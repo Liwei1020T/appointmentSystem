@@ -1,0 +1,364 @@
+// Prisma Schema for String Service Platform
+// Database: PostgreSQL
+// Generated from: docs/erd.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USERS & AUTHENTICATION
+// ============================================
+
+model User {
+  id            String   @id @default(uuid()) @db.Uuid
+  email         String   @unique
+  phone         String?  @unique
+  fullName      String?  @map("full_name")
+  password      String   // bcrypt hashed password
+  referralCode  String   @unique @default(cuid()) @map("referral_code")
+  referredBy    String?  @map("referred_by")
+  points        Int      @default(0)
+  role          String   @default("customer") // 'customer' or 'admin'
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  orders           Order[]
+  userPackages     UserPackage[]
+  userVouchers     UserVoucher[]
+  pointsLogs       PointsLog[]
+  referralsMade    ReferralLog[]    @relation("Referrer")
+  referralsReceived ReferralLog[]   @relation("Referred")
+  payments         Payment[]
+  notifications    Notification[]
+  stockLogsCreated StockLog[]
+  accounts         Account[]
+  sessions         Session[]
+
+  @@index([referralCode])
+  @@index([referredBy])
+  @@index([email])
+  @@map("users")
+}
+
+// NextAuth.js Account model
+model Account {
+  id                String  @id @default(uuid()) @db.Uuid
+  userId            String  @map("user_id") @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refreshToken      String? @map("refresh_token") @db.Text
+  accessToken       String? @map("access_token") @db.Text
+  expiresAt         Int?    @map("expires_at")
+  tokenType         String? @map("token_type")
+  scope             String?
+  idToken           String? @map("id_token") @db.Text
+  sessionState      String? @map("session_state")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// NextAuth.js Session model
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id") @db.Uuid
+  expires      DateTime @db.Timestamptz(6)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// NextAuth.js Verification Token
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime @db.Timestamptz(6)
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================
+// INVENTORY MANAGEMENT
+// ============================================
+
+model StringInventory {
+  id           String   @id @default(uuid()) @db.Uuid
+  model        String
+  brand        String
+  description  String?
+  costPrice    Decimal  @map("cost_price") @db.Decimal(10, 2)
+  sellingPrice Decimal  @map("selling_price") @db.Decimal(10, 2)
+  stock        Int      @default(0)
+  minimumStock Int      @default(5) @map("minimum_stock")
+  color        String?
+  gauge        String?
+  imageUrl     String?  @map("image_url")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  orders    Order[]
+  stockLogs StockLog[]
+
+  @@index([active])
+  @@index([brand, model])
+  @@map("string_inventory")
+}
+
+model StockLog {
+  id          String    @id @default(uuid()) @db.Uuid
+  stringId    String    @map("string_id") @db.Uuid
+  change      Int
+  type        String    // 'restock', 'sale', 'adjustment'
+  costPrice   Decimal?  @map("cost_price") @db.Decimal(10, 2)
+  referenceId String?   @map("reference_id") @db.Uuid
+  notes       String?
+  createdBy   String?   @map("created_by") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  string       StringInventory @relation(fields: [stringId], references: [id])
+  createdByUser User?          @relation(fields: [createdBy], references: [id])
+
+  @@index([stringId])
+  @@index([createdAt])
+  @@map("stock_logs")
+}
+
+// ============================================
+// ORDERS & BOOKINGS
+// ============================================
+
+model Order {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  stringId       String?   @map("string_id") @db.Uuid
+  tension        Int?
+  price          Decimal   @db.Decimal(10, 2)
+  cost           Decimal?  @db.Decimal(10, 2)
+  profit         Decimal?  @db.Decimal(10, 2)
+  discount       Decimal   @default(0) @db.Decimal(10, 2)
+  discountAmount Decimal?  @map("discount_amount") @db.Decimal(10, 2)
+  status         String    // 'pending', 'in_progress', 'completed', 'cancelled'
+  usePackage     Boolean   @default(false) @map("use_package")
+  packageUsedId  String?   @map("package_used_id") @db.Uuid
+  voucherUsedId  String?   @map("voucher_used_id") @db.Uuid
+  notes          String?
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user         User          @relation(fields: [userId], references: [id])
+  string       StringInventory? @relation(fields: [stringId], references: [id])
+  packageUsed  UserPackage?  @relation(fields: [packageUsedId], references: [id])
+  voucherUsed  UserVoucher?  @relation(fields: [voucherUsedId], references: [id])
+  payments     Payment[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+// ============================================
+// PAYMENTS
+// ============================================
+
+model Payment {
+  id            String    @id @default(uuid()) @db.Uuid
+  orderId       String?   @map("order_id") @db.Uuid
+  packageId     String?   @map("package_id") @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  amount        Decimal   @db.Decimal(10, 2)
+  provider      String    // 'fpx', 'tng', 'stripe', 'card', 'manual'
+  status        String    // 'pending', 'success', 'failed', 'refunded'
+  transactionId String?   @unique @map("transaction_id")
+  metadata      Json?
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user    User     @relation(fields: [userId], references: [id])
+  order   Order?   @relation(fields: [orderId], references: [id])
+  package Package? @relation(fields: [packageId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([transactionId])
+  @@map("payments")
+}
+
+// ============================================
+// PACKAGES (套餐)
+// ============================================
+
+model Package {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
+  description   String?
+  times         Int
+  price         Decimal  @db.Decimal(10, 2)
+  originalPrice Decimal? @map("original_price") @db.Decimal(10, 2)
+  validityDays  Int      @map("validity_days")
+  active        Boolean  @default(true)
+  imageUrl      String?  @map("image_url")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  userPackages UserPackage[]
+  payments     Payment[]
+
+  @@index([active])
+  @@map("packages")
+}
+
+model UserPackage {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  packageId     String   @map("package_id") @db.Uuid
+  remaining     Int
+  originalTimes Int      @map("original_times")
+  expiry        DateTime @db.Timestamptz(6)
+  status        String   @default("active") // 'active', 'expired', 'depleted'
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user    User    @relation(fields: [userId], references: [id])
+  package Package @relation(fields: [packageId], references: [id])
+  orders  Order[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([expiry])
+  @@map("user_packages")
+}
+
+// ============================================
+// VOUCHERS & COUPONS
+// ============================================
+
+model Voucher {
+  id          String    @id @default(uuid()) @db.Uuid
+  code        String    @unique
+  name        String
+  type        String    // 'fixed_amount', 'percentage'
+  value       Decimal   @db.Decimal(10, 2)
+  minPurchase Decimal   @default(0) @map("min_purchase") @db.Decimal(10, 2)
+  maxUses     Int?      @map("max_uses")
+  usedCount   Int       @default(0) @map("used_count")
+  pointsCost  Int       @default(0) @map("points_cost")
+  validFrom   DateTime  @map("valid_from") @db.Timestamptz(6)
+  validUntil  DateTime  @map("valid_until") @db.Timestamptz(6)
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  userVouchers UserVoucher[]
+
+  @@index([code])
+  @@index([active])
+  @@map("vouchers")
+}
+
+model UserVoucher {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  voucherId String    @map("voucher_id") @db.Uuid
+  status    String    @default("active") // 'active', 'used', 'expired'
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(6)
+  orderId   String?   @map("order_id") @db.Uuid
+  expiry    DateTime  @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user    User     @relation(fields: [userId], references: [id])
+  voucher Voucher  @relation(fields: [voucherId], references: [id])
+  orders  Order[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("user_vouchers")
+}
+
+// ============================================
+// POINTS SYSTEM
+// ============================================
+
+model PointsLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  amount       Int
+  type         String   // 'order', 'referral', 'redeem', 'admin_grant'
+  referenceId  String?  @map("reference_id") @db.Uuid
+  description  String?
+  balanceAfter Int      @map("balance_after")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("points_log")
+}
+
+// ============================================
+// REFERRAL SYSTEM
+// ============================================
+
+model ReferralLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  referrerId   String   @map("referrer_id") @db.Uuid
+  referredId   String   @map("referred_id") @db.Uuid
+  referralCode String   @map("referral_code")
+  rewardGiven  Boolean  @default(false) @map("reward_given")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  referrer User @relation("Referrer", fields: [referrerId], references: [id])
+  referred User @relation("Referred", fields: [referredId], references: [id])
+
+  @@index([referrerId])
+  @@index([referredId])
+  @@map("referral_logs")
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  title     String
+  message   String
+  type      String   // 'order', 'package', 'promo', 'system'
+  read      Boolean  @default(false)
+  actionUrl String?  @map("action_url")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([read])
+  @@map("notifications")
+}
+
+// ============================================
+// SYSTEM SETTINGS
+// ============================================
+
+model SystemSetting {
+  key         String   @id
+  value       Json
+  description String?
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("system_settings")
+}
