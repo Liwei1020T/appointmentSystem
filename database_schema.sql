@@ -73,6 +73,7 @@ CREATE TABLE string_inventory (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     model VARCHAR(255) NOT NULL,
     brand VARCHAR(255) NOT NULL,
+    description TEXT,
     cost_price DECIMAL(10, 2) NOT NULL,
     selling_price DECIMAL(10, 2) NOT NULL,
     stock INTEGER DEFAULT 0,
@@ -213,6 +214,56 @@ CREATE TABLE orders (
 CREATE INDEX idx_orders_user_id ON orders(user_id);
 CREATE INDEX idx_orders_status ON orders(status);
 CREATE INDEX idx_orders_created_at ON orders(created_at);
+
+-- ============================================
+-- ORDER PHOTOS
+-- ============================================
+
+CREATE TABLE order_photos (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id UUID NOT NULL,
+    photo_url TEXT NOT NULL,
+    photo_type VARCHAR(50) NOT NULL CHECK (photo_type IN ('before', 'after', 'detail', 'other')),
+    caption TEXT,
+    display_order INTEGER DEFAULT 0,
+    uploaded_by UUID,
+    created_at TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_order_photos_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    CONSTRAINT fk_order_photos_uploaded_by FOREIGN KEY (uploaded_by) REFERENCES users(id)
+);
+
+CREATE INDEX idx_order_photos_order_id ON order_photos(order_id);
+CREATE INDEX idx_order_photos_created_at ON order_photos(created_at DESC);
+CREATE INDEX idx_order_photos_type ON order_photos(photo_type);
+
+CREATE TRIGGER update_order_photos_updated_at BEFORE UPDATE ON order_photos
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- REVIEWS & RATINGS
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS reviews (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    photos TEXT[],
+    created_at TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reviews_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    CONSTRAINT fk_reviews_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_order_id ON reviews(order_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating);
+CREATE INDEX IF NOT EXISTS idx_reviews_created_at ON reviews(created_at);
+
+CREATE TRIGGER update_reviews_updated_at BEFORE UPDATE ON reviews
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
 -- PAYMENTS
@@ -390,6 +441,7 @@ COMMENT ON TABLE user_packages IS '用户套餐表 - 用户购买的套餐及剩
 COMMENT ON TABLE vouchers IS '优惠券表 - 系统优惠券定义';
 COMMENT ON TABLE user_vouchers IS '用户优惠券表 - 用户领取的优惠券';
 COMMENT ON TABLE orders IS '订单表 - 所有穿线订单记录';
+COMMENT ON TABLE order_photos IS '订单照片表 - 订单前后对比照片及细节照片';
 COMMENT ON TABLE payments IS '支付表 - 支付交易记录（套餐购买、订单支付）';
 COMMENT ON TABLE points_log IS '积分日志表 - 用户积分变动记录';
 COMMENT ON TABLE referral_logs IS '推荐日志表 - 用户推荐关系记录';

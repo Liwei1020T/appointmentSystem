@@ -165,18 +165,26 @@ export default function BookingFlow() {
       }
 
       const data = await response.json();
+      const order = data.data || data;
 
       // 成功提示
       setToast({
         show: true,
-        message: '预约成功！正在跳转...',
+        message: '预约成功！',
         type: 'success',
       });
 
-      // 跳转到订单详情
-      setTimeout(() => {
-        router.push(`/orders/${data.id}`);
-      }, 1500);
+      // 如果使用套餐，直接跳转到订单详情
+      if (usePackage) {
+        setTimeout(() => {
+          router.push(`/orders/${order.id}`);
+        }, 1500);
+      } else {
+        // 否则跳转到支付页面
+        setTimeout(() => {
+          router.push(`/orders/${order.id}`);
+        }, 1500);
+      }
     } catch (err: any) {
       setToast({
         show: true,

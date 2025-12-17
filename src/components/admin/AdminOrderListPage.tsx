@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAllOrders, getOrderStats, searchOrders } from '@/services/adminOrderService';
 import type { AdminOrder, OrderStatus, OrderStats } from '@/services/adminOrderService';
+import { generateShortCode, formatDate } from '@/lib/utils';
 
 type FilterStatus = 'all' | OrderStatus;
 
@@ -42,8 +43,8 @@ export default function AdminOrderListPage() {
     setError(null);
 
     const filters: any = {
+      page: currentPage,
       limit: pageSize,
-      offset: (currentPage - 1) * pageSize,
     };
 
     if (filterStatus !== 'all') {
@@ -74,13 +75,17 @@ export default function AdminOrderListPage() {
     }
 
     setLoading(true);
-    const { orders: searchResults, error: searchError } = await searchOrders(searchTerm);
+    const { orders: searchResults, total, error: searchError } = await searchOrders(searchTerm, {
+      page: currentPage,
+      limit: pageSize,
+      status: filterStatus !== 'all' ? filterStatus : undefined,
+    });
 
     if (searchError) {
       setError(searchError.message);
     } else {
       setOrders(searchResults || []);
-      setTotalOrders(searchResults?.length || 0);
+      setTotalOrders(total || searchResults?.length || 0);
     }
 
     setLoading(false);
@@ -95,7 +100,6 @@ export default function AdminOrderListPage() {
       ready: 'bg-teal-100 text-teal-700 border-teal-200',
       completed: 'bg-green-100 text-green-700 border-green-200',
       cancelled: 'bg-red-100 text-red-700 border-red-200',
-      refunded: 'bg-gray-100 text-gray-700 border-gray-200',
     };
     return styles[status];
   };
@@ -109,7 +113,6 @@ export default function AdminOrderListPage() {
       ready: '已完成',
       completed: '已完成',
       cancelled: '已取消',
-      refunded: '已退款',
     };
     return labels[status];
   };
@@ -266,10 +269,10 @@ export default function AdminOrderListPage() {
                       >
                         <td className="px-6 py-4">
                           <div className="text-sm font-mono text-gray-900">
-                            #{order.id.slice(0, 8)}
+                            #{generateShortCode(order.id)}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {new Date(order.created_at || order.createdAt).toLocaleString('zh-CN')}
+                            {formatDate(order.created_at || order.createdAt, 'yyyy/MM/dd HH:mm:ss')}
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -279,16 +282,36 @@ export default function AdminOrderListPage() {
                           <div className="text-xs text-gray-500">{order.user?.phone || '-'}</div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">{order.string?.name || '-'}</div>
-                          <div className="text-xs text-gray-500">{order.string?.brand || '-'}</div>
+                          <div className="text-sm text-gray-900">
+                            {order.string?.model ||
+                              order.string?.name ||
+                              order.stringInventory?.model ||
+                              '-'}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {order.string?.brand || order.stringInventory?.brand || '-'}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm font-semibold text-gray-900">
-                            RM {(order.total_price ?? order.totalAmount).toFixed(2)}
+                            {(() => {
+                              const totalAmount = Number(
+                                order.total_price ??
+                                  order.totalAmount ??
+                                  // prisma 订单价格字段
+                                  (order as any).price ??
+                                  (order as any).final_price ??
+                                  0
+                              );
+                              return `RM ${totalAmount.toFixed(2)}`;
+                            })()}
                           </div>
-                          {(order.voucher_discount ?? 0) > 0 && (
+                          {(Number(order.voucher_discount ?? 0) > 0) && (
                             <div className="text-xs text-green-600">
-                              -RM {(order.voucher_discount ?? 0).toFixed(2)}
+                              {(() => {
+                                const voucherDiscount = Number(order.voucher_discount ?? 0);
+                                return `-RM ${voucherDiscount.toFixed(2)}`;
+                              })()}
                             </div>
                           )}
                         </td>
@@ -302,15 +325,62 @@ export default function AdminOrderListPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(`/admin/orders/${order.id}`);
-                            }}
-                            className="text-purple-600 hover:text-purple-700 text-sm font-medium"
-                          >
-                            查看详情
-                          </button>
+                          <div className="flex items-center gap-2">
+                            {/* 快捷状态更新按钮 */}
+                            {(order.status === 'pending' || order.status === 'confirmed') && (
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  const { updateOrderStatus } = await import('@/services/adminOrderService');
+                                  const { toast } = await import('sonner');
+                                  const { order: updated, error } = await updateOrderStatus(
+                                    order.id,
+                                    'in_progress',
+                                    '快捷操作：开始穿线'
+                                  );
+                                  if (error) {
+                                    toast.error('更新失败');
+                                  } else {
+                                    toast.success('已开始穿线');
+                                    loadOrders();
+                                  }
+                                }}
+                                className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors"
+                                title="开始穿线"
+                              >
+                                ⚙️ 开始
+                              </button>
+                            )}
+                            {(order.status === 'in_progress' || order.status === 'processing') && (
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  const { completeOrder } = await import('@/services/completeOrderService');
+                                  const { toast } = await import('sonner');
+                                  const { data, error } = await completeOrder(order.id, '快捷操作：完成订单');
+                                  if (error) {
+                                    toast.error('完成失败');
+                                  } else {
+                                    toast.success('订单已完成');
+                                    loadOrders();
+                                  }
+                                }}
+                                className="px-2 py-1 text-xs bg-green-50 text-green-700 rounded hover:bg-green-100 transition-colors"
+                                title="完成订单"
+                              >
+                                ✓ 完成
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/admin/orders/${order.id}`);
+                              }}
+                              className="text-purple-600 hover:text-purple-700 text-sm font-medium"
+                            >
+                              详情
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

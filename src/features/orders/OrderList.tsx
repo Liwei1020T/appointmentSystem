@@ -236,7 +236,7 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                 <div>
                   <p className="text-slate-600">价格</p>
                   <p className="font-medium text-slate-900">
-                    RM {(order.final_price ?? order.price).toFixed(2)}
+                    RM {Number(order.final_price ?? order.price ?? 0).toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -252,7 +252,7 @@ export default function OrderList({ initialStatus }: OrderListProps) {
               {(order.discount_amount ?? 0) > 0 && !order.use_package && (
                 <div className="mt-3 flex items-center gap-2">
                   <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-700">
-                    优惠 RM {(order.discount_amount ?? 0).toFixed(2)}
+                    优惠 RM {Number(order.discount_amount ?? 0).toFixed(2)}
                   </span>
                 </div>
               )}

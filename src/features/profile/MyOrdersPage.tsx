@@ -300,7 +300,7 @@ export default function MyOrdersPage() {
                         <div className="flex items-center gap-2 mb-1">
                           <DollarSign className="w-4 h-4 text-gray-600" />
                           <span className="text-xl font-bold text-gray-900">
-                            RM {finalAmount.toFixed(2)}
+                            RM {Number(finalAmount).toFixed(2)}
                           </span>
                         </div>
                         <p className="text-sm text-gray-600">

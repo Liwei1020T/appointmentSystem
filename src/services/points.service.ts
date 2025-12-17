@@ -3,7 +3,7 @@
  * 积分系统服务
  */
 
-export type PointsLogType = 'EARN' | 'REDEEM' | 'earn' | 'redeem' | 'spend' | 'refund' | 'expire' | 'order' | 'referral' | 'review' | 'registration' | 'admin_adjust' | string;
+export type PointsLogType = 'EARN' | 'REDEEM' | 'earn' | 'redeem' | 'spend' | 'expire' | 'order' | 'referral' | 'review' | 'registration' | 'admin_adjust' | string;
 
 export interface PointsLog {
   id: string;
@@ -38,7 +38,6 @@ export interface PointsStats {
   // snake_case aliases for backward compatibility
   total_earned?: number;
   total_spent?: number;
-  total_refunded?: number;
 }
 
 export async function getPointsBalance(userId?: string): Promise<{ balance: number; error: string | null }> {
@@ -48,7 +47,10 @@ export async function getPointsBalance(userId?: string): Promise<{ balance: numb
     if (!response.ok) {
       return { balance: 0, error: data.error || '获取积分余额失败' };
     }
-    return { balance: data.points || data.balance || 0, error: null };
+    const payload = data?.data || data;
+    const rawBalance = payload?.balance ?? payload?.points ?? 0;
+    const balance = Number.isFinite(Number(rawBalance)) ? Number(rawBalance) : 0;
+    return { balance, error: null };
   } catch (error: any) {
     console.error('Failed to fetch points balance:', error);
     return { balance: 0, error: error.message || '获取积分余额失败' };
@@ -69,7 +71,8 @@ export async function getPointsHistory(
     if (!response.ok) {
       return { logs: [], error: data.error || '获取积分记录失败' };
     }
-    return { logs: data.history || data.logs || data.data || [], error: null };
+    const payload = data?.data?.logs ?? data?.logs ?? data?.history ?? data?.data ?? [];
+    return { logs: Array.isArray(payload) ? payload : [], error: null };
   } catch (error: any) {
     console.error('Failed to fetch points history:', error);
     return { logs: [], error: error.message || '获取积分记录失败' };
@@ -80,7 +83,14 @@ export async function getPointsStats(userId: string): Promise<PointsStats> {
   try {
     const response = await fetch('/api/points/stats');
     const data = await response.json();
-    return data;
+    const payload = data?.data ?? data;
+    return {
+      totalPoints: payload.totalPoints || 0,
+      earnedThisMonth: payload.earnedThisMonth || 0,
+      redeemedThisMonth: payload.redeemedThisMonth || 0,
+      total_earned: payload.total_earned ?? 0,
+      total_spent: payload.total_spent ?? 0,
+    };
   } catch (error) {
     console.error('Failed to fetch points stats:', error);
     return { totalPoints: 0, earnedThisMonth: 0, redeemedThisMonth: 0 };

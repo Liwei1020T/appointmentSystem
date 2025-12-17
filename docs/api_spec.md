@@ -683,6 +683,27 @@ All authenticated endpoints require:
 
 ---
 
+### Local Placeholder Endpoints (Next.js App Router)
+
+> 说明：以下端点为前端占位接口，用于避免 404/HTML 响应导致的崩溃。返回统一的 `{ success, data }` 结构，需在接入真实 Supabase/Edge Functions 后替换。
+
+- `GET /api/vouchers/stats` → `{ total: 0, used: 0, expired: 0, active: 0, usageRate: 0 }`。  
+- `GET /api/admin/vouchers/stats` → `{ issued: 0, used: 0, active: 0, usageRate: 0 }`。  
+- `GET /api/admin/vouchers/user/:userId` → `{ vouchers: [] }`。  
+- `POST /api/admin/vouchers/:id/distribute` → `{ distributed: 0, skipped: 0, sample: [] }`。  
+- `GET /api/admin/packages` → `{ packages: [] }`；`GET /api/admin/packages/stats`、`/sales` → `{ stats: {} }` 占位。  
+- Admin 报表占位：`/api/admin/reports/summary|revenue|profit|sales|top-strings|top-packages|user-growth|order-trends`（JSON），`/export`（CSV 字符串）。  
+- 评价占位：`POST /api/reviews` 保存评价并回传提交内容；`GET /api/reviews/featured` / `user` → `{ reviews: [] }`；`GET /api/reviews/order/:orderId` → `{ review: null }`（或返回单条评价）。
+- 备注：数据库已存在 `reviews` 表（字段：rating/comment/photos 等）；以上接口为占位，不持久化。
+
+### Local Implemented Endpoints (Next.js App Router)
+
+- `GET /api/user/vouchers` → Prisma `user_vouchers` + `vouchers` 联表，返回 `{ vouchers: [...] }`（需要登录）。  
+- `GET /api/vouchers/redeemable` → Prisma `vouchers` 表筛选 active + valid window，返回 `{ vouchers: [...] }`（需要登录）。  
+- `POST /api/vouchers/redeem-with-points` → 使用积分兑换指定 `voucherId`，写入 `user_vouchers` 与 `points_log`（需要登录）。  
+
+---
+
 ## Admin APIs
 
 ### 23. Get All Orders (Admin)

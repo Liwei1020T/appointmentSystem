@@ -33,7 +33,9 @@ export async function requireAuth() {
   const user = await getCurrentUser();
   
   if (!user) {
-    throw new Error('未登录');
+    const error: any = new Error('未登录');
+    error.json = () => Response.json({ error: '未登录' }, { status: 401 });
+    throw error;
   }
   
   return user;
@@ -43,7 +45,9 @@ export async function requireAdmin() {
   const user = await requireAuth();
   
   if (user.role !== 'admin') {
-    throw new Error('需要管理员权限');
+    const error: any = new Error('需要管理员权限');
+    error.json = () => Response.json({ error: '需要管理员权限' }, { status: 403 });
+    throw error;
   }
   
   return user;

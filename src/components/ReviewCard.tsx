@@ -24,9 +24,12 @@ export default function ReviewCard({ review, showOrder = false }: ReviewCardProp
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <StarRating value={review.rating} readonly size="md" />
+            <StarRating value={Number(review.rating) || 0} readonly size="md" />
             <span className="text-sm font-medium text-slate-900">
-              {review.rating.toFixed(1)} 分
+              {Number.isFinite(Number(review.rating))
+                ? Number(review.rating).toFixed(1)
+                : '0.0'}{' '}
+              分
             </span>
           </div>
           <p className="text-sm text-slate-600">

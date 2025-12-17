@@ -31,31 +31,45 @@ export async function uploadImage(
   folderOrOptions: string | UploadOptions = 'uploads'
 ): Promise<UploadResult> {
   try {
-    const folder = typeof folderOrOptions === 'string' 
-      ? folderOrOptions 
-      : (folderOrOptions.folder || folderOrOptions.bucket || 'uploads');
+    const options = typeof folderOrOptions === 'string' 
+      ? { folder: folderOrOptions }
+      : folderOrOptions;
+    
+    const folder = options.folder || options.bucket || 'uploads';
     
     const formData = new FormData();
     formData.append('file', file);
     formData.append('folder', folder);
+    
+    // 如果提供了自定义文件名，添加到formData
+    if (options.fileName) {
+      formData.append('fileName', options.fileName);
+    }
 
     const response = await fetch('/api/upload', {
       method: 'POST',
       body: formData,
     });
 
-    if (!response.ok) {
-      const error = await response.json();
+    // 上传接口使用 successResponse 包裹返回值，这里需要兼容 { data: { url } } 结构
+    const payload = await response.json().catch(() => ({}));
+    const fileUrl =
+      payload?.url ||
+      payload?.data?.url ||
+      payload?.data?.path ||
+      payload?.data?.filePath;
+
+    if (!response.ok || !fileUrl) {
+      const fallbackError = !fileUrl ? 'Upload failed: missing file URL' : 'Upload failed';
       return {
         success: false,
-        error: error.error || 'Upload failed',
+        error: payload?.error || payload?.message || fallbackError,
       };
     }
 
-    const data = await response.json();
     return {
       success: true,
-      url: data.url,
+      url: fileUrl,
     };
   } catch (error: any) {
     return {

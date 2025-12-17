@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getUserReviews, OrderReview } from '@/services/review.service';
+import { OrderReview } from '@/services/review.service';
 import ReviewCard from '@/components/ReviewCard';
 import Card from '@/components/Card';
 import Spinner from '@/components/Spinner';
@@ -26,10 +26,15 @@ export default function MyReviewsPage() {
     setError('');
 
     try {
-      // TODO: Get actual userId from session
-      const userId = 'temp-user-id';
-      const data = await getUserReviews(userId);
-      setReviews(data || []);
+      const response = await fetch('/api/reviews/user');
+      const data = await response.json();
+      if (response.ok && Array.isArray(data?.data?.reviews || data?.data)) {
+        const list = data.data.reviews || data.data;
+        setReviews(list);
+      } else {
+        setError(data?.error || '加载评价失败');
+        setReviews([]);
+      }
     } catch (err: any) {
       setError(err?.message || '加载评价失败');
       setReviews([]);

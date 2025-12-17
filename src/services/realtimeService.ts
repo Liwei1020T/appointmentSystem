@@ -13,11 +13,9 @@ export function subscribeToOrderUpdates(
 ): RealtimeSubscription {
   // Placeholder for realtime subscription
   // Can be implemented with WebSocket or Server-Sent Events
-  console.log('Subscribing to order updates:', orderId);
-  
   return {
     unsubscribe: () => {
-      console.log('Unsubscribed from order updates:', orderId);
+      // unsubscribed
     },
   };
 }
@@ -26,11 +24,9 @@ export function subscribeToUserOrders(
   userId: string,
   callback: (data: any) => void
 ): RealtimeSubscription {
-  console.log('Subscribing to user orders:', userId);
-  
   return {
     unsubscribe: () => {
-      console.log('Unsubscribed from user orders:', userId);
+      // unsubscribed
     },
   };
 }

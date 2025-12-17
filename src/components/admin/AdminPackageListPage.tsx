@@ -199,8 +199,10 @@ export default function AdminPackageListPage() {
   };
 
   // Format currency
-  const formatCurrency = (amount: number) => {
-    return `RM ${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number | string | null | undefined) => {
+    const numeric = Number(amount ?? 0);
+    if (Number.isNaN(numeric)) return 'RM 0.00';
+    return `RM ${numeric.toFixed(2)}`;
   };
 
   return (

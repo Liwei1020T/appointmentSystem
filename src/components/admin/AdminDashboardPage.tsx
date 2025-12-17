@@ -72,13 +72,13 @@ export default function AdminDashboardPage() {
       const data = await response.json();
       
       setStats({
-        todayOrders: data.totalOrders || 0,
-        todayRevenue: data.totalRevenue || 0,
-        monthOrders: data.totalOrders || 0,
-        monthRevenue: data.totalRevenue || 0,
+        todayOrders: Number(data.totalOrders) || 0,
+        todayRevenue: Number(data.totalRevenue) || 0,
+        monthOrders: Number(data.totalOrders) || 0,
+        monthRevenue: Number(data.totalRevenue) || 0,
         activePackages: 0,
-        lowStockItems: data.lowStockCount || 0,
-        pendingOrders: data.pendingOrders || 0,
+        lowStockItems: Number(data.lowStockCount) || 0,
+        pendingOrders: Number(data.pendingOrders) || 0,
       });
 
       setRecentOrders([]);

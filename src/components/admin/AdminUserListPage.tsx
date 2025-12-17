@@ -72,7 +72,8 @@ export default function AdminUserListPage() {
       return;
     }
 
-    setUsers(result.users || []);
+    const safeUsers = Array.isArray(result.users) ? result.users : [];
+    setUsers(safeUsers);
     setTotalCount(result.totalCount || 0);
     setLoading(false);
   }
@@ -304,7 +305,7 @@ export default function AdminUserListPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.length === 0 ? (
+                {!Array.isArray(users) || users.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                       暂无用户数据

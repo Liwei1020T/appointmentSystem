@@ -9,7 +9,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { getUserReviews, OrderReview } from '@/services/review.service';
+import { OrderReview } from '@/services/review.service';
 import Card from '@/components/Card';
 import Spinner from '@/components/Spinner';
 import Button from '@/components/Button';
@@ -42,11 +42,15 @@ export default function MyReviewsPage() {
     try {
       const response = await fetch('/api/reviews/user');
       const data = await response.json();
-      if (response.ok && data.data) {
-        setReviews(data.data);
+      const list = data?.data?.reviews || data?.data;
+      if (response.ok && Array.isArray(list)) {
+        setReviews(list);
+      } else {
+        setReviews([]);
       }
     } catch (error) {
       console.error('Failed to load reviews:', error);
+      setReviews([]);
     } finally {
       setLoading(false);
     }

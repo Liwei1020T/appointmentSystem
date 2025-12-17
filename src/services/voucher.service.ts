@@ -122,7 +122,8 @@ export async function getRedeemableVouchers(): Promise<{ vouchers: Voucher[]; er
     if (!response.ok) {
       return { vouchers: [], error: data.error || '获取可兑换优惠券失败' };
     }
-    return { vouchers: data.data || [], error: null };
+    const payload = data?.data?.vouchers ?? data?.data ?? [];
+    return { vouchers: Array.isArray(payload) ? payload : [], error: null };
   } catch (error: any) {
     return { vouchers: [], error: error.message || '获取可兑换优惠券失败' };
   }
@@ -145,7 +146,8 @@ export async function redeemVoucherWithPoints(
     if (!response.ok) {
       return { success: false, error: data.error || '兑换失败' };
     }
-    return { success: true, userVoucher: data.userVoucher || data.data, error: null };
+    const payload = data?.data?.userVoucher ?? data?.userVoucher ?? data?.data;
+    return { success: true, userVoucher: payload, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || '兑换失败' };
   }
@@ -219,12 +221,13 @@ export async function getVoucherStats(): Promise<VoucherStats> {
       throw new Error('Failed to fetch voucher stats');
     }
     const data = await response.json();
+    const payload = data?.data ?? data;
     return {
-      totalVouchers: data.totalVouchers || 0,
-      usedVouchers: data.usedVouchers || 0,
-      expiredVouchers: data.expiredVouchers || 0,
-      activeVouchers: data.activeVouchers || 0,
-      totalSavings: data.totalSavings || 0,
+      totalVouchers: payload.totalVouchers || payload.total || 0,
+      usedVouchers: payload.usedVouchers || payload.used || 0,
+      expiredVouchers: payload.expiredVouchers || payload.expired || 0,
+      activeVouchers: payload.activeVouchers || payload.active || 0,
+      totalSavings: payload.totalSavings || 0,
     };
   } catch (error) {
     console.error('Error fetching voucher stats:', error);

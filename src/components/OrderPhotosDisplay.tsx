@@ -55,10 +55,14 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
       const response = await fetch(`/api/orders/${orderId}/photos`);
       if (response.ok) {
         const data = await response.json();
-        setPhotos(data);
+        // API可能返回 { data: [...] } 或直接返回数组
+        const photosList = Array.isArray(data) ? data : (data.data || []);
+        setPhotos(photosList);
+      } else {
+        setPhotos([]);
       }
     } catch (error) {
-      console.error('Failed to load photos:', error);
+      setPhotos([]); // 出错时设置为空数组
     }
 
     setLoading(false);
@@ -92,14 +96,25 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Spinner size="md" />
+      <div className="bg-white rounded-lg border border-slate-200 p-6">
+        <div className="flex items-center justify-center py-12">
+          <Spinner size="md" />
+          <span className="ml-2 text-slate-600">加载照片中...</span>
+        </div>
       </div>
     );
   }
 
   if (photos.length === 0) {
-    return null;
+    return (
+      <div className="bg-white rounded-lg border border-slate-200 p-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Camera className="w-5 h-5 text-slate-400" />
+          <h3 className="text-lg font-semibold text-slate-900">穿线照片</h3>
+        </div>
+        <p className="text-sm text-slate-500">暂无照片，订单完成后管理员会上传穿线照片</p>
+      </div>
+    );
   }
 
   return (

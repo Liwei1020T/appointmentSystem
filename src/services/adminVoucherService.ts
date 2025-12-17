@@ -15,10 +15,12 @@ export interface DistributionTarget {
 export interface Voucher {
   id: string;
   code: string;
+  name: string;
   type: VoucherType;
   value: number;
   minPurchase: number;
   min_purchase?: number;
+  maxUses?: number | null;
   maxDiscount?: number;
   max_discount?: number;
   startDate?: Date;
@@ -46,6 +48,36 @@ export interface Voucher {
   updatedAt?: Date;
 }
 
+function normalizeVoucher(raw: any): Voucher {
+  // Normalize API voucher payload to expose both camelCase and snake_case fields for UI compatibility
+  if (!raw) return raw;
+  const validFrom = raw.validFrom || raw.valid_from;
+  const validUntil = raw.validUntil || raw.valid_until;
+  const minPurchaseValue = raw.minPurchase ?? raw.min_purchase ?? 0;
+  const pointsCostValue = raw.pointsCost ?? raw.points_cost ?? 0;
+  const maxUsesValue = raw.maxUses ?? raw.usage_limit ?? null;
+
+  return {
+    ...raw,
+    id: raw.id,
+    code: raw.code?.toUpperCase?.() || raw.code,
+    name: raw.name,
+    type: raw.type,
+    value: Number(raw.value ?? 0),
+    minPurchase: Number(minPurchaseValue ?? 0),
+    min_purchase: Number(minPurchaseValue ?? 0),
+    maxUses: maxUsesValue,
+    usage_limit: maxUsesValue,
+    pointsCost: Number(pointsCostValue ?? 0),
+    points_cost: Number(pointsCostValue ?? 0),
+    validFrom,
+    valid_from: validFrom,
+    validUntil,
+    valid_until: validUntil,
+    active: raw.active ?? raw.isActive ?? raw.is_active,
+  };
+}
+
 export interface GetVouchersFilter {
   status?: VoucherStatus;
   type?: VoucherType;
@@ -63,8 +95,13 @@ export async function getAllVouchers(filters?: GetVouchersFilter): Promise<{ vou
     const url = queryString ? `/api/admin/vouchers?${queryString}` : '/api/admin/vouchers';
     
     const response = await fetch(url);
-    const data = await response.json();
-    const vouchers = data.vouchers || [];
+    const result = await response.json();
+    if (!response.ok || result?.success === false) {
+      return { vouchers: [], data: [], error: result?.error || 'Failed to fetch vouchers' };
+    }
+    const vouchers = Array.isArray(result?.data)
+      ? (result.data as any[]).map(normalizeVoucher)
+      : [];
     return { vouchers, data: vouchers, error: null };
   } catch (error) {
     console.error('Failed to fetch vouchers:', error);
@@ -74,10 +111,13 @@ export async function getAllVouchers(filters?: GetVouchersFilter): Promise<{ vou
 
 export async function getVoucherById(voucherId: string): Promise<{ voucher: Voucher | null; data?: Voucher | null; error: string | null }> {
   try {
-    const response = await fetch(`/api/admin/vouchers/${voucherId}`);
-    if (!response.ok) return { voucher: null, data: null, error: 'Voucher not found' };
-    const voucher = await response.json();
-    return { voucher, data: voucher, error: null };
+    const response = await fetch(`/api/admin/vouchers?id=${voucherId}`);
+    const result = await response.json();
+    if (!response.ok || result?.success === false) {
+      return { voucher: null, data: null, error: result?.error || 'Voucher not found' };
+    }
+    const voucherData = normalizeVoucher(result?.data);
+    return { voucher: voucherData, data: voucherData, error: null };
   } catch (error) {
     console.error('Failed to fetch voucher:', error);
     return { voucher: null, data: null, error: 'Failed to fetch voucher' };
@@ -91,14 +131,20 @@ export async function createVoucher(data: Partial<Voucher>): Promise<{ voucher: 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      return { voucher: null, success: false, error: 'Failed to create voucher' };
+    const result = await response.json().catch(() => null);
+    if (!response.ok || result?.success === false) {
+      return {
+        voucher: null,
+        success: false,
+        error: result?.error || result?.message || 'Failed to create voucher',
+      };
     }
-    const voucher = await response.json();
+
+    const voucher = normalizeVoucher(result?.data) || null;
     return { voucher, success: true, error: null };
   } catch (error) {
     console.error('Failed to create voucher:', error);
-    return { voucher: null, success: false, error: 'Failed to create voucher' };
+    return { voucher: null, success: false, error: (error as Error)?.message || 'Failed to create voucher' };
   }
 }
 
@@ -107,15 +153,16 @@ export async function updateVoucher(
   data: Partial<Voucher>
 ): Promise<{ voucher: Voucher | null; success: boolean; error: string | null }> {
   try {
-    const response = await fetch(`/api/admin/vouchers/${voucherId}`, {
-      method: 'PUT',
+    const response = await fetch('/api/admin/vouchers', {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ id: voucherId, ...data }),
     });
-    if (!response.ok) {
-      return { voucher: null, success: false, error: 'Failed to update voucher' };
+    const result = await response.json();
+    if (!response.ok || result?.success === false) {
+      return { voucher: null, success: false, error: result?.error || 'Failed to update voucher' };
     }
-    const voucher = await response.json();
+    const voucher = normalizeVoucher(result?.data) || null;
     return { voucher, success: true, error: null };
   } catch (error) {
     console.error('Failed to update voucher:', error);
@@ -153,11 +200,14 @@ export async function distributeVoucher(
 
 export async function deleteVoucher(voucherId: string): Promise<{ success: boolean; error: string | null }> {
   try {
-    const response = await fetch(`/api/admin/vouchers/${voucherId}`, {
+    const response = await fetch('/api/admin/vouchers', {
       method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: voucherId }),
     });
+    const result = await response.json().catch(() => null);
     if (!response.ok) {
-      return { success: false, error: 'Failed to delete voucher' };
+      return { success: false, error: result?.error || 'Failed to delete voucher' };
     }
     return { success: true, error: null };
   } catch (error) {
@@ -202,13 +252,14 @@ export async function getUserVouchers(userId: string): Promise<{ data: UserVouch
 
 export async function toggleVoucherStatus(voucherId: string, active?: boolean): Promise<{ success: boolean; error: string | null }> {
   try {
-    const response = await fetch(`/api/admin/vouchers/${voucherId}/toggle`, {
-      method: 'POST',
+    const response = await fetch('/api/admin/vouchers', {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ active }),
+      body: JSON.stringify({ id: voucherId, active }),
     });
-    if (!response.ok) {
-      return { success: false, error: 'Failed to toggle voucher status' };
+    const result = await response.json().catch(() => null);
+    if (!response.ok || result?.success === false) {
+      return { success: false, error: result?.error || 'Failed to toggle voucher status' };
     }
     return { success: true, error: null };
   } catch (error) {

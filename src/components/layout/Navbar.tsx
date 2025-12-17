@@ -3,10 +3,14 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+import NotificationBell from '@/components/NotificationBell';
+import NotificationPanel from '@/components/NotificationPanel';
 
 export default function Navbar() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
 
   const isActive = (path: string) => {
     return pathname === path;
@@ -79,6 +83,12 @@ export default function Navbar() {
                   </Link>
                 )}
 
+                {/* Notification Bell */}
+                <NotificationBell 
+                  userId={session.user.id}
+                  onClick={() => setNotificationPanelOpen(true)}
+                />
+
                 {/* User Menu */}
                 <div className="relative group">
                   <button className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
@@ -98,19 +108,21 @@ export default function Navbar() {
                     </svg>
                   </button>
 
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block z-50">
-                    <Link
-                      href="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      个人中心
-                    </Link>
-                    <button
-                      onClick={handleSignOut}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      退出登录
-                    </button>
+                  <div className="absolute right-0 top-full pt-2 z-50 opacity-0 invisible pointer-events-none transition group-hover:opacity-100 group-hover:visible group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:visible group-focus-within:pointer-events-auto">
+                    <div className="w-48 bg-white rounded-md shadow-lg py-1">
+                      <Link
+                        href="/profile"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        个人中心
+                      </Link>
+                      <button
+                        onClick={handleSignOut}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        退出登录
+                      </button>
+                    </div>
                   </div>
                 </div>
               </>
@@ -152,6 +164,15 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Notification Panel */}
+      {session && (
+        <NotificationPanel 
+          userId={session.user.id}
+          isOpen={notificationPanelOpen}
+          onClose={() => setNotificationPanelOpen(false)}
+        />
+      )}
     </nav>
   );
 }

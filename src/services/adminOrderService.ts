@@ -3,15 +3,14 @@
  * 管理员订单管理功能
  */
 
-export type OrderStatus = 
+export type OrderStatus =
   | 'pending'
   | 'confirmed'
   | 'processing'
   | 'in_progress'
   | 'ready'
   | 'completed'
-  | 'cancelled'
-  | 'refunded';
+  | 'cancelled';
 
 export interface AdminOrder {
   id: string;
@@ -48,7 +47,6 @@ export interface AdminOrder {
   };
   photos?: string[];
   adminNotes?: string;
-  refunds?: any[];
   stringInventory?: {
     brand: string;
     model: string;
@@ -57,6 +55,7 @@ export interface AdminOrder {
     name: string;
     brand: string;
     price: number;
+    model?: string;
   };
   // Order details
   tension_horizontal?: number;
@@ -72,9 +71,13 @@ export async function getAllOrders(filters?: {
   status?: string;
   startDate?: string;
   endDate?: string;
+  page?: number;
+  limit?: number;
 }): Promise<{ orders: AdminOrder[]; total: number; error: { message: string } | null }> {
   try {
     const params = new URLSearchParams();
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
     if (filters?.status) params.append('status', filters.status);
     if (filters?.startDate) params.append('startDate', filters.startDate);
     if (filters?.endDate) params.append('endDate', filters.endDate);
@@ -84,7 +87,8 @@ export async function getAllOrders(filters?: {
     if (!response.ok) {
       return { orders: [], total: 0, error: { message: data.error || 'Failed to fetch orders' } };
     }
-    return { orders: data.orders || [], total: data.total || 0, error: null };
+    const payload = data.data || data;
+    return { orders: payload.orders || [], total: payload.total || payload.pagination?.total || 0, error: null };
   } catch (error: any) {
     console.error('Failed to fetch orders:', error);
     return { orders: [], total: 0, error: { message: error.message || 'Failed to fetch orders' } };
@@ -95,10 +99,12 @@ export async function getOrderById(orderId: string): Promise<{ order: AdminOrder
   try {
     const response = await fetch(`/api/admin/orders/${orderId}`);
     if (!response.ok) {
-      return { order: null, error: { message: 'Failed to fetch order' } };
+      const data = await response.json().catch(() => ({}));
+      return { order: null, error: { message: data.error || 'Failed to fetch order' } };
     }
     const data = await response.json();
-    return { order: data, error: null };
+    const payload = data.data || data;
+    return { order: payload, error: null };
   } catch (error: any) {
     console.error('Failed to fetch order:', error);
     return { order: null, error: { message: error.message || 'Failed to fetch order' } };
@@ -120,7 +126,8 @@ export async function updateOrderStatus(
     if (!response.ok) {
       return { order: null, error: { message: data.error || 'Failed to update order status' } };
     }
-    return { order: data.order || data, error: null };
+    const payload = data.data || data;
+    return { order: payload.order || payload, error: null };
   } catch (error: any) {
     console.error('Failed to update order status:', error);
     return { order: null, error: { message: error.message || 'Failed to update order status' } };
@@ -153,7 +160,6 @@ export interface OrderStats {
   ready?: number;
   completed: number;
   cancelled: number;
-  refunded?: number;
   revenue: number;
   todayTotal?: number;
   todayRevenue?: number;
@@ -199,22 +205,27 @@ export async function searchOrders(query: string, filters?: {
   status?: string;
   startDate?: string;
   endDate?: string;
-}): Promise<{ orders: AdminOrder[]; error: { message: string } | null }> {
+  page?: number;
+  limit?: number;
+}): Promise<{ orders: AdminOrder[]; total?: number; error: { message: string } | null }> {
   try {
     const params = new URLSearchParams();
     params.append('q', query);
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
     if (filters?.status) params.append('status', filters.status);
     if (filters?.startDate) params.append('startDate', filters.startDate);
     if (filters?.endDate) params.append('endDate', filters.endDate);
 
-    const response = await fetch(`/api/admin/orders/search?${params.toString()}`);
+    const response = await fetch(`/api/admin/orders?${params.toString()}`);
     const data = await response.json();
     if (!response.ok) {
-      return { orders: [], error: { message: data.error || 'Failed to search orders' } };
+      return { orders: [], total: 0, error: { message: data.error || 'Failed to search orders' } };
     }
-    return { orders: data.orders || [], error: null };
+    const payload = data.data || data;
+    return { orders: payload.orders || [], total: payload.total || payload.pagination?.total || 0, error: null };
   } catch (error: any) {
-    return { orders: [], error: { message: error.message || 'Failed to search orders' } };
+    return { orders: [], total: 0, error: { message: error.message || 'Failed to search orders' } };
   }
 }
 

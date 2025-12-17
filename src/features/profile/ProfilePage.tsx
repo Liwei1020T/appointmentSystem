@@ -512,6 +512,45 @@ export default function ProfilePage() {
         <div className="space-y-3">
           <h2 className="text-lg font-bold text-slate-900">账户设置</h2>
 
+          {/* 编辑资料 */}
+          <Card>
+            <button
+              onClick={() => router.push('/profile/edit')}
+              className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg
+                    className="w-5 h-5 text-blue-600"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div className="flex-1 text-left">
+                  <span className="font-medium text-slate-900 block">编辑资料</span>
+                  <span className="text-xs text-slate-500">修改头像、姓名、联系方式</span>
+                </div>
+              </div>
+              <svg
+                className="w-5 h-5 text-slate-400"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </Card>
+
           {/* 修改密码 */}
           <Card>
             <button

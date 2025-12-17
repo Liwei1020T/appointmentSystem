@@ -72,6 +72,15 @@ export interface Order {
     transaction_id?: string;
     created_at?: string;
   };
+  payments?: Array<{
+    id?: string;
+    amount?: number;
+    status?: string;
+    provider?: string;
+    created_at?: string;
+    updated_at?: string;
+    paid_at?: string;
+  }>;
   voucher?: {
     id?: string;
     voucher?: {
@@ -90,7 +99,7 @@ export interface Payment {
   user_id: string;
   amount: number;
   provider: 'tng' | 'cash'; // Only TNG QR Code and Cash payment
-  status: 'pending' | 'pending_verification' | 'success' | 'failed' | 'refunded';
+  status: 'pending' | 'pending_verification' | 'success' | 'failed';
   transaction_id?: string;
   receipt_url?: string;
   receipt_uploaded_at?: string;

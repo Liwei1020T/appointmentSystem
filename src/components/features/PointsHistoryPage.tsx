@@ -60,8 +60,6 @@ export default function PointsHistoryPage() {
         return '💰';
       case 'spend':
         return '🎁';
-      case 'refund':
-        return '↩️';
       case 'expire':
         return '⏰';
       default:
@@ -75,8 +73,6 @@ export default function PointsHistoryPage() {
         return '获得';
       case 'spend':
         return '消费';
-      case 'refund':
-        return '退款';
       case 'expire':
         return '过期';
       default:
@@ -87,7 +83,6 @@ export default function PointsHistoryPage() {
   const getAmountColor = (type: PointsLogType) => {
     switch (type) {
       case 'earn':
-      case 'refund':
         return 'text-green-600';
       case 'spend':
       case 'expire':
@@ -119,7 +114,6 @@ export default function PointsHistoryPage() {
     { type: 'all', label: '全部' },
     { type: 'earn', label: '获得' },
     { type: 'spend', label: '消费' },
-    { type: 'refund', label: '退款' },
     { type: 'expire', label: '过期' },
   ];
 
@@ -205,7 +199,7 @@ export default function PointsHistoryPage() {
                   </div>
                   <div className={`text-right ml-2 ${getAmountColor(log.type)}`}>
                     <div className="text-lg font-bold">
-                      {log.type === 'earn' || log.type === 'refund' ? '+' : '-'}
+                      {log.type === 'earn' ? '+' : '-'}
                       {log.amount}
                     </div>
                   </div>

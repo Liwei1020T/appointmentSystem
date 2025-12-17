@@ -67,7 +67,8 @@ export default function MyVouchersPage() {
         throw new Error('获取优惠券失败');
       }
       const vouchersData = await response.json();
-      setAllVouchers(vouchersData.vouchers || []);
+      const payload = vouchersData?.data?.vouchers ?? vouchersData?.vouchers ?? [];
+      setAllVouchers(Array.isArray(payload) ? payload : []);
 
       // 获取统计
       const statsResult = await getVoucherStats();
@@ -85,16 +86,20 @@ export default function MyVouchersPage() {
 
     if (filter === 'available') {
       filtered = allVouchers.filter((v) => {
-        const notUsed = !v.used;
-        const notExpired = !v.expires_at || new Date(v.expires_at) > now;
+        const used = v.used ?? v.status === 'used';
+        const expiresAt = v.expires_at || v.expiry;
+        const notUsed = !used;
+        const notExpired = !expiresAt || new Date(expiresAt) > now;
         return notUsed && notExpired;
       });
     } else if (filter === 'used') {
-      filtered = allVouchers.filter((v) => v.used);
+      filtered = allVouchers.filter((v) => v.used ?? v.status === 'used');
     } else if (filter === 'expired') {
       filtered = allVouchers.filter((v) => {
-        const notUsed = !v.used;
-        const expired = v.expires_at && new Date(v.expires_at) <= now;
+        const used = v.used ?? v.status === 'used';
+        const expiresAt = v.expires_at || v.expiry;
+        const notUsed = !used;
+        const expired = expiresAt && new Date(expiresAt) <= now;
         return notUsed && expired;
       });
     }
@@ -116,8 +121,9 @@ export default function MyVouchersPage() {
 
   // 检查优惠券是否过期
   const isExpired = (voucher: UserVoucher): boolean => {
-    if (!voucher.expires_at) return false;
-    return new Date(voucher.expires_at) < new Date();
+    const expiresAt = voucher.expires_at || voucher.expiry;
+    if (!expiresAt) return false;
+    return new Date(expiresAt) < new Date();
   };
 
   // 获取优惠券状态
@@ -186,21 +192,23 @@ export default function MyVouchersPage() {
               <div className="p-4 text-center">
                 <p className="text-xs text-slate-600 mb-1">可用</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {stats.available}
+                  {stats.activeVouchers ?? stats.available ?? 0}
                 </p>
               </div>
             </Card>
             <Card>
               <div className="p-4 text-center">
                 <p className="text-xs text-slate-600 mb-1">已用</p>
-                <p className="text-2xl font-bold text-gray-600">{stats.used}</p>
+                <p className="text-2xl font-bold text-gray-600">
+                  {stats.usedVouchers ?? stats.used ?? 0}
+                </p>
               </div>
             </Card>
             <Card>
               <div className="p-4 text-center">
                 <p className="text-xs text-slate-600 mb-1">已过期</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {stats.expired}
+                  {stats.expiredVouchers ?? stats.expired ?? 0}
                 </p>
               </div>
             </Card>
@@ -349,9 +357,9 @@ export default function MyVouchersPage() {
                           {voucherData.max_discount && (
                             <p>• 最高优惠: RM {voucherData.max_discount}</p>
                           )}
-                          {voucher.expires_at && (
+                          {(voucher.expires_at || voucher.expiry) && (
                             <p>
-                              • 有效期至: {formatDate(voucher.expires_at)}
+                              • 有效期至: {formatDate(voucher.expires_at || voucher.expiry)}
                             </p>
                           )}
                           <p>• 获得时间: {formatDate(voucher.created_at)}</p>

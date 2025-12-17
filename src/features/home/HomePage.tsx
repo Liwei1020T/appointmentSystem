@@ -16,6 +16,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card, StatsCard, Spinner, Button, Badge } from '@/components';
 import FeaturedReviews from '@/components/FeaturedReviews';
+import QuickActions from './QuickActions';
+import RecentOrders from './RecentOrders';
+import PackageSummary from './PackageSummary';
 import { useSession } from 'next-auth/react';
 import { getUserStats, getRecentOrders, getFeaturedPackages, UserStats, RecentOrder, FeaturedPackage } from '@/services/homeService';
 
@@ -124,66 +127,14 @@ export default function HomePage() {
 
       {/* 主内容区 */}
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* 快捷操作卡片 */}
-        <div className="grid grid-cols-2 gap-4">
-          <Link href="/booking">
-            <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition cursor-pointer border-2 border-blue-500">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-900">立即预约</h3>
-                <p className="text-sm text-gray-500 mt-1">穿线服务</p>
-              </div>
-            </div>
-          </Link>
+        {/* 快捷操作按钮 - 使用 QuickActions 组件 */}
+        <QuickActions />
 
-          <Link href="/packages">
-            <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition cursor-pointer">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-3">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-900">购买套餐</h3>
-                <p className="text-sm text-gray-500 mt-1">更加优惠</p>
-              </div>
-            </div>
-          </Link>
+        {/* 我的套餐摘要 - 使用 PackageSummary 组件 */}
+        <PackageSummary />
 
-          <Link href="/vouchers">
-            <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition cursor-pointer">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-900">我的优惠券</h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  {stats?.availableVouchers || 0} 张可用
-                </p>
-              </div>
-            </div>
-          </Link>
-
-          <Link href="/profile">
-            <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition cursor-pointer">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mb-3">
-                  <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-900">我的积分</h3>
-                <p className="text-sm text-gray-500 mt-1">{stats?.points || 0} 分</p>
-              </div>
-            </div>
-          </Link>
-        </div>
+        {/* 最近订单 - 使用 RecentOrders 组件 */}
+        <RecentOrders />
 
         {/* 用户统计数据 */}
         {stats && (
@@ -282,7 +233,7 @@ export default function HomePage() {
                         </p>
                       </div>
                       <div className="text-right ml-4">
-                        <div className="font-bold text-gray-900 mb-2">RM {(order.price || order.final_price || order.finalPrice || 0).toFixed(2)}</div>
+                        <div className="font-bold text-gray-900 mb-2">RM {Number(order.price || order.final_price || order.finalPrice || 0).toFixed(2)}</div>
                         <Badge className={getStatusBadgeColor(order.status)}>
                           {getStatusLabel(order.status)}
                         </Badge>
@@ -383,4 +334,5 @@ export default function HomePage() {
         </div>
       </div>
     </div>
- 
+  );
+}

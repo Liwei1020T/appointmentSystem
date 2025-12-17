@@ -44,26 +44,31 @@ export default function FeaturedReviews() {
   const loadFeaturedReviews = async () => {
     try {
       const response = await fetch('/api/reviews/featured');
-      const result = await response.json();
-      
-      if (response.ok && (result.data || result.reviews)) {
-        const data = result.data || result.reviews;
-        const normalized = data.map((review: any) => ({
-          ...review,
-          user: Array.isArray(review.user) ? review.user[0] : review.user,
-          order: review.order
-            ? {
-                ...review.order,
-                string: Array.isArray(review.order?.string)
-                  ? review.order.string[0]
-                  : review.order?.string,
-              }
-            : undefined,
-        }));
-        setReviews(normalized as Review[]);
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setReviews([]);
+        return;
       }
+      const data = Array.isArray(result?.data)
+        ? result.data
+        : Array.isArray(result?.reviews)
+        ? result.reviews
+        : [];
+      const normalized = data.map((review: any) => ({
+        ...review,
+        user: Array.isArray(review?.user) ? review.user[0] : review?.user,
+        order: review?.order
+          ? {
+              ...review.order,
+              string: Array.isArray(review.order?.string)
+                ? review.order.string[0]
+                : review.order?.string,
+            }
+          : undefined,
+      }));
+      setReviews(normalized as Review[]);
     } catch (error) {
-      console.error('Failed to load featured reviews:', error);
+      setReviews([]);
     } finally {
       setLoading(false);
     }

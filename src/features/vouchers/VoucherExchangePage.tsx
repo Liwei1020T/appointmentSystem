@@ -65,7 +65,7 @@ export default function VoucherExchangePage() {
       if (vouchersResult.error) {
         setError(vouchersResult.error);
       } else {
-        setVouchers(vouchersResult.vouchers || []);
+        setVouchers(Array.isArray(vouchersResult.vouchers) ? vouchersResult.vouchers : []);
       }
 
       if (balanceResult.error) {
@@ -226,7 +226,7 @@ export default function VoucherExchangePage() {
               </div>
             </Card>
           ) : (
-            vouchers.map((voucher) => {
+            (Array.isArray(vouchers) ? vouchers : []).map((voucher) => {
               const affordable = canRedeem(voucher);
               return (
                 <Card key={voucher.id}>

@@ -2,7 +2,7 @@
 
 String Service Platform — Development Governance Document  
 版本：1.0  
-最后更新：2025-12-11  
+最后更新：2025-12-17  
 
 ---
 
@@ -27,13 +27,12 @@ String Service Platform — Development Governance Document
 
 包括但不限于：
 
-- `docs/system_design.md`  
-- `docs/ui_design.md`  
-- `docs/mockup_user.md`  
-- `docs/mockup_admin.md`  
+- `docs/System-Design-Document.md`  
+- `docs/UI-Design-Guide.md`  
 - `docs/api_spec.md`  
 - `docs/erd.md`  
 - `docs/components.md`  
+- 以及所有最新的 `docs/change_log_*.md`（必须串读以确认上下文）  
 
 Agent 必须阅读这些文件并建立上下文。
 
@@ -50,6 +49,7 @@ Agent 需要对以下内容有清晰理解（或在变更时同步更新文档�
 - 现有代码组织方式  
 - 已完成与未完成功能  
 - 命名规范（变量、文件、函数、组件）  
+- 当前存在的临时 / 占位接口（Next.js API stubs），需要在未来替换为真实 Supabase/Edge Functions 时同步更新文档  
 
 > Agent **不得在不了解上下文的情况下开始编码**。
 
@@ -251,4 +251,3 @@ Agent 在本项目中扮演：
 - 避免重复造轮子，复用既有组件与模块。  
 - 严格参照文档执行，保持结构与风格一致性。  
 - 每次开发都为“未来的 Agent”留下清晰的上下文。  
-

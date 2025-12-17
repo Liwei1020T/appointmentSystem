@@ -89,7 +89,6 @@ export default function PointsHistoryPage() {
     const typeMap: Record<PointsLogType, string> = {
       earn: '获得',
       spend: '消费',
-      refund: '退款',
       expire: '过期',
     };
     return typeMap[type];
@@ -100,7 +99,6 @@ export default function PointsHistoryPage() {
     const colorMap: Record<PointsLogType, string> = {
       earn: 'green',
       spend: 'red',
-      refund: 'blue',
       expire: 'gray',
     };
     return colorMap[type];
@@ -169,7 +167,7 @@ export default function PointsHistoryPage() {
 
         {/* 积分统计 */}
         {stats && (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <Card>
               <div className="p-4 text-center">
                 <p className="text-xs text-slate-600 mb-1">累计获得</p>
@@ -183,14 +181,6 @@ export default function PointsHistoryPage() {
                 <p className="text-xs text-slate-600 mb-1">累计消费</p>
                 <p className="text-2xl font-bold text-red-600">
                   {stats.total_spent}
-                </p>
-              </div>
-            </Card>
-            <Card>
-              <div className="p-4 text-center">
-                <p className="text-xs text-slate-600 mb-1">累计退款</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {stats.total_refunded}
                 </p>
               </div>
             </Card>
@@ -228,16 +218,6 @@ export default function PointsHistoryPage() {
             }`}
           >
             消费
-          </button>
-          <button
-            onClick={() => setFilterType('refund')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
-              filterType === 'refund'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-slate-700 hover:bg-slate-50'
-            }`}
-          >
-            退款
           </button>
         </div>
 
@@ -287,16 +267,21 @@ export default function PointsHistoryPage() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p
-                        className={`text-lg font-bold ${
-                          log.type === 'earn' || log.type === 'refund'
-                            ? 'text-green-600'
-                            : 'text-red-600'
-                        }`}
-                      >
-                        {log.type === 'earn' || log.type === 'refund' ? '+' : '-'}
-                        {log.amount}
-                      </p>
+                      {(() => {
+                        const amount = Number(log.amount) || 0;
+                        const absAmount = Math.abs(amount);
+                        const isCredit = amount > 0 || log.type === 'earn';
+                        return (
+                          <p
+                            className={`text-lg font-bold ${
+                              isCredit ? 'text-green-600' : 'text-red-600'
+                            }`}
+                          >
+                            {isCredit ? '+' : '-'}
+                            {absAmount}
+                          </p>
+                        );
+                      })()}
                       <p className="text-xs text-slate-500">
                         余额: {log.balance_after}
                       </p>

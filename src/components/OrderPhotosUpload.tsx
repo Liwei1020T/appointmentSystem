@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ImageUploader from '@/components/ImageUploader';
 import Button from '@/components/Button';
 import Toast from '@/components/Toast';
@@ -37,14 +37,15 @@ const PHOTO_TYPES = [
 
 export default function OrderPhotosUpload({
   orderId,
-  existingPhotos = [],
+  existingPhotos,
   onUploadSuccess,
 }: OrderPhotosUploadProps) {
-  const [photos, setPhotos] = useState<OrderPhoto[]>(existingPhotos);
+  const [photos, setPhotos] = useState<OrderPhoto[]>(existingPhotos ?? []);
   const [selectedType, setSelectedType] = useState<string>('after');
   const [caption, setCaption] = useState<string>('');
   const [uploading, setUploading] = useState<boolean>(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
@@ -54,6 +55,31 @@ export default function OrderPhotosUpload({
     message: '',
     type: 'success',
   });
+
+  // 首次加载已存在的照片，确保管理员可见历史上传
+  useEffect(() => {
+    const loadExisting = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/orders/${orderId}/photos`);
+        if (res.ok) {
+          const data = await res.json();
+          const list = Array.isArray(data) ? data : data.photos || data.data || [];
+          setPhotos(list);
+        }
+      } catch (error) {
+        console.error('Failed to load existing photos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (existingPhotos && existingPhotos.length > 0) {
+      setPhotos(existingPhotos);
+    } else {
+      loadExisting();
+    }
+  }, [orderId, existingPhotos ? existingPhotos.length : 0]);
 
   // 上传照片到数据库
   const savePhotoToDatabase = async (photoUrl: string) => {
@@ -181,6 +207,10 @@ export default function OrderPhotosUpload({
           <h3 className="text-lg font-semibold text-slate-900">上传照片</h3>
         </div>
 
+        {loading && (
+          <div className="text-sm text-slate-500 mb-2">正在加载已上传的照片...</div>
+        )}
+
         {/* 照片类型选择 */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -222,6 +252,7 @@ export default function OrderPhotosUpload({
           uploadOptions={{
             bucket: 'orders',
             folder: orderId,
+            fileName: `${selectedType}_${Date.now()}`,
             compress: true,
             maxWidth: 1920,
             maxHeight: 1920,

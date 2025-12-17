@@ -19,9 +19,8 @@ import { getOrderById, updateOrderStatus, updateOrderPhotos } from '@/services/a
 import type { AdminOrder, OrderStatus } from '@/services/adminOrderService';
 import OrderPhotosUploader from '@/components/admin/OrderPhotosUploader';
 import OrderPhotosUpload from '@/components/OrderPhotosUpload';
-import RefundRequestModal from '@/components/admin/RefundRequestModal';
-import RefundManagementPanel from '@/components/admin/RefundManagementPanel';
 import PaymentReceiptVerifier from '@/components/admin/PaymentReceiptVerifier';
+import AdminOrderProgress from '@/components/admin/AdminOrderProgress';
 import { verifyPaymentReceipt } from '@/services/paymentService';
 import { completeOrder } from '@/services/completeOrderService';
 import { toast } from 'sonner';
@@ -38,10 +37,13 @@ export default function AdminOrderDetailPage() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [newStatus, setNewStatus] = useState<OrderStatus>('confirmed');
   const [adminNotes, setAdminNotes] = useState('');
-  const [showRefundModal, setShowRefundModal] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const payment = order?.payment;
+  // 支持从 payment 或 payments 数组中获取支付信息
+  const payment = order?.payment || (order as any)?.payments?.[0];
+
+  // 调试日志移除
+  useEffect(() => {}, [order, payment]);
 
   useEffect(() => {
     if (orderId) {
@@ -124,7 +126,6 @@ export default function AdminOrderDetailPage() {
       ready: 'bg-teal-100 text-teal-700 border-teal-200',
       completed: 'bg-green-100 text-green-700 border-green-200',
       cancelled: 'bg-red-100 text-red-700 border-red-200',
-      refunded: 'bg-gray-100 text-gray-700 border-gray-200',
     };
     return styles[status];
   };
@@ -138,7 +139,6 @@ export default function AdminOrderDetailPage() {
       ready: '已完成',
       completed: '已完成',
       cancelled: '已取消',
-      refunded: '已退款',
     };
     return labels[status];
   };
@@ -152,7 +152,6 @@ export default function AdminOrderDetailPage() {
       ready: ['completed', 'cancelled'],
       completed: [],
       cancelled: [],
-      refunded: [],
     };
     return transitions[currentStatus] || [];
   };
@@ -212,6 +211,73 @@ export default function AdminOrderDetailPage() {
               >
                 {getStatusLabel(order.status)}
               </span>
+
+              {/* 确认收款按钮 - 支持现金/TNG/其他待确认支付 */}
+              {payment && ['pending', 'pending_verification'].includes(payment.status) && (
+                <button
+                  onClick={async () => {
+                    setUpdating(true);
+                    try {
+                      const isCash = payment.provider === 'cash';
+                      const url = isCash
+                        ? `/api/admin/payments/${payment.id}/confirm-cash`
+                        : `/api/admin/payments/${payment.id}/confirm`;
+                      const res = await fetch(url, {
+                        method: 'POST',
+                        headers: isCash ? undefined : { 'Content-Type': 'application/json' },
+                        body: isCash ? undefined : JSON.stringify({}),
+                      });
+                      const data = await res.json().catch(() => ({}));
+                      if (!res.ok || data?.success === false) {
+                        throw new Error(data?.error || '确认收款失败');
+                      }
+                      toast.success(isCash ? '现金收款已确认' : '支付已确认');
+                      await loadOrder();
+                    } catch (error: any) {
+                      toast.error(error?.message || '确认收款失败');
+                    } finally {
+                      setUpdating(false);
+                    }
+                  }}
+                  disabled={updating}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span>✅</span>
+                  {updating ? '处理中...' : '确认收款'}
+                </button>
+              )}
+
+              {/* 确认TNG付款按钮 - 仅TNG支付需要单独确认 */}
+              {payment && payment.status === 'pending' && payment.provider === 'tng' && payment.receipt_url && (
+                <button
+                  onClick={async () => {
+                    if (confirm('确认TNG支付收据有效？')) {
+                      try {
+                        const { error } = await verifyPaymentReceipt(payment.id, true, '管理员快速审核通过');
+                        if (error) {
+                          toast.error(String(error));
+                        } else {
+                          toast.success('💳 TNG支付已确认');
+                          loadOrder();
+                        }
+                      } catch (error) {
+                        toast.error('确认失败');
+                      }
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
+                >
+                  <span>💳</span>
+                  确认TNG收款
+                </button>
+              )}
+              
+              {/* 现金支付提示标签 */}
+              {payment && payment.status === 'pending' && payment.provider === 'cash' && (
+                <span className="px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg text-sm font-medium">
+                  💵 现金待收款
+                </span>
+              )}
               
               {/* 完成订单按钮 (仅当状态为 in_progress 时显示) */}
               {order.status === 'in_progress' && (
@@ -229,7 +295,7 @@ export default function AdminOrderDetailPage() {
                   onClick={() => setShowStatusModal(true)}
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
-                  更新状态
+                  更多状态
                 </button>
               )}
             </div>
@@ -248,20 +314,45 @@ export default function AdminOrderDetailPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm text-gray-600 mb-1">球线型号</div>
-                  <div className="font-medium text-gray-900">{order.string?.name || '-'}</div>
-                  <div className="text-xs text-gray-500">{order.string?.brand || '-'}</div>
+                  <div className="font-medium text-gray-900">
+                    {order.string?.model || order.string?.name || order.stringInventory?.model || '-'}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {order.string?.brand || order.stringInventory?.brand || '-'}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-600 mb-1">价格</div>
-                  <div className="font-medium text-gray-900">RM {order.string?.price?.toFixed(2) || '0.00'}</div>
+                  <div className="font-medium text-gray-900">
+                    {(() => {
+                      const price = Number(
+                        order.total_price ??
+                          order.totalAmount ??
+                          (order as any).price ??
+                          order.string?.price ??
+                          0
+                      );
+                      return `RM ${price.toFixed(2)}`;
+                    })()}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-600 mb-1">横线拉力</div>
-                  <div className="font-medium text-gray-900">{order.tension_horizontal} lbs</div>
+                  <div className="font-medium text-gray-900">
+                    {(() => {
+                      const h = (order as any).tension_horizontal ?? (order as any).tension ?? order.tension;
+                      return h ? `${h} lbs` : '-';
+                    })()}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-600 mb-1">竖线拉力</div>
-                  <div className="font-medium text-gray-900">{order.tension_vertical} lbs</div>
+                  <div className="font-medium text-gray-900">
+                    {(() => {
+                      const v = (order as any).tension_vertical ?? (order as any).tension ?? order.tension;
+                      return v ? `${v} lbs` : '-';
+                    })()}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-600 mb-1">球拍品牌</div>
@@ -284,49 +375,74 @@ export default function AdminOrderDetailPage() {
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">支付信息</h2>
-                {order.payment && order.payment.payment_status === 'completed' && (
-                  <button
-                    onClick={() => setShowRefundModal(true)}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
-                  >
-                    申请退款
-                  </button>
-                )}
+                {/* 退款功能已移除 */}
               </div>
-              {order.payment ? (
+              {payment ? (
                 <div className="space-y-3">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">支付方式</span>
-                    <span className="font-medium text-gray-900">{order.payment?.payment_method || order.payment?.method || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">支付状态</span>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        order.payment?.payment_status === 'completed'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-yellow-100 text-yellow-700'
-                      }`}
-                    >
-                      {order.payment?.payment_status === 'completed' ? '已支付' : '待支付'}
+                    <span className="font-medium text-gray-900">
+                      {payment.provider === 'cash' ? '💵 现金支付' : 
+                       payment.provider === 'tng' ? '💳 TNG' : 
+                       payment.payment_method || payment.method || '-'}
                     </span>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">支付状态</span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          payment.payment_status === 'completed' || payment.status === 'completed'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                        }`}
+                      >
+                        {payment.payment_status === 'completed' || payment.status === 'completed' ? '已支付' : '待确认'}
+                      </span>
+                      {/* 现金支付待确认时显示提示 */}
+                      {payment.provider === 'cash' && payment.status === 'pending' && (
+                        <span className="text-xs text-yellow-600">
+                          点击"确认收款并开始穿线"确认
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {payment.amount && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">支付金额</span>
+                      <span className="font-medium text-gray-900">
+                        RM {Number(payment.amount).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between pt-3 border-t border-gray-200">
-                    <span className="text-gray-600">原价</span>
+                    <span className="text-gray-600">球线价格</span>
                     <span className="font-medium text-gray-900">
-                      RM {order.string?.price?.toFixed(2) || '0.00'}
+                      RM {(() => {
+                        const price = order.string?.price ?? (order as any).price ?? (order as any).final_price ?? 0;
+                        return Number(price).toFixed(2);
+                      })()}
                     </span>
                   </div>
                   {(order.voucher_discount ?? 0) > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>优惠券折扣</span>
-                      <span>-RM {order.voucher_discount?.toFixed(2) || '0.00'}</span>
+                      <span>-RM {Number(order.voucher_discount).toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between pt-3 border-t border-gray-200">
-                    <span className="text-lg font-semibold text-gray-900">实付金额</span>
+                    <span className="text-lg font-semibold text-gray-900">订单总额</span>
                     <span className="text-lg font-bold text-purple-600">
-                      RM {order.total_price?.toFixed(2) || order.totalAmount.toFixed(2)}
+                      RM {(() => {
+                        const totalAmount = Number(
+                          order.total_price ??
+                            order.totalAmount ??
+                            (order as any).final_price ??
+                            payment?.amount ??
+                            0
+                        );
+                        return totalAmount.toFixed(2);
+                      })()}
                     </span>
                   </div>
                 </div>
@@ -334,16 +450,6 @@ export default function AdminOrderDetailPage() {
                 <p className="text-gray-500">暂无支付信息</p>
               )}
             </div>
-
-            {/* Refund Management */}
-            {order.payment && (
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                <RefundManagementPanel
-                  orderId={order.id}
-                  onRefundUpdate={loadOrder}
-                />
-              </div>
-            )}
 
             {/* Payment Receipt Verification */}
             {payment && (
@@ -392,37 +498,16 @@ export default function AdminOrderDetailPage() {
               </div>
             </div>
 
-            {/* Timeline */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">订单时间线</h2>
-              <div className="space-y-4">
-                <div className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
-                    <div className="w-0.5 h-full bg-gray-200"></div>
-                  </div>
-                  <div className="flex-1 pb-4">
-                    <div className="font-medium text-gray-900">订单创建</div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(order.created_at || order.createdAt).toLocaleString('zh-CN')}
-                    </div>
-                  </div>
-                </div>
-                {order.completed_at && (
-                  <div className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <div className="w-3 h-3 bg-green-600 rounded-full"></div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">订单完成</div>
-                      <div className="text-xs text-gray-500">
-                        {new Date(order.completed_at).toLocaleString('zh-CN')}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Progress Management */}
+            <AdminOrderProgress
+              orderId={order.id}
+              currentStatus={order.status as any}
+              createdAt={String(order.created_at || order.createdAt || '')}
+              updatedAt={order.updated_at ? String(order.updated_at) : undefined}
+              completedAt={order.completed_at ? String(order.completed_at) : undefined}
+              cancelledAt={(order as any).cancelled_at ? String((order as any).cancelled_at) : undefined}
+              onStatusUpdate={loadOrder}
+            />
 
             {/* Order Photos (新系统) */}
             <OrderPhotosUpload
@@ -488,21 +573,6 @@ export default function AdminOrderDetailPage() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Refund Request Modal */}
-      {showRefundModal && order?.payment && (
-        <RefundRequestModal
-          isOpen={showRefundModal}
-          onClose={() => setShowRefundModal(false)}
-          paymentId={order.payment.id}
-          paymentAmount={order.total_price ?? order.totalAmount}
-          paymentProvider={order.payment.payment_method || order.payment.method}
-          orderId={order.id}
-          onRefundCreated={() => {
-            loadOrder();
-          }}
-        />
       )}
 
       {/* Complete Order Modal */}

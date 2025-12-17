@@ -424,7 +424,7 @@ VALUES (
   gen_random_uuid(),
   'admin@example.com',
   'System Admin',
-  '+60123456789',
+  '+60123453789',
   '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36YGdPJ5YlSj/mToT5q2P2u',
   'ADMIN' || substr(md5(random()::text), 1, 8),
   'admin',

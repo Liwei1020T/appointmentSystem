@@ -32,7 +32,7 @@ This database schema supports the complete String Service Platform, including:
 - Referral program
 - Notifications and analytics
 
-**Total Tables:** 13 core tables + system tables
+**Total Tables:** 14 core tables + system tables
 
 ---
 
@@ -108,6 +108,7 @@ Ball string inventory management.
 | `minimum_stock` | `integer`    | DEFAULT 5                | Minimum stock alert threshold  |
 | `color`         | `text`       |                          | String color                   |
 | `gauge`         | `text`       |                          | String gauge (e.g., "0.70mm")  |
+| `description`   | `text`       |                          | String description / notes     |
 | `image_url`     | `text`       |                          | Product image URL              |
 | `active`        | `boolean`    | DEFAULT true             | Whether visible to customers   |
 | `created_at`    | `timestamptz`| DEFAULT now()            |                                |
@@ -366,6 +367,26 @@ System-wide configuration.
 - `referral_reward`: Points for referrer and referee
 - `low_stock_threshold`: Global low stock alert
 - `sms_enabled`: Enable SMS notifications
+
+---
+
+### 14. `reviews`
+
+Order review records (user feedback after completion).
+
+| Column          | Type         | Constraints              | Description                              |
+|-----------------|--------------|--------------------------|------------------------------------------|
+| `id`            | `uuid`       | PRIMARY KEY              | Review ID                                |
+| `order_id`      | `uuid`       | FK → orders.id           | Related order                            |
+| `user_id`       | `uuid`       | FK → users.id            | Reviewer                                 |
+| `rating`        | `integer`    | NOT NULL CHECK (1–5)     | Overall rating                           |
+| `comment`       | `text`       |                          | Review text                              |
+| `photos`        | `text[]`     |                          | Optional review photos                   |
+| `created_at`    | `timestamptz`| DEFAULT now()            | Created timestamp                        |
+| `updated_at`    | `timestamptz`| DEFAULT now()            | Updated timestamp                        |
+
+**Notes:**
+- UI currently relies on local placeholder APIs (`/api/reviews/*`) to avoid 404; replace with real data source when available.
 
 ---
 

@@ -48,6 +48,7 @@ export default function AdminVoucherListPage() {
   // Form state
   const [formData, setFormData] = useState({
     code: '',
+    name: '',
     type: 'fixed_amount' as VoucherType,
     value: 0,
     min_purchase: 0,
@@ -91,16 +92,25 @@ export default function AdminVoucherListPage() {
   }
 
   async function handleCreateOrUpdate() {
-    if (!formData.code || formData.value <= 0) {
-      alert('Please fill in required fields');
+    if (!formData.code || !formData.name || formData.value <= 0 || !formData.valid_from || !formData.valid_until) {
+      alert('请填写必填字段（代码、名称、优惠值、有效期）');
       return;
     }
 
     setLoading(true);
 
     const payload = {
-      ...formData,
-      usage_limit: formData.usage_limit ?? undefined,
+      code: formData.code.trim().toUpperCase(),
+      name: formData.name.trim(),
+      type: formData.type,
+      value: Number(formData.value),
+      validFrom: formData.valid_from,
+      validUntil: formData.valid_until,
+      minOrderAmount: Number(formData.min_purchase) || 0,
+      maxUses: formData.usage_limit ?? null,
+      pointsCost: Number(formData.points_cost) || 0,
+      description: formData.description?.trim() || '',
+      active: formData.active,
     };
 
     if (editingVoucher) {
@@ -164,13 +174,18 @@ export default function AdminVoucherListPage() {
     const validUntil = voucher.valid_until || voucher.validUntil;
     setFormData({
       code: voucher.code,
+      name: voucher.name || '',
       type: voucher.type,
       value: voucher.value,
       min_purchase: voucher.min_purchase || voucher.minPurchase || 0,
       points_cost: voucher.points_cost || voucher.pointsCost || 0,
       description: voucher.description || '',
-      valid_from: validFrom ? (typeof validFrom === 'string' ? validFrom : String(validFrom)) : '',
-      valid_until: validUntil ? (typeof validUntil === 'string' ? validUntil : String(validUntil)) : '',
+      valid_from: validFrom
+        ? (typeof validFrom === 'string' ? validFrom.slice(0, 10) : new Date(validFrom).toISOString().slice(0, 10))
+        : '',
+      valid_until: validUntil
+        ? (typeof validUntil === 'string' ? validUntil.slice(0, 10) : new Date(validUntil).toISOString().slice(0, 10))
+        : '',
       usage_limit: voucher.usage_limit || voucher.usageLimit || null,
       active: voucher.active ?? voucher.isActive ?? true,
     });
@@ -180,6 +195,7 @@ export default function AdminVoucherListPage() {
   function resetForm() {
     setFormData({
       code: '',
+      name: '',
       type: 'fixed_amount',
       value: 0,
       min_purchase: 0,
@@ -473,6 +489,20 @@ export default function AdminVoucherListPage() {
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                   placeholder="SUMMER2024"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  优惠券名称 *
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="学生专享折扣"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>

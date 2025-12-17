@@ -7,7 +7,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { submitReview, SubmitReviewParams } from '@/services/review.service';
+import { submitReview, SubmitReviewParams, OrderReview } from '@/services/review.service';
 import StarRating from '@/components/StarRating';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
@@ -18,7 +18,7 @@ import { useSession } from 'next-auth/react';
 
 interface ReviewFormProps {
   orderId: string;
-  onSuccess?: () => void;
+  onSuccess?: (review?: OrderReview) => void;
   onCancel?: () => void;
 }
 
@@ -83,7 +83,7 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
       is_anonymous: isAnonymous,
     };
 
-    const { reviewId, error } = await submitReview(params);
+    const { review, error } = await submitReview(params);
 
     if (error) {
       setToast({
@@ -101,7 +101,23 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
 
       setTimeout(() => {
         if (onSuccess) {
-          onSuccess();
+          onSuccess(
+            review || {
+              id: crypto.randomUUID(),
+              orderId,
+              userId: '',
+              rating,
+              serviceRating,
+              qualityRating,
+              speedRating,
+              comment: comment.trim(),
+              tags: selectedTags,
+              imageUrls,
+              isAnonymous,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            }
+          );
         }
       }, 1500);
     }

@@ -174,6 +174,12 @@ Payment Gateway / SMS Provider / Firebase Push
   - 营销活动通知  
 - 库存警告：库存低于阈值时通知管理员  
 
+### 4.9 评价与反馈模块（Review & Feedback）
+
+- 用户在订单完成后可提交评分、标签、文字及图片  
+- 后台可查看用户评价并（可选）回复  
+- 当前前端使用 Next.js 本地 API 占位实现（`/api/reviews/*`），用于避免 404/JSON 错误；后续需要替换为 Supabase/Edge Function 的真实实现并更新文档  
+
 ---
 
 ## 5. 数据流设计（Data Flow Design）
@@ -459,4 +465,3 @@ RLS 策略示例（概念）：
 - 可扩展性与未来规划。  
 
 该文档可作为 String Service Platform 的系统级 Blueprint，用于指导后续详细设计与实现。  
-

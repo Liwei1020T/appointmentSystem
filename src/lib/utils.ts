@@ -5,18 +5,34 @@ import { format, formatDistance, parseISO } from 'date-fns';
  * @param date - Date string or Date object
  * @param formatStr - Format string (default: 'MMM dd, yyyy')
  */
-export function formatDate(date: string | Date, formatStr: string = 'MMM dd, yyyy'): string {
-  const dateObj = typeof date === 'string' ? parseISO(date) : date;
-  return format(dateObj, formatStr);
+export function formatDate(date: string | Date | null | undefined, formatStr: string = 'MMM dd, yyyy'): string {
+  if (!date) return '-';
+  
+  try {
+    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    if (isNaN(dateObj.getTime())) return '-';
+    return format(dateObj, formatStr);
+  } catch (error) {
+    console.error('Date format error:', error, date);
+    return '-';
+  }
 }
 
 /**
  * Format relative time (e.g., "2 hours ago")
  * @param date - Date string or Date object
  */
-export function formatRelativeTime(date: string | Date): string {
-  const dateObj = typeof date === 'string' ? parseISO(date) : date;
-  return formatDistance(dateObj, new Date(), { addSuffix: true });
+export function formatRelativeTime(date: string | Date | null | undefined): string {
+  if (!date) return '-';
+  
+  try {
+    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    if (isNaN(dateObj.getTime())) return '-';
+    return formatDistance(dateObj, new Date(), { addSuffix: true });
+  } catch (error) {
+    console.error('Relative time format error:', error, date);
+    return '-';
+  }
 }
 
 /**
@@ -112,6 +128,29 @@ export function truncate(text: string, maxLength: number): string {
 export function calculatePercentage(value: number, total: number): number {
   if (total === 0) return 0;
   return Math.round((value / total) * 100);
+}
+
+/**
+ * 根据 UUID 生成 6 位数字简码（稳定且可读）
+ */
+export function generateShortCode(id: string | null | undefined): string {
+  if (!id) return '000000';
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) % 1000000;
+  }
+  return hash.toString().padStart(6, '0');
+}
+
+/**
+ * Validate UUID (v4 compatible)
+ * Prevents passing invalid IDs to database queries
+ */
+export function isValidUUID(value: string | null | undefined): boolean {
+  if (!value) return false;
+  return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(
+    value
+  );
 }
 
 /**

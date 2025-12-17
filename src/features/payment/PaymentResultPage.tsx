@@ -96,7 +96,7 @@ export default function PaymentResultPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">支付金额</span>
-                <span className="font-medium text-gray-900">RM {payment.amount.toFixed(2)}</span>
+                <span className="font-medium text-gray-900">RM {Number(payment.amount).toFixed(2)}</span>
               </div>
               {payment.transaction_id && (
                 <div className="flex justify-between">
@@ -155,7 +155,7 @@ export default function PaymentResultPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">应付金额</span>
-                <span className="font-medium text-gray-900">RM {payment.amount.toFixed(2)}</span>
+                <span className="font-medium text-gray-900">RM {Number(payment.amount).toFixed(2)}</span>
               </div>
             </div>
           )}

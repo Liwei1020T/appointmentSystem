@@ -8,11 +8,54 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 
+/**
+ * 获取套餐列表
+ * 支持查询参数:
+ * - status: active | inactive | all (default all)
+ * - search: 模糊搜索名称/描述
+ * - includeInactive: boolean (default true)
+ */
+export async function GET(request: NextRequest) {
+  try {
+    await requireAdmin();
+
+    const searchParams = request.nextUrl.searchParams;
+    const status = searchParams.get('status') || 'all';
+    const search = searchParams.get('search') || '';
+    const includeInactive = searchParams.get('includeInactive') !== 'false';
+
+    const where: any = {};
+    if (status === 'active') where.active = true;
+    if (status === 'inactive') where.active = false;
+    if (!includeInactive) where.active = true;
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const packages = await prisma.package.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return successResponse(packages);
+  } catch (error: any) {
+    console.error('Get packages error:', error);
+    return errorResponse(error.message || '获取套餐失败', 500);
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
     
     const body = await request.json();
+    if (!body || typeof body !== 'object') {
+      return errorResponse('请求体不能为空');
+    }
+
     const { name, description, times, price, validityDays } = body;
 
     if (!name || !times || !price || !validityDays) {
@@ -46,6 +89,10 @@ export async function PATCH(request: NextRequest) {
     await requireAdmin();
     
     const body = await request.json();
+    if (!body || typeof body !== 'object') {
+      return errorResponse('请求体不能为空');
+    }
+
     const { id, name, description, times, price, validityDays, active } = body;
 
     if (!id) {
