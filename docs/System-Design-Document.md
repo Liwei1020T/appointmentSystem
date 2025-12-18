@@ -178,7 +178,7 @@ Payment Gateway / SMS Provider / Firebase Push
 
 - 用户在订单完成后可提交评分、标签、文字及图片  
 - 后台可查看用户评价并（可选）回复  
-- 当前前端使用 Next.js 本地 API 占位实现（`/api/reviews/*`），用于避免 404/JSON 错误；后续需要替换为 Supabase/Edge Function 的真实实现并更新文档  
+- 已实现 Next.js App Router 本地 API（Prisma + Postgres）持久化：`POST /api/reviews`、`GET /api/reviews/user`、`GET /api/reviews/order/:orderId`、`GET /api/reviews/featured`；未来接入 Supabase/Edge Functions 时需同步更新文档与接口适配  
 
 ---
 

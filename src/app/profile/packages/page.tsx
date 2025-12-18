@@ -2,7 +2,13 @@
  * 我的套餐页面路由
  */
 
-import MyPackagesPage from '@/features/profile/MyPackagesPage';
+/**
+ * 说明：
+ * - 统一使用 Prisma 迁移后的“我的套餐”实现（/api/packages/user）
+ * - 避免旧版占位接口（如 /api/packages/my）导致用户看不到已激活套餐
+ */
+
+import MyPackagesPage from '@/features/packages/MyPackagesPage';
 
 export const metadata = {
   title: '我的套餐 - String Service',

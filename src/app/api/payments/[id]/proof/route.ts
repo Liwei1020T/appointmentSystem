@@ -21,10 +21,17 @@ export async function POST(
     const payment = await prisma.payment.findFirst({
       where: { id: paymentId },
       include: {
+        user: { select: { id: true } },
         order: {
           select: {
             userId: true,
             id: true,
+          },
+        },
+        package: {
+          select: {
+            id: true,
+            name: true,
           },
         },
       },
@@ -34,11 +41,16 @@ export async function POST(
       return errorResponse('支付记录不存在', 404);
     }
 
+    // 订单支付：校验订单归属；套餐支付：校验 payment.userId
     if (payment.order && payment.order.userId !== user.id) {
       return errorResponse('无权操作此支付记录', 403);
     }
+    if (!payment.order && payment.userId !== user.id) {
+      return errorResponse('无权操作此支付记录', 403);
+    }
 
-    if (payment.status !== 'pending') {
+    // 允许用户在被拒绝后重新上传
+    if (!['pending', 'pending_verification', 'rejected', 'failed'].includes(payment.status)) {
       return errorResponse('该支付已处理，无需重复上传');
     }
 
@@ -69,24 +81,21 @@ export async function POST(
     });
 
     // 更新支付记录
-    const updated = await prisma.payment.update({
+    await prisma.payment.update({
       where: { id: paymentId },
       data: {
         metadata: {
+          ...(payment.metadata as any),
           proofUrl: filePath,
+          receiptUrl: (payment.metadata as any)?.receiptUrl || filePath,
           uploadedAt: new Date().toISOString(),
         },
-        status: 'pending',
+        // 进入待审核状态，管理员端可在列表看到
+        status: 'pending_verification',
       },
     });
 
-    // 更新订单状态
-    if (payment.order) {
-      await prisma.order.update({
-        where: { id: payment.order.id },
-        data: { status: 'pending' },
-      });
-    }
+    // 注意：此接口只处理“支付凭证上传”，不强制修改订单业务状态，避免覆盖管理员操作
 
     // 创建通知给管理员
     const admins = await prisma.user.findMany({
@@ -94,22 +103,23 @@ export async function POST(
       select: { id: true },
     });
 
-    if (payment.order) {
-      await Promise.all(
-        admins.map((admin) =>
-          prisma.notification.create({
-            data: {
-              userId: admin.id,
-              title: '新的支付凭证待审核',
-              message: `订单 #${payment.order?.id.slice(0, 8)} 已上传支付凭证`,
-              type: 'payment',
-              actionUrl: `/admin/payments/${paymentId}`,
-              read: false,
-            },
-          })
-        )
-      );
-    }
+    await Promise.all(
+      admins.map((admin) =>
+        prisma.notification.create({
+          data: {
+            userId: admin.id,
+            title: '新的支付凭证待审核',
+            message: payment.order
+              ? `订单 #${payment.order.id.slice(0, 8)} 已上传支付凭证`
+              : `套餐 ${payment.package?.name || payment.packageId || ''} 已上传支付凭证`,
+            type: 'payment',
+            // 当前管理端审核入口为列表页（避免不存在的详情路由）
+            actionUrl: '/admin/payments',
+            read: false,
+          },
+        })
+      )
+    );
 
     // 通知用户
     await prisma.notification.create({
@@ -118,7 +128,7 @@ export async function POST(
         title: '支付凭证已上传',
         message: '您的支付凭证已提交，我们会尽快审核',
         type: 'payment',
-        actionUrl: `/orders/${payment.orderId}`,
+        actionUrl: payment.orderId ? `/orders/${payment.orderId}` : '/profile/packages',
         read: false,
       },
     });

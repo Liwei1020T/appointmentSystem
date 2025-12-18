@@ -14,7 +14,8 @@ import {
   Users, 
   Tag, 
   BarChart3,
-  Settings 
+  CreditCard,
+  MessageSquare
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -56,6 +57,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       label: '优惠券管理',
       href: '/admin/vouchers',
       active: pathname === '/admin/vouchers',
+    },
+    {
+      icon: <MessageSquare className="w-full h-full" />,
+      label: '评价管理',
+      href: '/admin/reviews',
+      active: pathname.startsWith('/admin/reviews'),
+    },
+    {
+      icon: <CreditCard className="w-full h-full" />,
+      label: '支付审核',
+      href: '/admin/payments',
+      active: pathname === '/admin/payments',
     },
     {
       icon: <BarChart3 className="w-full h-full" />,

@@ -9,6 +9,7 @@
  * 
  * 使用场景：
  * - 订单支付页面
+ * - 套餐购买支付（传入 paymentId 作为 folderId / orderId，用于区分上传目录）
  */
 
 import React, { useState, useRef } from 'react';
@@ -18,6 +19,11 @@ import { toast } from 'sonner';
 
 interface PaymentReceiptUploaderProps {
   paymentId: string;
+  /**
+   * 上传目录标识（历史命名为 orderId）
+   * - 订单支付：传入 orderId
+   * - 套餐支付：可传入 paymentId 或 packageId
+   */
   orderId: string;
   existingReceiptUrl?: string;
   onUploadSuccess: (receiptUrl: string) => void;

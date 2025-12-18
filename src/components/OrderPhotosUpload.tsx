@@ -252,7 +252,6 @@ export default function OrderPhotosUpload({
           uploadOptions={{
             bucket: 'orders',
             folder: orderId,
-            fileName: `${selectedType}_${Date.now()}`,
             compress: true,
             maxWidth: 1920,
             maxHeight: 1920,

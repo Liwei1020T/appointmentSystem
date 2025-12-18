@@ -49,13 +49,9 @@ export async function PUT(
       where: { id: orderId },
       data: {
         status,
-        // 保留客户原始备注，管理员备注存储在 metadata 中
+        // 说明：orders 表目前没有 metadata 字段，避免写入不存在字段导致构建/运行错误。
+        // 保留客户原始备注；如需管理员备注，建议未来新增独立字段或表来存储。
         notes: currentOrder?.notes, // 不覆盖客户备注
-        metadata: adminNotes ? {
-          ...(currentOrder as any)?.metadata,
-          admin_notes: adminNotes,
-          last_status_update: new Date().toISOString(),
-        } : undefined,
       },
       include: {
         user: {

@@ -181,9 +181,20 @@ model Review {
   id        String   @id @default(uuid()) @db.Uuid
   orderId   String   @map("order_id") @db.Uuid
   userId    String   @map("user_id") @db.Uuid
-  rating    Int      // 1-5 stars
-  comment   String?  @db.Text
-  photos    String[] // Array of photo URLs
+
+  rating        Int      // 1-5 stars
+  comment       String?  @db.Text
+  photos        String[] // Array of photo URLs
+  tags          String[]
+  isAnonymous   Boolean  @default(false) @map("is_anonymous")
+  serviceRating Int?     @map("service_rating")
+  qualityRating Int?     @map("quality_rating")
+  speedRating   Int?     @map("speed_rating")
+
+  adminReply   String?   @map("admin_reply") @db.Text
+  adminReplyAt DateTime? @map("admin_reply_at") @db.Timestamptz(6)
+  adminReplyBy String?   @map("admin_reply_by") @db.Uuid
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 

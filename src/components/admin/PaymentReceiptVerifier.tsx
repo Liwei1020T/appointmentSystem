@@ -72,8 +72,8 @@ export default function PaymentReceiptVerifier({
   }
 
   // 已审核状态
-  const isVerified = paymentStatus === 'completed';
-  const isPending = paymentStatus === 'pending_verification';
+  const isVerified = paymentStatus === 'success' || paymentStatus === 'completed';
+  const isPending = paymentStatus === 'pending_verification' || paymentStatus === 'pending';
 
   return (
     <div className="space-y-4">
@@ -119,7 +119,7 @@ export default function PaymentReceiptVerifier({
         </div>
       )}
 
-      {paymentStatus === 'failed' && (
+      {['failed', 'rejected'].includes(paymentStatus) && (
         <div className="flex gap-2 rounded-lg bg-red-50 p-4">
           <X className="h-5 w-5 shrink-0 text-red-600" />
           <div className="flex-1">

@@ -13,11 +13,15 @@ export async function POST(request: NextRequest) {
     const user = await requireAuth();
     const body = await request.json();
     
-    const { packageId } = body;
+    const { packageId, paymentMethod = 'tng' } = body;
 
     if (!packageId) {
       return errorResponse('缺少套餐 ID');
     }
+
+    // 支付方式目前仅支持：TNG（线上扫码）与现金
+    const normalizedProvider =
+      paymentMethod === 'cash' ? 'cash' : 'tng';
 
     // 验证套餐
     const packageData = await prisma.package.findUnique({
@@ -42,8 +46,17 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         packageId: packageData.id,
         amount: packageData.price,
-        provider: 'manual',
+        provider: normalizedProvider,
         status: 'pending',
+        metadata: {
+          type: 'package',
+          paymentMethod: normalizedProvider,
+          createdAt: new Date().toISOString(),
+          note:
+            normalizedProvider === 'cash'
+              ? '客户选择现金购买套餐，等待管理员确认收款'
+              : '客户选择 TNG 扫码购买套餐，等待上传收据并由管理员审核',
+        },
       },
     });
 
@@ -55,6 +68,7 @@ export async function POST(request: NextRequest) {
       times: packageData.times,
       validityDays: packageData.validityDays,
       paymentRequired: true,
+      paymentMethod: normalizedProvider,
     }, '套餐订单创建成功');
 
   } catch (error: any) {

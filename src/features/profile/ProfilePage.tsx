@@ -17,7 +17,7 @@ import {
   UserProfile,
 } from '@/services/profileService';
 import { Card, Spinner, Badge, Button, Modal, Toast } from '@/components';
-import { formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -86,13 +86,48 @@ export default function ProfilePage() {
   };
 
   // 复制邀请码
-  const handleCopyReferralCode = () => {
-    navigator.clipboard.writeText(referralCode);
-    setToast({
-      show: true,
-      message: '邀请码已复制到剪贴板',
-      type: 'success',
-    });
+  const handleCopyReferralCode = async () => {
+    if (!referralCode) {
+      setToast({
+        show: true,
+        message: '暂无可复制的邀请码',
+        type: 'warning',
+      });
+      return;
+    }
+
+    try {
+      // Modern Clipboard API (requires secure context: https/localhost)
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(referralCode);
+      } else {
+        // Fallback for older browsers / non-secure contexts
+        const textarea = document.createElement('textarea');
+        textarea.value = referralCode;
+        textarea.setAttribute('readonly', 'true');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        if (!ok) throw new Error('copy_failed');
+      }
+
+      setToast({
+        show: true,
+        message: '邀请码已复制到剪贴板',
+        type: 'success',
+      });
+    } catch (err: any) {
+      console.error('Copy referral code failed:', err);
+      setToast({
+        show: true,
+        message: '复制失败，请手动选择并复制',
+        type: 'error',
+      });
+    }
   };
 
   // 退出登录
@@ -246,6 +281,45 @@ export default function ProfilePage() {
               </div>
             </Card>
           </div>
+        )}
+
+        {stats?.membership && (
+          <Card className="bg-gradient-to-r from-slate-900 to-slate-800 text-white">
+            <div className="p-4 space-y-3">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-white/70">
+                    会员等级
+                  </p>
+                  <h3 className="text-2xl font-bold">{stats.membership.label}</h3>
+                  <p className="text-sm text-white/80">{stats.membership.description}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-white/70">当前折扣</p>
+                  <p className="text-2xl font-semibold">
+                    {stats.membership.discountRate}% OFF
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-baseline justify-between">
+                <p className="text-sm text-white/60">累计消费</p>
+                <p className="text-xl font-semibold">{formatCurrency(stats.totalSpent)}</p>
+              </div>
+              <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-400 transition-all duration-200"
+                  style={{ width: `${Math.min(100, Math.max(0, stats.membership.progress * 100))}%` }}
+                />
+              </div>
+              <p className="text-xs text-white/70">
+                {stats.membership.nextTier
+                  ? `再消费 ${formatCurrency(
+                      Math.max(0, stats.membership.nextTier.minSpend - stats.totalSpent)
+                    )} 可升级为 ${stats.membership.nextTier.label}`
+                  : '已达到最高会员等级，继续保持高光！'}
+              </p>
+            </div>
+          </Card>
         )}
 
         {/* 邀请好友 */}

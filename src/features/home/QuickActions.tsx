@@ -93,7 +93,7 @@ export default function QuickActions() {
       ),
       title: '兑换优惠券',
       description: '使用积分兑换折扣券',
-      onClick: () => router.push('/vouchers'),
+      onClick: () => router.push('/vouchers/exchange'),
       color: 'orange',
     },
   ];

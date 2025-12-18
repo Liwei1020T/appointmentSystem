@@ -380,13 +380,21 @@ Order review records (user feedback after completion).
 | `order_id`      | `uuid`       | FK → orders.id           | Related order                            |
 | `user_id`       | `uuid`       | FK → users.id            | Reviewer                                 |
 | `rating`        | `integer`    | NOT NULL CHECK (1–5)     | Overall rating                           |
+| `service_rating`| `integer`    | CHECK (1–5)              | Service rating (optional)                |
+| `quality_rating`| `integer`    | CHECK (1–5)              | Quality rating (optional)                |
+| `speed_rating`  | `integer`    | CHECK (1–5)              | Speed rating (optional)                  |
 | `comment`       | `text`       |                          | Review text                              |
 | `photos`        | `text[]`     |                          | Optional review photos                   |
+| `tags`          | `text[]`     |                          | Optional tags                            |
+| `is_anonymous`  | `boolean`    | DEFAULT false            | Anonymous review flag                    |
+| `admin_reply`   | `text`       |                          | Optional admin reply                     |
+| `admin_reply_at`| `timestamptz`|                          | Admin reply timestamp                    |
+| `admin_reply_by`| `uuid`       | FK → users.id            | Admin who replied                        |
 | `created_at`    | `timestamptz`| DEFAULT now()            | Created timestamp                        |
 | `updated_at`    | `timestamptz`| DEFAULT now()            | Updated timestamp                        |
 
 **Notes:**
-- UI currently relies on local placeholder APIs (`/api/reviews/*`) to avoid 404; replace with real data source when available.
+- Review APIs are implemented in Next.js App Router (`/api/reviews/*`) and persist via Prisma; future Supabase/Edge migration should keep payload shape compatible.
 
 ---
 

@@ -35,15 +35,18 @@ export async function POST(
       return errorResponse('缺少收据URL', 400);
     }
 
-    // 更新支付记录，添加收据并更新状态为待审核
+    // 更新支付记录：合并 metadata，写入收据，并进入“待审核”状态
     const updatedPayment = await prisma.payment.update({
       where: { id: paymentId },
       data: {
         metadata: {
+          ...(payment.metadata as any),
+          // 兼容旧字段：部分管理端页面仍读取 proofUrl
+          proofUrl: (payment.metadata as any)?.proofUrl || receiptUrl,
           receiptUrl,
           uploadedAt: new Date().toISOString(),
         },
-        status: 'pending', // 等待管理员审核
+        status: 'pending_verification', // 等待管理员审核
       },
     });
 

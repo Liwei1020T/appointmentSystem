@@ -1,3 +1,5 @@
+import { MembershipTierId } from '@/lib/membership';
+
 /**
  * Profile Service
  * 用户个人资料管理
@@ -9,6 +11,7 @@ export interface UserProfile {
   fullName: string;
   phone?: string;
   points: number;
+  tier?: MembershipTierId;
   totalSpent: number;
   createdAt: Date;
   role?: string;
@@ -36,7 +39,9 @@ export async function getUserProfile(userId?: string): Promise<{ profile?: UserP
       const errorData = await response.json();
       return { error: new Error(errorData.error || 'Failed to fetch profile') };
     }
-    const profile = await response.json();
+    const payload = await response.json();
+    // API routes use { success, data } wrappers; keep backward compatibility if unwrapped.
+    const profile = payload?.data ?? payload;
     return { profile };
   } catch (error: any) {
     console.error('Failed to fetch user profile:', error);
@@ -104,12 +109,29 @@ export async function updateProfile(data: UpdateProfileParams): Promise<{ succes
 /**
  * 用户统计信息
  */
+export interface MembershipTierInfo {
+  tier: MembershipTierId;
+  label: string;
+  description: string;
+  discountRate: number;
+  progress: number;
+  nextTier?: {
+    id: MembershipTierId;
+    label: string;
+    minSpend: number;
+  } | null;
+}
+
 export interface UserStats {
   totalOrders: number;
+  pendingOrders: number;
+  completedOrders: number;
+  activePackages: number;
+  remainingPackageCount: number;
+  availableVouchers: number;
   totalPoints: number;
   totalSpent: number;
-  activeVouchers: number;
-  referralCount: number;
+  membership: MembershipTierInfo;
 }
 
 /**
@@ -117,26 +139,52 @@ export interface UserStats {
  */
 export async function getUserStats(): Promise<UserStats> {
   try {
-    const response = await fetch('/api/profile/stats');
+    const response = await fetch('/api/user/stats');
     if (!response.ok) {
       throw new Error('Failed to fetch user stats');
     }
-    const data = await response.json();
+    const payload = await response.json();
+    // API routes use { success, data } wrappers; keep backward compatibility if unwrapped.
+    const data = payload?.data ?? payload;
+    const membership = data?.membership || {
+      tier: 'standard' as MembershipTierId,
+      label: '普通会员',
+      description: '尚未达到会员门槛，继续消费即可升级',
+      discountRate: 0,
+      progress: 0,
+      nextTier: null,
+    };
+
     return {
-      totalOrders: data.totalOrders || 0,
-      totalPoints: data.totalPoints || 0,
-      totalSpent: data.totalSpent || 0,
-      activeVouchers: data.activeVouchers || 0,
-      referralCount: data.referralCount || 0,
+      totalOrders: data?.totalOrders || 0,
+      pendingOrders: data?.pendingOrders || 0,
+      completedOrders: data?.completedOrders || 0,
+      activePackages: data?.activePackages || 0,
+      remainingPackageCount: data?.remainingPackageCount || 0,
+      availableVouchers: data?.availableVouchers || 0,
+      totalPoints: data?.points || 0,
+      totalSpent: data?.totalSpent || 0,
+      membership,
     };
   } catch (error) {
     console.error('Failed to fetch user stats:', error);
     return {
       totalOrders: 0,
+      pendingOrders: 0,
+      completedOrders: 0,
+      activePackages: 0,
+      remainingPackageCount: 0,
+      availableVouchers: 0,
       totalPoints: 0,
       totalSpent: 0,
-      activeVouchers: 0,
-      referralCount: 0,
+      membership: {
+        tier: 'standard',
+        label: '普通会员',
+        description: '尚未达到会员门槛，继续消费即可升级',
+        discountRate: 0,
+        progress: 0,
+        nextTier: null,
+      },
     };
   }
 }
@@ -154,8 +202,9 @@ export async function generateReferralCode(): Promise<{ code: string; error: str
       const errorData = await response.json();
       return { code: '', error: errorData.error || 'Failed to generate referral code' };
     }
-    const data = await response.json();
-    return { code: data.code || '', error: null };
+    const payload = await response.json();
+    const code = payload?.data?.code ?? payload?.code ?? '';
+    return { code, error: null };
   } catch (error: any) {
     console.error('Failed to generate referral code:', error);
     return { code: '', error: error.message || 'Network error' };

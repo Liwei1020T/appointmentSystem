@@ -82,12 +82,12 @@ export default function PackageSummary() {
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-slate-900">我的套餐</h2>
-          <button
-            onClick={() => router.push('/packages')}
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-          >
-            查看全部
-          </button>
+            <button
+              onClick={() => router.push('/profile/packages')}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              查看全部
+            </button>
         </div>
 
         {/* 总剩余次数 */}

@@ -8,14 +8,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getPackageById, purchasePackage, Package } from '@/services/package.service';
-import { createPayment, simulatePayment, PaymentMethod } from '@/services/paymentService';
+import { buyPackage, getPackageById, Package } from '@/services/package.service';
+import { uploadPaymentReceipt, PaymentMethod } from '@/services/paymentService';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 import Spinner from '@/components/Spinner';
 import Toast from '@/components/Toast';
-import Modal from '@/components/Modal';
 import { useSession } from 'next-auth/react';
+import PaymentReceiptUploader from '@/components/PaymentReceiptUploader';
+import TngQRCodeDisplay from '@/components/TngQRCodeDisplay';
 
 export default function PackagePurchaseFlow() {
   const router = useRouter();
@@ -31,6 +32,7 @@ export default function PackagePurchaseFlow() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('tng');
   const [processing, setProcessing] = useState<boolean>(false);
   const [paymentId, setPaymentId] = useState<string>('');
+  const [receiptUploaded, setReceiptUploaded] = useState(false);
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
     show: false,
     message: '',
@@ -90,32 +92,34 @@ export default function PackagePurchaseFlow() {
     if (!pkg) return;
 
     setProcessing(true);
+    setReceiptUploaded(false);
     setStep(3);
 
     try {
-      // 1. 创建支付记录
-      const { payment, error: paymentError } = await createPayment(Number(pkg.price), paymentMethod);
+      /**
+       * 创建“套餐支付”记录（不直接创建 user_packages）
+       *
+       * 说明：
+       * - TNG：用户扫码后上传收据 → 支付状态变为 pending_verification → 管理员审核通过 → 创建 user_packages
+       * - 现金：创建 cash pending → 管理员确认收款 → 创建 user_packages
+       */
+      const data = await buyPackage(pkg.id, paymentMethod);
+      const createdPaymentId = data?.paymentId as string | undefined;
 
-      if (paymentError || !payment) {
-        throw new Error(paymentError || '创建支付失败');
+      if (!createdPaymentId) {
+        throw new Error('创建支付失败（缺少 paymentId）');
       }
 
-      setPaymentId(payment.id);
+      setPaymentId(createdPaymentId);
 
-      // 2. 模拟支付处理（实际应跳转到支付网关）
+      // 现金支付无需上传收据，直接进入完成页等待管理员确认
       if (paymentMethod === 'cash') {
-        // 到店支付直接创建套餐
-        await completePurchase();
-      } else {
-        // 模拟网关支付
-        const { success } = await simulatePayment(payment.id, Number(pkg.price));
-
-        if (!success) {
-          throw new Error('支付失败');
-        }
-
-        // 3. 支付成功后创建用户套餐
-        await completePurchase();
+        setStep(4);
+        setToast({
+          show: true,
+          message: '已提交现金支付申请，等待管理员确认后生效',
+          type: 'success',
+        });
       }
     } catch (err: any) {
       setToast({
@@ -125,32 +129,45 @@ export default function PackagePurchaseFlow() {
       });
       setStep(2);
       setProcessing(false);
-    }
-  };
-
-  // 完成购买
-  const completePurchase = async () => {
-    if (!pkg) return;
-
-    const { success, error } = await purchasePackage(pkg.id, paymentMethod);
-
-    if (error || !success) {
-      throw new Error(error || '创建套餐失败');
+      return;
     }
 
     setProcessing(false);
-    setStep(4);
+  };
 
-    setToast({
-      show: true,
-      message: '购买成功！',
-      type: 'success',
-    });
+  /**
+   * 收据上传成功后的回调
+   * - 更新 payments 记录（receiptUrl + pending_verification）
+   * - 显示等待审核提示，并跳转到“我的套餐”
+   */
+  const handleReceiptUpload = async (receiptUrl: string) => {
+    if (!paymentId) return;
 
-    // 3秒后跳转到我的套餐页面
-    setTimeout(() => {
-      router.push('/profile/packages');
-    }, 3000);
+    setProcessing(true);
+    try {
+      const { error } = await uploadPaymentReceipt(paymentId, receiptUrl);
+      if (error) throw new Error(error);
+
+      setReceiptUploaded(true);
+      setStep(4);
+      setToast({
+        show: true,
+        message: '收据已提交，等待管理员审核通过后即可在“我的套餐”查看',
+        type: 'success',
+      });
+
+      setTimeout(() => {
+        router.push('/profile/packages');
+      }, 2000);
+    } catch (err: any) {
+      setToast({
+        show: true,
+        message: err.message || '提交收据失败',
+        type: 'error',
+      });
+    } finally {
+      setProcessing(false);
+    }
   };
 
   // 加载状态
@@ -292,16 +309,61 @@ export default function PackagePurchaseFlow() {
           </Card>
         )}
 
-        {/* Step 3: 支付处理中 */}
+        {/* Step 3: 支付 / 上传收据 */}
         {step === 3 && (
-          <Card className="p-12 text-center">
-            <Spinner size="lg" className="mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">正在处理支付...</h3>
-            <p className="text-slate-600">请稍候，不要关闭此页面</p>
-          </Card>
+          <div className="space-y-4">
+            {processing ? (
+              <Card className="p-12 text-center">
+                <Spinner size="lg" className="mb-4" />
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  正在创建支付记录...
+                </h3>
+                <p className="text-slate-600">请稍候，不要关闭此页面</p>
+              </Card>
+            ) : paymentMethod === 'cash' ? (
+              <Card className="p-8">
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">现金支付</h3>
+                <p className="text-slate-600">
+                  已提交现金支付申请，请到店支付现金。管理员确认收款后，套餐将自动生效并显示在“我的套餐”。
+                </p>
+                {paymentId ? (
+                  <p className="mt-3 text-sm text-slate-500">
+                    支付单号：{paymentId.slice(0, 8)}
+                  </p>
+                ) : null}
+              </Card>
+            ) : (
+              <>
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">TNG 线上支付</h3>
+                  <p className="text-slate-600">
+                    扫码支付后请上传收据，管理员审核通过后套餐才会生效并显示在“我的套餐”。
+                  </p>
+                </Card>
+
+                <TngQRCodeDisplay amount={Number(pkg.price)} orderId={paymentId || pkg.id} />
+
+                {paymentId ? (
+                  <PaymentReceiptUploader
+                    paymentId={paymentId}
+                    orderId={paymentId}
+                    existingReceiptUrl={undefined}
+                    onUploadSuccess={handleReceiptUpload}
+                    onUploadError={(err) => {
+                      console.error('Upload receipt error:', err);
+                    }}
+                  />
+                ) : (
+                  <Card className="p-6 border-red-200 bg-red-50">
+                    <p className="text-sm text-red-700">创建支付记录失败，请返回重试</p>
+                  </Card>
+                )}
+              </>
+            )}
+          </div>
         )}
 
-        {/* Step 4: 购买成功 */}
+        {/* Step 4: 已提交（等待管理员确认/审核） */}
         {step === 4 && (
           <Card className="p-12 text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -313,11 +375,17 @@ export default function PackagePurchaseFlow() {
                 />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">购买成功！</h3>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">
+              {paymentMethod === 'cash' ? '已提交现金支付申请' : '已提交支付收据'}
+            </h3>
             <p className="text-slate-600 mb-6">
-              套餐已添加到您的账户，现在可以开始使用了
+              {paymentMethod === 'cash'
+                ? '管理员确认收款后，套餐将自动生效并显示在“我的套餐”。'
+                : receiptUploaded
+                ? '管理员审核通过后，套餐将自动生效并显示在“我的套餐”。'
+                : '请先上传收据以提交审核。'}
             </p>
-            <p className="text-sm text-slate-500">3秒后自动跳转到我的套餐...</p>
+            <Button onClick={() => router.push('/profile/packages')}>查看我的套餐</Button>
           </Card>
         )}
 

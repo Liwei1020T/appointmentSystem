@@ -69,15 +69,6 @@ export interface SubmitReviewParams {
   is_anonymous?: boolean;
 }
 
-// Lazy-load Prisma only on the server to avoid bundling it in the browser.
-async function getPrisma() {
-  if (typeof window !== 'undefined') {
-    throw new Error('Prisma is not available in the browser');
-  }
-  const { prisma } = await import('@/lib/prisma');
-  return prisma;
-}
-
 // Normalize any review payload (camelCase or snake_case) into a consistent shape.
 function normalizeReview(r: any): OrderReview {
   const rating = Number(r?.rating ?? 0);
@@ -85,7 +76,7 @@ function normalizeReview(r: any): OrderReview {
   const qualityRating = Number(r?.quality_rating ?? r?.qualityRating ?? 0);
   const speedRating = Number(r?.speed_rating ?? r?.speedRating ?? 0);
   const tags = r?.tags || [];
-  const imageUrls = r?.image_urls || r?.imageUrls || [];
+  const imageUrls = r?.images || r?.image_urls || r?.imageUrls || [];
   const createdAtValue = r?.created_at || r?.createdAt || new Date();
   const updatedAtValue = r?.updated_at || r?.updatedAt || new Date();
 
@@ -96,16 +87,16 @@ function normalizeReview(r: any): OrderReview {
     userId: r?.user_id || r?.userId || '',
     user_id: r?.user_id || r?.userId,
     rating,
-    serviceRating,
-    service_rating: serviceRating,
-    qualityRating,
-    quality_rating: qualityRating,
-    speedRating,
-    speed_rating: speedRating,
+    serviceRating: serviceRating || rating,
+    service_rating: serviceRating || rating,
+    qualityRating: qualityRating || rating,
+    quality_rating: qualityRating || rating,
+    speedRating: speedRating || rating,
+    speed_rating: speedRating || rating,
     comment: r?.comment || '',
-    tags,
-    imageUrls,
-    image_urls: imageUrls,
+    tags: Array.isArray(tags) ? tags : [],
+    imageUrls: Array.isArray(imageUrls) ? imageUrls : [],
+    image_urls: Array.isArray(imageUrls) ? imageUrls : [],
     isAnonymous: r?.is_anonymous ?? r?.isAnonymous ?? false,
     is_anonymous: r?.is_anonymous ?? r?.isAnonymous ?? false,
     adminReply: r?.admin_reply ?? r?.adminReply,
@@ -126,15 +117,16 @@ function normalizeReview(r: any): OrderReview {
  */
 export async function getUserReviews(userId: string): Promise<OrderReview[]> {
   if (!isValidUUID(userId)) return [];
-
-  const prisma = await getPrisma();
-  const reviews = await prisma.$queryRaw<any[]>`
-    SELECT * FROM order_reviews 
-    WHERE user_id = ${userId}
-    ORDER BY created_at DESC
-  `;
-
-  return reviews.map(normalizeReview);
+  try {
+    const response = await fetch('/api/reviews/user');
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return [];
+    const payload = data?.data?.reviews ?? data?.data ?? data?.reviews ?? [];
+    if (!Array.isArray(payload)) return [];
+    return payload.map(normalizeReview);
+  } catch (_error) {
+    return [];
+  }
 }
 
 /**
@@ -143,31 +135,18 @@ export async function getUserReviews(userId: string): Promise<OrderReview[]> {
 export async function getOrderReview(orderId: string): Promise<OrderReview | null> {
   if (!isValidUUID(orderId)) return null;
 
-  // Client side: fetch API to avoid Prisma in browser
-  if (typeof window !== 'undefined') {
-    try {
-      const response = await fetch(`/api/reviews/order/${orderId}`);
-      if (!response.ok) return null;
-      const data = await response.json();
-      const r = data.review || data.data || null;
-      if (!r) return null;
-      return normalizeReview(r);
-    } catch (_err) {
-      return null;
-    }
+  try {
+    const response = await fetch(`/api/reviews/order/${orderId}`);
+    if (!response.ok) return null;
+    const data = await response.json().catch(() => ({}));
+    // API returns { success, data: { review: Review | null } }
+    const payload = data?.data ?? data;
+    const review = payload?.review ?? null;
+    if (!review) return null;
+    return normalizeReview(review);
+  } catch (_err) {
+    return null;
   }
-
-  // Server side (only)
-  const prisma = await getPrisma();
-  const reviews = await prisma.$queryRaw<any[]>`
-    SELECT * FROM order_reviews 
-    WHERE order_id = ${orderId}
-    LIMIT 1
-  `;
-  
-  if (reviews.length === 0) return null;
-
-  return normalizeReview(reviews[0]);
 }
 
 /**
@@ -176,25 +155,18 @@ export async function getOrderReview(orderId: string): Promise<OrderReview | nul
 export async function canReviewOrder(orderId: string, userId: string): Promise<boolean> {
   if (!isValidUUID(orderId) || !isValidUUID(userId)) return false;
 
-  // Client side: best-effort check via API/no-op
-  if (typeof window !== 'undefined') {
-    const existing = await getOrderReview(orderId);
-    return !existing;
-  }
-
-  const prisma = await getPrisma();
-  const order = await prisma.order.findFirst({
-    where: {
-      id: orderId,
-      userId: userId,
-      status: 'completed',
-    },
-  });
-  
-  if (!order) return false;
-  
   const existingReview = await getOrderReview(orderId);
-  return !existingReview;
+  if (existingReview) return false;
+
+  try {
+    const orderRes = await fetch(`/api/orders/${orderId}`);
+    const orderJson = await orderRes.json().catch(() => ({}));
+    if (!orderRes.ok) return false;
+    const order = orderJson?.data ?? orderJson;
+    return order?.status === 'completed';
+  } catch (_error) {
+    return false;
+  }
 }
 
 /**
@@ -202,55 +174,24 @@ export async function canReviewOrder(orderId: string, userId: string): Promise<b
  */
 export async function submitReview(params: SubmitReviewParams, userId?: string): Promise<{ reviewId?: string; review?: OrderReview; error?: string }> {
   try {
-    // Try API call first for client-side
-    if (typeof window !== 'undefined') {
-      const response = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
-      });
-      
-      if (!response.ok) {
-        const data = await response.json();
-        return { error: data.error || 'Failed to submit review' };
-      }
-      
-      const data = await response.json();
-      const reviewPayload = data?.data || data?.review || data;
-      const normalized = normalizeReview({
-        ...reviewPayload,
-        order_id: params.order_id || params.orderId || reviewPayload?.order_id,
-        user_id: reviewPayload?.user_id || reviewPayload?.userId || userId,
-      });
-      return { reviewId: normalized.id, review: normalized };
+    const response = await fetch('/api/reviews', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return { error: data.error || 'Failed to submit review' };
     }
-    
-    // Server-side execution
-    const orderId = params.orderId || params.order_id;
-    const rating = params.rating;
-    const serviceRating = params.serviceRating || params.service_rating || 0;
-    const qualityRating = params.qualityRating || params.quality_rating || 0;
-    const speedRating = params.speedRating || params.speed_rating || 0;
-    const tags = params.tags || [];
-    const imageUrls = params.imageUrls || params.image_urls || params.images || [];
-    const isAnonymous = params.isAnonymous ?? params.is_anonymous ?? false;
-    
-    const prisma = await getPrisma();
-    const review = await prisma.$queryRaw<any[]>`
-      INSERT INTO order_reviews (
-        order_id, user_id, rating, service_rating, quality_rating, speed_rating,
-        comment, tags, image_urls, is_anonymous
-      )
-      VALUES (
-        ${orderId}, ${userId}, ${rating}, ${serviceRating},
-        ${qualityRating}, ${speedRating}, ${params.comment},
-        ${JSON.stringify(tags)}, ${JSON.stringify(imageUrls)}, ${isAnonymous}
-      )
-      RETURNING *
-    `;
-    
-    const mappedReview = normalizeReview(review[0]);
-    return { reviewId: mappedReview.id, review: mappedReview };
+
+    const reviewPayload = data?.data ?? data?.review ?? data;
+    const normalized = normalizeReview({
+      ...reviewPayload,
+      order_id: params.order_id || params.orderId || reviewPayload?.order_id,
+      user_id: reviewPayload?.user_id || reviewPayload?.userId || userId,
+    });
+    return { reviewId: normalized.id, review: normalized };
   } catch (error) {
     console.error('Failed to submit review:', error);
     return { error: 'Failed to submit review' };

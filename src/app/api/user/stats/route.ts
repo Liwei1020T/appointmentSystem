@@ -7,6 +7,11 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
+import {
+  getTierForSpend,
+  getTierProgress,
+  getNextTierAfterSpend,
+} from '@/lib/membership';
 
 export async function GET(request: NextRequest) {
   try {
@@ -70,6 +75,28 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    const totalSpentResult = await prisma.order.aggregate({
+      where: { userId: user.id },
+      _sum: { price: true },
+    });
+    const totalSpent = Number(totalSpentResult._sum.price ?? 0);
+    const membershipTier = getTierForSpend(totalSpent);
+    const nextTier = getNextTierAfterSpend(totalSpent);
+    const membership = {
+      tier: membershipTier.id,
+      label: membershipTier.label,
+      description: membershipTier.description,
+      discountRate: membershipTier.discountRate,
+      progress: getTierProgress(totalSpent),
+      nextTier: nextTier
+        ? {
+            id: nextTier.id,
+            label: nextTier.label,
+            minSpend: nextTier.minSpend,
+          }
+        : null,
+    };
+
     const stats = {
       totalOrders,
       pendingOrders,
@@ -78,6 +105,8 @@ export async function GET(request: NextRequest) {
       remainingPackageCount: totalPackageCount._sum.remaining || 0,
       availableVouchers,
       points: userProfile?.points || 0,
+      totalSpent,
+      membership,
     };
 
     return successResponse(stats);

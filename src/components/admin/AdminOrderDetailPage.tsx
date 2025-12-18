@@ -39,8 +39,45 @@ export default function AdminOrderDetailPage() {
   const [adminNotes, setAdminNotes] = useState('');
   const [completing, setCompleting] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
-  // 支持从 payment 或 payments 数组中获取支付信息
-  const payment = order?.payment || (order as any)?.payments?.[0];
+  /**
+   * 支付信息来源兼容：
+   * - 新：`order.payment`（单条）
+   * - 旧：`order.payments`（多条，需选取最相关的一条）
+   *
+   * 说明：
+   * - 之前直接取 `payments[0]` 会导致展示到旧记录/非当前记录，进而出现“支付方式 -”等信息缺失。
+   */
+  const payment = (() => {
+    const direct = (order as any)?.payment;
+    if (direct) return direct;
+
+    const payments = ((order as any)?.payments ?? []) as any[];
+    if (!Array.isArray(payments) || payments.length === 0) return null;
+
+    // 优先：排除 failed；按 createdAt/created_at/updatedAt/updated_at 倒序选择最新
+    const ranked = payments
+      .filter((p) => p && p.status !== 'failed')
+      .sort((a, b) => {
+        const aTime =
+          new Date(a.updatedAt ?? a.updated_at ?? a.createdAt ?? a.created_at ?? 0).getTime() || 0;
+        const bTime =
+          new Date(b.updatedAt ?? b.updated_at ?? b.createdAt ?? b.created_at ?? 0).getTime() || 0;
+        return bTime - aTime;
+      });
+
+    return ranked[0] ?? payments[0];
+  })();
+
+  /**
+   * Normalize payment “confirmed/paid” state across:
+   * - New prisma: payments.status = 'success' (confirmed)
+   * - Legacy/other flows: payment_status/status = 'completed'
+   */
+  const isPaymentConfirmed = (() => {
+    if (!payment) return false;
+    const candidates = [payment.status, payment.payment_status].filter(Boolean).map((s: string) => String(s).toLowerCase());
+    return candidates.some((s: string) => ['success', 'completed', 'paid'].includes(s));
+  })();
 
   // 调试日志移除
   useEffect(() => {}, [order, payment]);
@@ -213,7 +250,10 @@ export default function AdminOrderDetailPage() {
               </span>
 
               {/* 确认收款按钮 - 支持现金/TNG/其他待确认支付 */}
-              {payment && ['pending', 'pending_verification'].includes(payment.status) && (
+              {payment &&
+                ['pending', 'pending_verification'].includes(payment.status) &&
+                // TNG 有收据时需要走“收据审核”流程，避免重复展示两个确认按钮
+                !(payment.provider === 'tng' && !!payment.receipt_url) && (
                 <button
                   onClick={async () => {
                     setUpdating(true);
@@ -279,23 +319,14 @@ export default function AdminOrderDetailPage() {
                 </span>
               )}
               
-              {/* 完成订单按钮 (仅当状态为 in_progress 时显示) */}
-              {order.status === 'in_progress' && (
+              {/* “更多状态”改为“已完成”快捷按钮：直接走完成订单流程（库存/利润/积分） */}
+              {order.status !== 'completed' && order.status !== 'cancelled' && (
                 <button
                   onClick={() => setShowCompleteModal(true)}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2"
                 >
                   <span>✓</span>
-                  完成订单
-                </button>
-              )}
-              
-              {nextStatuses.length > 0 && (
-                <button
-                  onClick={() => setShowStatusModal(true)}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  更多状态
+                  已完成
                 </button>
               )}
             </div>
@@ -384,7 +415,7 @@ export default function AdminOrderDetailPage() {
                     <span className="font-medium text-gray-900">
                       {payment.provider === 'cash' ? '💵 现金支付' : 
                        payment.provider === 'tng' ? '💳 TNG' : 
-                       payment.payment_method || payment.method || '-'}
+                       payment.payment_method || payment.method || payment.provider || '-'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -392,15 +423,15 @@ export default function AdminOrderDetailPage() {
                     <div className="flex items-center gap-2">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          payment.payment_status === 'completed' || payment.status === 'completed'
+                          isPaymentConfirmed
                             ? 'bg-green-100 text-green-700'
                             : 'bg-yellow-100 text-yellow-700'
                         }`}
                       >
-                        {payment.payment_status === 'completed' || payment.status === 'completed' ? '已支付' : '待确认'}
+                        {isPaymentConfirmed ? '已支付' : '待确认'}
                       </span>
                       {/* 现金支付待确认时显示提示 */}
-                      {payment.provider === 'cash' && payment.status === 'pending' && (
+                      {payment.provider === 'cash' && !isPaymentConfirmed && payment.status === 'pending' && (
                         <span className="text-xs text-yellow-600">
                           点击"确认收款并开始穿线"确认
                         </span>

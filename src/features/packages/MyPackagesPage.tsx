@@ -50,11 +50,27 @@ export default function MyPackagesPage() {
     loadPackages();
   }, [user]);
 
+  /**
+   * 获取套餐过期时间（兼容历史字段命名）。
+   *
+   * Prisma 迁移后字段为 `expiry`（DateTime），旧代码/旧接口可能使用 `expires_at/expiry_date` 等字段。
+   */
+  const getExpiryValue = (pkg: UserPackageWithPackage): string | Date | null => {
+    return (
+      (pkg as any).expiry ??
+      (pkg as any).expiry_date ??
+      (pkg as any).expires_at ??
+      (pkg as any).expiresAt ??
+      null
+    );
+  };
+
   // 检查套餐是否有效
   const isPackageValid = (pkg: UserPackageWithPackage): boolean => {
     if (pkg.remaining <= 0) return false;
-    if (!pkg.expires_at) return true;
-    return new Date(pkg.expires_at) > new Date();
+    const expiry = getExpiryValue(pkg);
+    if (!expiry) return true;
+    return new Date(expiry).getTime() > Date.now();
   };
 
   // 过滤套餐
@@ -140,16 +156,17 @@ export default function MyPackagesPage() {
           </Card>
         )}
 
-        {/* 套餐列表 */}
-        {!loading && !error && displayPackages.length > 0 && (
-          <div className="space-y-3">
-            {displayPackages.map((pkg) => {
-              const isValid = isPackageValid(pkg);
-              const daysRemaining = pkg.expires_at ? calculateDaysRemaining(pkg.expires_at) : null;
-              const packageInfo = pkg.package;
-              const packageTimes = packageInfo?.times ?? 0;
-              const usedTimes = Math.max(packageTimes - pkg.remaining, 0);
-              const usagePercentage = packageTimes > 0 ? (usedTimes / packageTimes) * 100 : 0;
+	        {/* 套餐列表 */}
+	        {!loading && !error && displayPackages.length > 0 && (
+	          <div className="space-y-3">
+	            {displayPackages.map((pkg) => {
+	              const isValid = isPackageValid(pkg);
+	              const expiry = getExpiryValue(pkg);
+	              const daysRemaining = expiry ? calculateDaysRemaining(expiry) : null;
+	              const packageInfo = pkg.package;
+	              const packageTimes = packageInfo?.times ?? 0;
+	              const usedTimes = Math.max(packageTimes - pkg.remaining, 0);
+	              const usagePercentage = packageTimes > 0 ? (usedTimes / packageTimes) * 100 : 0;
 
               return (
                 <Card
@@ -200,22 +217,22 @@ export default function MyPackagesPage() {
                         {pkg.remaining} 次
                       </p>
                     </div>
-                    <div>
-                      <p className="text-slate-600">有效期</p>
-                      {pkg.expires_at ? (
-                        <div>
-                          <p className="font-semibold text-slate-900">
-                            {daysRemaining !== null && daysRemaining > 0
-                              ? `剩余 ${daysRemaining} 天`
-                              : '已过期'}
-                          </p>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            {new Date(pkg.expires_at).toLocaleDateString('zh-CN')}
-                          </p>
-                        </div>
-                      ) : (
-                        <p className="font-semibold text-green-600">永久有效</p>
-                      )}
+	                    <div>
+	                      <p className="text-slate-600">有效期</p>
+	                      {expiry ? (
+	                        <div>
+	                          <p className="font-semibold text-slate-900">
+	                            {daysRemaining !== null && daysRemaining > 0
+	                              ? `剩余 ${daysRemaining} 天`
+	                              : '已过期'}
+	                          </p>
+	                          <p className="text-xs text-slate-500 mt-0.5">
+	                            {new Date(expiry).toLocaleDateString('zh-CN')}
+	                          </p>
+	                        </div>
+	                      ) : (
+	                        <p className="font-semibold text-green-600">永久有效</p>
+	                      )}
                     </div>
                   </div>
 

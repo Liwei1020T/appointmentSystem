@@ -7,7 +7,6 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
-
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -44,6 +43,7 @@ export async function POST(
       return errorResponse('该支付已确认，无需重复操作');
     }
 
+    const targetUserId = payment.order?.userId || payment.userId;
     await prisma.$transaction(async (tx) => {
       // 1. 更新支付状态
       await tx.payment.update({
@@ -52,8 +52,10 @@ export async function POST(
           status: 'success',
           transactionId: transactionId || null,
           metadata: {
+            ...(payment.metadata as any),
             verifiedAt: new Date().toISOString(),
             verifiedBy: admin.id,
+            adminNotes: notes || null,
           },
         },
       });
@@ -67,23 +69,30 @@ export async function POST(
       }
 
       // 3. 如果是套餐购买，激活套餐
-      const paymentMeta = payment.metadata as any;
-      if (paymentMeta?.type === 'package' && payment.packageId) {
-        // 查找是否已有 UserPackage 记录
-        const existingUserPackage = payment.order ? await tx.userPackage.findFirst({
+      // 说明：
+      // - 以 payment.packageId 作为“套餐购买”的可信标记（历史数据可能缺失 metadata.type）
+      // - 为避免误判订单支付：要求 orderId 为空，或明确标记为 package
+      const paymentMeta = (payment.metadata as any) || {};
+      const packageId = payment.packageId;
+      const isPackagePurchase =
+        !!packageId && (!payment.orderId || paymentMeta?.type === 'package');
+
+      if (isPackagePurchase) {
+        // 查找是否已有 UserPackage 记录（避免重复点击导致重复创建）
+        const existingUserPackage = await tx.userPackage.findFirst({
           where: {
-            userId: payment.order.userId,
-            packageId: payment.packageId,
+            userId: targetUserId,
+            packageId,
             createdAt: {
               gte: new Date(Date.now() - 5 * 60 * 1000), // 5分钟内
             },
           },
-        }) : null;
+        });
 
-        if (!existingUserPackage && payment.order) {
-          // 获取套餐信息
+        if (!existingUserPackage) {
+          // 获取套餐信息并创建用户套餐记录
           const pkg = await tx.package.findUnique({
-            where: { id: payment.packageId },
+            where: { id: packageId },
           });
 
           if (pkg) {
@@ -92,7 +101,7 @@ export async function POST(
 
             await tx.userPackage.create({
               data: {
-                userId: payment.order.userId,
+                userId: targetUserId,
                 packageId: pkg.id,
                 remaining: pkg.times,
                 originalTimes: pkg.times,
@@ -113,6 +122,17 @@ export async function POST(
             message: `您的支付已确认，订单 #${payment.orderId?.slice(0, 8)} 已生效`,
             type: 'payment',
             actionUrl: `/orders/${payment.orderId}`,
+            read: false,
+          },
+        });
+      } else if (packageId) {
+        await tx.notification.create({
+          data: {
+            userId: targetUserId,
+            title: '支付已确认',
+            message: '您的套餐支付已确认，可在“我的套餐”查看',
+            type: 'payment',
+            actionUrl: '/profile/packages',
             read: false,
           },
         });

@@ -130,7 +130,8 @@ export default function AdminReportsPage() {
       if (!data) throw new Error('No data to export');
 
       // Download CSV
-      const blob = new Blob([data], { type: 'text/csv' });
+      // 说明：exportReportData 返回的是 Blob（服务层已调用 response.blob()）
+      const blob = data instanceof Blob ? data : new Blob([data as any], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

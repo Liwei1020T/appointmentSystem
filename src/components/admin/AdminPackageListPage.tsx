@@ -167,7 +167,8 @@ export default function AdminPackageListPage() {
       name: pkg.name,
       times: pkg.times,
       price: pkg.price,
-      validity_days: pkg.validity_days,
+      // 兼容 Prisma 字段 validityDays（camelCase）与旧字段 validity_days（snake_case）
+      validity_days: (pkg as any).validity_days ?? (pkg as any).validityDays ?? 0,
       active: pkg.active,
       description: pkg.description || '',
     });
@@ -374,10 +375,12 @@ export default function AdminPackageListPage() {
                           <span className="text-gray-600">包含次数</span>
                           <span className="font-semibold text-gray-900">{pkg.times} 次</span>
                         </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">有效期</span>
-                          <span className="font-semibold text-gray-900">{pkg.validity_days} 天</span>
-                        </div>
+	                      <div className="flex justify-between text-sm">
+	                        <span className="text-gray-600">有效期</span>
+	                        <span className="font-semibold text-gray-900">
+	                          {(pkg as any).validity_days ?? (pkg as any).validityDays ?? 0} 天
+	                        </span>
+	                      </div>
                         <div className="flex justify-between text-sm border-t border-gray-200 pt-2">
                           <span className="text-gray-600">价格</span>
                           <span className="font-bold text-purple-600 text-lg">

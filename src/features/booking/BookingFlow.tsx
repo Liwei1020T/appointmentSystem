@@ -19,6 +19,7 @@ import { StringInventory, UserVoucher } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { hasAvailablePackage, getPriorityPackage } from '@/services/packageService';
 import { calculateDiscount } from '@/services/voucherService';
+import { getUserStats, type MembershipTierInfo } from '@/services/profileService';
 
 export default function BookingFlow() {
   const router = useRouter();
@@ -44,6 +45,7 @@ export default function BookingFlow() {
     type: 'success' | 'error' | 'info' | 'warning';
   }>({ show: false, message: '', type: 'info' });
   const [packageAvailable, setPackageAvailable] = useState(false);
+  const [membershipInfo, setMembershipInfo] = useState<MembershipTierInfo | null>(null);
 
   /**
    * 如果未登录，跳转到登录页
@@ -63,6 +65,24 @@ export default function BookingFlow() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    (async () => {
+      try {
+        const statsData = await getUserStats();
+        if (active) {
+          setMembershipInfo(statsData.membership);
+        }
+      } catch (error) {
+        console.error('Failed to load membership info:', error);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
   const checkPackageAvailability = async () => {
     const available = await hasAvailablePackage();
     setPackageAvailable(available);
@@ -72,7 +92,7 @@ export default function BookingFlow() {
    * 计算价格
    */
   const calculatePrice = () => {
-    if (!selectedString) return { original: 0, discount: 0, final: 0 };
+    if (!selectedString) return { original: 0, discount: 0, membershipDiscount: 0, final: 0 };
 
     const original = Number(selectedString.sellingPrice) || 0;
     let discount = 0;
@@ -82,12 +102,19 @@ export default function BookingFlow() {
       discount = calculateDiscount(selectedVoucher, original);
     }
 
-    const final = usePackage ? 0 : original - discount;
+    const membershipRate = membershipInfo?.discountRate ?? 0;
+    const membershipBase = Math.max(0, original - discount);
+    const membershipDiscount =
+      !usePackage && membershipRate > 0
+        ? (membershipBase * membershipRate) / 100
+        : 0;
 
-    return { original, discount, final };
+    const final = usePackage ? 0 : Math.max(0, membershipBase - membershipDiscount);
+
+    return { original, discount, membershipDiscount, final };
   };
 
-  const { original, discount, final } = calculatePrice();
+  const { original, discount, membershipDiscount, final } = calculatePrice();
 
   /**
    * 验证当前步骤
@@ -139,13 +166,14 @@ export default function BookingFlow() {
 
     try {
       // 创建订单
+      const membershipDiscountTotal = membershipDiscount;
       const orderData = {
         user_id: user.id,
         string_id: selectedString.id,
         tension,
         price: Number(selectedString.sellingPrice),
         cost_price: Number(selectedString.costPrice),
-        discount_amount: discount,
+        discount_amount: discount + membershipDiscountTotal,
         final_price: final,
         use_package: usePackage,
         voucher_id: selectedVoucher?.voucher?.id || null,
@@ -383,6 +411,16 @@ export default function BookingFlow() {
                   <span className="text-slate-600">原价</span>
                   <span className="text-slate-900">{formatCurrency(original)}</span>
                 </div>
+                {!usePackage && membershipDiscount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">
+                      {membershipInfo?.label || '会员折扣'}
+                    </span>
+                    <span className="text-emerald-600">
+                      -{formatCurrency(membershipDiscount)}
+                    </span>
+                  </div>
+                )}
                 {discount > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-600">优惠</span>
@@ -401,6 +439,11 @@ export default function BookingFlow() {
                     {formatCurrency(final)}
                   </span>
                 </div>
+                {!usePackage && membershipInfo && membershipInfo.discountRate > 0 && (
+                  <p className="text-xs text-slate-500 mt-1">
+                    {membershipInfo.label} 额外享 {membershipInfo.discountRate}% 会员折扣
+                  </p>
+                )}
               </div>
             </Card>
           </div>

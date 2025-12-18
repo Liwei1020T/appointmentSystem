@@ -21,9 +21,11 @@ interface UserVoucher {
     discount_type: string;
     discount_value: number;
     min_purchase: number;
-    expiry_date: string;
     description: string;
   };
+  expiry?: string;
+  expires_at?: string;
+  used?: boolean;
 }
 
 export default function MyVouchersPage() {
@@ -46,10 +48,12 @@ export default function MyVouchersPage() {
 
   const loadVouchers = async () => {
     try {
-      const response = await fetch('/api/vouchers/my');
-      const data = await response.json();
+      // Use the implemented Prisma API (legacy `/api/vouchers/my` is not provided)
+      const response = await fetch('/api/user/vouchers');
+      const raw = await response.json().catch(() => ({}));
+      const data = raw?.data ?? raw;
       
-      if (response.ok && data.vouchers) {
+      if (response.ok && Array.isArray(data?.vouchers)) {
         setVouchers(data.vouchers);
         setFilteredVouchers(data.vouchers);
       }
@@ -62,13 +66,18 @@ export default function MyVouchersPage() {
   useEffect(() => {
     let filtered = vouchers;
     if (selectedStatus !== 'all') {
-      filtered = vouchers.filter((v) => v.status === selectedStatus);
+      filtered = vouchers.filter((v) => {
+        // Backend uses status: 'active' | 'used' | 'expired'
+        if (selectedStatus === 'available') return v.status === 'active' || v.status === 'available';
+        return v.status === selectedStatus;
+      });
     }
     setFilteredVouchers(filtered);
   }, [selectedStatus, vouchers]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'active':
       case 'available':
         return { label: '可用', color: 'bg-green-100 text-green-800', icon: <CheckCircle2 className="w-4 h-4" /> };
       case 'used':
@@ -183,11 +192,14 @@ export default function MyVouchersPage() {
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2 text-gray-600">
                       <Clock className="w-4 h-4" />
-                      <span>有效期至 {new Date(item.voucher.expiry_date).toLocaleDateString('zh-CN')}</span>
+                      <span>
+                        有效期至{' '}
+                        {new Date(item.expires_at || item.expiry || Date.now()).toLocaleDateString('zh-CN')}
+                      </span>
                     </div>
                   </div>
 
-                  {item.status === 'available' && (
+                  {(item.status === 'active' || item.status === 'available') && (
                     <button
                       onClick={() => router.push('/booking?voucher=' + item.voucher.code)}
                       className="mt-4 w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium"

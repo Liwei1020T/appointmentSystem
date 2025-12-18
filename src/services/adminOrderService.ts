@@ -58,6 +58,11 @@ export interface AdminOrder {
     model?: string;
   };
   // Order details
+  /**
+   * 订单拉力（历史字段：单一拉力）
+   * - 新结构可能使用 tension_horizontal / tension_vertical
+   */
+  tension?: number;
   tension_horizontal?: number;
   tension_vertical?: number;
   racket_brand?: string;

@@ -52,8 +52,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     {
       icon: <ShoppingBagIcon className="w-full h-full" />,
       label: '套餐',
-      href: '/packages',
-      active: pathname === '/packages',
+      // 用户已购买套餐（激活后可见）；购买入口在页面内跳转到 /packages
+      href: '/profile/packages',
+      active:
+        pathname === '/profile/packages' ||
+        pathname?.startsWith('/profile/packages') ||
+        pathname?.startsWith('/packages'),
     },
     {
       icon: <UserIcon className="w-full h-full" />,

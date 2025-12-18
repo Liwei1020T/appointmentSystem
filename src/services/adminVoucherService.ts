@@ -190,8 +190,9 @@ export async function distributeVoucher(
       return { success: false, error: 'Failed to distribute voucher' };
     }
     
-    const data = await response.json();
-    return { success: true, count: data.count || 0, error: null };
+    const raw = await response.json().catch(() => ({}));
+    const payload = raw?.data ?? raw;
+    return { success: true, count: payload.count || payload.distributed || 0, error: null };
   } catch (error) {
     console.error('Failed to distribute voucher:', error);
     return { success: false, error: 'Failed to distribute voucher' };
@@ -242,8 +243,9 @@ export interface UserVoucher {
 export async function getUserVouchers(userId: string): Promise<{ data: UserVoucher[]; error: string | null }> {
   try {
     const response = await fetch(`/api/admin/vouchers/user/${userId}`);
-    const data = await response.json();
-    return { data: data.vouchers || [], error: null };
+    const raw = await response.json().catch(() => ({}));
+    const payload = raw?.data ?? raw;
+    return { data: payload.vouchers || [], error: null };
   } catch (error) {
     console.error('Failed to fetch user vouchers:', error);
     return { data: [], error: 'Failed to fetch user vouchers' };
@@ -295,8 +297,9 @@ export interface VoucherStats {
 export async function getVoucherStats(): Promise<{ stats: VoucherStats; data?: VoucherStats; error: string | null }> {
   try {
     const response = await fetch('/api/admin/vouchers/stats');
-    const stats = await response.json();
-    return { stats, data: stats, error: null };
+    const raw = await response.json().catch(() => ({}));
+    const payload = raw?.data ?? raw;
+    return { stats: payload, data: payload, error: null };
   } catch (error) {
     console.error('Failed to fetch voucher stats:', error);
     const defaultStats = { totalVouchers: 0, activeVouchers: 0, totalRedemptions: 0, totalDiscount: 0 };

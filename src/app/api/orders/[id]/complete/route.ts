@@ -49,9 +49,20 @@ export async function POST(
       return errorResponse(`库存不足，当前: ${order.string.stock}m，需要: ${stockToDeduct}m`);
     }
 
-    // 计算积分
-    const pointsPerOrder = parseInt(process.env.POINTS_PER_ORDER || '10');
+    /**
+     * 计算积分（新规则）
+     * - 积分 = 订单总额的 50%
+     * - 以支付金额优先（payment.amount），回退到订单 price
+     * - 积分为整数：向下取整
+     */
     const profit = Number(order.price) - Number(order.cost || 0);
+    const latestPayment = await prisma.payment.findFirst({
+      where: { orderId },
+      orderBy: { createdAt: 'desc' },
+      select: { amount: true },
+    });
+    const orderTotalAmount = Number(latestPayment?.amount ?? order.price ?? 0);
+    const pointsPerOrder = Math.max(0, Math.floor(orderTotalAmount * 0.5));
 
     // 执行事务
     await prisma.$transaction(async (tx) => {
@@ -89,7 +100,7 @@ export async function POST(
           amount: pointsPerOrder,
           type: 'order',
           referenceId: orderId,
-          description: `订单完成奖励`,
+          description: `订单完成奖励：订单总额 RM${orderTotalAmount.toFixed(2)} × 50% = ${pointsPerOrder} 积分`,
           balanceAfter: newBalance,
         },
       });
@@ -109,7 +120,7 @@ export async function POST(
         data: {
           userId: order.userId,
           title: '订单已完成',
-          message: `您的订单已完成，获得 ${pointsPerOrder} 积分`,
+          message: `您的订单已完成，订单总额 RM${orderTotalAmount.toFixed(2)}，获得 ${pointsPerOrder} 积分（50%）`,
           type: 'order',
           actionUrl: `/orders/${orderId}`,
         },

@@ -48,14 +48,21 @@ export default function AdminPackageDetailPage({ packageId }: AdminPackageDetail
       setPackage(pkgResult.package);
     }
 
-    if (!purchasesResult.error && purchasesResult.data) {
+  if (!purchasesResult.error && purchasesResult.data) {
       setPurchases(purchasesResult.data);
     }
 
     setLoading(false);
   };
 
-  const formatCurrency = (amount: number) => `RM ${amount.toFixed(2)}`;
+  /**
+   * 统一金额显示（兼容 Prisma Decimal / string / number）
+   */
+  const formatCurrency = (amount: number | string | null | undefined) => {
+    const numeric = Number(amount ?? 0);
+    if (Number.isNaN(numeric)) return 'RM 0.00';
+    return `RM ${numeric.toFixed(2)}`;
+  };
   const formatDate = (date: string) => new Date(date).toLocaleString('zh-CN');
 
   if (loading) {
@@ -84,7 +91,10 @@ export default function AdminPackageDetailPage({ packageId }: AdminPackageDetail
     );
   }
 
-  const totalRevenue = purchases.reduce((sum, p) => sum + (p.package?.price || 0), 0);
+  const totalRevenue = purchases.reduce(
+    (sum, p) => sum + Number((p as any)?.package?.price ?? 0),
+    0
+  );
   const activePurchases = purchases.filter(p => p.remaining > 0 && new Date(p.expiry) > new Date());
 
   return (
@@ -124,11 +134,15 @@ export default function AdminPackageDetailPage({ packageId }: AdminPackageDetail
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">套餐价格</p>
-                  <p className="text-xl font-bold text-purple-600">{formatCurrency(pkg.price)}</p>
+                  <p className="text-xl font-bold text-purple-600">
+                    {formatCurrency((pkg as any).price)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">平均每次</p>
-                  <p className="text-xl font-bold text-green-600">{formatCurrency(pkg.price / pkg.times)}</p>
+                  <p className="text-xl font-bold text-green-600">
+                    {formatCurrency(Number((pkg as any).price ?? 0) / pkg.times)}
+                  </p>
                 </div>
               </div>
             </div>

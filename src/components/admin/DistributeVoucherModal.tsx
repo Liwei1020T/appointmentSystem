@@ -72,9 +72,15 @@ export default function DistributeVoucherModal({
     try {
       const response = await fetch('/api/admin/users');
       if (!response.ok) throw new Error('Failed to load users');
-      const data = await response.json();
-      setUsers(data);
-      setFilteredUsers(data);
+      const payload = await response.json();
+      if (!payload.success) {
+        throw new Error('Failed to load users');
+      }
+      const userList: User[] = Array.isArray(payload.data?.users)
+        ? payload.data.users
+        : [];
+      setUsers(userList);
+      setFilteredUsers(userList);
     } catch (err) {
       console.error('Failed to load users:', err);
     }

@@ -9,6 +9,9 @@ export interface User {
   referred_by?: string;
   points: number;
   role: 'customer' | 'admin';
+  tier: 'standard' | 'bronze' | 'silver' | 'gold' | 'platinum';
+  total_spent?: number | { toNumber(): number };
+  totalSpent?: number | { toNumber(): number };
   created_at: string;
   updated_at: string;
 }
@@ -64,6 +67,7 @@ export interface Order {
     model?: string;
     specification?: string | null;
   };
+  packageUsed?: UserPackage;
   payment?: {
     id?: string;
     amount?: number;

@@ -110,9 +110,11 @@ export default function AdminReviewsPage() {
       if (!response.ok) {
         throw new Error('加载评价列表失败');
       }
-      const data = await response.json();
-      setReviews(data || []);
-      setFilteredReviews(data || []);
+      const raw = await response.json().catch(() => ({}));
+      const payload = raw?.data ?? raw;
+      const list = Array.isArray(payload) ? payload : Array.isArray(payload?.reviews) ? payload.reviews : [];
+      setReviews(list);
+      setFilteredReviews(list);
     } catch (error) {
       setToast({
         show: true,
@@ -129,10 +131,9 @@ export default function AdminReviewsPage() {
     try {
       const response = await fetch('/api/admin/reviews/stats');
       if (response.ok) {
-        const data = await response.json();
-        if (data) {
-          setStats(data);
-        }
+        const raw = await response.json().catch(() => ({}));
+        const payload = raw?.data ?? raw;
+        setStats(payload || null);
       }
     } catch (error) {
       console.error('Failed to load review stats:', error);

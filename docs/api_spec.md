@@ -2,7 +2,7 @@
 
 **String Service Platform — API Reference**  
 **Version:** 1.0  
-**Last Updated:** 2025-12-11  
+**Last Updated:** 2025-12-18  
 **Backend:** Supabase Edge Functions + PostgreSQL RPC
 
 ---
@@ -183,6 +183,58 @@ All authenticated endpoints require:
 
 ---
 
+### 6. Get User Stats (Membership)
+
+**Endpoint:** `GET /api/user/stats`  
+**Auth Required:** Yes
+
+**Description:** Returns aggregated order/package/coupon counts, total spend, and membership progression for the authenticated user.
+
+**Response:**
+```json
+{
+  "totalOrders": 12,
+  "pendingOrders": 1,
+  "completedOrders": 11,
+  "activePackages": 2,
+  "remainingPackageCount": 5,
+  "availableVouchers": 3,
+  "points": 180,
+  "totalSpent": 842.5,
+  "membership": {
+    "tier": "gold",
+    "label": "黄金会员",
+    "description": "消费满 RM 700，解锁 10% 折扣",
+    "discountRate": 10,
+    "progress": 0.72,
+    "nextTier": {
+      "id": "platinum",
+      "label": "白金会员",
+      "minSpend": 1000
+    }
+  }
+}
+```
+
+### 7. Generate Referral Code
+
+**Endpoint:** `POST /api/profile/referral-code`  
+**Auth Required:** Yes
+
+**Description:** Ensures the authenticated user has a referral code; returns existing code if present, otherwise generates and persists a new one.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "code": "ABCD1234"
+  }
+}
+```
+
+---
+
 ## Order APIs
 
 ### 6. Create Order
@@ -302,9 +354,54 @@ All authenticated endpoints require:
 
 ---
 
+### 9. Get Order Details
+
+**Endpoint:** `GET /api/orders/{id}`  
+**Auth Required:** Yes
+
+**Description:** Returns the requested order joined with string details, payment history, applied voucher, and any `user_packages` record used for this booking.
+
+**Key Fields:**
+- `use_package`: `true` when the order was covered by a package redemption.
+- `packageUsed`: Includes `remaining`, `expiry`, and nested `package` metadata for UI showing the package name and counts.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "user_id": "uuid",
+    "string_id": "uuid",
+    "tension": 26,
+    "price": 0.00,
+    "status": "completed",
+    "use_package": true,
+    "final_price": 0.00,
+    "packageUsed": {
+      "id": "user-package-uuid",
+      "remaining": 4,
+      "expiry": "2026-01-10T00:00:00Z",
+      "package": {
+        "id": "package-uuid",
+        "name": "10次高端穿线配套",
+        "times": 10
+      }
+    },
+    "string": {
+      "brand": "YONEX",
+      "model": "BG66UM"
+    },
+    "payments": []
+  }
+}
+```
+
+---
+
 ## Payment APIs
 
-### 9. Create Payment
+### 10. Create Payment
 
 **Endpoint:** `POST /functions/v1/create-payment`  
 **Auth Required:** Yes
@@ -338,7 +435,7 @@ All authenticated endpoints require:
 
 ---
 
-### 10. Payment Webhook
+### 11. Payment Webhook
 
 **Endpoint:** `POST /functions/v1/payment-webhook`  
 **Auth Required:** No (Signature verification required)
@@ -364,7 +461,7 @@ All authenticated endpoints require:
 
 ---
 
-### 11. Get Payment History
+### 12. Get Payment History
 
 **Endpoint:** `GET /rest/v1/payments?user_id=eq.{user_id}&order=created_at.desc`  
 **Auth Required:** Yes
@@ -685,22 +782,44 @@ All authenticated endpoints require:
 
 ### Local Placeholder Endpoints (Next.js App Router)
 
-> 说明：以下端点为前端占位接口，用于避免 404/HTML 响应导致的崩溃。返回统一的 `{ success, data }` 结构，需在接入真实 Supabase/Edge Functions 后替换。
-
-- `GET /api/vouchers/stats` → `{ total: 0, used: 0, expired: 0, active: 0, usageRate: 0 }`。  
-- `GET /api/admin/vouchers/stats` → `{ issued: 0, used: 0, active: 0, usageRate: 0 }`。  
-- `GET /api/admin/vouchers/user/:userId` → `{ vouchers: [] }`。  
-- `POST /api/admin/vouchers/:id/distribute` → `{ distributed: 0, skipped: 0, sample: [] }`。  
-- `GET /api/admin/packages` → `{ packages: [] }`；`GET /api/admin/packages/stats`、`/sales` → `{ stats: {} }` 占位。  
-- Admin 报表占位：`/api/admin/reports/summary|revenue|profit|sales|top-strings|top-packages|user-growth|order-trends`（JSON），`/export`（CSV 字符串）。  
-- 评价占位：`POST /api/reviews` 保存评价并回传提交内容；`GET /api/reviews/featured` / `user` → `{ reviews: [] }`；`GET /api/reviews/order/:orderId` → `{ review: null }`（或返回单条评价）。
-- 备注：数据库已存在 `reviews` 表（字段：rating/comment/photos 等）；以上接口为占位，不持久化。
+> 说明：该区块用于记录“为了避免 404/HTML 响应导致前端崩溃”的占位接口。当前已全部移除/实现，无剩余占位端点。
 
 ### Local Implemented Endpoints (Next.js App Router)
 
 - `GET /api/user/vouchers` → Prisma `user_vouchers` + `vouchers` 联表，返回 `{ vouchers: [...] }`（需要登录）。  
 - `GET /api/vouchers/redeemable` → Prisma `vouchers` 表筛选 active + valid window，返回 `{ vouchers: [...] }`（需要登录）。  
 - `POST /api/vouchers/redeem-with-points` → 使用积分兑换指定 `voucherId`，写入 `user_vouchers` 与 `points_log`（需要登录）。  
+- `GET /api/vouchers/stats` → 当前用户优惠券统计（total/active/used/expired/usageRate，需要登录）。  
+- `GET /api/admin/vouchers/stats` → 管理端优惠券统计（total/active/expired/distributed/used/usage_rate/total_discount_given，管理员）。  
+- `GET /api/admin/vouchers/user/:userId` → 管理端查看指定用户的优惠券列表（管理员）。  
+- `POST /api/admin/vouchers/:id/distribute` → 管理端分发优惠券（支持 all/specific；返回 `{ count, distributed, skipped }`，管理员）。  
+- `POST /api/packages/buy` → 创建“套餐支付单”（Prisma `payments`），`provider=tng|cash`、`status=pending`；TNG 上传收据后变更为 `pending_verification`；管理员确认后创建 `user_packages`（需要登录）。  
+- `GET /api/admin/packages` → 套餐列表（支持 status/search/includeInactive，管理员）。  
+- `POST /api/admin/packages` → 创建套餐（兼容 `validityDays/validity_days`，管理员）。  
+- `PATCH /api/admin/packages` → 更新套餐（兼容 `validityDays/validity_days`，管理员）。  
+- `GET /api/admin/packages/stats` → 套餐统计（总购买数/收入/本月数据/最受欢迎，管理员）。  
+- `GET /api/admin/packages/sales` → 套餐销量聚合（按套餐统计销量、收入、活跃用户，管理员）。  
+- `POST /api/payments` → 创建支付记录（订单/套餐，二选一：`orderId` 或 `packageId`；默认 `paymentMethod=tng`）。  
+- `POST /api/payments/:id/receipt` → 更新 `receiptUrl` 并进入 `pending_verification`（需要登录，仅本人）。  
+- `POST /api/payments/:id/proof` → 上传支付凭证（multipart）并进入 `pending_verification`（需要登录，仅本人）。  
+- `GET /api/admin/payments/pending` → 待审核支付列表（TNG：`pending_verification`；现金：`pending|pending_verification`，管理员）。  
+- `POST /api/admin/payments/:id/confirm` → 审核通过（置 `success`；订单推进至 `in_progress`；套餐创建 `user_packages`，管理员）。  
+- `POST /api/admin/payments/:id/confirm-cash` → 现金确认收款（置 `success`；订单推进至 `in_progress`；套餐创建 `user_packages`，管理员）。  
+- `POST /api/admin/payments/:id/reject` → 拒绝支付并记录原因（置 `rejected`，管理员）。  
+- `GET /api/admin/reports` → 报表概览（revenue/orders/customers，管理员）。  
+- `GET /api/admin/reports/revenue` → 收入趋势与分类（管理员）。  
+- `GET /api/admin/reports/profit` → 利润分析 + Profit by Product（管理员）。  
+- `GET /api/admin/reports/sales` → 销售统计（完成率/使用率/状态分布/按天趋势，管理员）。  
+- `GET /api/admin/reports/top-strings` → 热门球线（管理员）。  
+- `GET /api/admin/reports/top-packages` → 热门套餐（管理员）。  
+- `GET /api/admin/reports/user-growth` → 用户增长（管理员）。  
+- `GET /api/admin/reports/order-trends` → 订单趋势（按小时/周几/月，管理员）。  
+- `GET /api/admin/reports/export` → CSV 导出（管理员）。  
+- `GET /api/admin/stats` → 管理员仪表板快捷指标（today/month orders & revenue、low-stock count、pending orders、active packages，管理员）。
+- `POST /api/reviews` → 提交订单评价（需要登录；仅允许评价自己的 completed 订单；奖励 10 积分并写入 `points_log`）。  
+- `GET /api/reviews/user` → 当前用户评价列表（需要登录；返回 `{ reviews: [...] }`）。  
+- `GET /api/reviews/order/:orderId` → 获取订单评价（需要登录；订单 owner 或管理员；返回 `{ review: ... | null }`）。  
+- `GET /api/reviews/featured` → 精选评价（公开；返回 array，用于首页轮播）。  
 
 ---
 

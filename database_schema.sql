@@ -249,12 +249,21 @@ CREATE TABLE IF NOT EXISTS reviews (
     order_id UUID NOT NULL,
     user_id UUID NOT NULL,
     rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    service_rating INTEGER CHECK (service_rating BETWEEN 1 AND 5),
+    quality_rating INTEGER CHECK (quality_rating BETWEEN 1 AND 5),
+    speed_rating INTEGER CHECK (speed_rating BETWEEN 1 AND 5),
     comment TEXT,
-    photos TEXT[],
+    photos TEXT[] DEFAULT '{}',
+    tags TEXT[] NOT NULL DEFAULT '{}',
+    is_anonymous BOOLEAN NOT NULL DEFAULT false,
+    admin_reply TEXT,
+    admin_reply_at TIMESTAMPTZ(6),
+    admin_reply_by UUID,
     created_at TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_reviews_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-    CONSTRAINT fk_reviews_user FOREIGN KEY (user_id) REFERENCES users(id)
+    CONSTRAINT fk_reviews_user FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_reviews_admin_reply_by FOREIGN KEY (admin_reply_by) REFERENCES users(id)
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_order_id ON reviews(order_id);
@@ -400,7 +409,7 @@ VALUES (
     'admin@string.com',
     '+60123456789',
     'System Admin',
-    '$2b$10$gS6nf5ekzaQlPmnCPNFv0OIrSW9/36jvZlZ9mkL7Iga6N2Epewsq', -- Replace with actual bcrypt hash
+    '$2b$10$NwZg0a0gw68vcCowPezfh.SpPVB15zNH2FRtkBfBkew60A5wX7vmG', -- Replace with actual bcrypt hash of 'admin'
     'ADMIN001',
     'admin',
     0

@@ -39,7 +39,7 @@ export async function POST(
       return errorResponse('支付记录不存在', 404);
     }
 
-    if (payment.status === 'completed') {
+    if (payment.status === 'success' || payment.status === 'completed') {
       return errorResponse('该支付已确认，无法拒绝');
     }
 
@@ -49,6 +49,11 @@ export async function POST(
         where: { id: paymentId },
         data: {
           status: 'rejected',
+          metadata: {
+            ...(payment.metadata as any),
+            rejectedAt: new Date().toISOString(),
+            rejectReason: reason,
+          },
         },
       });
 
@@ -60,19 +65,17 @@ export async function POST(
         });
       }
 
-      // 3. 创建通知给用户
-      if (payment.order) {
-        await tx.notification.create({
-          data: {
-            userId: payment.order.userId,
-            title: '支付被拒绝',
-            message: `您的支付凭证未通过审核。原因：${reason}。请重新上传正确的支付凭证。`,
-            type: 'payment',
-            actionUrl: `/orders/${payment.orderId}`,
-            read: false,
-          },
-        });
-      }
+      // 3. 创建通知给用户（订单/套餐通用）
+      await tx.notification.create({
+        data: {
+          userId: payment.order?.userId || payment.userId,
+          title: '支付被拒绝',
+          message: `您的支付未通过审核。原因：${reason}。请重新提交正确的支付凭证。`,
+          type: 'payment',
+          actionUrl: payment.orderId ? `/orders/${payment.orderId}` : '/profile/packages',
+          read: false,
+        },
+      });
     });
 
     return successResponse({}, '支付已拒绝');

@@ -67,26 +67,46 @@ export default function AdminDashboardPage() {
     setLoading(true);
 
     try {
-      // Fetch dashboard stats from API
       const response = await fetch('/api/admin/stats');
+      if (!response.ok) {
+        throw new Error('Failed to load stats');
+      }
       const data = await response.json();
-      
+
       setStats({
-        todayOrders: Number(data.totalOrders) || 0,
-        todayRevenue: Number(data.totalRevenue) || 0,
-        monthOrders: Number(data.totalOrders) || 0,
-        monthRevenue: Number(data.totalRevenue) || 0,
-        activePackages: 0,
-        lowStockItems: Number(data.lowStockCount) || 0,
+        todayOrders: Number(data.todayOrders) || 0,
+        todayRevenue: Number(data.todayRevenue) || 0,
+        monthOrders: Number(data.monthOrders) || 0,
+        monthRevenue: Number(data.monthRevenue) || 0,
+        activePackages: Number(data.activePackages) || Number(data.active_package_count) || 0,
+        lowStockItems: Number(data.lowStockItems) || Number(data.lowStockCount) || 0,
         pendingOrders: Number(data.pendingOrders) || 0,
       });
 
-      setRecentOrders([]);
+      const ordersResponse = await fetch('/api/admin/orders?limit=5');
+      if (ordersResponse.ok) {
+        const ordersPayload = await ordersResponse.json().catch(() => ({}));
+        const ordersData = ordersPayload?.data ?? ordersPayload;
+        const rawList = ordersData?.orders ?? ordersData;
+        const recentList = Array.isArray(rawList) ? rawList.slice(0, 5) : [];
+        setRecentOrders(
+          recentList.map((order) => ({
+            id: order.id,
+            user_name: order.user?.fullName || order.user?.email || '用户',
+            string_name: order.string ? `${order.string.brand || ''} ${order.string.model || ''}`.trim() : '',
+            total_price: Number(order.price || order.total_price || 0),
+            status: order.status,
+            created_at: order.createdAt || order.created_at || new Date().toISOString(),
+          }))
+        );
+      } else {
+        setRecentOrders([]);
+      }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   // 处理补货按钮点击

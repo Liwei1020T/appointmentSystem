@@ -232,6 +232,9 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   const paymentConfirmedAt = (paymentRecord as any)?.updated_at || (paymentRecord as any)?.paid_at || updatedAt;
   const paymentPendingAt = (paymentRecord as any)?.created_at || createdAt;
   const inProgressAt = (order as any).in_progress_at || updatedAt;
+  const packageName = order.packageUsed?.package?.name || '配套服务';
+  const packageRemainingCount = order.packageUsed?.remaining;
+  const packageExpiry = order.packageUsed?.expiry ?? order.packageUsed?.expires_at;
 
   // 判断支付状态：检查是否有已完成的支付记录
   const hasCompletedPayment =
@@ -441,13 +444,28 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             )}
 
             {order.use_package && (
-              <div className="flex justify-between items-center py-2 bg-green-50 -mx-2 px-2 rounded">
-                <span className="text-green-700 flex items-center gap-1">
-                  <span>🎁</span> 使用套餐
-                </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-200 text-green-800">
-                  套餐抵扣
-                </span>
+              <div className="space-y-2 py-3 px-3 bg-green-50 border border-green-100 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-green-700 flex items-center gap-1 font-semibold">
+                    <span>🎁</span> 套餐支付
+                  </span>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-200 text-green-800">
+                    套餐抵扣
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-slate-600">
+                  <span className="font-medium text-slate-900">{packageName}</span>
+                  {packageRemainingCount !== undefined ? (
+                    <span className="text-xs text-slate-500">{packageRemainingCount} 次剩余</span>
+                  ) : (
+                    <span className="text-xs text-slate-500">剩余次数未知</span>
+                  )}
+                </div>
+                {packageExpiry && (
+                  <div className="text-xs text-slate-500">
+                    有效期至 {formatDate(packageExpiry, 'yyyy-MM-dd')}
+                  </div>
+                )}
               </div>
             )}
 
@@ -468,6 +486,11 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                 RM {finalAmount.toFixed(2)}
               </span>
             </div>
+            {order.use_package && (
+              <p className="text-xs text-slate-500 mt-1">
+                套餐支付已覆盖本次服务，无需额外支付。
+              </p>
+            )}
           </div>
         </Card>
 
@@ -570,7 +593,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                       <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
                         <div className="text-xs text-slate-500">发起时间</div>
                         <div className="text-sm font-medium text-slate-900 mt-1">
-                          {formatDateTime((payment as any).created_at)}
+                          {formatDate((payment as any).created_at, 'yyyy-MM-dd HH:mm')}
                         </div>
                       </div>
                     )}
@@ -579,7 +602,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                       <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
                         <div className="text-xs text-slate-500">最近更新</div>
                         <div className="text-sm font-medium text-slate-900 mt-1">
-                          {formatDateTime((payment as any).updated_at)}
+                          {formatDate((payment as any).updated_at, 'yyyy-MM-dd HH:mm')}
                         </div>
                       </div>
                     )}

@@ -42,24 +42,26 @@ export const Toast: React.FC<ToastProps> = ({
   }, [onClose, duration]);
   
   return (
-    <div 
-      className={`
-        ${styles[type]} 
-        text-white px-4 py-3 rounded-lg shadow-lg 
-        flex items-center gap-3 min-w-[300px] max-w-md
-        animate-in slide-in-from-top-5 fade-in
-      `}
-      role="alert"
-    >
-      <span className="text-lg font-bold">{icons[type]}</span>
-      <span className="flex-1">{message}</span>
-      <button 
-        onClick={onClose} 
-        className="text-white/80 hover:text-white transition-colors"
-        aria-label="Close"
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4">
+      <div 
+        className={`
+          ${styles[type]} 
+          text-white px-4 py-3 rounded-lg shadow-lg 
+          flex items-center gap-3 min-w-[280px] max-w-md
+          animate-in slide-in-from-top-5 fade-in
+        `}
+        role="alert"
       >
-        ✕
-      </button>
+        <span className="text-lg font-bold">{icons[type]}</span>
+        <span className="flex-1">{message}</span>
+        <button 
+          onClick={onClose} 
+          className="text-white/80 hover:text-white transition-colors"
+          aria-label="Close"
+        >
+          ✕
+        </button>
+      </div>
     </div>
   );
 };

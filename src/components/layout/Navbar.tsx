@@ -16,6 +16,18 @@ export default function Navbar() {
     return pathname === path;
   };
 
+  /**
+   * 套餐相关页面（购买列表 / 购买流程 / 我的套餐）统一高亮。
+   *
+   * 说明：
+   * - “套餐”入口指向 `/profile/packages`（用户已购买/已激活套餐）
+   * - `/packages*` 仍用于购买流程，所以也应视为同一导航分组
+   */
+  const isPackagesActive =
+    pathname === '/profile/packages' ||
+    pathname?.startsWith('/profile/packages') ||
+    pathname?.startsWith('/packages');
+
   const handleSignOut = async () => {
     await signOut({ callbackUrl: '/login' });
   };
@@ -60,14 +72,25 @@ export default function Navbar() {
                 </Link>
 
                 <Link
-                  href="/packages"
+                  href="/profile/packages"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    isActive('/packages')
+                    isPackagesActive
                       ? 'bg-blue-100 text-blue-700'
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
                   套餐
+                </Link>
+
+                <Link
+                  href="/profile/vouchers"
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    pathname?.startsWith('/profile/vouchers')
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  优惠券
                 </Link>
 
                 {session.user.role === 'admin' && (

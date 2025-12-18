@@ -117,7 +117,9 @@ export function getPaymentStatusText(status: string): string {
   const statusMap: Record<string, string> = {
     pending: '待支付',
     pending_verification: '待审核',
-    completed: '已完成',
+    success: '已支付',
+    completed: '已支付',
+    failed: '失败',
     rejected: '已拒绝',
     cancelled: '已取消',
   };
@@ -131,7 +133,9 @@ export function getPaymentStatusColor(status: string): string {
   const colorMap: Record<string, string> = {
     pending: 'yellow',
     pending_verification: 'blue',
+    success: 'green',
     completed: 'green',
+    failed: 'red',
     rejected: 'red',
     cancelled: 'gray',
   };

@@ -1,32 +1,92 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import {
-  getPendingPayments,
-  confirmPayment,
-  rejectPayment,
-} from '@/services/payment.service';
+/**
+ * 管理员支付审核页面
+ *
+ * 功能：
+ * - 展示待审核的支付记录（TNG 收据待审核 + 现金待确认）
+ * - 支持订单支付 & 套餐支付
+ * - 支持通过/拒绝，并触发后端创建 user_packages（套餐）或推进订单状态（订单）
+ *
+ * 数据来源：
+ * - GET /api/admin/payments/pending
+ *
+ * 重要说明：
+ * - 支付凭证 URL 存在 payments.metadata.receiptUrl / payments.metadata.proofUrl
+ * - 这里使用 <img> 而不是 next/image，避免配置远程域名导致的显示问题
+ */
+
+import { useEffect, useMemo, useState } from 'react';
+import { getPendingPayments, rejectPayment } from '@/services/payment.service';
 import { formatAmount } from '@/lib/payment-helpers';
+
+interface PaymentUser {
+  id: string;
+  fullName: string | null;
+  email: string;
+  phone: string | null;
+}
+
+interface PaymentOrder {
+  id: string;
+  string: null | {
+    brand: string;
+    model: string;
+  };
+}
+
+interface PaymentPackage {
+  id: string;
+  name: string;
+  times: number;
+  validityDays: number;
+  price: number | string;
+}
 
 interface Payment {
   id: string;
-  amount: number;
+  amount: number | string;
   status: string;
-  proofUrl: string | null;
-  createdAt: Date;
-  order: {
-    id: string;
-    user: {
-      fullName: string;
-      email: string;
-      phone: string;
-    };
-    string: {
-      brand: string;
-      model: string;
-    };
-  };
+  provider: string;
+  metadata?: any;
+  createdAt: string | Date;
+  user: PaymentUser;
+  order: PaymentOrder | null;
+  package: PaymentPackage | null;
+}
+
+function getProofUrl(payment: Payment): string | null {
+  const meta = payment.metadata || {};
+  return meta.receiptUrl || meta.proofUrl || null;
+}
+
+function getPaymentTitle(payment: Payment): string {
+  if (payment.package) return `套餐购买：${payment.package.name}`;
+  if (payment.order?.string)
+    return `订单：${payment.order.string.brand} ${payment.order.string.model}`;
+  if (payment.order) return `订单：${payment.order.id.slice(0, 8)}`;
+  return '支付记录';
+}
+
+async function confirmPaymentByProvider(payment: Payment): Promise<void> {
+  const endpoint =
+    payment.provider === 'cash'
+      ? `/api/admin/payments/${payment.id}/confirm-cash`
+      : `/api/admin/payments/${payment.id}/confirm`;
+
+  const response =
+    payment.provider === 'cash'
+      ? await fetch(endpoint, { method: 'POST' })
+      : await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.error || '确认支付失败');
+  }
 }
 
 export default function PaymentVerificationPage() {
@@ -34,21 +94,26 @@ export default function PaymentVerificationPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [processing, setProcessing] = useState(false);
+
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
 
+  const pendingCount = useMemo(() => payments.length, [payments.length]);
+
   useEffect(() => {
-    fetchPayments();
+    void fetchPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   const fetchPayments = async () => {
     setLoading(true);
     try {
       const data = await getPendingPayments(page, 10);
-      setPayments(data.payments);
-      setTotalPages(data.pagination.totalPages);
+      setPayments(data.payments || []);
+      setTotalPages(data.pagination?.totalPages || 1);
     } catch (error) {
       console.error('获取支付列表失败:', error);
     } finally {
@@ -57,13 +122,14 @@ export default function PaymentVerificationPage() {
   };
 
   const handleConfirm = async (payment: Payment) => {
-    if (!confirm(`确认支付 ${formatAmount(payment.amount)}？`)) return;
+    const amountText = formatAmount(Number(payment.amount));
+    if (!confirm(`确认收款 ${amountText}？\n${getPaymentTitle(payment)}`)) return;
 
     setProcessing(true);
     try {
-      await confirmPayment(payment.id);
+      await confirmPaymentByProvider(payment);
       alert('支付已确认');
-      fetchPayments();
+      await fetchPayments();
       setSelectedPayment(null);
     } catch (error: any) {
       alert(error.message || '确认失败');
@@ -81,9 +147,9 @@ export default function PaymentVerificationPage() {
 
     setProcessing(true);
     try {
-      await rejectPayment(selectedPayment.id, rejectReason);
+      await rejectPayment(selectedPayment.id, rejectReason.trim());
       alert('支付已拒绝');
-      fetchPayments();
+      await fetchPayments();
       setSelectedPayment(null);
       setShowRejectModal(false);
       setRejectReason('');
@@ -96,118 +162,110 @@ export default function PaymentVerificationPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <div className="text-gray-600">加载中...</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="mx-auto max-w-7xl p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900">支付审核</h1>
-        <p className="text-gray-600 mt-2">
-          待审核支付：{payments.length} 笔
-        </p>
+        <p className="mt-2 text-gray-600">待审核支付：{pendingCount} 笔</p>
       </div>
 
       {payments.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
+        <div className="rounded-lg bg-white p-12 text-center shadow">
           <p className="text-gray-500">暂无待审核的支付</p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {payments.map((payment) => (
-            <div
-              key={payment.id}
-              className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
-            >
-              {/* 支付凭证预览 */}
-              {payment.proofUrl && (
-                <div className="relative h-48 bg-gray-100">
-                  <Image
-                    src={payment.proofUrl}
-                    alt="Payment Proof"
-                    fill
-                    className="object-contain cursor-pointer"
-                    onClick={() => setSelectedPayment(payment)}
-                  />
-                </div>
-              )}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {payments.map((payment) => {
+            const proofUrl = getProofUrl(payment);
+            const title = getPaymentTitle(payment);
+            const isCash = payment.provider === 'cash';
 
-              <div className="p-4 space-y-3">
-                {/* 金额 */}
-                <div>
-                  <p className="text-sm text-gray-600">支付金额</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {formatAmount(payment.amount)}
-                  </p>
-                </div>
+            return (
+              <div
+                key={payment.id}
+                className="overflow-hidden rounded-lg bg-white shadow-lg transition-shadow hover:shadow-xl"
+              >
+                {/* 支付凭证预览（现金不一定有） */}
+                {proofUrl ? (
+                  <div className="relative h-48 bg-gray-100">
+                    <img
+                      src={proofUrl}
+                      alt="Payment Proof"
+                      className="h-full w-full cursor-pointer object-contain"
+                      onClick={() => setSelectedPayment(payment)}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-48 items-center justify-center bg-gray-50 text-sm text-gray-500">
+                    {isCash ? '现金支付（无需收据）' : '未上传收据'}
+                  </div>
+                )}
 
-                {/* 用户信息 */}
-                <div>
-                  <p className="text-sm text-gray-600">用户信息</p>
-                  <p className="font-medium">{payment.order.user.fullName}</p>
-                  <p className="text-sm text-gray-500">
-                    {payment.order.user.email}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {payment.order.user.phone}
-                  </p>
-                </div>
+                <div className="space-y-3 p-4">
+                  <div className="text-sm font-semibold text-gray-900">
+                    {title}
+                  </div>
 
-                {/* 订单信息 */}
-                <div>
-                  <p className="text-sm text-gray-600">订单内容</p>
-                  <p className="text-sm">
-                    {payment.order.string.brand} {payment.order.string.model}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    订单号: {payment.order.id.slice(0, 8)}
-                  </p>
-                </div>
+                  <div>
+                    <p className="text-sm text-gray-600">支付金额</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {formatAmount(Number(payment.amount))}
+                    </p>
+                  </div>
 
-                {/* 提交时间 */}
-                <div>
-                  <p className="text-xs text-gray-500">
-                    提交时间:{' '}
-                    {new Date(payment.createdAt).toLocaleString('zh-CN')}
-                  </p>
-                </div>
+                  <div>
+                    <p className="text-sm text-gray-600">用户信息</p>
+                    <p className="font-medium">
+                      {payment.user.fullName || '用户'}
+                    </p>
+                    <p className="text-sm text-gray-500">{payment.user.email}</p>
+                    {payment.user.phone ? (
+                      <p className="text-sm text-gray-500">{payment.user.phone}</p>
+                    ) : null}
+                  </div>
 
-                {/* 操作按钮 */}
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={() => handleConfirm(payment)}
-                    disabled={processing}
-                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400"
-                  >
-                    确认
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedPayment(payment);
-                      setShowRejectModal(true);
-                    }}
-                    disabled={processing}
-                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400"
-                  >
-                    拒绝
-                  </button>
+                  <div className="text-xs text-gray-500">
+                    提交时间：{new Date(payment.createdAt).toLocaleString('zh-CN')}
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={() => handleConfirm(payment)}
+                      disabled={processing}
+                      className="flex-1 rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:bg-gray-400"
+                    >
+                      确认
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedPayment(payment);
+                        setShowRejectModal(true);
+                      }}
+                      disabled={processing}
+                      className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:bg-gray-400"
+                    >
+                      拒绝
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* 分页 */}
-      {totalPages > 1 && (
+      {totalPages > 1 ? (
         <div className="mt-6 flex justify-center gap-2">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-4 py-2 bg-white border rounded-lg disabled:opacity-50"
+            className="rounded-lg border bg-white px-4 py-2 disabled:opacity-50"
           >
             上一页
           </button>
@@ -217,51 +275,62 @@ export default function PaymentVerificationPage() {
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="px-4 py-2 bg-white border rounded-lg disabled:opacity-50"
+            className="rounded-lg border bg-white px-4 py-2 disabled:opacity-50"
           >
             下一页
           </button>
         </div>
-      )}
+      ) : null}
 
       {/* 凭证预览模态框 */}
-      {selectedPayment && !showRejectModal && (
+      {selectedPayment && !showRejectModal ? (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           onClick={() => setSelectedPayment(null)}
         >
           <div
-            className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto"
+            className="max-h-[90vh] w-full max-w-4xl overflow-auto rounded-lg bg-white"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
-              <h2 className="text-2xl font-bold mb-4">支付凭证详情</h2>
+              <h2 className="mb-4 text-2xl font-bold">支付详情</h2>
 
-              {selectedPayment.proofUrl && (
+              {getProofUrl(selectedPayment) ? (
                 <div className="mb-6">
-                  <Image
-                    src={selectedPayment.proofUrl}
+                  <img
+                    src={getProofUrl(selectedPayment) as string}
                     alt="Payment Proof"
-                    width={800}
-                    height={600}
-                    className="w-full h-auto rounded-lg"
+                    className="h-auto w-full rounded-lg object-contain"
                   />
                 </div>
-              )}
+              ) : null}
 
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">支付金额</p>
                     <p className="text-xl font-bold">
-                      {formatAmount(selectedPayment.amount)}
+                      {formatAmount(Number(selectedPayment.amount))}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">订单号</p>
-                    <p className="font-mono">
-                      {selectedPayment.order.id.slice(0, 16)}
+                    <p className="text-sm text-gray-600">支付方式</p>
+                    <p className="font-medium">
+                      {selectedPayment.provider === 'cash' ? '现金' : 'TNG'}
                     </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">用户</p>
+                    <p className="font-medium">
+                      {selectedPayment.user.fullName || '用户'}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {selectedPayment.user.email}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">内容</p>
+                    <p className="text-sm">{getPaymentTitle(selectedPayment)}</p>
                   </div>
                 </div>
 
@@ -269,20 +338,20 @@ export default function PaymentVerificationPage() {
                   <button
                     onClick={() => handleConfirm(selectedPayment)}
                     disabled={processing}
-                    className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                    className="flex-1 rounded-lg bg-green-600 px-6 py-3 text-white hover:bg-green-700 disabled:opacity-50"
                   >
                     确认支付
                   </button>
                   <button
                     onClick={() => setShowRejectModal(true)}
                     disabled={processing}
-                    className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                    className="flex-1 rounded-lg bg-red-600 px-6 py-3 text-white hover:bg-red-700 disabled:opacity-50"
                   >
                     拒绝支付
                   </button>
                   <button
                     onClick={() => setSelectedPayment(null)}
-                    className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                    className="rounded-lg bg-gray-200 px-6 py-3 text-gray-800 hover:bg-gray-300"
                   >
                     关闭
                   </button>
@@ -291,27 +360,25 @@ export default function PaymentVerificationPage() {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* 拒绝原因模态框 */}
-      {showRejectModal && selectedPayment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4">拒绝支付</h2>
-            <p className="text-gray-600 mb-4">
-              请输入拒绝原因，用户将收到通知
-            </p>
+      {showRejectModal && selectedPayment ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6">
+            <h2 className="mb-4 text-xl font-bold">拒绝支付</h2>
+            <p className="mb-4 text-gray-600">请输入拒绝原因，用户将收到通知</p>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="例如：支付金额不符、凭证不清晰等"
-              className="w-full border rounded-lg p-3 min-h-[100px] mb-4"
+              className="mb-4 min-h-[100px] w-full rounded-lg border p-3"
             />
             <div className="flex gap-4">
               <button
                 onClick={handleReject}
                 disabled={processing || !rejectReason.trim()}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400"
+                className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:bg-gray-400"
               >
                 确认拒绝
               </button>
@@ -320,14 +387,15 @@ export default function PaymentVerificationPage() {
                   setShowRejectModal(false);
                   setRejectReason('');
                 }}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                className="flex-1 rounded-lg bg-gray-200 px-4 py-2 text-gray-800 hover:bg-gray-300"
               >
                 取消
               </button>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
+

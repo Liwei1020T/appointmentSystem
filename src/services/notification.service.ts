@@ -3,11 +3,44 @@
  * 替代原来的 Supabase client 调用
  */
 
-import { Notification } from '.prisma/client';
-
 export interface NotificationData {
-  notifications: Notification[];
+  /**
+   * Normalized notification objects for UI components.
+   * Notes:
+   * - Backend (Prisma) uses `read`, `createdAt`.
+   * - UI legacy expects `is_read`, `created_at`.
+   */
+  notifications: Array<{
+    id: string;
+    userId: string;
+    title: string;
+    message: string;
+    type: string;
+    actionUrl?: string | null;
+    priority?: string | null;
+    // Prisma fields
+    read: boolean;
+    createdAt: string | Date;
+    // Legacy aliases for UI
+    is_read: boolean;
+    created_at: string | Date;
+  }>;
   unreadCount: number;
+}
+
+/**
+ * Convert backend notifications into the UI's legacy-friendly shape.
+ */
+function normalizeNotification(raw: any) {
+  const read = Boolean(raw?.read ?? raw?.is_read ?? false);
+  const createdAt = raw?.createdAt ?? raw?.created_at ?? new Date().toISOString();
+  return {
+    ...raw,
+    read,
+    createdAt,
+    is_read: read,
+    created_at: createdAt,
+  };
 }
 
 /**
@@ -28,7 +61,13 @@ export async function getNotifications(
     throw new Error(data.error || '获取通知失败');
   }
 
-  return data.data;
+  const payload = data?.data ?? data;
+  return {
+    unreadCount: Number(payload?.unreadCount ?? 0) || 0,
+    notifications: Array.isArray(payload?.notifications)
+      ? payload.notifications.map(normalizeNotification)
+      : [],
+  };
 }
 
 /**

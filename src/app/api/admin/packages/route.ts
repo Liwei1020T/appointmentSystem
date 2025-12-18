@@ -40,7 +40,19 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return successResponse(packages);
+    /**
+     * 兼容字段命名：
+     * - Prisma 模型字段为 camelCase（validityDays/createdAt/updatedAt）
+     * - 部分前端页面与旧接口仍读取 snake_case（validity_days/created_at/updated_at）
+     */
+    const normalized = packages.map((pkg) => ({
+      ...pkg,
+      validity_days: (pkg as any).validityDays,
+      created_at: (pkg as any).createdAt,
+      updated_at: (pkg as any).updatedAt,
+    }));
+
+    return successResponse(normalized);
   } catch (error: any) {
     console.error('Get packages error:', error);
     return errorResponse(error.message || '获取套餐失败', 500);
@@ -56,9 +68,10 @@ export async function POST(request: NextRequest) {
       return errorResponse('请求体不能为空');
     }
 
-    const { name, description, times, price, validityDays } = body;
+    const { name, description, times, price, validityDays, validity_days } = body as any;
+    const resolvedValidityDays = validityDays ?? validity_days;
 
-    if (!name || !times || !price || !validityDays) {
+    if (!name || !times || !price || !resolvedValidityDays) {
       return errorResponse('请提供套餐名称、次数、价格和有效期');
     }
 
@@ -68,7 +81,7 @@ export async function POST(request: NextRequest) {
         description: description || '',
         times,
         price,
-        validityDays,
+        validityDays: resolvedValidityDays,
         active: true,
       },
     });
@@ -93,7 +106,8 @@ export async function PATCH(request: NextRequest) {
       return errorResponse('请求体不能为空');
     }
 
-    const { id, name, description, times, price, validityDays, active } = body;
+    const { id, name, description, times, price, validityDays, validity_days, active } = body as any;
+    const resolvedValidityDays = validityDays ?? validity_days;
 
     if (!id) {
       return errorResponse('请提供套餐ID');
@@ -106,7 +120,7 @@ export async function PATCH(request: NextRequest) {
         ...(description !== undefined && { description }),
         ...(times !== undefined && { times }),
         ...(price !== undefined && { price }),
-        ...(validityDays !== undefined && { validityDays }),
+        ...(resolvedValidityDays !== undefined && { validityDays: resolvedValidityDays }),
         ...(active !== undefined && { active }),
       },
     });

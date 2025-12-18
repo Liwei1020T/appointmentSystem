@@ -73,25 +73,42 @@ export default function PointsCenterPage() {
     try {
       // 获取用户当前积分
       const pointsRes = await fetch('/api/points');
-      const pointsData = await pointsRes.json();
+      const pointsPayload = await pointsRes.json();
+      const pointsData = pointsPayload?.data ?? pointsPayload;
       
-      if (pointsRes.ok && pointsData.points !== undefined) {
-        setCurrentPoints(pointsData.points);
+      // API returns { balance, logs } (wrapped with { success, data })
+      if (pointsRes.ok && pointsData?.balance !== undefined) {
+        setCurrentPoints(Number(pointsData.balance) || 0);
       }
 
       // 获取积分明细
       const logsRes = await fetch('/api/points/history');
-      const logsData = await logsRes.json();
+      const logsPayload = await logsRes.json();
+      const logsData = logsPayload?.data ?? logsPayload;
       
-      if (logsRes.ok && logsData.logs) {
-        setPointsLogs(logsData.logs);
+      // API returns { logs } (wrapped)
+      if (logsRes.ok && Array.isArray(logsData?.logs)) {
+        const mapped: PointsLog[] = logsData.logs.map((log: any) => {
+          const amount = Number(log.amount ?? 0);
+          return {
+            id: String(log.id),
+            points: Math.abs(amount),
+            type: amount > 0 ? 'earned' : amount < 0 ? 'spent' : 'expired',
+            // Use backend `type` as source: 'order' | 'referral' | 'redeem' | 'admin_grant' | ...
+            source: String(log.type || 'bonus'),
+            description: String(log.description || log.reason || ''),
+            created_at: String(log.createdAt || log.created_at || new Date().toISOString()),
+          };
+        });
+        setPointsLogs(mapped);
       }
 
       // 获取可兑换优惠券
-      const vouchersRes = await fetch('/api/vouchers?redeemable=true');
-      const vouchersData = await vouchersRes.json();
+      const vouchersRes = await fetch('/api/vouchers/redeemable');
+      const vouchersPayload = await vouchersRes.json();
+      const vouchersData = vouchersPayload?.data ?? vouchersPayload;
       
-      if (vouchersRes.ok && vouchersData.vouchers) {
+      if (vouchersRes.ok && Array.isArray(vouchersData?.vouchers)) {
         setAvailableVouchers(vouchersData.vouchers);
       }
     } catch (error) {
@@ -114,8 +131,11 @@ export default function PointsCenterPage() {
     setRedeeming(voucher.id);
 
     try {
-      // 调用兑换接口
-      const response = await fetch('/api/vouchers/redeem', {
+      /**
+       * 调用“积分兑换”接口（按 voucherId）
+       * 注意：`/api/vouchers/redeem` 需要 `code`，这里是积分中心（按 voucherId 兑换），应使用 redeem-with-points。
+       */
+      const response = await fetch('/api/vouchers/redeem-with-points', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ voucherId: voucher.id }),
@@ -145,13 +165,14 @@ export default function PointsCenterPage() {
 
   const getSourceIcon = (source: string) => {
     switch (source) {
-      case 'order_completed':
+      case 'order':
         return <ShoppingBag className="w-4 h-4" />;
       case 'referral':
         return <UserPlus className="w-4 h-4" />;
-      case 'voucher_redeemed':
+      case 'redeem':
         return <Ticket className="w-4 h-4" />;
       case 'bonus':
+      case 'admin_grant':
         return <Gift className="w-4 h-4" />;
       default:
         return <Coins className="w-4 h-4" />;
@@ -160,11 +181,11 @@ export default function PointsCenterPage() {
 
   const getSourceLabel = (source: string) => {
     const labels: Record<string, string> = {
-      order_completed: '订单完成',
+      order: '订单完成',
       referral: '邀请好友',
-      voucher_redeemed: '兑换优惠券',
+      redeem: '兑换优惠券',
       bonus: '奖励',
-      admin_adjust: '管理员调整',
+      admin_grant: '管理员调整',
     };
     return labels[source] || source;
   };
