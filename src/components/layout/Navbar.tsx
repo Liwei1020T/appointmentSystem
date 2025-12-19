@@ -115,7 +115,7 @@ export default function Navbar() {
                 {/* User Menu */}
                 <div className="relative group">
                   <button className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
-                    <span>{session.user.name || session.user.email}</span>
+                    <span>{session.user.name || session.user.phone || session.user.email || '用户'}</span>
                     <svg
                       className="w-4 h-4"
                       fill="none"

@@ -14,8 +14,11 @@ export async function GET(request: NextRequest) {
     
     const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get('search');
+    const role = searchParams.get('role');
+    const status = searchParams.get('status');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    // Support both `limit` and legacy `pageSize`
+    const limit = parseInt(searchParams.get('limit') || searchParams.get('pageSize') || '20');
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -25,6 +28,17 @@ export async function GET(request: NextRequest) {
         { fullName: { contains: search, mode: 'insensitive' } },
         { phone: { contains: search } },
       ];
+    }
+    if (role && role !== 'all') {
+      where.role = role;
+    }
+    // Note: user "blocked" is not modeled in current schema; keep behavior predictable.
+    if (status && status !== 'all') {
+      if (status === 'blocked') {
+        // No blocked concept yet → return empty set
+        where.id = { equals: '__never__' };
+      }
+      // status === 'active' => no extra filter
     }
 
     const [users, total] = await Promise.all([
@@ -37,6 +51,7 @@ export async function GET(request: NextRequest) {
           phone: true,
           points: true,
           referralCode: true,
+          referredBy: true,
           role: true,
           createdAt: true,
           _count: {

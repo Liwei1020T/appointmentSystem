@@ -36,7 +36,7 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
   // 加载通知列表
   const loadNotifications = async () => {
     setLoading(true);
-    
+
     try {
       const unreadOnly = filter === 'unread';
       const data = await getNotifications(unreadOnly, 50);
@@ -45,7 +45,7 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
       console.error('Failed to load notifications:', err);
       setNotifications([]);
     }
-    
+
     setLoading(false);
   };
 
@@ -112,21 +112,19 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
           <div className="flex gap-2">
             <button
               onClick={() => setFilter('all')}
-              className={`px-3 py-1 text-sm rounded-lg transition-colors ${
-                filter === 'all'
+              className={`px-3 py-1 text-sm rounded-lg transition-colors ${filter === 'all'
                   ? 'bg-purple-600 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
+                }`}
             >
               全部
             </button>
             <button
               onClick={() => setFilter('unread')}
-              className={`px-3 py-1 text-sm rounded-lg transition-colors ${
-                filter === 'unread'
+              className={`px-3 py-1 text-sm rounded-lg transition-colors ${filter === 'unread'
                   ? 'bg-purple-600 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
+                }`}
             >
               未读
             </button>
@@ -142,7 +140,7 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
             >
               <RefreshCw className={`w-4 h-4 text-gray-600 ${loading ? 'animate-spin' : ''}`} />
             </button>
-            
+
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}

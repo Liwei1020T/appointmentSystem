@@ -19,13 +19,14 @@ export async function PATCH(
     const body = await request.json();
     const { role } = body;
 
-    if (!role || !['customer', 'admin'].includes(role)) {
+    const normalizedRole = role === 'user' ? 'customer' : role;
+    if (!normalizedRole || typeof normalizedRole !== 'string') {
       return errorResponse('无效的角色');
     }
 
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { role },
+      data: { role: normalizedRole },
       select: {
         id: true,
         email: true,
@@ -39,4 +40,9 @@ export async function PATCH(
     console.error('Update role error:', error);
     return errorResponse(error.message || '更新角色失败', 500);
   }
+}
+
+// Backward-compatible method used by some clients
+export async function PUT(request: NextRequest, ctx: { params: { id: string } }) {
+  return PATCH(request, ctx);
 }

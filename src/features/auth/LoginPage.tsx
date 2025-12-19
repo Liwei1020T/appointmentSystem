@@ -2,12 +2,12 @@
  * 登录页面组件 (Login Page)
  * 
  * 功能：
- * - 用户登录表单（Email + Password）
- * - 记住我选项（localStorage）
+ * - 用户登录表单（Phone + Password）
+ * - 记住我选项（localStorage 记住手机号）
  * - 表单验证
  * - 错误提示
  * - 登录成功后自动跳转首页
- * - 忘记密码链接
+ * - 忘记密码（OTP 重置）
  */
 
 'use client';
@@ -17,14 +17,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button, Input, Card, Toast, Checkbox } from '@/components';
 import { signIn } from '@/services/authService';
-import { validateEmail } from '@/lib/utils';
+import { normalizeMyPhone, validatePhone } from '@/lib/utils';
 
 export default function LoginPage() {
   const router = useRouter();
 
   // 表单状态
   const [formData, setFormData] = useState({
-    email: '',
+    phone: '',
     password: '',
     rememberMe: false,
   });
@@ -39,12 +39,12 @@ export default function LoginPage() {
   }>({ show: false, message: '', type: 'info' });
 
   /**
-   * 从 localStorage 加载记住的邮箱
+   * 从 localStorage 加载记住的手机号
    */
   useEffect(() => {
-    const savedEmail = localStorage.getItem('remembered_email');
-    if (savedEmail) {
-      setFormData((prev) => ({ ...prev, email: savedEmail, rememberMe: true }));
+    const savedPhone = localStorage.getItem('remembered_phone');
+    if (savedPhone) {
+      setFormData((prev) => ({ ...prev, phone: savedPhone, rememberMe: true }));
     }
   }, []);
 
@@ -53,7 +53,8 @@ export default function LoginPage() {
    */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    const newValue = type === 'checkbox' ? checked : value;
+    const newValue =
+      type === 'checkbox' ? checked : name === 'phone' ? normalizeMyPhone(value) : value;
     
     setFormData((prev) => ({ ...prev, [name]: newValue }));
     
@@ -69,15 +70,15 @@ export default function LoginPage() {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // 验证邮箱
-    if (!formData.email.trim()) {
-      newErrors.email = '请输入邮箱 (Email is required)';
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = '邮箱格式不正确 (Invalid email format)';
+    // 验证手机号
+    if (!formData.phone.trim()) {
+      newErrors.phone = '请输入手机号 (Phone is required)';
+    } else if (!validatePhone(formData.phone)) {
+      newErrors.phone = '手机号格式不正确 (Invalid phone format)';
     }
 
     // 验证密码
-    if (!formData.password) {
+    if (!formData.password.trim()) {
       newErrors.password = '请输入密码 (Password is required)';
     }
 
@@ -99,17 +100,17 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // 正确调用方式：传递对象
+      // 使用手机号 + 密码登录
       await signIn({
-        email: formData.email,
+        phone: formData.phone,
         password: formData.password,
       });
 
       // 处理"记住我"
       if (formData.rememberMe) {
-        localStorage.setItem('remembered_email', formData.email);
+        localStorage.setItem('remembered_phone', formData.phone);
       } else {
-        localStorage.removeItem('remembered_email');
+        localStorage.removeItem('remembered_phone');
       }
 
       // 登录成功
@@ -126,7 +127,7 @@ export default function LoginPage() {
     } catch (err: any) {
       setToast({
         show: true,
-        message: err.message || '邮箱或密码错误',
+        message: err.message || '手机号或密码错误',
         type: 'error',
       });
       setLoading(false);
@@ -145,15 +146,18 @@ export default function LoginPage() {
 
           {/* 表单 */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* 邮箱 */}
+            {/* 手机号 */}
             <Input
-              label="邮箱 Email"
-              name="email"
-              type="email"
-              value={formData.email}
+              label="手机号 Phone"
+              name="phone"
+              type="tel"
+              value={formData.phone}
               onChange={handleChange}
-              error={errors.email}
-              placeholder="example@mail.com"
+              error={errors.phone}
+              placeholder="01131609008"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              helperText="可直接输入 01 开头手机号，无需填写 +60"
               required
             />
 
@@ -177,7 +181,6 @@ export default function LoginPage() {
                 checked={formData.rememberMe}
                 onChange={handleChange}
               />
-              
               <Link
                 href="/forgot-password"
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"

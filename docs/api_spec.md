@@ -65,6 +65,119 @@ All authenticated endpoints require:
 
 ## Authentication
 
+> Note (Local Next.js Auth):
+> 本项目当前的本地后端（Next.js API + Prisma + NextAuth）已支持 **手机号 + 短信验证码 (OTP)** 登录/注册（方案B），并在用户端流程中移除邮箱/密码。
+> Supabase Auth 的 Email/Password 文档仍保留作为未来对接/迁移参考。
+
+### Phone + Password (Next.js)
+
+#### 1) Sign Up (Phone + Password)
+
+**Endpoint:** `POST /api/auth/signup`  
+**Auth Required:** No
+
+**Request Body:**
+```json
+{
+  "fullName": "Test User",
+  "phone": "01131609008",
+  "password": "Password123",
+  "referralCode": "ABCD1234"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "uuid",
+      "fullName": "Test User",
+      "phone": "601131609008",
+      "referralCode": "XXXX",
+      "points": 0
+    }
+  },
+  "message": "注册成功"
+}
+```
+
+#### 2) Sign In (NextAuth Credentials)
+
+**Client Action:** `signIn('credentials', ...)`  
+**Auth Required:** No
+
+**Credentials Payload (Login):**
+```json
+{
+  "phone": "01131609008",
+  "password": "Password123"
+}
+```
+
+**Admin-only Login Payload:**
+```json
+{
+  "phone": "01131609008",
+  "password": "Password123",
+  "admin": "true"
+}
+```
+
+#### 3) Forgot Password (OTP Reset)
+
+**Step A: Request OTP**
+
+**Endpoint:** `POST /api/auth/otp/request`  
+**Auth Required:** No
+
+**Request Body:**
+```json
+{
+  "phone": "01131609008",
+  "purpose": "password_reset"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "cooldownSeconds": 60
+  },
+  "message": "验证码已发送"
+}
+```
+
+**Notes:**
+- OTP 有效期：5 分钟；同手机号 60 秒冷却；每小时最多 5 次。
+- 生产环境通过 Twilio 发送；本地未配置 Twilio 时会 fallback 到 server console log。
+
+**Step B: Confirm Reset**
+
+**Endpoint:** `POST /api/auth/password-reset/confirm`  
+**Auth Required:** No
+
+**Request Body:**
+```json
+{
+  "phone": "01131609008",
+  "code": "123456",
+  "newPassword": "Password123"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": { "ok": true },
+  "message": "密码已重置"
+}
+```
+
 ### 1. Sign Up
 
 **Endpoint:** `POST /auth/v1/signup`  
@@ -154,11 +267,16 @@ All authenticated endpoints require:
 ```json
 {
   "full_name": "Jane Doe",
-  "phone": "+60198765432"
+  "phone": "+60198765432",
+  "address": "No. 8, Jalan SS2/67, Petaling Jaya",
+  "avatar_url": "https://cdn.example.com/avatars/user.png"
 }
 ```
 
 **Response:** Updated user object
+
+**Local Next.js API (current implementation):**  
+`PATCH /api/profile` accepts both `fullName` and `full_name` along with `phone`, `address`, `avatar_url`.
 
 ---
 
@@ -228,7 +346,7 @@ All authenticated endpoints require:
 {
   "success": true,
   "data": {
-    "code": "ABCD1234"
+    "code": "123456"
   }
 }
 ```

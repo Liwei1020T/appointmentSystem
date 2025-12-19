@@ -76,10 +76,12 @@ Extends Supabase Auth with business profile data.
 | Column          | Type         | Constraints              | Description                    |
 |-----------------|--------------|--------------------------|--------------------------------|
 | `id`            | `uuid`       | PRIMARY KEY              | User ID (from Supabase Auth)   |
-| `email`         | `text`       | UNIQUE, NOT NULL         | Email address                  |
-| `phone`         | `text`       | UNIQUE                   | Phone number                   |
+| `email`         | `text`       | UNIQUE, NULLABLE         | Email address (legacy / optional) |
+| `phone`         | `text`       | UNIQUE                   | Phone number (used for OTP login) |
 | `full_name`     | `text`       |                          | Full name                      |
-| `referral_code` | `text`       | UNIQUE, NOT NULL         | User's unique referral code    |
+| `address`       | `text`       |                          | Address (optional)             |
+| `avatar_url`    | `text`       |                          | Avatar image URL (optional)    |
+| `referral_code` | `text`       | UNIQUE, NOT NULL         | User's unique 6-digit referral code |
 | `referred_by`   | `text`       | FK → users.referral_code | Referrer's code                |
 | `points`        | `integer`    | DEFAULT 0                | Current points balance         |
 | `role`          | `text`       | DEFAULT 'customer'       | 'customer' or 'admin'          |
@@ -90,6 +92,29 @@ Extends Supabase Auth with business profile data.
 - `idx_users_referral_code` on `referral_code`
 - `idx_users_referred_by` on `referred_by`
 - `idx_users_email` on `email`
+
+---
+
+### 1.1 `otp_codes` (Phone OTP)
+
+Stores hashed OTP codes for **password reset**. Plain OTP codes are **never** stored.
+
+| Column          | Type         | Constraints                 | Description                       |
+|-----------------|--------------|-----------------------------|-----------------------------------|
+| `id`            | `uuid`       | PRIMARY KEY                 | OTP record ID                     |
+| `phone`         | `text`       | NOT NULL                    | Canonical phone digits (e.g. 60...) |
+| `purpose`       | `text`       | NOT NULL                    | Purpose (e.g. `password_reset`)   |
+| `code_hash`     | `text`       | NOT NULL                    | Hashed OTP code                   |
+| `attempts`      | `int`        | DEFAULT 0                   | Wrong attempts count              |
+| `max_attempts`  | `int`        | DEFAULT 5                   | Max attempts before invalidation  |
+| `expires_at`    | `timestamptz`| NOT NULL                    | Expiration time                   |
+| `created_at`    | `timestamptz`| DEFAULT now()               | Created time                      |
+| `updated_at`    | `timestamptz`| DEFAULT now()               | Updated time                      |
+
+**Constraints & Indexes:**
+- UNIQUE(`phone`, `purpose`) — only one active OTP per phone/purpose
+- `idx_otp_codes_expires_at` on `expires_at`
+- `idx_otp_codes_created_at` on `created_at`
 
 ---
 

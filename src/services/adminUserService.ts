@@ -40,14 +40,38 @@ export async function getAllUsers(filters?: {
     if (filters?.status && filters.status !== 'all') params.append('status', filters.status);
     if (filters?.searchTerm) params.append('search', filters.searchTerm);
     if (filters?.page) params.append('page', filters.page.toString());
-    if (filters?.pageSize) params.append('pageSize', filters.pageSize.toString());
+    if (filters?.pageSize) params.append('limit', filters.pageSize.toString());
 
     const response = await fetch(`/api/admin/users?${params.toString()}`);
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       return { users: [], totalCount: 0, error: data.error || 'Failed to fetch users' };
     }
-    return { users: data.users || data.data || [], totalCount: data.totalCount || data.total || 0, error: null };
+    const payload = data?.data ?? data;
+    const rawUsers = Array.isArray(payload?.users) ? payload.users : [];
+    const normalizedUsers: User[] = rawUsers.map((u: any) => ({
+      id: u.id,
+      email: u.email,
+      phone: u.phone,
+      points: Number(u.points ?? 0) || 0,
+      role: u.role,
+      referralCode: u.referralCode,
+      referral_code: u.referralCode,
+      referredBy: u.referredBy,
+      referred_by: u.referredBy,
+      fullName: u.fullName,
+      full_name: u.fullName,
+      createdAt: u.createdAt,
+      created_at: u.createdAt,
+      updatedAt: u.updatedAt,
+      updated_at: u.updatedAt,
+      // Not modeled yet
+      isBlocked: false,
+      is_blocked: false,
+    }));
+
+    const totalCount = Number(payload?.pagination?.total ?? payload?.total ?? 0) || 0;
+    return { users: normalizedUsers, totalCount, error: null };
   } catch (error: any) {
     return { users: [], totalCount: 0, error: error.message || 'Failed to fetch users' };
   }
@@ -56,11 +80,33 @@ export async function getAllUsers(filters?: {
 export async function getUserById(userId: string): Promise<{ user: User | null; error: string | null }> {
   try {
     const response = await fetch(`/api/admin/users/${userId}`);
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       return { user: null, error: data.error || 'Failed to fetch user' };
     }
-    return { user: data.user || data, error: null };
+    const payload = data?.data ?? data;
+    const u = payload?.user ?? payload;
+    if (!u?.id) return { user: null, error: 'User not found' };
+    const normalized: User = {
+      id: u.id,
+      email: u.email,
+      phone: u.phone,
+      points: Number(u.points ?? 0) || 0,
+      role: u.role,
+      fullName: u.fullName ?? u.full_name,
+      full_name: u.fullName ?? u.full_name,
+      referralCode: u.referralCode ?? u.referral_code,
+      referral_code: u.referralCode ?? u.referral_code,
+      referredBy: u.referredBy ?? u.referred_by,
+      referred_by: u.referredBy ?? u.referred_by,
+      createdAt: u.createdAt ?? u.created_at,
+      created_at: u.createdAt ?? u.created_at,
+      updatedAt: u.updatedAt ?? u.updated_at,
+      updated_at: u.updatedAt ?? u.updated_at,
+      isBlocked: Boolean(u.isBlocked ?? u.is_blocked ?? false),
+      is_blocked: Boolean(u.isBlocked ?? u.is_blocked ?? false),
+    };
+    return { user: normalized, error: null };
   } catch (error: any) {
     return { user: null, error: error.message || 'Failed to fetch user' };
   }
@@ -126,11 +172,12 @@ export async function getUserOrders(userId: string, filters?: {
     if (filters?.limit) params.append('limit', filters.limit.toString());
 
     const response = await fetch(`/api/admin/users/${userId}/orders?${params.toString()}`);
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       return { data: [], total: 0, error: data.error || 'Failed to fetch user orders' };
     }
-    return { data: data.data || [], total: data.total || 0, error: null };
+    const payload = data?.data ?? data;
+    return { data: payload?.data || [], total: payload?.total || 0, error: null };
   } catch (error: any) {
     return { data: [], total: 0, error: error.message || 'Failed to fetch user orders' };
   }
@@ -162,11 +209,12 @@ export interface UserPackage {
 export async function getUserPackages(userId: string): Promise<{ data: UserPackage[]; error: string | null }> {
   try {
     const response = await fetch(`/api/admin/users/${userId}/packages`);
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       return { data: [], error: data.error || 'Failed to fetch user packages' };
     }
-    return { data: data.data || [], error: null };
+    const payload = data?.data ?? data;
+    return { data: payload?.data || payload || [], error: null };
   } catch (error: any) {
     return { data: [], error: error.message || 'Failed to fetch user packages' };
   }
@@ -196,11 +244,12 @@ export interface UserVoucher {
 export async function getUserVouchers(userId: string): Promise<{ data: UserVoucher[]; error: string | null }> {
   try {
     const response = await fetch(`/api/admin/users/${userId}/vouchers`);
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       return { data: [], error: data.error || 'Failed to fetch user vouchers' };
     }
-    return { data: data.data || [], error: null };
+    const payload = data?.data ?? data;
+    return { data: payload?.data || payload || [], error: null };
   } catch (error: any) {
     return { data: [], error: error.message || 'Failed to fetch user vouchers' };
   }
@@ -241,11 +290,12 @@ export async function getUserPointsLog(userId: string, filters?: {
     if (filters?.limit) params.append('limit', filters.limit.toString());
 
     const response = await fetch(`/api/admin/users/${userId}/points-log?${params.toString()}`);
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       return { data: [], total: 0, error: data.error || 'Failed to fetch points log' };
     }
-    return { data: data.data || [], total: data.total || 0, error: null };
+    const payload = data?.data ?? data;
+    return { data: payload?.data || [], total: payload?.total || 0, error: null };
   } catch (error: any) {
     return { data: [], total: 0, error: error.message || 'Failed to fetch points log' };
   }
@@ -261,11 +311,12 @@ export async function updateUserPoints(userId: string, points: number, reason: s
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ points, reason, type }),
     });
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       return { success: false, error: data.error || 'Failed to update user points' };
     }
-    return { success: true, newBalance: data.newBalance, error: null };
+    const payload = data?.data ?? data;
+    return { success: true, newBalance: payload?.newBalance, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to update user points' };
   }
@@ -281,7 +332,7 @@ export async function updateUserRole(userId: string, role: string): Promise<{ su
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role }),
     });
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       return { success: false, error: data.error || 'Failed to update user role' };
     }
@@ -301,7 +352,7 @@ export async function blockUser(userId: string, blocked: boolean, reason?: strin
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ blocked, reason }),
     });
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       return { success: false, error: data.error || 'Failed to update user block status' };
     }

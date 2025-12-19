@@ -5,14 +5,21 @@
 
 export interface UserProfile {
   id: string;
-  email: string;
+  email: string | null;
   fullName: string | null;
+  full_name?: string | null;
   phone: string | null;
+  address?: string | null;
+  avatarUrl?: string | null;
+  avatar_url?: string | null;
   points: number;
   referralCode: string;
+  referral_code?: string;
   referredBy: string | null;
+  referred_by?: string | null;
   role: string;
   createdAt: Date;
+  created_at?: string | Date;
   stats: {
     totalOrders: number;
     activePackages: number;

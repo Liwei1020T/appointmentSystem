@@ -17,6 +17,7 @@ import {
 } from '@/services/profileService';
 import { Card, Spinner, Button, Toast, Input } from '@/components';
 import AvatarUploader from '@/components/AvatarUploader';
+import { normalizeMyPhone } from '@/lib/utils';
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -69,8 +70,9 @@ export default function EditProfilePage() {
         });
       } else if (data) {
         setProfile(data);
+        const resolvedName = data.fullName || data.full_name || '';
         setFormData({
-          full_name: data.full_name || '',
+          full_name: resolvedName,
           phone: data.phone || '',
           address: data.address || '',
           avatar_url: data.avatar_url || '',
@@ -90,7 +92,8 @@ export default function EditProfilePage() {
   // 处理表单变化
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const nextValue = name === 'phone' ? normalizeMyPhone(value) : value;
+    setFormData((prev) => ({ ...prev, [name]: nextValue }));
     // 清除对应字段的错误
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
@@ -257,11 +260,13 @@ export default function EditProfilePage() {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="例如：0123456789"
+                placeholder="例如：01131609008"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 error={errors.phone}
               />
               <p className="text-xs text-slate-500 mt-2">
-                支持马来西亚手机号码格式
+                可直接输入 01 开头手机号，无需填写 +60
               </p>
             </div>
           </Card>
@@ -280,21 +285,6 @@ export default function EditProfilePage() {
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                 rows={3}
               />
-            </div>
-          </Card>
-
-          {/* 邮箱（只读） */}
-          <Card>
-            <div className="p-4">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                邮箱
-              </label>
-              <div className="px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-600">
-                {profile.email}
-              </div>
-              <p className="text-xs text-slate-500 mt-2">
-                邮箱无法修改
-              </p>
             </div>
           </Card>
 

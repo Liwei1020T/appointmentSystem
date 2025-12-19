@@ -8,8 +8,9 @@
  * - Some legacy rows may have `referral_code` missing/blank after migrations.
  *
  * Behavior:
- * - If the user already has a non-empty referral code: return it.
- * - Otherwise generate a unique 8-char code (A-Z0-9), persist it, and return it.
+ * - If the user already has a 6-digit numeric referral code: return it.
+ * - If the user has a legacy (non-6-digit) referral code: migrate it to a 6-digit code and update references.
+ * - Otherwise generate a unique 6-digit numeric code, persist it, and return it.
  */
 
 import { NextResponse } from 'next/server';
@@ -18,27 +19,23 @@ import { requireAuth } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 
 /**
- * Generate a human-friendly referral code.
- * - Uppercase, no ambiguous chars removed (keep simple A-Z0-9).
- * - 8 chars to match existing docs/ERD examples.
+ * Generate a 6-digit numeric referral code.
+ * - Digits only to match the UI requirement (“6位数”).
+ * - Leading zeros are allowed.
  */
-function createReferralCode(length: number = 8): string {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for (let i = 0; i < length; i += 1) {
-    code += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
-  return code;
+function createReferralCode6Digits(): string {
+  const n = Math.floor(Math.random() * 1_000_000);
+  return String(n).padStart(6, '0');
 }
 
 /**
  * Ensure referral code is unique in DB, retrying a few times.
  * This is safe under concurrency because we also rely on the DB unique constraint.
  */
-async function generateUniqueReferralCode(): Promise<string> {
+async function generateUniqueReferralCode6Digits(): Promise<string> {
   const maxAttempts = 10;
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const candidate = createReferralCode(8);
+    const candidate = createReferralCode6Digits();
     const existing = await prisma.user.findUnique({
       where: { referralCode: candidate },
       select: { id: true },
@@ -46,6 +43,10 @@ async function generateUniqueReferralCode(): Promise<string> {
     if (!existing) return candidate;
   }
   throw new Error('Unable to generate unique referral code');
+}
+
+function isSixDigitReferralCode(code: string): boolean {
+  return /^[0-9]{6}$/.test(String(code || '').trim());
 }
 
 export async function POST() {
@@ -59,19 +60,46 @@ export async function POST() {
     });
 
     const currentCode = (existing?.referralCode || '').trim();
-    if (currentCode) {
+    if (currentCode && isSixDigitReferralCode(currentCode)) {
       return successResponse({ code: currentCode });
     }
 
+    /**
+     * If user has a legacy code (e.g., cuid), migrate it:
+     * - Update user's own referralCode
+     * - Update users.referredBy that points to the old code
+     * - Update referral_logs.referral_code that stores the old code
+     *
+     * Note:
+     * - This will make the old code invalid going forward.
+     * - We do this to keep the referral system consistent after shortening codes.
+     */
+    const oldCode = currentCode || null;
+
     // Generate + persist (handle potential unique conflicts by retrying)
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      const code = await generateUniqueReferralCode();
+      const code = await generateUniqueReferralCode6Digits();
       try {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { referralCode: code },
-          select: { id: true },
-        });
+        await prisma.$transaction([
+          prisma.user.update({
+            where: { id: user.id },
+            data: { referralCode: code },
+            select: { id: true },
+          }),
+          ...(oldCode
+            ? [
+                prisma.user.updateMany({
+                  where: { referredBy: oldCode },
+                  data: { referredBy: code },
+                }),
+                prisma.referralLog.updateMany({
+                  where: { referralCode: oldCode },
+                  data: { referralCode: code },
+                }),
+              ]
+            : []),
+        ]);
+
         return successResponse({ code });
       } catch (err: any) {
         // If a unique constraint collision happens, retry.
@@ -91,4 +119,3 @@ export async function POST() {
     return NextResponse.json({ error: error?.message || 'Failed to generate referral code' }, { status: 500 });
   }
 }
-

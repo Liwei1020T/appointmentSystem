@@ -85,6 +85,24 @@ export function isValidPhone(phone: string): boolean {
 }
 
 /**
+ * Normalize Malaysian phone input for consistent validation/storage/display.
+ *
+ * Supported inputs:
+ * - `01131609008`
+ * - `601131609008`
+ * - `+601131609008`
+ *
+ * Output:
+ * - digits only, either starting with `01` or `60` (no `+`).
+ *
+ * @param phone - Raw user input
+ * @returns Normalized digits or empty string
+ */
+export function normalizeMyPhone(phone: string): string {
+  return String(phone || '').replace(/\D/g, '');
+}
+
+/**
  * Validate password strength
  * At least 8 characters, 1 uppercase, 1 lowercase, 1 number
  */

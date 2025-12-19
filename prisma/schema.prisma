@@ -17,10 +17,15 @@ datasource db {
 
 model User {
   id            String   @id @default(uuid()) @db.Uuid
-  email         String   @unique
+  // Email is optional because the platform now supports phone-only auth (OTP).
+  // We keep the column for backward compatibility with existing data and NextAuth adapter expectations.
+  email         String?  @unique
   phone         String?  @unique
   fullName      String?  @map("full_name")
-  password      String   // bcrypt hashed password
+  address       String?
+  avatarUrl     String?  @map("avatar_url")
+  // Password is optional when using OTP-based auth; legacy accounts may still have a password hash.
+  password      String?  // bcrypt hashed password (legacy)
   referralCode  String   @unique @default(cuid()) @map("referral_code")
   referredBy    String?  @map("referred_by")
   points        Int      @default(0)
@@ -46,6 +51,28 @@ model User {
   @@index([referredBy])
   @@index([email])
   @@map("users")
+}
+
+// One-time password (OTP) codes for phone-based authentication.
+// Used by `/api/auth/otp/request` + NextAuth Credentials authorize().
+model OtpCode {
+  id          String   @id @default(uuid()) @db.Uuid
+  phone       String
+  purpose     String
+  codeHash    String   @map("code_hash")
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(5) @map("max_attempts")
+  expiresAt   DateTime @map("expires_at") @db.Timestamptz(6)
+  ip          String?  @db.Text
+  userAgent   String?  @map("user_agent") @db.Text
+  payload     Json?    @db.JsonB
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([phone, purpose])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@map("otp_codes")
 }
 
 // NextAuth.js Account model

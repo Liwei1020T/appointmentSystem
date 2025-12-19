@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Users, Copy, Gift, CheckCircle2, Share2, Sparkles } from 'lucide-react';
+import { Toast } from '@/components';
 
 interface ReferralStats {
   referral_code: string;
@@ -29,6 +30,11 @@ export default function ReferralsPage() {
   const [stats, setStats] = useState<ReferralStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'error' | 'info' | 'warning';
+  }>({ show: false, message: '', type: 'info' });
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -42,14 +48,28 @@ export default function ReferralsPage() {
     try {
       // 获取邀请统计
       const response = await fetch('/api/referrals');
-      const data = await response.json();
+      const payload = await response.json();
+      const data = payload?.data ?? payload;
       
       if (response.ok) {
+        const referrals = Array.isArray(data?.referrals) ? data.referrals : [];
+        const totalRewards = data?.stats?.totalRewards ?? 0;
+        const totalPointsEarned = data?.stats?.totalPointsEarned ?? 0;
+        const rewardPointsPerReferral = totalRewards
+          ? Math.round(totalPointsEarned / totalRewards)
+          : 0;
+        const mappedReferrals = referrals.map((referral) => ({
+          id: referral.id,
+          full_name: referral.referred?.fullName || '用户',
+          created_at: referral.referred?.createdAt || referral.createdAt,
+          reward_points: referral.rewardGiven ? rewardPointsPerReferral : 0,
+        }));
+
         setStats({
           referral_code: data.referralCode || '',
-          total_referrals: data.totalReferrals || 0,
-          total_rewards: data.totalRewards || 0,
-          referrals: data.referrals || [],
+          total_referrals: data?.stats?.totalReferrals ?? referrals.length,
+          total_rewards: totalPointsEarned,
+          referrals: mappedReferrals,
         });
       }
     } catch (error) {
@@ -59,11 +79,32 @@ export default function ReferralsPage() {
     setLoading(false);
   };
 
-  const handleCopy = () => {
-    if (stats?.referral_code) {
-      navigator.clipboard.writeText(stats.referral_code);
+  const handleCopy = async () => {
+    if (!stats?.referral_code) {
+      setToast({
+        show: true,
+        message: '暂无可复制的邀请码',
+        type: 'warning',
+      });
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(stats.referral_code);
       setCopied(true);
+      setToast({
+        show: true,
+        message: '邀请码已复制',
+        type: 'success',
+      });
       setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy referral code:', error);
+      setToast({
+        show: true,
+        message: '复制失败，请重试',
+        type: 'error',
+      });
     }
   };
 
@@ -225,6 +266,14 @@ export default function ReferralsPage() {
           </div>
         </div>
       </div>
+
+      {toast.show && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </div>
   );
 }

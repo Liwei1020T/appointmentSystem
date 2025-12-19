@@ -519,8 +519,8 @@ export default function AdminOrderDetailPage() {
                   <div className="font-medium text-gray-900">{order.user?.full_name || order.user?.fullName || '-'}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">邮箱</div>
-                  <div className="text-gray-900">{order.user?.email || '-'}</div>
+                  <div className="text-sm text-gray-600 mb-1">联系方式</div>
+                  <div className="text-gray-900">{order.user?.phone || order.user?.email || '-'}</div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-600 mb-1">电话</div>

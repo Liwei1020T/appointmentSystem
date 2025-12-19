@@ -2,9 +2,9 @@
  * 注册页面组件 (Signup Page)
  * 
  * 功能：
- * - 用户注册表单（Email + Password + 全名 + 手机号）
+ * - 用户注册表单（Phone + Password + 全名）
  * - 可选填写邀请码
- * - 表单验证（Email 格式、密码强度、手机号格式）
+ * - 表单验证（手机号格式、密码强度）
  * - 错误提示
  * - 注册成功后自动跳转首页
  */
@@ -15,8 +15,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button, Input, Card, Toast } from '@/components';
-import { signUp } from '@/services/authService';
-import { validateEmail, validatePassword, validatePhone } from '@/lib/utils';
+import { signIn, signUp } from '@/services/authService';
+import { normalizeMyPhone, validatePassword, validatePhone } from '@/lib/utils';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -24,12 +24,11 @@ export default function SignupPage() {
 
   // 表单状态
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
     fullName: '',
     phone: '',
     referralCode: '',
+    password: '',
+    confirmPassword: '',
   });
 
   // 从 URL 参数获取邀请码
@@ -54,7 +53,9 @@ export default function SignupPage() {
    */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Phone input: allow simple digit input like 01131609008 (no +60 needed)
+    const nextValue = name === 'phone' ? normalizeMyPhone(value) : value;
+    setFormData((prev) => ({ ...prev, [name]: nextValue }));
     
     // 清除对应字段的错误提示
     if (errors[name]) {
@@ -73,13 +74,6 @@ export default function SignupPage() {
       newErrors.fullName = '请输入姓名 (Name is required)';
     }
 
-    // 验证邮箱
-    if (!formData.email.trim()) {
-      newErrors.email = '请输入邮箱 (Email is required)';
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = '邮箱格式不正确 (Invalid email format)';
-    }
-
     // 验证手机号
     if (!formData.phone.trim()) {
       newErrors.phone = '请输入手机号 (Phone is required)';
@@ -88,16 +82,16 @@ export default function SignupPage() {
     }
 
     // 验证密码
-    if (!formData.password) {
+    if (!formData.password.trim()) {
       newErrors.password = '请输入密码 (Password is required)';
     } else if (!validatePassword(formData.password)) {
-      newErrors.password = '密码至少8位，包含字母和数字 (Min 8 chars, letters + numbers)';
+      newErrors.password = '密码至少8位，包含大小写字母和数字';
     }
 
-    // 验证确认密码
-    if (!formData.confirmPassword) {
+    // 确认密码
+    if (!formData.confirmPassword.trim()) {
       newErrors.confirmPassword = '请确认密码 (Confirm password is required)';
-    } else if (formData.password !== formData.confirmPassword) {
+    } else if (formData.confirmPassword !== formData.password) {
       newErrors.confirmPassword = '两次密码不一致 (Passwords do not match)';
     }
 
@@ -119,14 +113,16 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      // 正确的 signUp 调用方式：传递对象
-      const result = await signUp({
-        email: formData.email,
-        password: formData.password,
+      // 手机号 + 密码注册
+      await signUp({
         fullName: formData.fullName,
         phone: formData.phone,
+        password: formData.password,
         referralCode: formData.referralCode || undefined,
       });
+
+      // 注册后自动登录
+      await signIn({ phone: formData.phone, password: formData.password });
 
       // 注册成功
       setToast({
@@ -173,18 +169,6 @@ export default function SignupPage() {
               required
             />
 
-            {/* 邮箱 */}
-            <Input
-              label="邮箱 Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              error={errors.email}
-              placeholder="example@mail.com"
-              required
-            />
-
             {/* 手机号 */}
             <Input
               label="手机号 Phone"
@@ -193,7 +177,10 @@ export default function SignupPage() {
               value={formData.phone}
               onChange={handleChange}
               error={errors.phone}
-              placeholder="+60123456789"
+              placeholder="01131609008"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              helperText="可直接输入 01 开头手机号（例如 01131609008），无需填写 +60"
               required
             />
 
@@ -205,8 +192,8 @@ export default function SignupPage() {
               value={formData.password}
               onChange={handleChange}
               error={errors.password}
-              placeholder="至少8位，包含字母和数字"
-              helperText="至少8位，包含字母和数字"
+              placeholder="至少8位，包含大小写字母和数字"
+              helperText="至少8位，包含大小写字母和数字"
               required
             />
 
@@ -230,7 +217,7 @@ export default function SignupPage() {
               value={formData.referralCode}
               onChange={handleChange}
               placeholder="输入朋友的邀请码"
-              helperText="使用邀请码双方可获得积分奖励"
+              helperText="使用邀请码双方可获得积分奖励（注册后自动发放）"
             />
 
             {/* 提交按钮 */}

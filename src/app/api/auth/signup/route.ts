@@ -7,104 +7,124 @@ import { NextRequest } from 'next/server';
 import bcrypt from 'bcrypt';
 import { prisma } from '@/lib/prisma';
 import { errorResponse, successResponse } from '@/lib/api-response';
+import { isValidMyPhone, toMyCanonicalPhone } from '@/lib/phone';
+import { normalizeMyPhone, validatePassword } from '@/lib/utils';
+
+/**
+ * Generate a unique 6-digit numeric referral code.
+ *
+ * Why:
+ * - UI requirement: “邀请码为6位数”
+ * - Keep it human-friendly and easy to type.
+ */
+async function generateUniqueReferralCode6Digits(): Promise<string> {
+  const maxAttempts = 15;
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const n = Math.floor(Math.random() * 1_000_000);
+    const code = String(n).padStart(6, '0');
+    const existing = await prisma.user.findUnique({
+      where: { referralCode: code },
+      select: { id: true },
+    });
+    if (!existing) return code;
+  }
+  throw new Error('Unable to generate unique referral code');
+}
 
 export async function POST(request: NextRequest) {
   try {
+    /**
+     * Phone + Password Signup
+     *
+     * Data flow:
+     * - Create account with phone + password (no email).
+     * - Referral reward is applied immediately after user creation.
+     */
     const body = await request.json();
-    const { email, password, fullName, phone, referralCode } = body;
+    const fullName = String(body?.fullName || '');
+    const phoneInput = String(body?.phone || '');
+    const password = String(body?.password || '');
+    const referralCode = body?.referralCode ? String(body.referralCode) : undefined;
 
-    // 验证必填字段
-    if (!email || !password || !fullName) {
+    if (!fullName.trim() || !phoneInput.trim() || !password.trim()) {
       return errorResponse('请填写所有必填字段');
     }
 
-    // 验证邮箱格式
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return errorResponse('邮箱格式无效');
+    if (!isValidMyPhone(phoneInput)) {
+      return errorResponse('手机号格式无效');
     }
 
-    // 验证密码强度
-    if (password.length < 8) {
-      return errorResponse('密码至少需要 8 个字符');
+    if (!validatePassword(password)) {
+      return errorResponse('密码至少8位，包含大小写字母和数字');
     }
 
-    // 验证手机号（如有）
-    if (phone) {
-      const phoneClean = phone.replace(/\D/g, '');
-      if (!/^(601\d{8,9}|01\d{8,9})$/.test(phoneClean)) {
-        return errorResponse('手机号格式无效');
-      }
-    }
+    const phoneDigits = normalizeMyPhone(phoneInput);
+    const canonicalPhone = toMyCanonicalPhone(phoneDigits);
 
-    // 检查邮箱是否已存在
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
+    // Check phone uniqueness
+    const existingByPhone = await prisma.user.findFirst({
+      where: { OR: [{ phone: canonicalPhone }, { phone: phoneDigits }] },
+      select: { id: true },
     });
-
-    if (existingUser) {
-      return errorResponse('该邮箱已被注册');
+    if (existingByPhone) {
+      return errorResponse('该手机号已被注册');
     }
 
-    // 验证邀请码（如有）
-    let referrerId: string | null = null;
-    if (referralCode) {
-      const referrer = await prisma.user.findUnique({
-        where: { referralCode },
-        select: { id: true },
+    // Validate referral code (optional)
+    let referrer: { id: string; points: number } | null = null;
+    if (referralCode?.trim()) {
+      referrer = await prisma.user.findUnique({
+        where: { referralCode: referralCode.trim() },
+        select: { id: true, points: true },
       });
-
       if (!referrer) {
         return errorResponse('邀请码无效');
       }
-      referrerId = referrer.id;
     }
 
-    // 加密密码
     const hashedPassword = await bcrypt.hash(password, 10);
+    const rewardPoints = Number.parseInt(process.env.REFERRAL_REWARD_POINTS || '50', 10);
+    const internalEmail = `u_${canonicalPhone}@phone.local`;
+    const referralCodeForUser = await generateUniqueReferralCode6Digits();
 
-    // 创建用户
+    // Create user
     const user = await prisma.user.create({
       data: {
-        email,
+        // Email is kept only for backward compatibility. We generate an internal synthetic email.
+        email: internalEmail,
+        phone: canonicalPhone,
+        fullName: fullName.trim(),
         password: hashedPassword,
-        fullName,
-        phone: phone || null,
-        referredBy: referralCode || null,
+        referralCode: referralCodeForUser,
+        referredBy: referralCode?.trim() || null,
         role: 'customer',
-        points: 0,
+        points: referrer ? rewardPoints : 0,
       },
       select: {
         id: true,
-        email: true,
         fullName: true,
+        phone: true,
         referralCode: true,
+        points: true,
       },
     });
 
-    // 处理推荐奖励
-    if (referrerId) {
-      const rewardPoints = parseInt(process.env.REFERRAL_REWARD_POINTS || '50');
-
-      // 给推荐人积分
+    // Apply referral rewards (both sides)
+    if (referrer) {
       await prisma.$transaction([
         prisma.user.update({
-          where: { id: referrerId },
+          where: { id: referrer.id },
           data: { points: { increment: rewardPoints } },
         }),
         prisma.pointsLog.create({
           data: {
-            userId: referrerId,
+            userId: referrer.id,
             amount: rewardPoints,
             type: 'referral',
             referenceId: user.id,
-            description: `推荐用户 ${email}`,
-            balanceAfter: 0, // 将在事后查询
+            description: `推荐用户 ${canonicalPhone}`,
+            balanceAfter: (referrer.points || 0) + rewardPoints,
           },
-        }),
-        // 给新用户积分
-        prisma.user.update({
-          where: { id: user.id },
-          data: { points: rewardPoints },
         }),
         prisma.pointsLog.create({
           data: {
@@ -115,42 +135,41 @@ export async function POST(request: NextRequest) {
             balanceAfter: rewardPoints,
           },
         }),
-        // 记录推荐关系
         prisma.referralLog.create({
           data: {
-            referrerId,
+            referrerId: referrer.id,
             referredId: user.id,
-            referralCode: referralCode!,
+            referralCode: referralCode!.trim(),
             rewardGiven: true,
           },
         }),
+        prisma.notification.create({
+          data: {
+            userId: user.id,
+            type: 'system',
+            title: '注册奖励',
+            message: `注册成功，获得 ${rewardPoints} 积分`,
+          },
+        }),
+        prisma.notification.create({
+          data: {
+            userId: referrer.id,
+            type: 'system',
+            title: '邀请奖励',
+            message: `成功邀请新用户，获得 ${rewardPoints} 积分`,
+          },
+        }),
       ]);
-
-      // 更新积分日志的 balanceAfter
-      const referrerUser = await prisma.user.findUnique({
-        where: { id: referrerId },
-        select: { points: true },
-      });
-      
-      await prisma.pointsLog.updateMany({
-        where: {
-          userId: referrerId,
-          referenceId: user.id,
-          type: 'referral',
-        },
-        data: {
-          balanceAfter: referrerUser?.points || 0,
-        },
-      });
     }
 
     return successResponse(
       {
         user: {
           id: user.id,
-          email: user.email,
           fullName: user.fullName,
+          phone: user.phone,
           referralCode: user.referralCode,
+          points: user.points,
         },
       },
       '注册成功'

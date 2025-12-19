@@ -224,7 +224,7 @@ export default function PaymentVerificationPage() {
                     <p className="font-medium">
                       {payment.user.fullName || '用户'}
                     </p>
-                    <p className="text-sm text-gray-500">{payment.user.email}</p>
+                    <p className="text-sm text-gray-500">{payment.user.phone || payment.user.email || '-'}</p>
                     {payment.user.phone ? (
                       <p className="text-sm text-gray-500">{payment.user.phone}</p>
                     ) : null}
@@ -325,7 +325,7 @@ export default function PaymentVerificationPage() {
                       {selectedPayment.user.fullName || '用户'}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {selectedPayment.user.email}
+                      {selectedPayment.user.phone || selectedPayment.user.email || '-'}
                     </p>
                   </div>
                   <div>
@@ -398,4 +398,3 @@ export default function PaymentVerificationPage() {
     </div>
   );
 }
-

@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
         email: true,
         fullName: true,
         phone: true,
+        address: true,
+        avatarUrl: true,
         points: true,
         referralCode: true,
         referredBy: true,
@@ -40,6 +42,8 @@ export async function GET(request: NextRequest) {
 
     return successResponse({
       ...profile,
+      full_name: profile.fullName,
+      avatar_url: profile.avatarUrl,
       stats: {
         totalOrders: orderCount,
         activePackages: packageCount,
@@ -60,25 +64,47 @@ export async function PATCH(request: NextRequest) {
   try {
     const user = await requireAuth();
     const body = await request.json();
-    const { fullName, phone } = body;
+    const { fullName, full_name, phone, address, avatar_url, avatarUrl } = body;
+    const resolvedFullName = fullName ?? full_name;
+    const resolvedAvatarUrl = avatarUrl ?? avatar_url;
+    const updateData: Record<string, unknown> = {};
+
+    if (resolvedFullName !== undefined) {
+      updateData.fullName = resolvedFullName;
+    }
+    if (phone !== undefined) {
+      updateData.phone = phone;
+    }
+    if (address !== undefined) {
+      updateData.address = address;
+    }
+    if (resolvedAvatarUrl !== undefined) {
+      updateData.avatarUrl = resolvedAvatarUrl;
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      data: {
-        ...(fullName && { fullName }),
-        ...(phone && { phone }),
-      },
+      data: updateData,
       select: {
         id: true,
         email: true,
         fullName: true,
         phone: true,
+        address: true,
+        avatarUrl: true,
         points: true,
         referralCode: true,
       },
     });
 
-    return successResponse(updatedUser, '资料更新成功');
+    return successResponse(
+      {
+        ...updatedUser,
+        full_name: updatedUser.fullName,
+        avatar_url: updatedUser.avatarUrl,
+      },
+      '资料更新成功'
+    );
   } catch (error: any) {
     console.error('Update profile error:', error);
     return errorResponse(error.message || '更新资料失败', 500);

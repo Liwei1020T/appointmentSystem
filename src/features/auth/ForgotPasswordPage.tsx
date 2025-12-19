@@ -2,28 +2,34 @@
  * 忘记密码页面组件 (Forgot Password Page)
  * 
  * 功能：
- * - 发送密码重置邮件
- * - 表单验证（Email 格式）
- * - 成功提示用户检查邮箱
- * - 返回登录链接
+ * - 通过手机号获取 OTP
+ * - 输入 OTP + 新密码完成重置
+ * - 重置完成后引导返回登录
  */
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button, Input, Card, Toast } from '@/components';
-import { resetPassword } from '@/services/authService';
-import { validateEmail } from '@/lib/utils';
+import { Button, Card, Input, Toast } from '@/components';
+import { confirmPasswordReset, requestPasswordResetOtp } from '@/services/authService';
+import { normalizeMyPhone, validatePassword, validatePhone } from '@/lib/utils';
 
 export default function ForgotPasswordPage() {
-  // 表单状态
-  const [email, setEmail] = useState('');
+  // Step: 1 request OTP, 2 confirm reset
+  const [step, setStep] = useState<1 | 2>(1);
 
-  // UI 状态
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [formData, setFormData] = useState({
+    phone: '',
+    code: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  const [sendingCode, setSendingCode] = useState(false);
+  const [cooldownLeft, setCooldownLeft] = useState<number>(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
@@ -31,71 +37,111 @@ export default function ForgotPasswordPage() {
   }>({ show: false, message: '', type: 'info' });
 
   /**
+   * OTP 冷却倒计时（秒）
+   */
+  useEffect(() => {
+    if (cooldownLeft <= 0) return;
+    const timer = setInterval(() => {
+      setCooldownLeft((s) => Math.max(0, s - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldownLeft]);
+
+  /**
    * 处理输入变化
    */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-    if (error) setError('');
+    const { name, value } = e.target;
+    const nextValue =
+      name === 'phone' || name === 'code' ? normalizeMyPhone(value) : value;
+    setFormData((prev) => ({ ...prev, [name]: nextValue }));
+
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
   };
 
   /**
-   * 验证表单
+   * Step 1: 获取验证码
    */
-  const validateForm = (): boolean => {
-    if (!email.trim()) {
-      setError('请输入邮箱 (Email is required)');
-      return false;
+  const handleRequestCode = async () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.phone.trim()) {
+      newErrors.phone = '请输入手机号 (Phone is required)';
+    } else if (!validatePhone(formData.phone)) {
+      newErrors.phone = '手机号格式不正确 (Invalid phone format)';
     }
+    setErrors((prev) => ({ ...prev, ...newErrors }));
+    if (Object.keys(newErrors).length > 0) return;
 
-    if (!validateEmail(email)) {
-      setError('邮箱格式不正确 (Invalid email format)');
-      return false;
-    }
-
-    return true;
-  };
-
-  /**
-   * 处理表单提交
-   */
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // 验证表单
-    if (!validateForm()) {
-      return;
-    }
-
-    setLoading(true);
-
+    setSendingCode(true);
     try {
-      const { error: resetError } = await resetPassword(email);
-
-      if (resetError) {
-        setToast({
-          show: true,
-          message: typeof resetError === 'string' ? resetError : (resetError as any)?.message || '发送失败，请重试 (Failed to send reset email)',
-          type: 'error',
-        });
-        setLoading(false);
-        return;
-      }
-
-      // 成功发送重置邮件
-      setSuccess(true);
+      const result = await requestPasswordResetOtp({ phone: formData.phone });
+      setCooldownLeft(result.cooldownSeconds || 60);
+      setStep(2);
       setToast({
         show: true,
-        message: '重置邮件已发送，请检查您的邮箱 (Reset email sent!)',
+        message: '验证码已发送（5 分钟内有效）',
         type: 'success',
       });
-      setLoading(false);
     } catch (err: any) {
       setToast({
         show: true,
-        message: err.message || '发送失败 (Failed to send reset email)',
+        message: err.message || '发送验证码失败',
         type: 'error',
       });
-      setLoading(false);
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  /**
+   * Step 2: 确认重置密码
+   */
+  const handleConfirmReset = async () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.phone.trim() || !validatePhone(formData.phone)) {
+      newErrors.phone = '手机号格式不正确 (Invalid phone format)';
+    }
+    if (!formData.code.trim() || !/^[0-9]{6}$/.test(formData.code.trim())) {
+      newErrors.code = '请输入 6 位数字验证码';
+    }
+    if (!formData.newPassword.trim()) {
+      newErrors.newPassword = '请输入新密码 (New password is required)';
+    } else if (!validatePassword(formData.newPassword)) {
+      newErrors.newPassword = '密码至少8位，包含大小写字母和数字';
+    }
+    if (!formData.confirmPassword.trim()) {
+      newErrors.confirmPassword = '请确认密码 (Confirm password is required)';
+    } else if (formData.confirmPassword !== formData.newPassword) {
+      newErrors.confirmPassword = '两次密码不一致 (Passwords do not match)';
+    }
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
+    setSubmitting(true);
+    try {
+      await confirmPasswordReset({
+        phone: formData.phone,
+        code: formData.code,
+        newPassword: formData.newPassword,
+      });
+
+      setToast({
+        show: true,
+        message: '密码已重置，请使用新密码登录',
+        type: 'success',
+      });
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1200);
+    } catch (err: any) {
+      setToast({
+        show: true,
+        message: err.message || '重置密码失败',
+        type: 'error',
+      });
+      setSubmitting(false);
     }
   };
 
@@ -106,85 +152,129 @@ export default function ForgotPasswordPage() {
           {/* 标题 */}
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-slate-900">忘记密码</h1>
-            <p className="text-sm text-slate-600 mt-1">Reset Your Password</p>
+            <p className="text-sm text-slate-600 mt-1">Reset password with OTP</p>
           </div>
 
-          {success ? (
-            /* 成功提示 */
+          {step === 1 ? (
             <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <svg
-                    className="w-5 h-5 text-green-600 mt-0.5 mr-3"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  <div>
-                    <h3 className="text-sm font-medium text-green-900">
-                      邮件已发送！
-                    </h3>
-                    <p className="text-sm text-green-700 mt-1">
-                      我们已向 <strong>{email}</strong> 发送了密码重置邮件。
-                      请检查您的邮箱（包括垃圾邮件文件夹），并点击邮件中的链接重置密码。
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <Input
+                label="手机号 Phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleChange}
+                error={errors.phone}
+                placeholder="01131609008"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                helperText="可直接输入 01 开头手机号，无需填写 +60"
+                required
+              />
 
-              <div className="text-center">
-                <Link href="/login">
-                  <Button variant="primary" fullWidth>
-                    返回登录
-                  </Button>
-                </Link>
-              </div>
+              <Button
+                type="button"
+                variant="primary"
+                fullWidth
+                loading={sendingCode}
+                disabled={sendingCode || cooldownLeft > 0}
+                onClick={handleRequestCode}
+              >
+                {cooldownLeft > 0 ? `请稍候 ${cooldownLeft}s` : '获取重置验证码'}
+              </Button>
             </div>
           ) : (
-            /* 表单 */
-            <>
-              <p className="text-sm text-slate-600 mb-6 text-center">
-                输入您注册时使用的邮箱，我们将向您发送密码重置链接。
-              </p>
+            <div className="space-y-4">
+              <Input
+                label="手机号 Phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleChange}
+                error={errors.phone}
+                placeholder="01131609008"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                required
+              />
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* 邮箱 */}
-                <Input
-                  label="邮箱 Email"
-                  name="email"
-                  type="email"
-                  value={email}
-                  onChange={handleChange}
-                  error={error}
-                  placeholder="example@mail.com"
-                  required
-                />
-
-                {/* 提交按钮 */}
+              <div className="grid grid-cols-3 gap-3 items-end">
+                <div className="col-span-2">
+                  <Input
+                    label="验证码 OTP"
+                    name="code"
+                    type="text"
+                    value={formData.code}
+                    onChange={handleChange}
+                    error={errors.code}
+                    placeholder="6 位数字"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    required
+                  />
+                </div>
                 <Button
-                  type="submit"
+                  type="button"
+                  variant="secondary"
+                  onClick={handleRequestCode}
+                  disabled={sendingCode || cooldownLeft > 0}
+                  loading={sendingCode}
+                >
+                  {cooldownLeft > 0 ? `${cooldownLeft}s` : '重发验证码'}
+                </Button>
+              </div>
+
+              <Input
+                label="新密码 New Password"
+                name="newPassword"
+                type="password"
+                value={formData.newPassword}
+                onChange={handleChange}
+                error={errors.newPassword}
+                placeholder="至少8位，包含大小写字母和数字"
+                required
+              />
+
+              <Input
+                label="确认新密码 Confirm Password"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                error={errors.confirmPassword}
+                placeholder="再次输入密码"
+                required
+              />
+
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  fullWidth
+                  disabled={submitting}
+                  onClick={() => setStep(1)}
+                >
+                  返回
+                </Button>
+                <Button
+                  type="button"
                   variant="primary"
                   fullWidth
-                  loading={loading}
-                  disabled={loading}
+                  loading={submitting}
+                  disabled={submitting}
+                  onClick={handleConfirmReset}
                 >
-                  {loading ? '发送中...' : '发送重置邮件'}
+                  确认重置
                 </Button>
-              </form>
-
-              {/* 返回登录链接 */}
-              <div className="mt-6 text-center text-sm text-slate-600">
-                <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-                  ← 返回登录
-                </Link>
               </div>
-            </>
+            </div>
           )}
+
+          {/* 返回登录链接 */}
+          <div className="mt-6 text-center text-sm text-slate-600">
+            <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+              ← 返回登录
+            </Link>
+          </div>
         </div>
       </Card>
 

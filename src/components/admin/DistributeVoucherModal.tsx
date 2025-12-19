@@ -57,9 +57,9 @@ export default function DistributeVoucherModal({
     if (searchTerm) {
       const filtered = users.filter(
         (user) =>
-          user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.phone?.includes(searchTerm)
+          String(user.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          String(user.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          String(user.phone || '').includes(searchTerm)
       );
       setFilteredUsers(filtered);
     } else {
@@ -259,7 +259,7 @@ export default function DistributeVoucherModal({
                         <div className="ml-3">
                           <div className="font-medium">{user.full_name}</div>
                           <div className="text-sm text-gray-500">
-                            {user.email} {user.phone && `• ${user.phone}`}
+                            {user.phone || user.email || '-'}
                           </div>
                         </div>
                       </label>

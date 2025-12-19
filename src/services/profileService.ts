@@ -72,13 +72,16 @@ export async function changePassword(
   newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const response = await fetch('/api/profile/change-password', {
-      method: 'POST',
+    const response = await fetch('/api/user/password', {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ currentPassword, newPassword }),
     });
-    const data = await response.json();
-    return data;
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return { success: false, error: data.error || '修改密码失败' };
+    }
+    return { success: true };
   } catch (error) {
     console.error('Failed to change password:', error);
     return { success: false, error: 'Network error' };
@@ -90,10 +93,16 @@ export async function changePassword(
  */
 export async function updateProfile(data: UpdateProfileParams): Promise<{ success: boolean; error: string | null }> {
   try {
+    const payload = {
+      fullName: data.fullName ?? data.full_name,
+      phone: data.phone,
+      address: data.address,
+      avatar_url: data.avatar_url,
+    };
     const response = await fetch('/api/profile', {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
     if (!response.ok) {
       const errorData = await response.json();

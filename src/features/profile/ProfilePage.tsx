@@ -176,8 +176,16 @@ export default function ProfilePage() {
         <div className="max-w-2xl mx-auto px-4">
           <div className="flex items-center gap-4">
             {/* 头像 */}
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-blue-600 text-3xl font-bold">
-              {(profile.full_name || profile.fullName || 'U').charAt(0).toUpperCase()}
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-blue-600 text-3xl font-bold overflow-hidden">
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt="用户头像"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                (profile.full_name || profile.fullName || 'U').charAt(0).toUpperCase()
+              )}
             </div>
             
             {/* 用户信息 */}

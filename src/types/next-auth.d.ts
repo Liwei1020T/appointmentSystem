@@ -4,13 +4,13 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id: string;
-      email: string;
+      email?: string | null;
       name?: string | null;
       role: string;
       // Extended fields
       full_name?: string;
       fullName?: string;
-      phone?: string;
+      phone?: string | null;
       avatar?: string;
       avatar_url?: string;
       referral_code?: string;
@@ -23,13 +23,13 @@ declare module 'next-auth' {
 
   interface User {
     id: string;
-    email: string;
+    email?: string | null;
     name?: string | null;
     role: string;
     // Extended fields
     full_name?: string;
     fullName?: string;
-    phone?: string;
+    phone?: string | null;
     avatar?: string;
     avatar_url?: string;
     referral_code?: string;

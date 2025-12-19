@@ -2,8 +2,8 @@
  * 管理员登录页面组件 (Admin Login Page)
  * 
  * 功能：
- * - Email + Password 登录表单
- * - 角色验证（仅允许 admin/super_admin）
+ * - Phone + Password 登录表单（无邮箱）
+ * - 角色验证（仅允许 admin/super_admin，通过 NextAuth authorize 校验）
  * - 登录成功后跳转到管理员仪表板
  * - 错误提示
  * - 记住我功能
@@ -11,17 +11,29 @@
 
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn } from '@/services/authService';
+import { normalizeMyPhone, validatePhone } from '@/lib/utils';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
+
+  /**
+   * 从 localStorage 读取记住的手机号
+   */
+  useEffect(() => {
+    const savedPhone = localStorage.getItem('admin_remembered_phone');
+    if (savedPhone) {
+      setPhone(savedPhone);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -29,30 +41,28 @@ export default function AdminLoginPage() {
     setError(null);
 
     // 基本验证
-    if (!email || !password) {
-      setError('请输入邮箱和密码');
+    const phoneValue = normalizeMyPhone(phone);
+    setPhone(phoneValue);
+    if (!phoneValue || !validatePhone(phoneValue)) {
+      setError('请输入正确的手机号');
+      setLoading(false);
+      return;
+    }
+    if (!password.trim()) {
+      setError('请输入密码');
       setLoading(false);
       return;
     }
 
     try {
-      // 使用NextAuth登录
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
+      // 使用 NextAuth Credentials 登录（admin=true 会在 authorize 中强制检查角色）
+      await signIn({ phone: phoneValue, password: password.trim(), admin: true });
 
-      if (result?.error) {
-        setError(result.error || '登录失败');
-        setLoading(false);
-        return;
-      }
-
-      if (!result?.ok) {
-        setError('登录失败，请检查邮箱和密码');
-        setLoading(false);
-        return;
+      // 处理 "记住我"
+      if (rememberMe) {
+        localStorage.setItem('admin_remembered_phone', phoneValue);
+      } else {
+        localStorage.removeItem('admin_remembered_phone');
       }
 
       // 登录成功，跳转到仪表板
@@ -79,21 +89,24 @@ export default function AdminLoginPage() {
         {/* Login Form */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
+            {/* Phone Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                邮箱地址
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                手机号
               </label>
               <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(normalizeMyPhone(e.target.value))}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all"
-                placeholder="admin@example.com"
+                placeholder="01131609008"
                 disabled={loading}
-                autoComplete="email"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="tel"
               />
+              <p className="text-xs text-gray-500 mt-2">可直接输入 01 开头手机号，无需填写 +60</p>
             </div>
 
             {/* Password Field */}

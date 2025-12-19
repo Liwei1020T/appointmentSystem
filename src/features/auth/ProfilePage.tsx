@@ -5,7 +5,7 @@
  * - 显示用户基本信息
  * - 显示我的邀请码（可复制）
  * - 编辑个人资料（姓名、手机号）
- * - 修改密码
+ * - 修改密码（已登录用户）
  * - 退出登录
  */
 
@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Input, Card, Badge, Toast, Spinner } from '@/components';
 import { useSession, signOut } from 'next-auth/react';
 import { updateProfile, updatePassword } from '@/services/authService';
-import { validatePhone } from '@/lib/utils';
+import { normalizeMyPhone, validatePassword, validatePhone } from '@/lib/utils';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -30,11 +30,6 @@ export default function ProfilePage() {
     phone: '',
   });
 
-  const [passwordData, setPasswordData] = useState({
-    newPassword: '',
-    confirmPassword: '',
-  });
-
   // UI 状态
   const [editMode, setEditMode] = useState(false);
   const [changePasswordMode, setChangePasswordMode] = useState(false);
@@ -45,6 +40,12 @@ export default function ProfilePage() {
     message: string;
     type: 'success' | 'error' | 'info' | 'warning';
   }>({ show: false, message: '', type: 'info' });
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
 
   /**
    * 从用户信息加载表单数据
@@ -86,7 +87,8 @@ export default function ProfilePage() {
    */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const nextValue = name === 'phone' ? normalizeMyPhone(value) : value;
+    setFormData((prev) => ({ ...prev, [name]: nextValue }));
     
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
@@ -99,7 +101,7 @@ export default function ProfilePage() {
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPasswordData((prev) => ({ ...prev, [name]: value }));
-    
+
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -119,26 +121,6 @@ export default function ProfilePage() {
       newErrors.phone = '请输入手机号 (Phone is required)';
     } else if (!validatePhone(formData.phone)) {
       newErrors.phone = '手机号格式不正确 (Invalid phone format)';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  /**
-   * 验证密码表单
-   */
-  const validatePasswordForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!passwordData.newPassword) {
-      newErrors.newPassword = '请输入新密码 (New password is required)';
-    } else if (passwordData.newPassword.length < 8) {
-      newErrors.newPassword = '密码至少8位 (Min 8 characters)';
-    }
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      newErrors.confirmPassword = '两次密码不一致 (Passwords do not match)';
     }
 
     setErrors(newErrors);
@@ -193,17 +175,34 @@ export default function ProfilePage() {
    * 修改密码
    */
   const handleChangePassword = async () => {
-    if (!validatePasswordForm()) return;
+    const newErrors: Record<string, string> = {};
+
+    if (!passwordData.newPassword.trim()) {
+      newErrors.newPassword = '请输入新密码 (New password is required)';
+    } else if (!validatePassword(passwordData.newPassword)) {
+      newErrors.newPassword = '密码至少8位，包含大小写字母和数字';
+    }
+
+    if (!passwordData.confirmPassword.trim()) {
+      newErrors.confirmPassword = '请确认密码 (Confirm password is required)';
+    } else if (passwordData.confirmPassword !== passwordData.newPassword) {
+      newErrors.confirmPassword = '两次密码不一致 (Passwords do not match)';
+    }
+
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
     setLoading(true);
-
     try {
-      const { error } = await updatePassword(passwordData.newPassword);
+      const { success, error } = await updatePassword({
+        currentPassword: passwordData.currentPassword || undefined,
+        newPassword: passwordData.newPassword,
+      });
 
-      if (error) {
+      if (!success || error) {
         setToast({
           show: true,
-          message: typeof error === 'string' ? error : (error as any)?.message || '修改失败 (Update failed)',
+          message: error || '修改失败 (Update failed)',
           type: 'error',
         });
         setLoading(false);
@@ -216,7 +215,7 @@ export default function ProfilePage() {
         type: 'success',
       });
       setChangePasswordMode(false);
-      setPasswordData({ newPassword: '', confirmPassword: '' });
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setLoading(false);
     } catch (err: any) {
       setToast({
@@ -277,6 +276,10 @@ export default function ProfilePage() {
                   value={formData.phone}
                   onChange={handleChange}
                   error={errors.phone}
+                  placeholder="01131609008"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  helperText="可直接输入 01 开头手机号（例如 01131609008）"
                 />
 
                 <div className="flex gap-3">
@@ -310,11 +313,6 @@ export default function ProfilePage() {
                 <div>
                   <label className="text-sm font-medium text-slate-700">姓名</label>
                   <p className="mt-1 text-slate-900">{user.full_name}</p>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700">邮箱</label>
-                  <p className="mt-1 text-slate-900">{user.email}</p>
                 </div>
 
                 <div>
@@ -357,13 +355,23 @@ export default function ProfilePage() {
           </div>
         </Card>
 
-        {/* 修改密码卡片 */}
+        {/* 登录方式说明 */}
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-bold text-slate-900 mb-4">修改密码</h3>
 
             {changePasswordMode ? (
               <div className="space-y-4">
+                <Input
+                  label="当前密码 Current Password"
+                  name="currentPassword"
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="如未设置可留空"
+                  error={errors.currentPassword}
+                />
+
                 <Input
                   label="新密码 New Password"
                   name="newPassword"
@@ -387,6 +395,7 @@ export default function ProfilePage() {
                 <div className="flex gap-3">
                   <Button
                     variant="primary"
+                    fullWidth
                     onClick={handleChangePassword}
                     loading={loading}
                     disabled={loading}
@@ -395,9 +404,10 @@ export default function ProfilePage() {
                   </Button>
                   <Button
                     variant="secondary"
+                    fullWidth
                     onClick={() => {
                       setChangePasswordMode(false);
-                      setPasswordData({ newPassword: '', confirmPassword: '' });
+                      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
                       setErrors({});
                     }}
                     disabled={loading}
@@ -407,10 +417,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             ) : (
-              <Button
-                variant="secondary"
-                onClick={() => setChangePasswordMode(true)}
-              >
+              <Button variant="secondary" onClick={() => setChangePasswordMode(true)}>
                 修改密码
               </Button>
             )}

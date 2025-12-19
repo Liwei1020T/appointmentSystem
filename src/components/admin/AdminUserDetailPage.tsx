@@ -321,8 +321,8 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
             <h2 className="text-xl font-bold mb-4">用户信息</h2>
             <div className="space-y-3">
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">邮箱</span>
-                <span className="font-medium">{user.email}</span>
+                <span className="text-gray-600">联系方式</span>
+                <span className="font-medium">{user.phone || user.email || '-'}</span>
               </div>
               <div className="flex justify-between py-2 border-b">
                 <span className="text-gray-600">手机</span>
