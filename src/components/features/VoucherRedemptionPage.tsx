@@ -108,20 +108,20 @@ export default function VoucherRedemptionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-ink pb-20">
       {/* 顶部导航 */}
-      <div className="sticky top-0 z-10 bg-white border-b">
+      <div className="sticky top-0 z-10 glass-surface border-b border-border-subtle">
         <div className="px-4 py-3">
-          <h1 className="text-lg font-semibold text-gray-900">兑换优惠券</h1>
+          <h1 className="text-lg font-semibold text-text-primary">兑换优惠券</h1>
         </div>
       </div>
 
       {/* 积分余额横幅 */}
-      <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-6 text-white">
+      <div className="bg-ink-elevated p-6 text-text-primary border-b border-border-subtle">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm opacity-90 mb-1">我的积分</div>
-            <div className="text-3xl font-bold">{balance}</div>
+            <div className="text-sm text-text-tertiary mb-1">我的积分</div>
+            <div className="text-3xl font-bold font-mono text-accent">{balance}</div>
           </div>
           <div className="text-5xl">💰</div>
         </div>
@@ -131,18 +131,18 @@ export default function VoucherRedemptionPage() {
       <div className="p-4">
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-600 border-t-transparent"></div>
-            <p className="text-gray-500 mt-2">加载中...</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-accent border-t-transparent"></div>
+            <p className="text-text-tertiary mt-2">加载中...</p>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-            <p className="text-red-600">{error}</p>
+          <div className="bg-danger/10 border border-danger/30 rounded-lg p-4 text-center">
+            <p className="text-danger">{error}</p>
           </div>
         ) : vouchers.length === 0 ? (
-          <div className="bg-white rounded-lg p-12 text-center">
+          <div className="bg-ink-surface rounded-lg p-12 text-center border border-border-subtle">
             <div className="text-6xl mb-4">🎁</div>
-            <p className="text-gray-600 mb-2">暂无可兑换优惠券</p>
-            <p className="text-sm text-gray-500">敬请期待更多优惠</p>
+            <p className="text-text-secondary mb-2">暂无可兑换优惠券</p>
+            <p className="text-sm text-text-tertiary">敬请期待更多优惠</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -151,36 +151,36 @@ export default function VoucherRedemptionPage() {
               return (
                 <div
                   key={voucher.id}
-                  className={`bg-white rounded-xl p-4 shadow-sm border-2 transition-all ${
-                    affordable ? 'border-purple-200' : 'border-gray-100 opacity-60'
+                  className={`bg-ink-surface rounded-xl p-4 shadow-sm border-2 transition-all ${
+                    affordable ? 'border-accent-border' : 'border-border-subtle opacity-60'
                   }`}
                 >
                   <div className="flex items-start gap-4">
                     {/* 折扣标签 */}
-                    <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl p-4 text-white min-w-[80px] text-center">
-                      <div className="text-xs opacity-90 mb-1">立减</div>
-                      <div className="text-xl font-bold">{getDiscountDisplay(voucher)}</div>
+                    <div className="bg-ink-elevated rounded-xl p-4 text-text-primary min-w-[80px] text-center border border-border-subtle">
+                      <div className="text-xs text-text-tertiary mb-1">立减</div>
+                      <div className="text-xl font-bold text-accent">{getDiscountDisplay(voucher)}</div>
                     </div>
 
                     {/* 优惠券详情 */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 mb-1">{voucher.name}</h3>
+                      <h3 className="font-semibold text-text-primary mb-1">{voucher.name}</h3>
                       {voucher.description && (
-                        <p className="text-sm text-gray-600 mb-2">{voucher.description}</p>
+                        <p className="text-sm text-text-secondary mb-2">{voucher.description}</p>
                       )}
-                      <div className="flex flex-wrap gap-2 text-xs text-gray-500 mb-3">
+                      <div className="flex flex-wrap gap-2 text-xs text-text-tertiary mb-3">
                         {(voucher.min_purchase || voucher.minPurchase) && (
-                          <span className="bg-gray-100 px-2 py-1 rounded">
+                          <span className="bg-ink-elevated px-2 py-1 rounded border border-border-subtle">
                             满 RM {toNum(voucher.min_purchase ?? voucher.minPurchase)}
                           </span>
                         )}
                         {voucher.max_discount && voucher.discount_type === 'percentage' && (
-                          <span className="bg-gray-100 px-2 py-1 rounded">
+                          <span className="bg-ink-elevated px-2 py-1 rounded border border-border-subtle">
                             最高减 RM {toNum(voucher.max_discount)}
                           </span>
                         )}
                         {voucher.validity_days && (
-                          <span className="bg-gray-100 px-2 py-1 rounded">
+                          <span className="bg-ink-elevated px-2 py-1 rounded border border-border-subtle">
                             有效期 {voucher.validity_days} 天
                           </span>
                         )}
@@ -188,8 +188,8 @@ export default function VoucherRedemptionPage() {
 
                       {/* 积分成本 + 兑换按钮 */}
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1 text-purple-600 font-semibold">
-                          <span className="text-lg">{voucher.points_required}</span>
+                        <div className="flex items-center gap-1 text-accent font-semibold">
+                          <span className="text-lg font-mono">{voucher.points_required}</span>
                           <span className="text-sm">积分</span>
                         </div>
                         <button
@@ -197,8 +197,8 @@ export default function VoucherRedemptionPage() {
                           disabled={!affordable}
                           className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                             affordable
-                              ? 'bg-purple-600 text-white hover:bg-purple-700 active:bg-purple-800'
-                              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              ? 'bg-accent text-text-onAccent hover:shadow-glow'
+                              : 'bg-ink-elevated text-text-tertiary cursor-not-allowed'
                           }`}
                         >
                           {affordable ? '立即兑换' : '积分不足'}
@@ -216,14 +216,14 @@ export default function VoucherRedemptionPage() {
       {/* 确认兑换弹窗 */}
       {showConfirmModal && selectedVoucher && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+          <div className="glass-strong rounded-2xl p-6 max-w-sm w-full shadow-xl">
             <div className="text-center mb-6">
               <div className="text-5xl mb-3">🎁</div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">确认兑换？</h3>
-              <p className="text-sm text-gray-600 mb-4">{selectedVoucher.name}</p>
-              <div className="bg-purple-50 rounded-lg p-3">
-                <div className="text-sm text-gray-600 mb-1">消耗积分</div>
-                <div className="text-2xl font-bold text-purple-600">
+              <h3 className="text-lg font-semibold text-text-primary mb-2">确认兑换？</h3>
+              <p className="text-sm text-text-secondary mb-4">{selectedVoucher.name}</p>
+              <div className="bg-ink-elevated rounded-lg p-3 border border-border-subtle">
+                <div className="text-sm text-text-tertiary mb-1">消耗积分</div>
+                <div className="text-2xl font-bold text-accent font-mono">
                   {selectedVoucher.points_required}
                 </div>
               </div>
@@ -233,14 +233,14 @@ export default function VoucherRedemptionPage() {
               <button
                 onClick={() => setShowConfirmModal(false)}
                 disabled={redeeming}
-                className="flex-1 px-4 py-3 rounded-lg font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-3 rounded-lg font-medium text-text-secondary bg-ink-elevated hover:bg-ink-surface transition-colors disabled:opacity-50"
               >
                 取消
               </button>
               <button
                 onClick={handleConfirmRedeem}
                 disabled={redeeming}
-                className="flex-1 px-4 py-3 rounded-lg font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-3 rounded-lg font-medium text-text-onAccent bg-accent hover:shadow-glow transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {redeeming ? '兑换中...' : '确认兑换'}
               </button>
@@ -253,8 +253,8 @@ export default function VoucherRedemptionPage() {
       {toast && (
         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in">
           <div
-            className={`px-6 py-3 rounded-lg shadow-lg text-white font-medium ${
-              toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+            className={`px-6 py-3 rounded-lg shadow-lg text-text-primary font-medium ${
+              toast.type === 'success' ? 'bg-success' : 'bg-danger'
             }`}
           >
             {toast.message}

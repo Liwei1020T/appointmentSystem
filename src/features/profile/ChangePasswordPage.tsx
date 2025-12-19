@@ -133,7 +133,7 @@ export default function ChangePasswordPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-ink flex items-center justify-center">
         <Spinner size="large" />
       </div>
     );
@@ -144,16 +144,16 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-ink pb-24">
       {/* 顶部导航 */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+      <div className="glass-surface border-b border-border-subtle sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
           >
             <svg
-              className="w-5 h-5 text-slate-600"
+              className="w-5 h-5 text-text-secondary"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -164,7 +164,7 @@ export default function ChangePasswordPage() {
               <path d="M15 19l-7-7 7-7"></path>
             </svg>
           </button>
-          <h1 className="text-lg font-bold text-slate-900">修改密码</h1>
+          <h1 className="text-lg font-bold text-text-primary">修改密码</h1>
         </div>
       </div>
 
@@ -173,8 +173,8 @@ export default function ChangePasswordPage() {
           {/* 当前密码 */}
           <Card>
             <div className="p-4">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                当前密码 <span className="text-red-600">*</span>
+              <label className="block text-sm font-medium text-text-tertiary mb-2">
+                当前密码 <span className="text-danger">*</span>
               </label>
               <div className="relative">
                 <input
@@ -183,16 +183,16 @@ export default function ChangePasswordPage() {
                   value={formData.currentPassword}
                   onChange={handleChange}
                   placeholder="请输入当前密码"
-                  className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                  className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink bg-ink-surface text-text-primary placeholder:text-text-tertiary ${
                     errors.currentPassword
-                      ? 'border-red-300'
-                      : 'border-slate-300'
+                      ? 'border-danger'
+                      : 'border-border-subtle'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary"
                 >
                   {showCurrentPassword ? (
                     <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -207,7 +207,7 @@ export default function ChangePasswordPage() {
                 </button>
               </div>
               {errors.currentPassword && (
-                <p className="text-sm text-red-600 mt-1">{errors.currentPassword}</p>
+                <p className="text-sm text-danger mt-1">{errors.currentPassword}</p>
               )}
             </div>
           </Card>
@@ -215,8 +215,8 @@ export default function ChangePasswordPage() {
           {/* 新密码 */}
           <Card>
             <div className="p-4">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                新密码 <span className="text-red-600">*</span>
+              <label className="block text-sm font-medium text-text-tertiary mb-2">
+                新密码 <span className="text-danger">*</span>
               </label>
               <div className="relative">
                 <input
@@ -225,16 +225,16 @@ export default function ChangePasswordPage() {
                   value={formData.newPassword}
                   onChange={handleChange}
                   placeholder="请输入新密码（至少6位）"
-                  className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                  className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink bg-ink-surface text-text-primary placeholder:text-text-tertiary ${
                     errors.newPassword
-                      ? 'border-red-300'
-                      : 'border-slate-300'
+                      ? 'border-danger'
+                      : 'border-border-subtle'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary"
                 >
                   {showNewPassword ? (
                     <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -249,7 +249,7 @@ export default function ChangePasswordPage() {
                 </button>
               </div>
               {errors.newPassword && (
-                <p className="text-sm text-red-600 mt-1">{errors.newPassword}</p>
+                <p className="text-sm text-danger mt-1">{errors.newPassword}</p>
               )}
             </div>
           </Card>
@@ -257,8 +257,8 @@ export default function ChangePasswordPage() {
           {/* 确认新密码 */}
           <Card>
             <div className="p-4">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                确认新密码 <span className="text-red-600">*</span>
+              <label className="block text-sm font-medium text-text-tertiary mb-2">
+                确认新密码 <span className="text-danger">*</span>
               </label>
               <div className="relative">
                 <input
@@ -267,16 +267,16 @@ export default function ChangePasswordPage() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="请再次输入新密码"
-                  className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                  className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink bg-ink-surface text-text-primary placeholder:text-text-tertiary ${
                     errors.confirmPassword
-                      ? 'border-red-300'
-                      : 'border-slate-300'
+                      ? 'border-danger'
+                      : 'border-border-subtle'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary"
                 >
                   {showConfirmPassword ? (
                     <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -291,7 +291,7 @@ export default function ChangePasswordPage() {
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-sm text-red-600 mt-1">{errors.confirmPassword}</p>
+                <p className="text-sm text-danger mt-1">{errors.confirmPassword}</p>
               )}
             </div>
           </Card>
@@ -299,20 +299,20 @@ export default function ChangePasswordPage() {
           {/* 提示 */}
           <Card>
             <div className="p-4">
-              <h3 className="text-sm font-semibold text-slate-900 mb-3">
+              <h3 className="text-sm font-semibold text-text-primary mb-3">
                 密码要求
               </h3>
-              <ul className="space-y-1 text-sm text-slate-600">
+              <ul className="space-y-1 text-sm text-text-secondary">
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span className="text-accent mt-0.5">•</span>
                   <span>密码长度至少6位</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span className="text-accent mt-0.5">•</span>
                   <span>建议使用字母、数字、符号组合</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-600 mt-0.5">•</span>
+                  <span className="text-accent mt-0.5">•</span>
                   <span>不要使用过于简单的密码</span>
                 </li>
               </ul>
@@ -320,7 +320,7 @@ export default function ChangePasswordPage() {
           </Card>
 
           {/* 提交按钮 */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4">
+          <div className="fixed bottom-0 left-0 right-0 glass-surface border-t border-border-subtle p-4">
             <div className="max-w-2xl mx-auto flex gap-3">
               <Button
                 type="button"

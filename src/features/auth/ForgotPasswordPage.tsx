@@ -146,13 +146,13 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-ink flex items-center justify-center p-6">
+      <Card className="w-full max-w-md border border-border-subtle bg-ink-surface/90">
         <div className="p-6">
           {/* 标题 */}
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-slate-900">忘记密码</h1>
-            <p className="text-sm text-slate-600 mt-1">Reset password with OTP</p>
+            <h1 className="text-2xl font-bold text-text-primary">忘记密码</h1>
+            <p className="text-sm text-text-secondary mt-1">Reset password with OTP</p>
           </div>
 
           {step === 1 ? (
@@ -270,8 +270,8 @@ export default function ForgotPasswordPage() {
           )}
 
           {/* 返回登录链接 */}
-          <div className="mt-6 text-center text-sm text-slate-600">
-            <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+          <div className="mt-6 text-center text-sm text-text-secondary">
+            <Link href="/login" className="text-accent hover:text-accent/80 font-medium">
               ← 返回登录
             </Link>
           </div>

@@ -32,12 +32,12 @@ export function Table<T>({
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-slate-200">
+          <tr className="border-b border-border-subtle">
             {columns.map(col => (
               <th 
                 key={col.key} 
                 className={`
-                  px-4 py-3 text-sm font-semibold text-slate-700
+                  px-4 py-3 text-sm font-semibold text-text-secondary
                   ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'}
                 `}
               >
@@ -51,7 +51,7 @@ export function Table<T>({
             <tr>
               <td 
                 colSpan={columns.length} 
-                className="px-4 py-8 text-center text-slate-500"
+                className="px-4 py-8 text-center text-text-tertiary"
               >
                 {emptyMessage}
               </td>
@@ -60,13 +60,13 @@ export function Table<T>({
             data.map(item => (
               <tr 
                 key={keyExtractor(item)} 
-                className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                className="border-b border-border-subtle hover:bg-ink-elevated/70 transition-colors"
               >
                 {columns.map(col => (
                   <td 
                     key={col.key} 
                     className={`
-                      px-4 py-3 text-sm text-slate-600
+                      px-4 py-3 text-sm text-text-secondary
                       ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'}
                     `}
                   >

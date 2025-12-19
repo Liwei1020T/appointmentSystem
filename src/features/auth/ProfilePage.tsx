@@ -236,7 +236,7 @@ export default function ProfilePage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-ink flex items-center justify-center">
         <Spinner size="large" />
       </div>
     );
@@ -247,13 +247,13 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4">
+    <div className="min-h-screen bg-ink py-8 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* 用户信息卡片 */}
         <Card>
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-900">个人资料</h2>
+              <h2 className="text-xl font-bold text-text-primary">个人资料</h2>
               <Badge variant="blue">
                 {user.role === 'admin' ? '管理员' : '用户'}
               </Badge>
@@ -311,18 +311,18 @@ export default function ProfilePage() {
               /* 查看模式 */
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-slate-700">姓名</label>
-                  <p className="mt-1 text-slate-900">{user.full_name}</p>
+                  <label className="text-sm font-medium text-text-secondary">姓名</label>
+                  <p className="mt-1 text-text-primary">{user.full_name}</p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">手机号</label>
-                  <p className="mt-1 text-slate-900">{user.phone}</p>
+                  <label className="text-sm font-medium text-text-secondary">手机号</label>
+                  <p className="mt-1 text-text-primary">{user.phone}</p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">当前积分</label>
-                  <p className="mt-1 text-slate-900 font-semibold text-lg">
+                  <label className="text-sm font-medium text-text-secondary">当前积分</label>
+                  <p className="mt-1 text-text-primary font-semibold text-lg">
                     {user.points} 分
                   </p>
                 </div>
@@ -338,10 +338,10 @@ export default function ProfilePage() {
         {/* 邀请码卡片 */}
         <Card>
           <div className="p-6">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">我的邀请码</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">我的邀请码</h3>
             <div className="flex items-center gap-3">
-              <div className="flex-1 bg-slate-100 rounded-lg px-4 py-3">
-                <p className="text-2xl font-mono font-bold text-blue-600 text-center">
+              <div className="flex-1 bg-ink-elevated rounded-lg px-4 py-3 border border-border-subtle">
+                <p className="text-2xl font-mono font-bold text-accent text-center">
                   {user.referral_code}
                 </p>
               </div>
@@ -349,7 +349,7 @@ export default function ProfilePage() {
                 复制
               </Button>
             </div>
-            <p className="text-sm text-slate-600 mt-3">
+            <p className="text-sm text-text-secondary mt-3">
               邀请朋友注册，双方各得 50 积分！
             </p>
           </div>
@@ -358,7 +358,7 @@ export default function ProfilePage() {
         {/* 登录方式说明 */}
         <Card>
           <div className="p-6">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">修改密码</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">修改密码</h3>
 
             {changePasswordMode ? (
               <div className="space-y-4">

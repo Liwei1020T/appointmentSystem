@@ -16,8 +16,8 @@ export default function MyPackagesRedirect() {
   }, [router]);
 
   return (
-    <div className='flex items-center justify-center min-h-screen'>
-      <div className='text-gray-600'>重定向到我的套餐...</div>
+    <div className="flex items-center justify-center min-h-screen bg-ink">
+      <div className="text-text-secondary">重定向到我的套餐...</div>
     </div>
   );
 }

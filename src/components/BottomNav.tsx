@@ -18,7 +18,7 @@ interface BottomNavProps {
  */
 export const BottomNav: React.FC<BottomNavProps> = ({ items }) => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 safe-area-pb z-40">
+    <nav className="fixed bottom-0 left-0 right-0 glass-surface border-t border-border-subtle safe-area-pb z-40">
       <div className="flex items-center justify-around h-16">
         {items.map((item, idx) => (
           <a
@@ -26,7 +26,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ items }) => {
             href={item.href}
             className={`
               flex flex-col items-center gap-1 px-3 py-2 transition-colors
-              ${item.active ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'}
+              ${item.active ? 'text-accent' : 'text-text-tertiary hover:text-text-primary'}
             `}
             aria-current={item.active ? 'page' : undefined}
           >

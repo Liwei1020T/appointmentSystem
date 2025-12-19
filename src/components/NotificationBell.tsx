@@ -45,14 +45,14 @@ export default function NotificationBell({ onClick, userId }: NotificationBellPr
   return (
     <button
       onClick={onClick}
-      className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+      className="relative p-2 hover:bg-ink-elevated rounded-lg transition-colors"
       title="通知"
     >
-      <Bell className="w-5 h-5 text-gray-700" />
+      <Bell className="w-5 h-5 text-text-secondary" />
 
       {/* 未读数量徽章 */}
       {!loading && unreadCount > 0 && (
-        <span className="absolute top-1 right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+        <span className="absolute top-1 right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-text-primary bg-danger rounded-full">
           {unreadCount > 99 ? '99+' : unreadCount}
         </span>
       )}

@@ -17,7 +17,7 @@ export default function AdminIndexPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <div className="text-gray-600">重定向到管理后台...</div>
+      <div className="text-text-secondary">重定向到管理后台...</div>
     </div>
   );
 }
@@ -43,7 +43,7 @@ export default function AdminIndexPage() {
     return (
       <ProtectedRoute requireAdmin>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-gray-600">加载中...</div>
+          <div className="text-text-secondary">加载中...</div>
         </div>
       </ProtectedRoute>
     );
@@ -53,7 +53,7 @@ export default function AdminIndexPage() {
     return (
       <ProtectedRoute requireAdmin>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-gray-600">加载失败</div>
+          <div className="text-text-secondary">加载失败</div>
         </div>
       </ProtectedRoute>
     );
@@ -64,18 +64,18 @@ export default function AdminIndexPage() {
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* 页面标题 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">管理后台</h1>
-          <p className="text-gray-600 mt-2">系统概览和数据统计</p>
+          <h1 className="text-3xl font-bold text-text-primary">管理后台</h1>
+          <p className="text-text-secondary mt-2">系统概览和数据统计</p>
         </div>
 
         {/* 统计卡片 */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           {/* 订单统计 */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-ink-surface rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-500">总订单数</h3>
+              <h3 className="text-sm font-medium text-text-tertiary">总订单数</h3>
               <svg
-                className="w-8 h-8 text-blue-500"
+                className="w-8 h-8 text-info"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -88,18 +88,18 @@ export default function AdminIndexPage() {
                 />
               </svg>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.totalOrders}</p>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-3xl font-bold text-text-primary">{stats.totalOrders}</p>
+            <p className="text-sm text-text-tertiary mt-2">
               待处理: {stats.pendingOrders}
             </p>
           </div>
 
           {/* 营收统计 */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-ink-surface rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-500">总营收</h3>
+              <h3 className="text-sm font-medium text-text-tertiary">总营收</h3>
               <svg
-                className="w-8 h-8 text-green-500"
+                className="w-8 h-8 text-success"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -112,18 +112,18 @@ export default function AdminIndexPage() {
                 />
               </svg>
             </div>
-            <p className="text-3xl font-bold text-gray-900">
+            <p className="text-3xl font-bold text-text-primary">
               {formatAmount(stats.totalRevenue)}
             </p>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-text-tertiary mt-2">
               本月: {formatAmount(stats.monthlyRevenue)}
             </p>
           </div>
 
           {/* 用户统计 */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-ink-surface rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-500">用户总数</h3>
+              <h3 className="text-sm font-medium text-text-tertiary">用户总数</h3>
               <svg
                 className="w-8 h-8 text-purple-500"
                 fill="none"
@@ -138,16 +138,16 @@ export default function AdminIndexPage() {
                 />
               </svg>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.totalUsers}</p>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-3xl font-bold text-text-primary">{stats.totalUsers}</p>
+            <p className="text-sm text-text-tertiary mt-2">
               活跃用户: {stats.activeUsers}
             </p>
           </div>
 
           {/* 待办事项 */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-ink-surface rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-500">待处理</h3>
+              <h3 className="text-sm font-medium text-text-tertiary">待处理</h3>
               <svg
                 className="w-8 h-8 text-orange-500"
                 fill="none"
@@ -162,10 +162,10 @@ export default function AdminIndexPage() {
                 />
               </svg>
             </div>
-            <p className="text-3xl font-bold text-gray-900">
+            <p className="text-3xl font-bold text-text-primary">
               {stats.pendingPayments + stats.lowStockItems}
             </p>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-text-tertiary mt-2">
               支付: {stats.pendingPayments} | 库存: {stats.lowStockItems}
             </p>
           </div>
@@ -175,12 +175,12 @@ export default function AdminIndexPage() {
         <div className="grid md:grid-cols-3 gap-6">
           <Link
             href="/admin/orders"
-            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+            className="bg-ink-surface rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+              <div className="w-12 h-12 bg-info-soft rounded-lg flex items-center justify-center mr-4">
                 <svg
-                  className="w-6 h-6 text-blue-600"
+                  className="w-6 h-6 text-info"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -194,21 +194,21 @@ export default function AdminIndexPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-bold text-gray-900">订单管理</h3>
-                <p className="text-sm text-gray-500">查看和处理订单</p>
+                <h3 className="font-bold text-text-primary">订单管理</h3>
+                <p className="text-sm text-text-tertiary">查看和处理订单</p>
               </div>
             </div>
-            <div className="text-blue-600 font-medium">前往 →</div>
+            <div className="text-info font-medium">前往 →</div>
           </Link>
 
           <Link
             href="/admin/payments"
-            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+            className="bg-ink-surface rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+              <div className="w-12 h-12 bg-success/15 rounded-lg flex items-center justify-center mr-4">
                 <svg
-                  className="w-6 h-6 text-green-600"
+                  className="w-6 h-6 text-success"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -222,18 +222,18 @@ export default function AdminIndexPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-bold text-gray-900">支付审核</h3>
-                <p className="text-sm text-gray-500">
+                <h3 className="font-bold text-text-primary">支付审核</h3>
+                <p className="text-sm text-text-tertiary">
                   待审核: {stats.pendingPayments}
                 </p>
               </div>
             </div>
-            <div className="text-green-600 font-medium">前往 →</div>
+            <div className="text-success font-medium">前往 →</div>
           </Link>
 
           <Link
             href="/admin/inventory"
-            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+            className="bg-ink-surface rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
@@ -252,8 +252,8 @@ export default function AdminIndexPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-bold text-gray-900">库存管理</h3>
-                <p className="text-sm text-gray-500">
+                <h3 className="font-bold text-text-primary">库存管理</h3>
+                <p className="text-sm text-text-tertiary">
                   低库存: {stats.lowStockItems}
                 </p>
               </div>
@@ -263,7 +263,7 @@ export default function AdminIndexPage() {
 
           <Link
             href="/admin/users"
-            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+            className="bg-ink-surface rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
@@ -282,8 +282,8 @@ export default function AdminIndexPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-bold text-gray-900">用户管理</h3>
-                <p className="text-sm text-gray-500">管理用户账户</p>
+                <h3 className="font-bold text-text-primary">用户管理</h3>
+                <p className="text-sm text-text-tertiary">管理用户账户</p>
               </div>
             </div>
             <div className="text-orange-600 font-medium">前往 →</div>
@@ -291,7 +291,7 @@ export default function AdminIndexPage() {
 
           <Link
             href="/admin/packages"
-            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+            className="bg-ink-surface rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mr-4">
@@ -310,8 +310,8 @@ export default function AdminIndexPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-bold text-gray-900">套餐管理</h3>
-                <p className="text-sm text-gray-500">管理套餐产品</p>
+                <h3 className="font-bold text-text-primary">套餐管理</h3>
+                <p className="text-sm text-text-tertiary">管理套餐产品</p>
               </div>
             </div>
             <div className="text-pink-600 font-medium">前往 →</div>
@@ -319,12 +319,12 @@ export default function AdminIndexPage() {
 
           <Link
             href="/admin/vouchers"
-            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+            className="bg-ink-surface rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
+              <div className="w-12 h-12 bg-warning/15 rounded-lg flex items-center justify-center mr-4">
                 <svg
-                  className="w-6 h-6 text-yellow-600"
+                  className="w-6 h-6 text-warning"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -338,11 +338,11 @@ export default function AdminIndexPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-bold text-gray-900">优惠券管理</h3>
-                <p className="text-sm text-gray-500">创建和管理优惠券</p>
+                <h3 className="font-bold text-text-primary">优惠券管理</h3>
+                <p className="text-sm text-text-tertiary">创建和管理优惠券</p>
               </div>
             </div>
-            <div className="text-yellow-600 font-medium">前往 →</div>
+            <div className="text-warning font-medium">前往 →</div>
           </Link>
         </div>
       </div>

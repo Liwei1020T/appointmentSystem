@@ -129,24 +129,24 @@ export function getOrderStatusColor(status: OrderStatus): {
     { bg: string; text: string; border: string }
   > = {
     pending: {
-      bg: 'bg-yellow-100',
-      text: 'text-yellow-700',
-      border: 'border-yellow-300',
+      bg: 'bg-warning/15',
+      text: 'text-warning',
+      border: 'border-warning/40',
     },
     in_progress: {
-      bg: 'bg-blue-100',
-      text: 'text-blue-700',
-      border: 'border-blue-300',
+      bg: 'bg-info-soft',
+      text: 'text-info',
+      border: 'border-info/40',
     },
     completed: {
-      bg: 'bg-green-100',
-      text: 'text-green-700',
-      border: 'border-green-300',
+      bg: 'bg-success/15',
+      text: 'text-success',
+      border: 'border-success/40',
     },
     cancelled: {
-      bg: 'bg-red-100',
-      text: 'text-red-700',
-      border: 'border-red-300',
+      bg: 'bg-danger/15',
+      text: 'text-danger',
+      border: 'border-danger/40',
     },
   };
 

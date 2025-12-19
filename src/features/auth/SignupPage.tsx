@@ -146,13 +146,13 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-ink flex items-center justify-center p-6">
+      <Card className="w-full max-w-md border border-border-subtle bg-ink-surface/90">
         <div className="p-6">
           {/* 标题 */}
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-slate-900">创建账户</h1>
-            <p className="text-sm text-slate-600 mt-1">Sign up for String Service</p>
+            <h1 className="text-2xl font-bold text-text-primary">创建账户</h1>
+            <p className="text-sm text-text-secondary mt-1">Sign up for String Service</p>
           </div>
 
           {/* 表单 */}
@@ -233,9 +233,9 @@ export default function SignupPage() {
           </form>
 
           {/* 登录链接 */}
-          <div className="mt-6 text-center text-sm text-slate-600">
+          <div className="mt-6 text-center text-sm text-text-secondary">
             已有账户？{' '}
-            <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link href="/login" className="text-accent hover:text-accent/80 font-medium">
               立即登录
             </Link>
           </div>

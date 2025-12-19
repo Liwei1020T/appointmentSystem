@@ -182,9 +182,9 @@ export default function PackagePurchaseFlow() {
   // 错误状态
   if (error || !pkg) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="min-h-screen bg-ink p-4">
         <Card className="p-6 text-center max-w-md mx-auto mt-12">
-          <p className="text-red-600 mb-4">{error || '套餐不存在'}</p>
+          <p className="text-danger mb-4">{error || '套餐不存在'}</p>
           <Button onClick={() => router.push('/packages')}>返回套餐列表</Button>
         </Card>
       </div>
@@ -192,20 +192,20 @@ export default function PackagePurchaseFlow() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-ink">
       {/* 顶部导航 */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+      <div className="glass-surface border-b border-border-subtle sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="text-slate-600 hover:text-slate-900"
+            className="text-text-secondary hover:text-text-primary"
             disabled={processing}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-lg font-semibold text-slate-900">购买套餐</h1>
+          <h1 className="text-lg font-semibold text-text-primary">购买套餐</h1>
         </div>
       </div>
 
@@ -217,8 +217,8 @@ export default function PackagePurchaseFlow() {
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
                   s <= step
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-200 text-slate-600'
+                    ? 'bg-accent text-text-onAccent'
+                    : 'bg-ink-elevated text-text-tertiary'
                 }`}
               >
                 {s < step ? '✓' : s}
@@ -226,7 +226,7 @@ export default function PackagePurchaseFlow() {
               {s < 4 && (
                 <div
                   className={`w-12 h-1 ${
-                    s < step ? 'bg-blue-600' : 'bg-slate-200'
+                    s < step ? 'bg-accent' : 'bg-ink-elevated'
                   }`}
                 />
               )}
@@ -238,25 +238,25 @@ export default function PackagePurchaseFlow() {
         {step === 1 && (
           <>
             <Card className="p-6">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">确认套餐信息</h2>
+              <h2 className="text-lg font-semibold text-text-primary mb-4">确认套餐信息</h2>
               <div className="space-y-4">
                 <div className="flex justify-between">
-                  <span className="text-slate-600">套餐名称</span>
-                  <span className="font-semibold text-slate-900">{pkg.name}</span>
+                  <span className="text-text-tertiary">套餐名称</span>
+                  <span className="font-semibold text-text-primary">{pkg.name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-600">穿线次数</span>
-                  <span className="font-semibold text-slate-900">{pkg.times} 次</span>
+                  <span className="text-text-tertiary">穿线次数</span>
+                  <span className="font-semibold text-text-primary">{pkg.times} 次</span>
                 </div>
                 {pkg.validityDays && (
                   <div className="flex justify-between">
-                    <span className="text-slate-600">有效期</span>
-                    <span className="font-semibold text-slate-900">{pkg.validityDays} 天</span>
+                    <span className="text-text-tertiary">有效期</span>
+                    <span className="font-semibold text-text-primary">{pkg.validityDays} 天</span>
                   </div>
                 )}
-                <div className="flex justify-between items-center pt-4 border-t border-slate-200">
-                  <span className="text-lg font-semibold text-slate-900">总价</span>
-                  <span className="text-2xl font-bold text-blue-600">
+                <div className="flex justify-between items-center pt-4 border-t border-border-subtle">
+                  <span className="text-lg font-semibold text-text-primary">总价</span>
+                  <span className="text-2xl font-bold text-accent font-mono">
                     RM {Number(pkg.price).toFixed(2)}
                   </span>
                 </div>
@@ -264,9 +264,9 @@ export default function PackagePurchaseFlow() {
             </Card>
 
             {pkg.description && (
-              <Card className="p-6 bg-blue-50 border-blue-200">
-                <h3 className="font-semibold text-slate-900 mb-2">套餐说明</h3>
-                <p className="text-sm text-slate-700">{pkg.description}</p>
+              <Card className="p-6 bg-ink-elevated border border-border-subtle">
+                <h3 className="font-semibold text-text-primary mb-2">套餐说明</h3>
+                <p className="text-sm text-text-secondary">{pkg.description}</p>
               </Card>
             )}
           </>
@@ -275,7 +275,7 @@ export default function PackagePurchaseFlow() {
         {/* Step 2: 选择支付方式 */}
         {step === 2 && (
           <Card className="p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">选择支付方式</h2>
+            <h2 className="text-lg font-semibold text-text-primary mb-4">选择支付方式</h2>
             <div className="space-y-3">
               {paymentMethods.map((method) => (
                 <button
@@ -283,18 +283,18 @@ export default function PackagePurchaseFlow() {
                   onClick={() => setPaymentMethod(method.value)}
                   className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
                     paymentMethod === method.value
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-slate-200 hover:border-slate-300'
+                      ? 'border-accent-border bg-ink-elevated'
+                      : 'border-border-subtle hover:border-accent-border'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{method.icon}</span>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-slate-900">{method.label}</h3>
-                      <p className="text-sm text-slate-600">{method.description}</p>
+                      <h3 className="font-semibold text-text-primary">{method.label}</h3>
+                      <p className="text-sm text-text-secondary">{method.description}</p>
                     </div>
                     {paymentMethod === method.value && (
-                      <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-6 h-6 text-accent" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fillRule="evenodd"
                           d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -315,19 +315,19 @@ export default function PackagePurchaseFlow() {
             {processing ? (
               <Card className="p-12 text-center">
                 <Spinner size="lg" className="mb-4" />
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                <h3 className="text-lg font-semibold text-text-primary mb-2">
                   正在创建支付记录...
                 </h3>
-                <p className="text-slate-600">请稍候，不要关闭此页面</p>
+                <p className="text-text-secondary">请稍候，不要关闭此页面</p>
               </Card>
             ) : paymentMethod === 'cash' ? (
               <Card className="p-8">
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">现金支付</h3>
-                <p className="text-slate-600">
+                <h3 className="text-lg font-semibold text-text-primary mb-2">现金支付</h3>
+                <p className="text-text-secondary">
                   已提交现金支付申请，请到店支付现金。管理员确认收款后，套餐将自动生效并显示在“我的套餐”。
                 </p>
                 {paymentId ? (
-                  <p className="mt-3 text-sm text-slate-500">
+                  <p className="mt-3 text-sm text-text-tertiary">
                     支付单号：{paymentId.slice(0, 8)}
                   </p>
                 ) : null}
@@ -335,8 +335,8 @@ export default function PackagePurchaseFlow() {
             ) : (
               <>
                 <Card className="p-6">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">TNG 线上支付</h3>
-                  <p className="text-slate-600">
+                  <h3 className="text-lg font-semibold text-text-primary mb-2">TNG 线上支付</h3>
+                  <p className="text-text-secondary">
                     扫码支付后请上传收据，管理员审核通过后套餐才会生效并显示在“我的套餐”。
                   </p>
                 </Card>
@@ -354,8 +354,8 @@ export default function PackagePurchaseFlow() {
                     }}
                   />
                 ) : (
-                  <Card className="p-6 border-red-200 bg-red-50">
-                    <p className="text-sm text-red-700">创建支付记录失败，请返回重试</p>
+                  <Card className="p-6 border-danger/30 bg-danger/10">
+                    <p className="text-sm text-danger">创建支付记录失败，请返回重试</p>
                   </Card>
                 )}
               </>
@@ -366,8 +366,8 @@ export default function PackagePurchaseFlow() {
         {/* Step 4: 已提交（等待管理员确认/审核） */}
         {step === 4 && (
           <Card className="p-12 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-10 h-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+            <div className="w-16 h-16 bg-success/15 rounded-full flex items-center justify-center mx-auto mb-4 border border-success/30">
+              <svg className="w-10 h-10 text-success" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
                   d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -375,10 +375,10 @@ export default function PackagePurchaseFlow() {
                 />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">
+            <h3 className="text-2xl font-bold text-text-primary mb-2">
               {paymentMethod === 'cash' ? '已提交现金支付申请' : '已提交支付收据'}
             </h3>
-            <p className="text-slate-600 mb-6">
+            <p className="text-text-secondary mb-6">
               {paymentMethod === 'cash'
                 ? '管理员确认收款后，套餐将自动生效并显示在“我的套餐”。'
                 : receiptUploaded
@@ -391,7 +391,7 @@ export default function PackagePurchaseFlow() {
 
         {/* 底部操作栏 */}
         {(step === 1 || step === 2) && (
-          <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4">
+          <div className="sticky bottom-0 left-0 right-0 glass-surface border-t border-border-subtle p-4">
             <div className="max-w-2xl mx-auto flex gap-3">
               {step > 1 && (
                 <Button

@@ -25,7 +25,7 @@ export default function RootLayout({
           <RealtimeOrderProvider>
             <ClientLayout>
               <Navbar />
-              <main className="min-h-screen bg-gray-50">
+              <main className="min-h-screen bg-ink">
                 {children}
               </main>
             </ClientLayout>

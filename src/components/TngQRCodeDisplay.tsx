@@ -36,34 +36,34 @@ export default function TngQRCodeDisplay({ amount, orderId }: TngQRCodeDisplayPr
   };
 
   return (
-    <div className="rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50 p-6">
+    <div className="rounded-lg border border-border-subtle bg-ink-surface p-6">
       {/* 标题 */}
       <div className="mb-4 flex items-center gap-3">
-        <div className="rounded-full bg-blue-600 p-2">
-          <Smartphone className="h-6 w-6 text-white" />
+        <div className="rounded-full bg-accent p-2">
+          <Smartphone className="h-6 w-6 text-text-onAccent" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Touch &apos;n Go eWallet 扫码支付</h3>
-          <p className="text-sm text-gray-600">使用 TNG 应用扫描二维码完成支付</p>
+          <h3 className="text-lg font-semibold text-text-primary">Touch &apos;n Go eWallet 扫码支付</h3>
+          <p className="text-sm text-text-secondary">使用 TNG 应用扫描二维码完成支付</p>
         </div>
       </div>
 
       {/* 支付金额 */}
-      <div className="mb-4 rounded-lg bg-white p-4 text-center">
-        <div className="text-sm text-gray-600">应付金额</div>
-        <div className="text-4xl font-bold text-blue-600">RM {amount.toFixed(2)}</div>
-        <div className="mt-1 text-xs text-gray-500">订单编号：{orderId.slice(0, 8)}</div>
+      <div className="mb-4 rounded-lg bg-ink-surface p-4 text-center">
+        <div className="text-sm text-text-secondary">应付金额</div>
+        <div className="text-4xl font-bold text-accent">RM {amount.toFixed(2)}</div>
+        <div className="mt-1 text-xs text-text-tertiary">订单编号：{orderId.slice(0, 8)}</div>
       </div>
 
       {/* 二维码 */}
-      <div className="mb-4 flex justify-center rounded-lg bg-white p-6">
+      <div className="mb-4 flex justify-center rounded-lg bg-ink-surface p-6">
         <div className="relative">
           {/* TODO: 替换为实际的 QR Code 图片 */}
-          <div className="flex h-64 w-64 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50">
+          <div className="flex h-64 w-64 items-center justify-center rounded-lg border-2 border-dashed border-border-subtle bg-ink-elevated">
             <div className="text-center">
-              <Smartphone className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="mt-2 text-sm text-gray-500">TNG 收款码</p>
-              <p className="text-xs text-gray-400">请放置实际二维码图片</p>
+              <Smartphone className="mx-auto h-12 w-12 text-text-tertiary" />
+              <p className="mt-2 text-sm text-text-tertiary">TNG 收款码</p>
+              <p className="text-xs text-text-tertiary">请放置实际二维码图片</p>
             </div>
           </div>
           
@@ -71,83 +71,83 @@ export default function TngQRCodeDisplay({ amount, orderId }: TngQRCodeDisplayPr
           <img 
             src={qrCodeUrl} 
             alt="TNG QR Code" 
-            className="h-64 w-64 rounded-lg border-2 border-gray-200"
+            className="h-64 w-64 rounded-lg border-2 border-border-subtle"
           />
           */}
         </div>
       </div>
 
       {/* 支付步骤说明 */}
-      <div className="mb-4 rounded-lg bg-white p-4">
-        <h4 className="mb-3 font-semibold text-gray-900">支付步骤：</h4>
-        <ol className="space-y-2 text-sm text-gray-700">
+      <div className="mb-4 rounded-lg bg-ink-surface p-4">
+        <h4 className="mb-3 font-semibold text-text-primary">支付步骤：</h4>
+        <ol className="space-y-2 text-sm text-text-secondary">
           <li className="flex gap-2">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-text-onAccent">
               1
             </span>
             <span>打开 Touch &apos;n Go eWallet 应用</span>
           </li>
           <li className="flex gap-2">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-text-onAccent">
               2
             </span>
             <span>点击 &quot;扫码&quot; 或 &quot;Scan&quot;</span>
           </li>
           <li className="flex gap-2">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-text-onAccent">
               3
             </span>
             <span>扫描上方二维码</span>
           </li>
           <li className="flex gap-2">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-text-onAccent">
               4
             </span>
             <span>
-              确认支付金额为 <span className="font-semibold text-blue-600">RM {amount.toFixed(2)}</span>
+              确认支付金额为 <span className="font-semibold text-accent">RM {amount.toFixed(2)}</span>
             </span>
           </li>
           <li className="flex gap-2">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-text-onAccent">
               5
             </span>
             <span>完成支付后，截图保存支付收据</span>
           </li>
           <li className="flex gap-2">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-text-onAccent">
               6
             </span>
-            <span className="font-semibold text-purple-600">上传支付收据到下方</span>
+            <span className="font-semibold text-accent">上传支付收据到下方</span>
           </li>
         </ol>
       </div>
 
       {/* 手动转账选项 */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <h4 className="mb-2 text-sm font-semibold text-gray-900">或使用手动转账</h4>
+      <div className="rounded-lg border border-border-subtle bg-ink-surface p-4">
+        <h4 className="mb-2 text-sm font-semibold text-text-primary">或使用手动转账</h4>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">TNG 电话号码：</span>
-          <code className="rounded bg-gray-100 px-2 py-1 text-sm font-mono text-gray-900">
+          <span className="text-sm text-text-secondary">TNG 电话号码：</span>
+          <code className="rounded bg-ink-elevated px-2 py-1 text-sm font-mono text-text-primary">
             {merchantPhone}
           </code>
           <button
             onClick={handleCopyPhone}
-            className="rounded-lg p-1.5 hover:bg-gray-100"
+            className="rounded-lg p-1.5 hover:bg-ink-elevated"
             title="复制电话号码"
           >
             {copied ? (
-              <Check className="h-4 w-4 text-green-600" />
+              <Check className="h-4 w-4 text-success" />
             ) : (
-              <Copy className="h-4 w-4 text-gray-600" />
+              <Copy className="h-4 w-4 text-text-secondary" />
             )}
           </button>
         </div>
       </div>
 
       {/* 重要提示 */}
-      <div className="mt-4 flex gap-2 rounded-lg bg-yellow-50 p-3">
-        <AlertCircle className="h-5 w-5 shrink-0 text-yellow-600" />
-        <div className="text-xs text-yellow-800">
+      <div className="mt-4 flex gap-2 rounded-lg bg-warning/15 p-3">
+        <AlertCircle className="h-5 w-5 shrink-0 text-warning" />
+        <div className="text-xs text-text-secondary">
           <p className="font-semibold">重要提示：</p>
           <ul className="mt-1 list-inside list-disc space-y-1">
             <li>请确保支付金额正确（RM {amount.toFixed(2)}）</li>

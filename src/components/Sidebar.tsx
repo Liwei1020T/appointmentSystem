@@ -20,7 +20,7 @@ interface SidebarProps {
  */
 export const Sidebar: React.FC<SidebarProps> = ({ items, className = '' }) => {
   return (
-    <aside className={`w-64 h-screen bg-white border-r border-slate-200 p-4 ${className}`}>
+    <aside className={`w-64 h-screen bg-ink-elevated border-r border-border-subtle p-4 ${className}`}>
       <div className="space-y-1">
         {items.map((item, idx) => (
           <a
@@ -29,8 +29,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, className = '' }) => {
             className={`
               flex items-center gap-3 px-3 py-2 rounded-lg transition-colors
               ${item.active 
-                ? 'bg-blue-50 text-blue-600 font-semibold border-l-4 border-blue-600 -ml-px pl-[11px]' 
-                : 'text-slate-700 hover:bg-slate-100'}
+                ? 'bg-accent-soft text-text-primary font-semibold border-l-4 border-accent -ml-px pl-[11px]' 
+                : 'text-text-secondary hover:bg-ink-surface/80'}
             `}
             aria-current={item.active ? 'page' : undefined}
           >

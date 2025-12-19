@@ -86,13 +86,13 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
       />
 
       {/* 侧边面板 */}
-      <div className="fixed right-0 top-0 h-full w-full sm:w-96 bg-white shadow-2xl z-50 flex flex-col">
+      <div className="fixed right-0 top-0 h-full w-full sm:w-96 bg-ink-surface shadow-2xl z-50 flex flex-col">
         {/* 标题栏 */}
-        <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-purple-600 to-blue-600">
+        <div className="flex items-center justify-between p-4 border-b border-border-subtle bg-ink-elevated">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-white">通知</h2>
+            <h2 className="text-lg font-semibold text-text-primary">通知</h2>
             {unreadCount > 0 && (
-              <span className="px-2 py-0.5 text-xs font-bold text-purple-600 bg-white rounded-full">
+              <span className="px-2 py-0.5 text-xs font-bold text-accent bg-ink-surface rounded-full">
                 {unreadCount} 条未读
               </span>
             )}
@@ -100,21 +100,21 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
 
           <button
             onClick={onClose}
-            className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+            className="p-1 hover:bg-ink-surface/20 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-white" />
+            <X className="w-5 h-5 text-text-primary" />
           </button>
         </div>
 
         {/* 操作栏 */}
-        <div className="flex items-center justify-between p-3 border-b bg-gray-50">
+        <div className="flex items-center justify-between p-3 border-b border-border-subtle bg-ink-elevated">
           {/* 筛选器 */}
           <div className="flex gap-2">
             <button
               onClick={() => setFilter('all')}
               className={`px-3 py-1 text-sm rounded-lg transition-colors ${filter === 'all'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-accent text-text-onAccent'
+                  : 'bg-ink-surface text-text-secondary hover:bg-ink-elevated'
                 }`}
             >
               全部
@@ -122,8 +122,8 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
             <button
               onClick={() => setFilter('unread')}
               className={`px-3 py-1 text-sm rounded-lg transition-colors ${filter === 'unread'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-accent text-text-onAccent'
+                  : 'bg-ink-surface text-text-secondary hover:bg-ink-elevated'
                 }`}
             >
               未读
@@ -135,19 +135,19 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
             <button
               onClick={loadNotifications}
               disabled={loading}
-              className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+              className="p-1.5 hover:bg-ink-elevated rounded-lg transition-colors disabled:opacity-50"
               title="刷新"
             >
-              <RefreshCw className={`w-4 h-4 text-gray-600 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 text-text-secondary ${loading ? 'animate-spin' : ''}`} />
             </button>
 
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-ink-elevated rounded-lg transition-colors"
                 title="全部标记为已读"
               >
-                <CheckCheck className="w-4 h-4 text-gray-600" />
+                <CheckCheck className="w-4 h-4 text-text-secondary" />
               </button>
             )}
           </div>
@@ -157,10 +157,10 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center h-48">
-              <RefreshCw className="w-6 h-6 animate-spin text-purple-600" />
+              <RefreshCw className="w-6 h-6 animate-spin text-accent" />
             </div>
           ) : notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 text-gray-500">
+            <div className="flex flex-col items-center justify-center h-48 text-text-tertiary">
               <div className="text-5xl mb-3">🔔</div>
               <p className="text-sm">
                 {filter === 'unread' ? '没有未读通知' : '暂无通知'}
@@ -182,8 +182,8 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
 
         {/* 底部提示 */}
         {notifications.length > 0 && (
-          <div className="p-3 border-t bg-gray-50 text-center">
-            <p className="text-xs text-gray-500">
+          <div className="p-3 border-t border-border-subtle bg-ink-elevated text-center">
+            <p className="text-xs text-text-tertiary">
               共 {notifications.length} 条通知
               {filter === 'unread' && unreadCount === 0 && ' · 已全部已读'}
             </p>

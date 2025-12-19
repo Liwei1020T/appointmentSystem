@@ -185,7 +185,7 @@ export default function ImageUploader({
     <div className="space-y-3">
       {/* 标签 */}
       {label && (
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-text-secondary">
           {label}
         </label>
       )}
@@ -198,8 +198,8 @@ export default function ImageUploader({
             flex flex-col items-center justify-center
             cursor-pointer transition-all
             ${isDragging 
-              ? 'border-blue-500 bg-blue-50' 
-              : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+              ? 'border-accent-border bg-ink-elevated' 
+              : 'border-border-subtle hover:border-accent-border hover:bg-ink-elevated'
             }
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
@@ -208,11 +208,11 @@ export default function ImageUploader({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <Upload className="w-12 h-12 text-gray-400 mb-3" />
-          <p className="text-gray-600 font-medium mb-1">
+          <Upload className="w-12 h-12 text-text-tertiary mb-3" />
+          <p className="text-text-secondary font-medium mb-1">
             {hint.replace('{max}', maxFiles.toString())}
           </p>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-text-tertiary">
             支持 JPG、PNG、WebP、GIF（最大5MB）
           </p>
         </div>
@@ -224,7 +224,7 @@ export default function ImageUploader({
           {images.map((image, index) => (
             <div
               key={index}
-              className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group"
+              className="relative aspect-square rounded-lg overflow-hidden border border-border-subtle group"
             >
               {/* 图片 */}
               <img
@@ -236,7 +236,7 @@ export default function ImageUploader({
               {/* 上传中遮罩 */}
               {image.uploading && (
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 text-white animate-spin" />
+                  <Loader2 className="w-8 h-8 text-text-onAccent animate-spin" />
                 </div>
               )}
 
@@ -244,7 +244,7 @@ export default function ImageUploader({
               {!image.uploading && (
                 <button
                   onClick={() => handleDelete(index)}
-                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  className="absolute top-2 right-2 bg-danger text-text-primary rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-danger/90"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -252,7 +252,7 @@ export default function ImageUploader({
 
               {/* 已上传标识 */}
               {image.uploaded && !image.uploading && (
-                <div className="absolute bottom-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                <div className="absolute bottom-2 right-2 bg-success text-text-primary text-xs px-2 py-1 rounded">
                   已上传
                 </div>
               )}
@@ -263,7 +263,7 @@ export default function ImageUploader({
 
       {/* 图片数量提示 */}
       {images.length > 0 && (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-text-tertiary">
           已选择 {images.length} / {maxFiles} 张图片
         </p>
       )}

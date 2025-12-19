@@ -79,30 +79,30 @@ export default function MyVouchersPage() {
     switch (status) {
       case 'active':
       case 'available':
-        return { label: '可用', color: 'bg-green-100 text-green-800', icon: <CheckCircle2 className="w-4 h-4" /> };
+        return { label: '可用', color: 'bg-success/15 text-success', icon: <CheckCircle2 className="w-4 h-4" /> };
       case 'used':
-        return { label: '已使用', color: 'bg-gray-100 text-gray-800', icon: <CheckCircle2 className="w-4 h-4" /> };
+        return { label: '已使用', color: 'bg-ink-elevated text-text-secondary', icon: <CheckCircle2 className="w-4 h-4" /> };
       case 'expired':
-        return { label: '已过期', color: 'bg-red-100 text-red-800', icon: <XCircle className="w-4 h-4" /> };
+        return { label: '已过期', color: 'bg-danger/15 text-danger', icon: <XCircle className="w-4 h-4" /> };
       default:
-        return { label: status, color: 'bg-gray-100 text-gray-800', icon: <Ticket className="w-4 h-4" /> };
+        return { label: status, color: 'bg-ink-elevated text-text-secondary', icon: <Ticket className="w-4 h-4" /> };
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent"></div>
+      <div className="min-h-screen flex items-center justify-center bg-ink">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-ink py-8">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">我的优惠券</h1>
-          <p className="text-gray-600">管理您的优惠券</p>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">我的优惠券</h1>
+          <p className="text-text-secondary">管理您的优惠券</p>
         </div>
 
         {/* 筛选器 */}
@@ -118,8 +118,8 @@ export default function MyVouchersPage() {
               onClick={() => setSelectedStatus(status.value as VoucherStatus)}
               className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                 selectedStatus === status.value
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                  ? 'bg-accent text-text-onAccent'
+                  : 'bg-ink-surface text-text-secondary border border-border-subtle hover:bg-ink-elevated'
               }`}
             >
               {status.label}
@@ -129,13 +129,13 @@ export default function MyVouchersPage() {
 
         {/* 优惠券列表 */}
         {filteredVouchers.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-            <Ticket className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">暂无优惠券</h3>
-            <p className="text-gray-600 mb-6">使用积分兑换优惠券</p>
+          <div className="bg-ink-surface rounded-lg border border-border-subtle p-12 text-center">
+            <Ticket className="w-16 h-16 text-text-tertiary mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-text-primary mb-2">暂无优惠券</h3>
+            <p className="text-text-secondary mb-6">使用积分兑换优惠券</p>
             <button
               onClick={() => router.push('/profile/points')}
-              className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium"
+              className="px-6 py-2 bg-accent text-text-onAccent rounded-lg font-medium hover:shadow-glow"
             >
               前往兑换
             </button>
@@ -147,15 +147,15 @@ export default function MyVouchersPage() {
               return (
                 <div
                   key={item.id}
-                  className={`bg-white rounded-lg shadow-sm border-2 p-6 ${
+                  className={`bg-ink-surface rounded-lg border p-6 ${
                     item.status === 'available'
-                      ? 'border-purple-200'
-                      : 'border-gray-200 opacity-75'
+                      ? 'border-accent-border'
+                      : 'border-border-subtle opacity-75'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="font-bold text-xl text-gray-900 mb-1">
+                      <h3 className="font-bold text-xl text-text-primary mb-1">
                         {item.voucher.name}
                       </h3>
                       <div className="flex items-center gap-2 mb-2">
@@ -164,33 +164,33 @@ export default function MyVouchersPage() {
                           {badge.label}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600">{item.voucher.description}</p>
+                      <p className="text-sm text-text-secondary">{item.voucher.description}</p>
                     </div>
-                    <Ticket className="w-8 h-8 text-purple-600" />
+                    <Ticket className="w-8 h-8 text-accent" />
                   </div>
 
-                  <div className="bg-purple-50 rounded-lg p-4 mb-4">
+                  <div className="bg-ink-elevated rounded-lg p-4 mb-4 border border-border-subtle">
                     <div className="flex items-center gap-2 mb-2">
                       {item.voucher.discount_type === 'percentage' ? (
-                        <Percent className="w-5 h-5 text-purple-600" />
+                        <Percent className="w-5 h-5 text-accent" />
                       ) : (
-                        <DollarSign className="w-5 h-5 text-purple-600" />
+                        <DollarSign className="w-5 h-5 text-accent" />
                       )}
-                      <span className="text-2xl font-bold text-purple-600">
+                      <span className="text-2xl font-bold text-accent">
                         {item.voucher.discount_type === 'percentage'
                           ? `${item.voucher.discount_value}% OFF`
                           : `RM ${item.voucher.discount_value} OFF`}
                       </span>
                     </div>
                     {item.voucher.min_purchase > 0 && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-text-secondary">
                         最低消费: RM {item.voucher.min_purchase}
                       </p>
                     )}
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <div className="flex items-center gap-2 text-text-secondary">
                       <Clock className="w-4 h-4" />
                       <span>
                         有效期至{' '}
@@ -202,7 +202,7 @@ export default function MyVouchersPage() {
                   {(item.status === 'active' || item.status === 'available') && (
                     <button
                       onClick={() => router.push('/booking?voucher=' + item.voucher.code)}
-                      className="mt-4 w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium"
+                      className="mt-4 w-full px-4 py-2 bg-accent text-text-onAccent rounded-lg font-medium hover:shadow-glow"
                     >
                       立即使用
                     </button>

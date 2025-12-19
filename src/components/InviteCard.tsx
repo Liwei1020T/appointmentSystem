@@ -98,35 +98,35 @@ export default function InviteCard() {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
-        <div className="animate-pulse">
-          <div className="h-6 bg-white/20 rounded w-1/2 mb-4"></div>
-          <div className="h-12 bg-white/20 rounded mb-4"></div>
-        </div>
+    <div className="bg-gradient-to-r from-accent/25 via-ink-surface to-ink-elevated rounded-lg p-6 text-text-primary border border-border-subtle">
+      <div className="animate-pulse">
+        <div className="h-6 bg-ink-elevated rounded w-1/2 mb-4"></div>
+        <div className="h-12 bg-ink-elevated rounded mb-4"></div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
-    <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white shadow-lg">
+    <div className="bg-gradient-to-r from-accent/25 via-ink-surface to-ink-elevated rounded-lg p-6 text-text-primary border border-border-subtle">
       {/* 标题 */}
       <div className="flex items-center gap-2 mb-4">
-        <Share2 className="w-6 h-6" />
+        <Share2 className="w-6 h-6 text-accent" />
         <h2 className="text-xl font-bold">邀请好友</h2>
       </div>
 
       {/* 邀请码 */}
       <div className="mb-4">
-        <p className="text-sm text-white/80 mb-2">你的专属邀请码</p>
+        <p className="text-sm text-text-tertiary mb-2">你的专属邀请码</p>
         <div className="flex items-center gap-2">
-          <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 border border-white/20">
+          <div className="flex-1 bg-ink-elevated rounded-lg px-4 py-3 border border-border-subtle">
             <p className="text-2xl font-mono font-bold tracking-wider text-center">
               {referralCode}
             </p>
           </div>
           <button
             onClick={handleCopyCode}
-            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg p-3 transition-colors"
+            className="bg-accent text-text-onAccent rounded-lg p-3 transition-colors hover:shadow-glow"
           >
             {copied ? (
               <Check className="w-5 h-5" />
@@ -138,9 +138,9 @@ export default function InviteCard() {
       </div>
 
       {/* 奖励说明 */}
-      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-4 border border-white/20">
+      <div className="bg-ink-elevated rounded-lg p-4 mb-4 border border-border-subtle">
         <p className="text-sm font-medium mb-2">🎁 邀请奖励</p>
-        <div className="space-y-1 text-sm text-white/90">
+        <div className="space-y-1 text-sm text-text-secondary">
           <p>• 好友注册：你获得 <span className="font-bold">50 积分</span></p>
           <p>• 好友奖励：获得 <span className="font-bold">20 积分</span></p>
         </div>
@@ -150,14 +150,14 @@ export default function InviteCard() {
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={handleCopyLink}
-          className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg px-4 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+          className="bg-ink-elevated hover:bg-ink-surface rounded-lg px-4 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-border-subtle"
         >
           <Copy className="w-4 h-4" />
           复制链接
         </button>
         <button
           onClick={handleShare}
-          className="bg-white hover:bg-white/90 text-blue-600 rounded-lg px-4 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+          className="bg-accent text-text-onAccent rounded-lg px-4 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-2 hover:shadow-glow"
         >
           <Share2 className="w-4 h-4" />
           立即分享

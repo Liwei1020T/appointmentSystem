@@ -17,23 +17,23 @@ interface OrderStatusBadgeProps {
 const statusConfig: Record<OrderStatus, { label: string; color: string; bgColor: string }> = {
   pending: {
     label: '待处理',
-    color: 'text-yellow-700',
-    bgColor: 'bg-yellow-100',
+    color: 'text-warning',
+    bgColor: 'bg-warning/15',
   },
   in_progress: {
     label: '处理中',
-    color: 'text-blue-700',
-    bgColor: 'bg-blue-100',
+    color: 'text-info',
+    bgColor: 'bg-info-soft',
   },
   completed: {
     label: '已完成',
-    color: 'text-green-700',
-    bgColor: 'bg-green-100',
+    color: 'text-success',
+    bgColor: 'bg-success/15',
   },
   cancelled: {
     label: '已取消',
-    color: 'text-slate-700',
-    bgColor: 'bg-slate-100',
+    color: 'text-text-secondary',
+    bgColor: 'bg-ink-elevated',
   },
 };
 

@@ -127,11 +127,11 @@ export default function AdminInventoryListPage() {
   // Get stock status badge color
   const getStockBadge = (string: StringInventory) => {
     if (string.stock === 0) {
-      return <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">Out of Stock</span>;
+      return <span className="px-2 py-1 text-xs font-medium bg-danger/15 text-danger rounded-full">Out of Stock</span>;
     } else if (string.stock < string.minimumStock) {
-      return <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full">Low Stock</span>;
+      return <span className="px-2 py-1 text-xs font-medium bg-warning/15 text-warning rounded-full">Low Stock</span>;
     } else {
-      return <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">In Stock</span>;
+      return <span className="px-2 py-1 text-xs font-medium bg-success/15 text-success rounded-full">In Stock</span>;
     }
   };
 
@@ -141,22 +141,22 @@ export default function AdminInventoryListPage() {
   const outOfStockCount = strings.filter(s => s.stock === 0).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-ink-elevated p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <button
               onClick={() => router.push('/admin/dashboard')}
-              className="text-gray-600 hover:text-gray-900 mb-2 flex items-center text-sm"
+              className="text-text-secondary hover:text-text-primary mb-2 flex items-center text-sm"
             >
               ← 返回仪表板
             </button>
-            <h1 className="text-2xl font-bold text-gray-900">库存管理</h1>
+            <h1 className="text-2xl font-bold text-text-primary">库存管理</h1>
           </div>
           <button
             onClick={handleAddNew}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="px-4 py-2 bg-accent text-text-onAccent rounded-lg hover:shadow-glow transition-colors"
           >
             + 添加新球线
           </button>
@@ -164,18 +164,18 @@ export default function AdminInventoryListPage() {
 
         {/* Low Stock Alerts Banner */}
         {lowStockAlerts.length > 0 && (
-          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="mb-6 bg-warning/10 border border-warning/30 rounded-lg p-4">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="h-5 w-5 text-warning" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="ml-3 flex-1">
-                <h3 className="text-sm font-medium text-yellow-800">
+                <h3 className="text-sm font-medium text-warning">
                   {lowStockAlerts.length} 种球线库存不足
                 </h3>
-                <div className="mt-2 text-sm text-yellow-700">
+                <div className="mt-2 text-sm text-warning">
                   <ul className="list-disc list-inside space-y-1">
                     {lowStockAlerts.slice(0, 3).map(alert => (
                       <li key={alert.id}>
@@ -183,7 +183,7 @@ export default function AdminInventoryListPage() {
                       </li>
                     ))}
                     {lowStockAlerts.length > 3 && (
-                      <li className="text-yellow-600">还有 {lowStockAlerts.length - 3} 种...</li>
+                      <li className="text-warning">还有 {lowStockAlerts.length - 3} 种...</li>
                     )}
                   </ul>
                 </div>
@@ -193,7 +193,7 @@ export default function AdminInventoryListPage() {
         )}
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div className="bg-ink-surface rounded-lg shadow-sm p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <div className="flex-1">
@@ -203,7 +203,7 @@ export default function AdminInventoryListPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={handleSearchKeyPress}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent"
               />
             </div>
 
@@ -211,7 +211,7 @@ export default function AdminInventoryListPage() {
             <select
               value={selectedBrand}
               onChange={(e) => handleBrandChange(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="px-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent"
             >
               <option value="">所有品牌</option>
               {brands.map(brand => (
@@ -221,13 +221,13 @@ export default function AdminInventoryListPage() {
           </div>
 
           {/* Stock Status Tabs */}
-          <div className="flex gap-2 mt-4 border-b border-gray-200">
+          <div className="flex gap-2 mt-4 border-b border-border-subtle">
             <button
               onClick={() => handleFilterChange('all')}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 stockStatus === 'all'
-                  ? 'border-purple-600 text-purple-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'border-accent text-accent'
+                  : 'border-transparent text-text-secondary hover:text-text-primary'
               }`}
             >
               全部 ({allCount})
@@ -236,8 +236,8 @@ export default function AdminInventoryListPage() {
               onClick={() => handleFilterChange('low_stock')}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 stockStatus === 'low_stock'
-                  ? 'border-yellow-600 text-yellow-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'border-warning text-warning'
+                  : 'border-transparent text-text-secondary hover:text-text-primary'
               }`}
             >
               库存不足 ({lowStockCount})
@@ -246,8 +246,8 @@ export default function AdminInventoryListPage() {
               onClick={() => handleFilterChange('out_of_stock')}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 stockStatus === 'out_of_stock'
-                  ? 'border-red-600 text-red-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'border-danger text-danger'
+                  : 'border-transparent text-text-secondary hover:text-text-primary'
               }`}
             >
               缺货 ({outOfStockCount})
@@ -257,59 +257,59 @@ export default function AdminInventoryListPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-700">{error}</p>
+          <div className="mb-6 bg-danger/15 border border-danger/40 rounded-lg p-4">
+            <p className="text-sm text-danger">{error}</p>
           </div>
         )}
 
         {/* Loading State */}
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
           </div>
         ) : (
           <>
             {/* Strings Table */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+            <div className="bg-ink-surface rounded-lg shadow-sm overflow-hidden mb-6">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-border-subtle">
+                  <thead className="bg-ink-elevated">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         品牌
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         球线名称
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         成本价
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         售价
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         利润率
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         当前库存
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         最低库存
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         状态
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         操作
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-ink-surface divide-y divide-border-subtle">
                     {strings.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan={9} className="px-6 py-12 text-center text-text-tertiary">
                           <div className="flex flex-col items-center">
-                            <svg className="h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-12 w-12 text-text-tertiary mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                             </svg>
                             <p className="text-sm">暂无库存数据</p>
@@ -323,27 +323,27 @@ export default function AdminInventoryListPage() {
                           <tr
                             key={string.id}
                             onClick={() => handleViewDetail(string.id)}
-                            className="hover:bg-gray-50 cursor-pointer transition-colors"
+                            className="hover:bg-ink-elevated cursor-pointer transition-colors"
                           >
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">
                               {string.brand}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                               {string.model}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                               RM {Number(string.costPrice).toFixed(2)}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary font-medium">
                               RM {Number(string.sellingPrice).toFixed(2)}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-success font-medium">
                               {profitMargin}%
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary font-semibold">
                               {string.stock}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-tertiary">
                               {string.minimumStock}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -355,7 +355,7 @@ export default function AdminInventoryListPage() {
                                   e.stopPropagation();
                                   handleViewDetail(string.id);
                                 }}
-                                className="text-purple-600 hover:text-purple-900 font-medium"
+                                className="text-accent hover:text-accent/80 font-medium"
                               >
                                 查看详情
                               </button>
@@ -371,15 +371,15 @@ export default function AdminInventoryListPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between bg-white px-6 py-4 rounded-lg shadow-sm">
-                <div className="text-sm text-gray-700">
+              <div className="flex items-center justify-between bg-ink-surface px-6 py-4 rounded-lg shadow-sm">
+                <div className="text-sm text-text-secondary">
                   显示 {startIndex} 到 {endIndex} 条，共 {totalStrings} 条
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    className="px-3 py-1 border border-border-subtle rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ink-elevated"
                   >
                     上一页
                   </button>
@@ -391,8 +391,8 @@ export default function AdminInventoryListPage() {
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-3 py-1 border rounded-md text-sm ${
                           currentPage === pageNum
-                            ? 'bg-purple-600 text-white border-purple-600'
-                            : 'border-gray-300 hover:bg-gray-50'
+                            ? 'bg-accent text-text-onAccent border-accent'
+                            : 'border-border-subtle hover:bg-ink-elevated'
                         }`}
                       >
                         {pageNum}
@@ -402,7 +402,7 @@ export default function AdminInventoryListPage() {
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    className="px-3 py-1 border border-border-subtle rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ink-elevated"
                   >
                     下一页
                   </button>

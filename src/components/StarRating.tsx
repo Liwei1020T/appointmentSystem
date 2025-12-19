@@ -67,8 +67,8 @@ export default function StarRating({
           <svg
             className={`${sizeClass} ${
               rating <= displayValue
-                ? 'text-yellow-400 fill-current'
-                : 'text-slate-300'
+                ? 'text-warning fill-current'
+                : 'text-text-tertiary'
             }`}
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -83,7 +83,7 @@ export default function StarRating({
         </button>
       ))}
       {showValue && (
-        <span className="ml-2 text-sm font-medium text-slate-700">
+        <span className="ml-2 text-sm font-medium text-text-secondary">
           {displayValue.toFixed(1)}
         </span>
       )}

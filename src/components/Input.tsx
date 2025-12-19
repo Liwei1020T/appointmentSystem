@@ -29,37 +29,37 @@ export const Input: React.FC<InputProps> = ({
   return (
     <div className="space-y-1">
       {label && (
-        <label className="block text-sm font-medium text-slate-700">
+        <label className="block text-sm font-medium text-text-secondary">
           {label}
         </label>
       )}
       <div className="relative">
         {leftIcon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary">
             {leftIcon}
           </div>
         )}
         <input
           className={`
-            w-full h-11 px-3 rounded-lg border 
-            ${error ? 'border-red-300 focus:ring-red-500' : 'border-slate-300 focus:ring-blue-500'}
+            w-full h-11 px-3 rounded-lg border bg-ink-surface text-text-primary
+            ${error ? 'border-danger focus:ring-danger/40' : 'border-border-subtle focus:ring-accent-border'}
             ${leftIcon ? 'pl-10' : ''}
             ${rightIcon ? 'pr-10' : ''}
-            focus:outline-none focus:ring-2 focus:border-transparent
-            placeholder:text-slate-400
-            disabled:bg-slate-100 disabled:cursor-not-allowed
+            focus:outline-none focus:ring-2 focus:border-transparent focus:ring-offset-2 focus:ring-offset-ink
+            placeholder:text-text-tertiary
+            disabled:bg-ink-elevated disabled:cursor-not-allowed
             ${className}
           `.trim().replace(/\s+/g, ' ')}
           {...props}
         />
         {rightIcon && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary">
             {rightIcon}
           </div>
         )}
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {helperText && !error && <p className="text-sm text-slate-500">{helperText}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
+      {helperText && !error && <p className="text-sm text-text-tertiary">{helperText}</p>}
     </div>
   );
 };

@@ -39,44 +39,44 @@ export default function PackageCard({
   return (
     <Card
       className={`p-6 relative ${
-        isRecommended ? 'ring-2 ring-blue-500' : ''
+        isRecommended ? 'ring-2 ring-accent-border' : ''
       } ${disabled ? 'opacity-60' : ''}`}
     >
       {/* 推荐标签 */}
       {isRecommended && (
         <div className="absolute top-0 right-6 transform -translate-y-1/2">
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-500 text-white shadow-lg">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-accent text-text-onAccent shadow-lg">
             🔥 推荐
           </span>
         </div>
       )}
 
       {/* 套餐名称 */}
-      <h3 className="text-xl font-bold text-slate-900 mb-2">{pkg.name}</h3>
+      <h3 className="text-xl font-bold text-text-primary mb-2">{pkg.name}</h3>
 
       {/* 次数 */}
       <div className="flex items-baseline gap-2 mb-4">
-        <span className="text-4xl font-bold text-blue-600">{pkg.times}</span>
-        <span className="text-slate-600">次穿线</span>
+        <span className="text-4xl font-bold text-accent font-mono">{pkg.times}</span>
+        <span className="text-text-tertiary">次穿线</span>
       </div>
 
       {/* 价格 */}
       <div className="mb-4">
         <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold text-slate-900">
+          <span className="text-3xl font-bold text-text-primary font-mono">
             RM {price.toFixed(2)}
           </span>
         </div>
-        <p className="text-sm text-slate-600 mt-1">
+        <p className="text-sm text-text-tertiary mt-1">
           平均每次 RM {pricePerTime.toFixed(2)}
         </p>
       </div>
 
       {/* 节省金额 */}
       {showSavings && savings > 0 && (
-        <div className="mb-4 p-3 bg-green-50 rounded-lg">
+        <div className="mb-4 p-3 bg-success/10 rounded-lg border border-success/30">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
                 d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -84,10 +84,10 @@ export default function PackageCard({
               />
             </svg>
             <div>
-              <p className="text-sm font-semibold text-green-700">
+              <p className="text-sm font-semibold text-success">
                 节省 RM {savings.toFixed(2)}
               </p>
-              <p className="text-xs text-green-600">
+              <p className="text-xs text-text-tertiary">
                 相比单次购买省 {savingsPercentage}%
               </p>
             </div>
@@ -97,14 +97,14 @@ export default function PackageCard({
 
       {/* 有效期 */}
       {pkg.validityDays && (
-        <p className="text-sm text-slate-600 mb-4">
+        <p className="text-sm text-text-tertiary mb-4">
           有效期：{pkg.validityDays} 天
         </p>
       )}
 
       {/* 描述 */}
       {pkg.description && (
-        <p className="text-sm text-slate-600 mb-4">{pkg.description}</p>
+        <p className="text-sm text-text-secondary mb-4">{pkg.description}</p>
       )}
 
       {/* 购买按钮 */}

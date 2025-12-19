@@ -12,11 +12,11 @@ export const metadata: Metadata = {
 
 export default function OrdersPage() {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-ink">
       {/* 顶部导航 */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+      <div className="bg-ink-surface border-b border-border-subtle sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4">
-          <h1 className="text-lg font-semibold text-slate-900">我的订单</h1>
+          <h1 className="text-lg font-semibold text-text-primary">我的订单</h1>
         </div>
       </div>
 

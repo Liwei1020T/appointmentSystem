@@ -152,11 +152,11 @@ export default function MyVouchersPage() {
   const displayVouchers = tab === 'available' ? availableVouchers : usedVouchers;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-ink pb-20">
       {/* 顶部导航 */}
-      <div className="sticky top-0 z-10 bg-white border-b">
+      <div className="sticky top-0 z-10 glass-surface border-b border-border-subtle">
         <div className="px-4 py-3">
-          <h1 className="text-lg font-semibold text-gray-900">我的优惠券</h1>
+          <h1 className="text-lg font-semibold text-text-primary">我的优惠券</h1>
         </div>
 
         {/* 标签切换 */}
@@ -165,26 +165,26 @@ export default function MyVouchersPage() {
             onClick={() => setTab('available')}
             className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
               tab === 'available'
-                ? 'text-purple-600'
-                : 'text-gray-600'
+                ? 'text-accent'
+                : 'text-text-tertiary'
             }`}
           >
             可用 ({availableVouchers.length})
             {tab === 'available' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent"></div>
             )}
           </button>
           <button
             onClick={() => setTab('used')}
             className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
               tab === 'used'
-                ? 'text-purple-600'
-                : 'text-gray-600'
+                ? 'text-accent'
+                : 'text-text-tertiary'
             }`}
           >
             已用 ({usedVouchers.length})
             {tab === 'used' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent"></div>
             )}
           </button>
         </div>
@@ -194,25 +194,25 @@ export default function MyVouchersPage() {
       <div className="p-4">
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-600 border-t-transparent"></div>
-            <p className="text-gray-500 mt-2">加载中...</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-accent border-t-transparent"></div>
+            <p className="text-text-tertiary mt-2">加载中...</p>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-            <p className="text-red-600">{error}</p>
+          <div className="bg-danger/10 border border-danger/30 rounded-lg p-4 text-center">
+            <p className="text-danger">{error}</p>
           </div>
         ) : displayVouchers.length === 0 ? (
-          <div className="bg-white rounded-lg p-12 text-center">
+          <div className="bg-ink-surface rounded-lg p-12 text-center border border-border-subtle">
             <div className="text-6xl mb-4">
               {tab === 'available' ? '🎁' : '📋'}
             </div>
-            <p className="text-gray-600 mb-2">
+            <p className="text-text-secondary mb-2">
               {tab === 'available' ? '暂无可用优惠券' : '暂无使用记录'}
             </p>
             {tab === 'available' && (
               <button
                 onClick={() => router.push('/vouchers/redeem')}
-                className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                className="mt-4 px-6 py-2 bg-accent text-text-onAccent rounded-lg font-medium hover:shadow-glow transition-colors"
               >
                 去兑换
               </button>
@@ -229,19 +229,19 @@ export default function MyVouchersPage() {
               return (
                 <div
                   key={userVoucher.id}
-                  className={`bg-white rounded-xl overflow-hidden shadow-sm border-2 ${
+                  className={`bg-ink-surface rounded-xl overflow-hidden shadow-sm border-2 ${
                     tab === 'used'
-                      ? 'border-gray-200 opacity-60'
+                      ? 'border-border-subtle opacity-60'
                       : expiringSoon
-                      ? 'border-orange-200'
-                      : 'border-purple-200'
+                      ? 'border-warning/30'
+                      : 'border-accent-border'
                   }`}
                 >
                   {/* 过期警告横幅 */}
                   {expiringSoon && (
-                    <div className="bg-orange-50 border-b border-orange-200 px-4 py-2 flex items-center gap-2">
-                      <span className="text-orange-600 text-sm">⚠️</span>
-                      <span className="text-xs text-orange-700 font-medium">
+                    <div className="bg-warning/10 border-b border-warning/30 px-4 py-2 flex items-center gap-2">
+                      <span className="text-warning text-sm">⚠️</span>
+                      <span className="text-xs text-warning font-medium">
                         即将过期，请尽快使用
                       </span>
                     </div>
@@ -251,72 +251,72 @@ export default function MyVouchersPage() {
                     <div className="flex items-start gap-4">
                       {/* 折扣标签 */}
                       <div
-                        className={`rounded-xl p-4 text-white min-w-[80px] text-center ${
+                        className={`rounded-xl p-4 text-text-primary min-w-[80px] text-center ${
                           tab === 'used'
-                            ? 'bg-gray-400'
-                            : 'bg-gradient-to-br from-purple-500 to-purple-700'
+                            ? 'bg-ink-elevated'
+                            : 'bg-ink-elevated'
                         }`}
                       >
-                        <div className="text-xs opacity-90 mb-1">立减</div>
-                        <div className="text-xl font-bold">
+                        <div className="text-xs text-text-tertiary mb-1">立减</div>
+                        <div className="text-xl font-bold text-accent">
                           {getDiscountDisplay(userVoucher)}
                         </div>
                       </div>
 
                       {/* 优惠券详情 */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 mb-1">
+                        <h3 className="font-semibold text-text-primary mb-1">
                           {voucher.name}
                         </h3>
                         {voucher.description && (
-                          <p className="text-sm text-gray-600 mb-2">
+                          <p className="text-sm text-text-secondary mb-2">
                             {voucher.description}
                           </p>
                         )}
 
                         {/* 使用条件 */}
-                        <div className="flex flex-wrap gap-2 text-xs text-gray-500 mb-3">
+                        <div className="flex flex-wrap gap-2 text-xs text-text-tertiary mb-3">
                           {voucher.min_purchase && (
-                            <span className="bg-gray-100 px-2 py-1 rounded">
+                            <span className="bg-ink-elevated px-2 py-1 rounded border border-border-subtle">
                               满 RM {voucher.min_purchase}
                             </span>
                           )}
                           {voucher.max_discount && voucher.discount_type === 'percentage' && (
-                            <span className="bg-gray-100 px-2 py-1 rounded">
+                            <span className="bg-ink-elevated px-2 py-1 rounded border border-border-subtle">
                               最高减 RM {voucher.max_discount}
                             </span>
                           )}
                         </div>
 
                         {/* 优惠券代码 + 过期时间 */}
-                        <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                        <div className="bg-ink-elevated rounded-lg p-3 mb-3 border border-border-subtle">
                           <div className="flex items-center justify-between mb-2">
-                            <div className="text-xs text-gray-600">优惠码</div>
+                            <div className="text-xs text-text-tertiary">优惠码</div>
                             <button
                               onClick={() => handleCopyCode(voucher.code)}
                               disabled={tab === 'used'}
                               className={`text-xs font-medium transition-colors ${
                                 tab === 'used'
-                                  ? 'text-gray-400 cursor-not-allowed'
+                                  ? 'text-text-tertiary cursor-not-allowed'
                                   : copiedCode === voucher.code
-                                  ? 'text-green-600'
-                                  : 'text-purple-600 hover:text-purple-700'
+                                  ? 'text-success'
+                                  : 'text-accent hover:text-text-primary'
                               }`}
                             >
                               {copiedCode === voucher.code ? '已复制 ✓' : '复制'}
                             </button>
                           </div>
-                          <div className="font-mono font-bold text-lg text-gray-900 tracking-wider">
+                          <div className="font-mono font-bold text-lg text-text-primary tracking-wider">
                             {voucher.code}
                           </div>
                         </div>
 
                         {/* 过期时间 */}
                         <div className="flex items-center gap-2 text-xs">
-                          <span className="text-gray-500">有效期至:</span>
+                          <span className="text-text-tertiary">有效期至:</span>
                           <span
                             className={`font-medium ${
-                              expiringSoon ? 'text-orange-600' : 'text-gray-700'
+                              expiringSoon ? 'text-warning' : 'text-text-secondary'
                             }`}
                           >
                             {formatExpiryDate(userVoucher.expires_at)}
@@ -325,7 +325,7 @@ export default function MyVouchersPage() {
 
                         {/* 已使用标记 */}
                         {userVoucher.used && userVoucher.used_at && (
-                          <div className="mt-2 text-xs text-gray-500">
+                          <div className="mt-2 text-xs text-text-tertiary">
                             已于 {new Date(userVoucher.used_at).toLocaleDateString('zh-CN')} 使用
                           </div>
                         )}
@@ -342,12 +342,12 @@ export default function MyVouchersPage() {
       {/* 使用说明 */}
       {!loading && !error && displayVouchers.length > 0 && tab === 'available' && (
         <div className="px-4 mt-4 mb-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-ink-elevated border border-border-subtle rounded-lg p-4">
             <div className="flex items-start gap-3">
               <div className="text-xl">💡</div>
               <div className="flex-1 text-sm">
-                <p className="text-blue-900 font-medium mb-1">使用说明</p>
-                <ul className="text-blue-700 space-y-1 text-xs">
+                <p className="text-text-primary font-medium mb-1">使用说明</p>
+                <ul className="text-text-secondary space-y-1 text-xs">
                   <li>• 在预订页面选择优惠券即可使用</li>
                   <li>• 部分优惠券有最低消费要求</li>
                   <li>• 优惠券过期后将自动失效</li>

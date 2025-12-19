@@ -135,9 +135,9 @@ export default function AdminUserListPage() {
 
   function getRoleBadge(role: string) {
     const badges = {
-      user: 'bg-blue-100 text-blue-800',
-      admin: 'bg-purple-100 text-purple-800',
-      super_admin: 'bg-red-100 text-red-800',
+      user: 'bg-info-soft text-info',
+      admin: 'bg-accent/15 text-accent',
+      super_admin: 'bg-danger/15 text-danger',
     };
     
     const labels = {
@@ -159,40 +159,40 @@ export default function AdminUserListPage() {
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">用户管理</h1>
+        <h1 className="text-3xl font-bold text-text-primary">用户管理</h1>
       </div>
 
       {/* Statistics Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-sm text-gray-500 mb-1">总用户数</div>
-            <div className="text-2xl font-bold text-gray-900">{stats.total_users || stats.totalUsers || 0}</div>
-            <div className="text-xs text-gray-400 mt-1">
+          <div className="bg-ink-surface p-6 rounded-lg shadow">
+            <div className="text-sm text-text-tertiary mb-1">总用户数</div>
+            <div className="text-2xl font-bold text-text-primary">{stats.total_users || stats.totalUsers || 0}</div>
+            <div className="text-xs text-text-tertiary mt-1">
               活跃: {stats.active_users || stats.activeUsers || 0} | 封禁: {stats.blocked_users || stats.blockedUsers || 0}
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-sm text-gray-500 mb-1">本月新增</div>
-            <div className="text-2xl font-bold text-blue-600">{stats.new_users_this_month || stats.newUsersThisMonth || 0}</div>
-            <div className="text-xs text-gray-400 mt-1">
+          <div className="bg-ink-surface p-6 rounded-lg shadow">
+            <div className="text-sm text-text-tertiary mb-1">本月新增</div>
+            <div className="text-2xl font-bold text-info">{stats.new_users_this_month || stats.newUsersThisMonth || 0}</div>
+            <div className="text-xs text-text-tertiary mt-1">
               较上月增长
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-sm text-gray-500 mb-1">总订单数</div>
-            <div className="text-2xl font-bold text-green-600">{stats.total_orders || stats.totalOrders || 0}</div>
-            <div className="text-xs text-gray-400 mt-1">
+          <div className="bg-ink-surface p-6 rounded-lg shadow">
+            <div className="text-sm text-text-tertiary mb-1">总订单数</div>
+            <div className="text-2xl font-bold text-success">{stats.total_orders || stats.totalOrders || 0}</div>
+            <div className="text-xs text-text-tertiary mt-1">
               总营收: {formatCurrency(stats.total_revenue || stats.totalRevenue || 0)}
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-sm text-gray-500 mb-1">积分发放</div>
-            <div className="text-2xl font-bold text-purple-600">{stats.total_points_distributed || stats.totalPointsDistributed || 0}</div>
-            <div className="text-xs text-gray-400 mt-1">
+          <div className="bg-ink-surface p-6 rounded-lg shadow">
+            <div className="text-sm text-text-tertiary mb-1">积分发放</div>
+            <div className="text-2xl font-bold text-accent">{stats.total_points_distributed || stats.totalPointsDistributed || 0}</div>
+            <div className="text-xs text-text-tertiary mt-1">
               总积分
             </div>
           </div>
@@ -200,11 +200,11 @@ export default function AdminUserListPage() {
       )}
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
+      <div className="bg-ink-surface p-4 rounded-lg shadow mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Search */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-text-secondary mb-2">
               搜索
             </label>
             <input
@@ -215,13 +215,13 @@ export default function AdminUserListPage() {
                 setCurrentPage(1);
               }}
               placeholder="姓名或手机"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent"
             />
           </div>
 
           {/* Role Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-text-secondary mb-2">
               角色
             </label>
             <select
@@ -230,7 +230,7 @@ export default function AdminUserListPage() {
                 setRoleFilter(e.target.value as UserRole | 'all');
                 setCurrentPage(1);
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent"
             >
               <option value="all">全部角色</option>
               <option value="user">用户</option>
@@ -241,7 +241,7 @@ export default function AdminUserListPage() {
 
           {/* Status Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-text-secondary mb-2">
               状态
             </label>
             <select
@@ -250,7 +250,7 @@ export default function AdminUserListPage() {
                 setStatusFilter(e.target.value as UserStatus);
                 setCurrentPage(1);
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent"
             >
               <option value="all">全部状态</option>
               <option value="active">活跃</option>
@@ -262,108 +262,108 @@ export default function AdminUserListPage() {
 
       {/* Loading/Error States */}
       {loading && users.length === 0 && (
-        <div className="text-center py-12 text-gray-500">加载中...</div>
+        <div className="text-center py-12 text-text-tertiary">加载中...</div>
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6">
+        <div className="bg-danger/15 border border-danger/40 text-danger px-4 py-3 rounded-lg mb-6">
           {error}
         </div>
       )}
 
       {/* Users Table */}
       {!loading && !error && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-ink-surface rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-ink-elevated">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                     用户
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                     联系方式
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                     角色
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                     积分
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                     邀请码
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                     状态
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                     注册时间
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                     操作
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-ink-surface divide-y divide-border-subtle">
                 {!Array.isArray(users) || users.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={8} className="px-6 py-4 text-center text-text-tertiary">
                       暂无用户数据
                     </td>
                   </tr>
                 ) : (
                   users.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
+                    <tr key={user.id} className="hover:bg-ink-elevated">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{user.full_name}</div>
-                        <div className="text-sm text-gray-500">{user.phone || '-'}</div>
+                        <div className="font-medium text-text-primary">{user.full_name}</div>
+                        <div className="text-sm text-text-tertiary">{user.phone || '-'}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-text-tertiary">
                         {user.phone || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getRoleBadge(user.role)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="font-bold text-purple-600">{user.points}</span>
+                        <span className="font-bold text-accent">{user.points}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <div className="font-mono text-blue-600">{user.referral_code || '-'}</div>
+                        <div className="font-mono text-info">{user.referral_code || '-'}</div>
                         {user.referred_by && (
-                          <div className="text-xs text-gray-400">推荐: {user.referred_by}</div>
+                          <div className="text-xs text-text-tertiary">推荐: {user.referred_by}</div>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-semibold ${
                             user.is_blocked
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-green-100 text-green-800'
+                              ? 'bg-danger/15 text-danger'
+                              : 'bg-success/15 text-success'
                           }`}
                         >
                           {user.is_blocked ? '已封禁' : '正常'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-text-tertiary">
                         {formatDate(user.created_at)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex gap-2">
                           <a
                             href={`/admin/users/${user.id}`}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-info hover:text-info/80"
                           >
                             详情
                           </a>
                           <button
                             onClick={() => handleChangeRole(user.id, user.role)}
-                            className="text-purple-600 hover:text-purple-900"
+                            className="text-accent hover:text-accent/80"
                           >
                             角色
                           </button>
                           <button
                             onClick={() => handleBlockUser(user.id, user.is_blocked || false)}
-                            className={user.is_blocked ? 'text-green-600 hover:text-green-900' : 'text-red-600 hover:text-red-900'}
+                            className={user.is_blocked ? 'text-success hover:text-success/80' : 'text-danger hover:text-danger/80'}
                           >
                             {user.is_blocked ? '解封' : '封禁'}
                           </button>
@@ -378,15 +378,15 @@ export default function AdminUserListPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="bg-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200">
-              <div className="text-sm text-gray-700">
+            <div className="bg-ink-elevated px-6 py-4 flex items-center justify-between border-t border-border-subtle">
+              <div className="text-sm text-text-secondary">
                 显示 {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalCount)} / 共 {totalCount} 条
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                  className="px-3 py-1 border border-border-subtle rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ink-surface"
                 >
                   上一页
                 </button>
@@ -396,7 +396,7 @@ export default function AdminUserListPage() {
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                  className="px-3 py-1 border border-border-subtle rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ink-surface"
                 >
                   下一页
                 </button>

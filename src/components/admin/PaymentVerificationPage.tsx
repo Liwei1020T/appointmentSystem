@@ -163,7 +163,7 @@ export default function PaymentVerificationPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-gray-600">加载中...</div>
+        <div className="text-text-secondary">加载中...</div>
       </div>
     );
   }
@@ -171,13 +171,13 @@ export default function PaymentVerificationPage() {
   return (
     <div className="mx-auto max-w-7xl p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">支付审核</h1>
-        <p className="mt-2 text-gray-600">待审核支付：{pendingCount} 笔</p>
+        <h1 className="text-3xl font-bold text-text-primary">支付审核</h1>
+        <p className="mt-2 text-text-secondary">待审核支付：{pendingCount} 笔</p>
       </div>
 
       {payments.length === 0 ? (
-        <div className="rounded-lg bg-white p-12 text-center shadow">
-          <p className="text-gray-500">暂无待审核的支付</p>
+        <div className="rounded-lg bg-ink-surface p-12 text-center shadow">
+          <p className="text-text-tertiary">暂无待审核的支付</p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -189,11 +189,11 @@ export default function PaymentVerificationPage() {
             return (
               <div
                 key={payment.id}
-                className="overflow-hidden rounded-lg bg-white shadow-lg transition-shadow hover:shadow-xl"
+                className="overflow-hidden rounded-lg bg-ink-surface shadow-lg transition-shadow hover:shadow-xl border border-border-subtle"
               >
                 {/* 支付凭证预览（现金不一定有） */}
                 {proofUrl ? (
-                  <div className="relative h-48 bg-gray-100">
+                  <div className="relative h-48 bg-ink-elevated">
                     <img
                       src={proofUrl}
                       alt="Payment Proof"
@@ -202,35 +202,35 @@ export default function PaymentVerificationPage() {
                     />
                   </div>
                 ) : (
-                  <div className="flex h-48 items-center justify-center bg-gray-50 text-sm text-gray-500">
+                  <div className="flex h-48 items-center justify-center bg-ink-elevated text-sm text-text-tertiary">
                     {isCash ? '现金支付（无需收据）' : '未上传收据'}
                   </div>
                 )}
 
                 <div className="space-y-3 p-4">
-                  <div className="text-sm font-semibold text-gray-900">
+                  <div className="text-sm font-semibold text-text-primary">
                     {title}
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-600">支付金额</p>
-                    <p className="text-2xl font-bold text-blue-600">
+                    <p className="text-sm text-text-secondary">支付金额</p>
+                    <p className="text-2xl font-bold text-accent">
                       {formatAmount(Number(payment.amount))}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-600">用户信息</p>
-                    <p className="font-medium">
+                    <p className="text-sm text-text-secondary">用户信息</p>
+                    <p className="font-medium text-text-primary">
                       {payment.user.fullName || '用户'}
                     </p>
-                    <p className="text-sm text-gray-500">{payment.user.phone || payment.user.email || '-'}</p>
+                    <p className="text-sm text-text-tertiary">{payment.user.phone || payment.user.email || '-'}</p>
                     {payment.user.phone ? (
-                      <p className="text-sm text-gray-500">{payment.user.phone}</p>
+                      <p className="text-sm text-text-tertiary">{payment.user.phone}</p>
                     ) : null}
                   </div>
 
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-text-tertiary">
                     提交时间：{new Date(payment.createdAt).toLocaleString('zh-CN')}
                   </div>
 
@@ -238,7 +238,7 @@ export default function PaymentVerificationPage() {
                     <button
                       onClick={() => handleConfirm(payment)}
                       disabled={processing}
-                      className="flex-1 rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:bg-gray-400"
+                      className="flex-1 rounded-lg bg-success px-4 py-2 text-text-primary hover:bg-success/90 disabled:opacity-50"
                     >
                       确认
                     </button>
@@ -248,7 +248,7 @@ export default function PaymentVerificationPage() {
                         setShowRejectModal(true);
                       }}
                       disabled={processing}
-                      className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:bg-gray-400"
+                      className="flex-1 rounded-lg bg-danger px-4 py-2 text-text-primary hover:bg-danger/90 disabled:opacity-50"
                     >
                       拒绝
                     </button>
@@ -265,17 +265,17 @@ export default function PaymentVerificationPage() {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="rounded-lg border bg-white px-4 py-2 disabled:opacity-50"
+            className="rounded-lg border border-border-subtle bg-ink-surface px-4 py-2 text-text-secondary hover:bg-ink-elevated disabled:opacity-50"
           >
             上一页
           </button>
-          <span className="px-4 py-2">
+          <span className="px-4 py-2 text-text-secondary">
             第 {page} / {totalPages} 页
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="rounded-lg border bg-white px-4 py-2 disabled:opacity-50"
+            className="rounded-lg border border-border-subtle bg-ink-surface px-4 py-2 text-text-secondary hover:bg-ink-elevated disabled:opacity-50"
           >
             下一页
           </button>
@@ -285,15 +285,15 @@ export default function PaymentVerificationPage() {
       {/* 凭证预览模态框 */}
       {selectedPayment && !showRejectModal ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 p-4"
           onClick={() => setSelectedPayment(null)}
         >
           <div
-            className="max-h-[90vh] w-full max-w-4xl overflow-auto rounded-lg bg-white"
+            className="max-h-[90vh] w-full max-w-4xl overflow-auto rounded-lg bg-ink-surface border border-border-subtle"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
-              <h2 className="mb-4 text-2xl font-bold">支付详情</h2>
+              <h2 className="mb-4 text-2xl font-bold text-text-primary">支付详情</h2>
 
               {getProofUrl(selectedPayment) ? (
                 <div className="mb-6">
@@ -308,29 +308,29 @@ export default function PaymentVerificationPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">支付金额</p>
-                    <p className="text-xl font-bold">
+                    <p className="text-sm text-text-secondary">支付金额</p>
+                    <p className="text-xl font-bold text-text-primary">
                       {formatAmount(Number(selectedPayment.amount))}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">支付方式</p>
-                    <p className="font-medium">
+                    <p className="text-sm text-text-secondary">支付方式</p>
+                    <p className="font-medium text-text-primary">
                       {selectedPayment.provider === 'cash' ? '现金' : 'TNG'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">用户</p>
-                    <p className="font-medium">
+                    <p className="text-sm text-text-secondary">用户</p>
+                    <p className="font-medium text-text-primary">
                       {selectedPayment.user.fullName || '用户'}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-text-tertiary">
                       {selectedPayment.user.phone || selectedPayment.user.email || '-'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">内容</p>
-                    <p className="text-sm">{getPaymentTitle(selectedPayment)}</p>
+                    <p className="text-sm text-text-secondary">内容</p>
+                    <p className="text-sm text-text-primary">{getPaymentTitle(selectedPayment)}</p>
                   </div>
                 </div>
 
@@ -338,20 +338,20 @@ export default function PaymentVerificationPage() {
                   <button
                     onClick={() => handleConfirm(selectedPayment)}
                     disabled={processing}
-                    className="flex-1 rounded-lg bg-green-600 px-6 py-3 text-white hover:bg-green-700 disabled:opacity-50"
+                    className="flex-1 rounded-lg bg-success px-6 py-3 text-text-primary hover:bg-success/90 disabled:opacity-50"
                   >
                     确认支付
                   </button>
                   <button
                     onClick={() => setShowRejectModal(true)}
                     disabled={processing}
-                    className="flex-1 rounded-lg bg-red-600 px-6 py-3 text-white hover:bg-red-700 disabled:opacity-50"
+                    className="flex-1 rounded-lg bg-danger px-6 py-3 text-text-primary hover:bg-danger/90 disabled:opacity-50"
                   >
                     拒绝支付
                   </button>
                   <button
                     onClick={() => setSelectedPayment(null)}
-                    className="rounded-lg bg-gray-200 px-6 py-3 text-gray-800 hover:bg-gray-300"
+                    className="rounded-lg bg-ink-elevated px-6 py-3 text-text-secondary hover:bg-ink-surface"
                   >
                     关闭
                   </button>
@@ -364,21 +364,21 @@ export default function PaymentVerificationPage() {
 
       {/* 拒绝原因模态框 */}
       {showRejectModal && selectedPayment ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-6">
-            <h2 className="mb-4 text-xl font-bold">拒绝支付</h2>
-            <p className="mb-4 text-gray-600">请输入拒绝原因，用户将收到通知</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 p-4">
+          <div className="w-full max-w-md rounded-lg bg-ink-surface p-6 border border-border-subtle">
+            <h2 className="mb-4 text-xl font-bold text-text-primary">拒绝支付</h2>
+            <p className="mb-4 text-text-secondary">请输入拒绝原因，用户将收到通知</p>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="例如：支付金额不符、凭证不清晰等"
-              className="mb-4 min-h-[100px] w-full rounded-lg border p-3"
+              className="mb-4 min-h-[100px] w-full rounded-lg border border-border-subtle bg-ink-elevated p-3 text-text-primary focus:ring-2 focus:ring-accent"
             />
             <div className="flex gap-4">
               <button
                 onClick={handleReject}
                 disabled={processing || !rejectReason.trim()}
-                className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:bg-gray-400"
+                className="flex-1 rounded-lg bg-danger px-4 py-2 text-text-primary hover:bg-danger/90 disabled:opacity-50"
               >
                 确认拒绝
               </button>
@@ -387,7 +387,7 @@ export default function PaymentVerificationPage() {
                   setShowRejectModal(false);
                   setRejectReason('');
                 }}
-                className="flex-1 rounded-lg bg-gray-200 px-4 py-2 text-gray-800 hover:bg-gray-300"
+                className="flex-1 rounded-lg bg-ink-elevated px-4 py-2 text-text-secondary hover:bg-ink-surface"
               >
                 取消
               </button>

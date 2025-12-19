@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
@@ -90,18 +90,24 @@ export default function EditProfilePage() {
   };
 
   // 处理表单变化
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    const nextValue = name === 'phone' ? normalizeMyPhone(value) : value;
-    setFormData((prev) => ({ ...prev, [name]: nextValue }));
+    // 使用函数式更新以避免依赖 formData
+    setFormData((prev) => {
+      const nextValue = name === 'phone' ? normalizeMyPhone(value) : value;
+      return { ...prev, [name]: nextValue };
+    });
     // 清除对应字段的错误
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
-    }
-  };
+    setErrors((prev) => {
+      if (prev[name]) {
+        return { ...prev, [name]: '' };
+      }
+      return prev;
+    });
+  }, []);
 
   // 验证表单
-  const validateForm = (): boolean => {
+  const validateForm = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.full_name || formData.full_name.trim().length < 2) {
@@ -114,10 +120,10 @@ export default function EditProfilePage() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData.full_name, formData.phone]);
 
   // 提交表单
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -155,11 +161,11 @@ export default function EditProfilePage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [formData, router, validateForm]);
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-ink flex items-center justify-center">
         <Spinner size="large" />
       </div>
     );
@@ -170,16 +176,16 @@ export default function EditProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-ink pb-24">
       {/* 顶部导航 */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+      <div className="glass-surface border-b border-border-subtle sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
           >
             <svg
-              className="w-5 h-5 text-slate-600"
+              className="w-5 h-5 text-text-secondary"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -190,7 +196,7 @@ export default function EditProfilePage() {
               <path d="M15 19l-7-7 7-7"></path>
             </svg>
           </button>
-          <h1 className="text-lg font-bold text-slate-900">编辑资料</h1>
+          <h1 className="text-lg font-bold text-text-primary">编辑资料</h1>
         </div>
       </div>
 
@@ -235,8 +241,8 @@ export default function EditProfilePage() {
           {/* 姓名 */}
           <Card>
             <div className="p-4">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                姓名 <span className="text-red-600">*</span>
+              <label className="block text-sm font-medium text-text-tertiary mb-2">
+                姓名 <span className="text-danger">*</span>
               </label>
               <Input
                 type="text"
@@ -252,7 +258,7 @@ export default function EditProfilePage() {
           {/* 电话 */}
           <Card>
             <div className="p-4">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-text-tertiary mb-2">
                 电话号码
               </label>
               <Input
@@ -265,7 +271,7 @@ export default function EditProfilePage() {
                 pattern="[0-9]*"
                 error={errors.phone}
               />
-              <p className="text-xs text-slate-500 mt-2">
+              <p className="text-xs text-text-tertiary mt-2">
                 可直接输入 01 开头手机号，无需填写 +60
               </p>
             </div>
@@ -274,7 +280,7 @@ export default function EditProfilePage() {
           {/* 地址 */}
           <Card>
             <div className="p-4">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-text-tertiary mb-2">
                 地址
               </label>
               <textarea
@@ -282,14 +288,14 @@ export default function EditProfilePage() {
                 value={formData.address}
                 onChange={handleChange}
                 placeholder="请输入地址（可选）"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border-subtle rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink bg-ink-surface text-text-primary placeholder:text-text-tertiary"
                 rows={3}
               />
             </div>
           </Card>
 
           {/* 提交按钮 */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4">
+          <div className="fixed bottom-0 left-0 right-0 glass-surface border-t border-border-subtle p-4">
             <div className="max-w-2xl mx-auto flex gap-3">
               <Button
                 type="button"

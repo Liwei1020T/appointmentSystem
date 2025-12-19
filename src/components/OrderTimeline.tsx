@@ -36,50 +36,50 @@ const statusConfig = {
   pending: {
     label: '订单已创建',
     icon: Clock,
-    color: 'text-yellow-600',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-300',
-    iconBg: 'bg-yellow-100',
+    color: 'text-warning',
+    bgColor: 'bg-warning/10',
+    borderColor: 'border-warning/30',
+    iconBg: 'bg-warning/15',
   },
   payment_pending: {
     label: '等待支付',
     icon: AlertCircle,
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-50',
-    borderColor: 'border-orange-300',
-    iconBg: 'bg-orange-100',
+    color: 'text-warning',
+    bgColor: 'bg-warning/10',
+    borderColor: 'border-warning/30',
+    iconBg: 'bg-warning/15',
   },
   payment_confirmed: {
     label: '支付已确认',
     icon: CheckCircle,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-300',
-    iconBg: 'bg-blue-100',
+    color: 'text-info',
+    bgColor: 'bg-info-soft',
+    borderColor: 'border-info/30',
+    iconBg: 'bg-info-soft',
   },
   in_progress: {
     label: '穿线处理中',
     icon: Clock,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-300',
-    iconBg: 'bg-blue-100',
+    color: 'text-info',
+    bgColor: 'bg-info-soft',
+    borderColor: 'border-info/30',
+    iconBg: 'bg-info-soft',
   },
   completed: {
     label: '服务完成',
     icon: CheckCircle,
-    color: 'text-green-600',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-300',
-    iconBg: 'bg-green-100',
+    color: 'text-success',
+    bgColor: 'bg-success/10',
+    borderColor: 'border-success/30',
+    iconBg: 'bg-success/15',
   },
   cancelled: {
     label: '订单已取消',
     icon: XCircle,
-    color: 'text-slate-600',
-    bgColor: 'bg-slate-50',
-    borderColor: 'border-slate-300',
-    iconBg: 'bg-slate-100',
+    color: 'text-text-secondary',
+    bgColor: 'bg-ink-elevated',
+    borderColor: 'border-border-subtle',
+    iconBg: 'bg-ink-elevated',
   },
 };
 
@@ -189,19 +189,19 @@ export default function OrderTimeline({
               </div>
 
               {event.active && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 animate-pulse mb-1">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-accent/15 text-accent animate-pulse mb-1">
                   进行中
                 </span>
               )}
 
               {event.timestamp && (
-                <div className={`text-xs ${event.completed || event.active ? 'text-slate-600' : 'text-slate-400'}`}>
+                <div className={`text-xs ${event.completed || event.active ? 'text-text-secondary' : 'text-text-tertiary'}`}>
                   {formatDate(event.timestamp, 'yyyy/MM/dd HH:mm:ss')}
                 </div>
               )}
 
               {event.description && (
-                <div className={`text-xs mt-1 ${event.completed || event.active ? 'text-slate-500' : 'text-slate-400'}`}>
+                <div className={`text-xs mt-1 ${event.completed || event.active ? 'text-text-tertiary' : 'text-text-tertiary'}`}>
                   {event.description}
                 </div>
               )}
@@ -224,7 +224,7 @@ export default function OrderTimeline({
                   className={`
                     w-10 h-10 rounded-full flex items-center justify-center
                     ${config.iconBg} ${config.borderColor} border-2
-                    ${event.active ? 'ring-4 ring-blue-100' : ''}
+                    ${event.active ? 'ring-4 ring-accent/20' : ''}
                     ${!event.completed && !event.active ? 'opacity-40' : ''}
                     transition-all duration-300
                   `}
@@ -235,7 +235,7 @@ export default function OrderTimeline({
                   />
                   {event.completed && (
                     <div className="absolute -top-1 -right-1">
-                      <CheckCircle className="w-4 h-4 text-green-500 bg-white rounded-full" />
+                      <CheckCircle className="w-4 h-4 text-success bg-ink-surface rounded-full" />
                     </div>
                   )}
                 </div>
@@ -246,7 +246,7 @@ export default function OrderTimeline({
                 <div 
                   className={`
                     flex-1 h-0.5 
-                    ${event.completed ? 'bg-green-300' : 'bg-slate-200'}
+                    ${event.completed ? 'bg-success/40' : 'bg-border-subtle'}
                     transition-colors duration-300
                   `} 
                 />

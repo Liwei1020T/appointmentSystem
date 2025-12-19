@@ -26,7 +26,7 @@ export const Tabs: React.FC<TabsProps> = ({
   className = '' 
 }) => {
   return (
-    <div className={`border-b border-slate-200 ${className}`}>
+    <div className={`border-b border-border-subtle ${className}`}>
       <div className="flex gap-6">
         {tabs.map(tab => (
           <button
@@ -35,8 +35,8 @@ export const Tabs: React.FC<TabsProps> = ({
             className={`
               pb-3 px-1 font-medium text-sm border-b-2 transition-colors
               ${activeTab === tab.id 
-                ? 'border-blue-600 text-blue-600' 
-                : 'border-transparent text-slate-600 hover:text-slate-900'}
+                ? 'border-accent text-text-primary' 
+                : 'border-transparent text-text-tertiary hover:text-text-primary'}
             `}
             role="tab"
             aria-selected={activeTab === tab.id}

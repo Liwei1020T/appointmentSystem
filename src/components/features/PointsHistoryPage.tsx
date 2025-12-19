@@ -83,12 +83,12 @@ export default function PointsHistoryPage() {
   const getAmountColor = (type: PointsLogType) => {
     switch (type) {
       case 'earn':
-        return 'text-green-600';
+        return 'text-success';
       case 'spend':
       case 'expire':
-        return 'text-red-600';
+        return 'text-danger';
       default:
-        return 'text-gray-600';
+        return 'text-text-tertiary';
     }
   };
 
@@ -118,20 +118,20 @@ export default function PointsHistoryPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-ink pb-20">
       {/* 顶部导航 */}
-      <div className="sticky top-0 z-10 bg-white border-b">
+      <div className="sticky top-0 z-10 glass-surface border-b border-border-subtle">
         <div className="px-4 py-3">
-          <h1 className="text-lg font-semibold text-gray-900">我的积分</h1>
+          <h1 className="text-lg font-semibold text-text-primary">我的积分</h1>
         </div>
       </div>
 
       {/* 积分余额卡片 */}
       <div className="p-4">
-        <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-6 text-white shadow-lg">
-          <div className="text-sm opacity-90 mb-2">当前积分</div>
-          <div className="text-4xl font-bold mb-1">{balance}</div>
-          <div className="text-xs opacity-75">可用于兑换优惠券</div>
+        <div className="bg-ink-elevated rounded-2xl p-6 text-text-primary shadow-lg border border-border-subtle">
+          <div className="text-sm text-text-tertiary mb-2">当前积分</div>
+          <div className="text-4xl font-bold mb-1 font-mono text-accent">{balance}</div>
+          <div className="text-xs text-text-tertiary">可用于兑换优惠券</div>
         </div>
       </div>
 
@@ -144,8 +144,8 @@ export default function PointsHistoryPage() {
               onClick={() => setFilter(f.type)}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                 filter === f.type
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-200'
+                  ? 'bg-accent text-text-onAccent'
+                  : 'bg-ink-elevated text-text-secondary border border-border-subtle'
               }`}
             >
               {f.label}
@@ -158,39 +158,39 @@ export default function PointsHistoryPage() {
       <div className="px-4">
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-600 border-t-transparent"></div>
-            <p className="text-gray-500 mt-2">加载中...</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-accent border-t-transparent"></div>
+            <p className="text-text-tertiary mt-2">加载中...</p>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-            <p className="text-red-600">{error}</p>
+          <div className="bg-danger/10 border border-danger/30 rounded-lg p-4 text-center">
+            <p className="text-danger">{error}</p>
           </div>
         ) : logs.length === 0 ? (
-          <div className="bg-white rounded-lg p-12 text-center">
+          <div className="bg-ink-surface rounded-lg p-12 text-center border border-border-subtle">
             <div className="text-6xl mb-4">💰</div>
-            <p className="text-gray-600 mb-2">暂无积分记录</p>
-            <p className="text-sm text-gray-500">完成订单即可赚取积分</p>
+            <p className="text-text-secondary mb-2">暂无积分记录</p>
+            <p className="text-sm text-text-tertiary">完成订单即可赚取积分</p>
           </div>
         ) : (
           <div className="space-y-3">
             {logs.map((log) => (
               <div
                 key={log.id}
-                className="bg-white rounded-lg p-4 shadow-sm border border-gray-100"
+                className="bg-ink-surface rounded-lg p-4 shadow-sm border border-border-subtle"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3 flex-1">
                     <div className="text-2xl">{getTypeIcon(log.type)}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                        <span className="text-xs font-medium text-text-tertiary bg-ink-elevated px-2 py-0.5 rounded border border-border-subtle">
                           {getTypeLabel(log.type)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-900 font-medium mb-1">
+                      <p className="text-sm text-text-primary font-medium mb-1">
                         {log.description}
                       </p>
-                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <div className="flex items-center gap-3 text-xs text-text-tertiary">
                         <span>{formatDate(log.created_at)}</span>
                         <span>•</span>
                         <span>余额: {log.balance_after}</span>
@@ -213,12 +213,12 @@ export default function PointsHistoryPage() {
       {/* 提示卡片 */}
       {!loading && !error && logs.length > 0 && (
         <div className="px-4 mt-6 mb-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-ink-elevated border border-border-subtle rounded-lg p-4">
             <div className="flex items-start gap-3">
               <div className="text-xl">💡</div>
               <div className="flex-1 text-sm">
-                <p className="text-blue-900 font-medium mb-1">如何赚取积分？</p>
-                <ul className="text-blue-700 space-y-1 text-xs">
+                <p className="text-text-primary font-medium mb-1">如何赚取积分？</p>
+                <ul className="text-text-secondary space-y-1 text-xs">
                   <li>• 完成订单：每消费 RM 1 = 1 积分</li>
                   <li>• 邀请好友：好友首单完成获得 50 积分</li>
                   <li>• 评价订单：每次评价获得 10 积分</li>

@@ -35,7 +35,7 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div 
       className={`
-        bg-white rounded-xl border border-slate-200 
+        bg-ink-surface rounded-xl border border-border-subtle 
         ${shadow ? 'shadow-sm' : ''}
         ${paddings[padding]}
         ${isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}

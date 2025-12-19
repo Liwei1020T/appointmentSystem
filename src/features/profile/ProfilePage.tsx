@@ -159,7 +159,7 @@ export default function ProfilePage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-ink flex items-center justify-center">
         <Spinner size="large" />
       </div>
     );
@@ -170,13 +170,13 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-ink pb-24">
       {/* 顶部个人信息卡片 */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-8">
+      <div className="bg-ink-elevated border-b border-border-subtle py-8">
         <div className="max-w-2xl mx-auto px-4">
           <div className="flex items-center gap-4">
             {/* 头像 */}
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-blue-600 text-3xl font-bold overflow-hidden">
+            <div className="w-20 h-20 bg-ink-surface rounded-full flex items-center justify-center text-accent text-3xl font-bold overflow-hidden border border-border-subtle">
               {profile.avatar_url ? (
                 <img
                   src={profile.avatar_url}
@@ -190,17 +190,17 @@ export default function ProfilePage() {
             
             {/* 用户信息 */}
             <div className="flex-1">
-              <h1 className="text-2xl font-bold mb-1">{profile.full_name || profile.fullName || '用户'}</h1>
-              <p className="text-blue-100 text-sm">{profile.email}</p>
+              <h1 className="text-2xl font-bold mb-1 text-text-primary">{profile.full_name || profile.fullName || '用户'}</h1>
+              <p className="text-text-tertiary text-sm">{profile.email}</p>
               {profile.phone && (
-                <p className="text-blue-100 text-sm">{profile.phone}</p>
+                <p className="text-text-tertiary text-sm">{profile.phone}</p>
               )}
             </div>
 
             {/* 编辑按钮 */}
             <button
               onClick={() => router.push('/profile/edit')}
-              className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+              className="p-2 bg-ink-surface hover:bg-ink-elevated rounded-lg transition-colors border border-border-subtle"
             >
               <svg
                 className="w-5 h-5"
@@ -221,21 +221,21 @@ export default function ProfilePage() {
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* 错误提示 */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="bg-danger/10 border border-danger/30 rounded-lg p-4">
+            <p className="text-sm text-danger">{error}</p>
           </div>
         )}
 
         {/* 积分卡片 */}
         <Card>
           <div
-            className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors"
+            className="p-4 flex items-center justify-between cursor-pointer hover:bg-ink-elevated/70 transition-colors"
             onClick={() => router.push('/points')}
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-ink-elevated rounded-full flex items-center justify-center border border-border-subtle">
                 <svg
-                  className="w-6 h-6 text-yellow-600"
+                  className="w-6 h-6 text-accent"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -243,12 +243,12 @@ export default function ProfilePage() {
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-slate-600">我的积分</p>
-                <p className="text-2xl font-bold text-slate-900">{profile.points}</p>
+                <p className="text-sm text-text-tertiary">我的积分</p>
+                <p className="text-2xl font-bold text-text-primary font-mono">{profile.points}</p>
               </div>
             </div>
             <svg
-              className="w-5 h-5 text-slate-400"
+              className="w-5 h-5 text-text-tertiary"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -266,60 +266,60 @@ export default function ProfilePage() {
           <div className="grid grid-cols-2 gap-3">
             <Card>
               <div className="p-4 text-center">
-                <p className="text-xs text-slate-600 mb-1">总订单</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.totalOrders}</p>
+                <p className="text-xs text-text-tertiary mb-1">总订单</p>
+                <p className="text-2xl font-bold text-text-primary font-mono">{stats.totalOrders}</p>
               </div>
             </Card>
             <Card>
               <div className="p-4 text-center">
-                <p className="text-xs text-slate-600 mb-1">已完成</p>
-                <p className="text-2xl font-bold text-green-600">{stats.completedOrders}</p>
+                <p className="text-xs text-text-tertiary mb-1">已完成</p>
+                <p className="text-2xl font-bold text-success font-mono">{stats.completedOrders}</p>
               </div>
             </Card>
             <Card>
               <div className="p-4 text-center">
-                <p className="text-xs text-slate-600 mb-1">活跃套餐</p>
-                <p className="text-2xl font-bold text-purple-600">{stats.activePackages}</p>
+                <p className="text-xs text-text-tertiary mb-1">活跃套餐</p>
+                <p className="text-2xl font-bold text-info font-mono">{stats.activePackages}</p>
               </div>
             </Card>
             <Card>
               <div className="p-4 text-center">
-                <p className="text-xs text-slate-600 mb-1">可用优惠券</p>
-                <p className="text-2xl font-bold text-orange-600">{stats.availableVouchers}</p>
+                <p className="text-xs text-text-tertiary mb-1">可用优惠券</p>
+                <p className="text-2xl font-bold text-warning font-mono">{stats.availableVouchers}</p>
               </div>
             </Card>
           </div>
         )}
 
         {stats?.membership && (
-          <Card className="bg-gradient-to-r from-slate-900 to-slate-800 text-white">
+          <Card className="bg-ink-elevated text-text-primary border border-border-subtle">
             <div className="p-4 space-y-3">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-wider text-white/70">
+                  <p className="text-xs uppercase tracking-wider text-text-tertiary">
                     会员等级
                   </p>
                   <h3 className="text-2xl font-bold">{stats.membership.label}</h3>
-                  <p className="text-sm text-white/80">{stats.membership.description}</p>
+                  <p className="text-sm text-text-secondary">{stats.membership.description}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-white/70">当前折扣</p>
+                  <p className="text-xs text-text-tertiary">当前折扣</p>
                   <p className="text-2xl font-semibold">
                     {stats.membership.discountRate}% OFF
                   </p>
                 </div>
               </div>
               <div className="flex items-baseline justify-between">
-                <p className="text-sm text-white/60">累计消费</p>
-                <p className="text-xl font-semibold">{formatCurrency(stats.totalSpent)}</p>
+                <p className="text-sm text-text-tertiary">累计消费</p>
+                <p className="text-xl font-semibold font-mono">{formatCurrency(stats.totalSpent)}</p>
               </div>
-              <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-2 bg-ink-surface rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-emerald-400 transition-all duration-200"
+                  className="h-full bg-accent transition-all duration-200"
                   style={{ width: `${Math.min(100, Math.max(0, stats.membership.progress * 100))}%` }}
                 />
               </div>
-              <p className="text-xs text-white/70">
+              <p className="text-xs text-text-tertiary">
                 {stats.membership.nextTier
                   ? `再消费 ${formatCurrency(
                       Math.max(0, stats.membership.nextTier.minSpend - stats.totalSpent)
@@ -334,20 +334,20 @@ export default function ProfilePage() {
         {referralCode && (
           <Card>
             <div className="p-4">
-              <h3 className="text-sm font-semibold text-slate-900 mb-3">
+              <h3 className="text-sm font-semibold text-text-primary mb-3">
                 邀请好友赚积分
               </h3>
-              <p className="text-xs text-slate-600 mb-3">
+              <p className="text-xs text-text-secondary mb-3">
                 邀请好友注册并完成首单，您和好友各得 50 积分
               </p>
               <div className="flex items-center gap-2">
-                <div className="flex-1 bg-slate-100 rounded-lg px-4 py-3 text-center">
-                  <p className="text-xs text-slate-600 mb-1">我的邀请码</p>
-                  <p className="text-2xl font-bold text-blue-600">{referralCode}</p>
+                <div className="flex-1 bg-ink-elevated rounded-lg px-4 py-3 text-center border border-border-subtle">
+                  <p className="text-xs text-text-tertiary mb-1">我的邀请码</p>
+                  <p className="text-2xl font-bold text-accent font-mono">{referralCode}</p>
                 </div>
                 <button
                   onClick={handleCopyReferralCode}
-                  className="px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-3 bg-accent text-text-onAccent text-sm font-medium rounded-lg hover:shadow-glow transition-colors"
                 >
                   复制
                 </button>
@@ -358,18 +358,18 @@ export default function ProfilePage() {
 
         {/* 功能菜单 */}
         <div className="space-y-3">
-          <h2 className="text-lg font-bold text-slate-900">我的账户</h2>
+          <h2 className="text-lg font-bold text-text-primary">我的账户</h2>
 
           {/* 我的订单 */}
           <Card>
             <button
               onClick={() => router.push('/profile/orders')}
-              className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+              className="w-full p-4 flex items-center justify-between hover:bg-ink-elevated/70 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-ink-elevated rounded-lg flex items-center justify-center border border-border-subtle">
                   <svg
-                    className="w-5 h-5 text-blue-600"
+                    className="w-5 h-5 text-info"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -381,12 +381,12 @@ export default function ProfilePage() {
                   </svg>
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-medium text-slate-900 block">我的订单</span>
-                  <span className="text-xs text-slate-500">查看订单历史</span>
+                  <span className="font-medium text-text-primary block">我的订单</span>
+                  <span className="text-xs text-text-tertiary">查看订单历史</span>
                 </div>
               </div>
               <svg
-                className="w-5 h-5 text-slate-400"
+                className="w-5 h-5 text-text-tertiary"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -403,12 +403,12 @@ export default function ProfilePage() {
           <Card>
             <button
               onClick={() => router.push('/profile/packages')}
-              className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+              className="w-full p-4 flex items-center justify-between hover:bg-ink-elevated/70 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-ink-elevated rounded-lg flex items-center justify-center border border-border-subtle">
                   <svg
-                    className="w-5 h-5 text-purple-600"
+                    className="w-5 h-5 text-info"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -420,12 +420,12 @@ export default function ProfilePage() {
                   </svg>
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-medium text-slate-900 block">我的套餐</span>
-                  <span className="text-xs text-slate-500">套餐与使用记录</span>
+                  <span className="font-medium text-text-primary block">我的套餐</span>
+                  <span className="text-xs text-text-tertiary">套餐与使用记录</span>
                 </div>
               </div>
               <svg
-                className="w-5 h-5 text-slate-400"
+                className="w-5 h-5 text-text-tertiary"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -442,12 +442,12 @@ export default function ProfilePage() {
           <Card>
             <button
               onClick={() => router.push('/profile/points')}
-              className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+              className="w-full p-4 flex items-center justify-between hover:bg-ink-elevated/70 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-ink-elevated rounded-lg flex items-center justify-center border border-border-subtle">
                   <svg
-                    className="w-5 h-5 text-yellow-600"
+                    className="w-5 h-5 text-accent"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -455,12 +455,12 @@ export default function ProfilePage() {
                   </svg>
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-medium text-slate-900 block">积分中心</span>
-                  <span className="text-xs text-slate-500">积分明细与兑换</span>
+                  <span className="font-medium text-text-primary block">积分中心</span>
+                  <span className="text-xs text-text-tertiary">积分明细与兑换</span>
                 </div>
               </div>
               <svg
-                className="w-5 h-5 text-slate-400"
+                className="w-5 h-5 text-text-tertiary"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -477,12 +477,12 @@ export default function ProfilePage() {
           <Card>
             <button
               onClick={() => router.push('/profile/vouchers')}
-              className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+              className="w-full p-4 flex items-center justify-between hover:bg-ink-elevated/70 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-ink-elevated rounded-lg flex items-center justify-center border border-border-subtle">
                   <svg
-                    className="w-5 h-5 text-orange-600"
+                    className="w-5 h-5 text-warning"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -494,12 +494,12 @@ export default function ProfilePage() {
                   </svg>
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-medium text-slate-900 block">我的优惠券</span>
-                  <span className="text-xs text-slate-500">优惠券管理</span>
+                  <span className="font-medium text-text-primary block">我的优惠券</span>
+                  <span className="text-xs text-text-tertiary">优惠券管理</span>
                 </div>
               </div>
               <svg
-                className="w-5 h-5 text-slate-400"
+                className="w-5 h-5 text-text-tertiary"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -516,12 +516,12 @@ export default function ProfilePage() {
           <Card>
             <button
               onClick={() => router.push('/profile/referrals')}
-              className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+              className="w-full p-4 flex items-center justify-between hover:bg-ink-elevated/70 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-ink-elevated rounded-lg flex items-center justify-center border border-border-subtle">
                   <svg
-                    className="w-5 h-5 text-green-600"
+                    className="w-5 h-5 text-success"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -533,12 +533,12 @@ export default function ProfilePage() {
                   </svg>
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-medium text-slate-900 block">邀请好友</span>
-                  <span className="text-xs text-slate-500">邀请赚积分</span>
+                  <span className="font-medium text-text-primary block">邀请好友</span>
+                  <span className="text-xs text-text-tertiary">邀请赚积分</span>
                 </div>
               </div>
               <svg
-                className="w-5 h-5 text-slate-400"
+                className="w-5 h-5 text-text-tertiary"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -555,12 +555,12 @@ export default function ProfilePage() {
           <Card>
             <button
               onClick={() => router.push('/profile/reviews')}
-              className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+              className="w-full p-4 flex items-center justify-between hover:bg-ink-elevated/70 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-ink-elevated rounded-lg flex items-center justify-center border border-border-subtle">
                   <svg
-                    className="w-5 h-5 text-pink-600"
+                    className="w-5 h-5 text-info"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -572,12 +572,12 @@ export default function ProfilePage() {
                   </svg>
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-medium text-slate-900 block">我的评价</span>
-                  <span className="text-xs text-slate-500">查看我的评价</span>
+                  <span className="font-medium text-text-primary block">我的评价</span>
+                  <span className="text-xs text-text-tertiary">查看我的评价</span>
                 </div>
               </div>
               <svg
-                className="w-5 h-5 text-slate-400"
+                className="w-5 h-5 text-text-tertiary"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -592,18 +592,18 @@ export default function ProfilePage() {
         </div>
 
         <div className="space-y-3">
-          <h2 className="text-lg font-bold text-slate-900">账户设置</h2>
+          <h2 className="text-lg font-bold text-text-primary">账户设置</h2>
 
           {/* 编辑资料 */}
           <Card>
             <button
               onClick={() => router.push('/profile/edit')}
-              className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+              className="w-full p-4 flex items-center justify-between hover:bg-ink-elevated/70 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-ink-elevated rounded-lg flex items-center justify-center border border-border-subtle">
                   <svg
-                    className="w-5 h-5 text-blue-600"
+                    className="w-5 h-5 text-info"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -615,12 +615,12 @@ export default function ProfilePage() {
                   </svg>
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-medium text-slate-900 block">编辑资料</span>
-                  <span className="text-xs text-slate-500">修改头像、姓名、联系方式</span>
+                  <span className="font-medium text-text-primary block">编辑资料</span>
+                  <span className="text-xs text-text-tertiary">修改头像、姓名、联系方式</span>
                 </div>
               </div>
               <svg
-                className="w-5 h-5 text-slate-400"
+                className="w-5 h-5 text-text-tertiary"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -637,12 +637,12 @@ export default function ProfilePage() {
           <Card>
             <button
               onClick={() => router.push('/profile/password')}
-              className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+              className="w-full p-4 flex items-center justify-between hover:bg-ink-elevated/70 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-ink-elevated rounded-lg flex items-center justify-center border border-border-subtle">
                   <svg
-                    className="w-5 h-5 text-green-600"
+                    className="w-5 h-5 text-success"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -653,10 +653,10 @@ export default function ProfilePage() {
                     <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                   </svg>
                 </div>
-                <span className="font-medium text-slate-900">修改密码</span>
+                <span className="font-medium text-text-primary">修改密码</span>
               </div>
               <svg
-                className="w-5 h-5 text-slate-400"
+                className="w-5 h-5 text-text-tertiary"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -673,12 +673,12 @@ export default function ProfilePage() {
           <Card>
             <button
               onClick={() => setShowLogoutModal(true)}
-              className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+              className="w-full p-4 flex items-center justify-between hover:bg-ink-elevated/70 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-danger/15 rounded-lg flex items-center justify-center border border-danger/30">
                   <svg
-                    className="w-5 h-5 text-red-600"
+                    className="w-5 h-5 text-danger"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -689,7 +689,7 @@ export default function ProfilePage() {
                     <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
                 </div>
-                <span className="font-medium text-red-600">退出登录</span>
+                <span className="font-medium text-danger">退出登录</span>
               </div>
             </button>
           </Card>
@@ -698,17 +698,17 @@ export default function ProfilePage() {
         {/* 账户信息 */}
         <Card>
           <div className="p-4">
-            <h3 className="text-sm font-semibold text-slate-900 mb-3">
+            <h3 className="text-sm font-semibold text-text-primary mb-3">
               账户信息
             </h3>
-            <div className="space-y-2 text-sm text-slate-600">
+            <div className="space-y-2 text-sm text-text-secondary">
               <div className="flex justify-between">
                 <span>注册时间</span>
                 <span>{profile.created_at || profile.createdAt ? formatDate(profile.created_at || profile.createdAt!) : '未知'}</span>
               </div>
               <div className="flex justify-between">
                 <span>账户类型</span>
-                <Badge variant={profile.role === 'admin' ? 'blue' : 'neutral'}>
+                <Badge variant={profile.role === 'admin' ? 'info' : 'neutral'}>
                   {profile.role === 'admin' ? '管理员' : '普通用户'}
                 </Badge>
               </div>
@@ -724,7 +724,7 @@ export default function ProfilePage() {
         title="确认退出"
       >
         <div className="space-y-4">
-          <p className="text-slate-600">确定要退出登录吗？</p>
+          <p className="text-text-secondary">确定要退出登录吗？</p>
           <div className="flex gap-3">
             <Button
               variant="secondary"

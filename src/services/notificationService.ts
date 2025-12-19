@@ -251,19 +251,19 @@ export function getNotificationIcon(type: string): string {
  */
 export function getNotificationColor(type: string): string {
   const colors: Record<string, string> = {
-    order: 'text-blue-600 bg-blue-50',
-    order_confirmed: 'text-green-600 bg-green-50',
-    order_completed: 'text-green-600 bg-green-50',
-    order_cancelled: 'text-red-600 bg-red-50',
-    payment: 'text-purple-600 bg-purple-50',
-    referral: 'text-orange-600 bg-orange-50',
-    points: 'text-yellow-600 bg-yellow-50',
-    voucher: 'text-pink-600 bg-pink-50',
-    system: 'text-gray-600 bg-gray-50',
-    reminder: 'text-cyan-600 bg-cyan-50',
-    promotion: 'text-red-600 bg-red-50',
+    order: 'text-info bg-info-soft',
+    order_confirmed: 'text-success bg-success/15',
+    order_completed: 'text-success bg-success/15',
+    order_cancelled: 'text-danger bg-danger/15',
+    payment: 'text-accent bg-accent/15',
+    referral: 'text-warning bg-warning/15',
+    points: 'text-warning bg-warning/15',
+    voucher: 'text-accent bg-accent/15',
+    system: 'text-text-secondary bg-ink-elevated',
+    reminder: 'text-info bg-info-soft',
+    promotion: 'text-danger bg-danger/15',
   };
-  return colors[type] || 'text-gray-600 bg-gray-50';
+  return colors[type] || 'text-text-secondary bg-ink-elevated';
 }
 
 /**

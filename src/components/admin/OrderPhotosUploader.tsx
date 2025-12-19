@@ -131,7 +131,7 @@ export default function OrderPhotosUploader({
     url: string;
     index: number;
   }) => (
-    <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 group cursor-pointer">
+    <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-border-subtle group cursor-pointer">
       <img
         src={url}
         alt={`${type === 'before' ? '穿线前' : '穿线后'} ${index + 1}`}
@@ -145,7 +145,7 @@ export default function OrderPhotosUploader({
             e.stopPropagation();
             handleDelete(type, index);
           }}
-          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+          className="absolute top-2 right-2 bg-danger text-text-primary rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-danger/90"
         >
           <X className="w-4 h-4" />
         </button>
@@ -168,10 +168,10 @@ export default function OrderPhotosUploader({
     return (
       <label
         className={`
-          aspect-square rounded-lg border-2 border-dashed border-gray-300
+          aspect-square rounded-lg border-2 border-dashed border-border-subtle
           flex flex-col items-center justify-center
           cursor-pointer transition-all
-          hover:border-purple-400 hover:bg-purple-50
+          hover:border-accent-border hover:bg-ink-elevated
           ${uploading ? 'opacity-50 pointer-events-none' : ''}
         `}
       >
@@ -189,11 +189,11 @@ export default function OrderPhotosUploader({
         />
         
         {uploading ? (
-          <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+          <Loader2 className="w-8 h-8 text-accent animate-spin" />
         ) : (
           <>
-            <Camera className="w-8 h-8 text-gray-400 mb-2" />
-            <span className="text-sm text-gray-600">添加照片</span>
+            <Camera className="w-8 h-8 text-text-tertiary mb-2" />
+            <span className="text-sm text-text-secondary">添加照片</span>
           </>
         )}
       </label>
@@ -205,10 +205,10 @@ export default function OrderPhotosUploader({
       {/* 穿线前照片 */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-gray-700">
+          <h3 className="text-sm font-semibold text-text-secondary">
             📷 穿线前照片 (Before)
           </h3>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-text-tertiary">
             {beforeImages.length} / {MAX_PHOTOS}
           </span>
         </div>
@@ -229,10 +229,10 @@ export default function OrderPhotosUploader({
       {/* 穿线后照片 */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-gray-700">
+          <h3 className="text-sm font-semibold text-text-secondary">
             ✨ 穿线后照片 (After)
           </h3>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-text-tertiary">
             {afterImages.length} / {MAX_PHOTOS}
           </span>
         </div>
@@ -252,12 +252,12 @@ export default function OrderPhotosUploader({
 
       {/* 提示信息 */}
       {editable && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-info-soft border border-border-subtle rounded-lg p-4">
           <div className="flex items-start gap-2">
-            <ImageIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-blue-700">
+            <ImageIcon className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-text-secondary">
               <p className="font-medium mb-1">照片上传提示</p>
-              <ul className="list-disc list-inside space-y-0.5 text-blue-600">
+              <ul className="list-disc list-inside space-y-0.5 text-accent">
                 <li>每种类型最多上传 {MAX_PHOTOS} 张照片</li>
                 <li>支持 JPG、PNG、WebP 格式</li>
                 <li>建议拍摄清晰、光线充足的照片</li>

@@ -33,13 +33,13 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white shadow-lg">
+    <nav className="glass-surface border-b border-border-subtle sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-blue-600">
+              <span className="text-2xl font-bold text-text-primary tracking-tight">
                 String Service
               </span>
             </Link>
@@ -51,44 +51,40 @@ export default function Navbar() {
               <>
                 <Link
                   href="/booking"
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    isActive('/booking')
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/booking')
+                      ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
+                      : 'text-text-secondary hover:bg-ink-surface/80'
+                    }`}
                 >
                   预约穿线
                 </Link>
 
                 <Link
                   href="/orders"
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    isActive('/orders')
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/orders')
+                      ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
+                      : 'text-text-secondary hover:bg-ink-surface/80'
+                    }`}
                 >
                   我的订单
                 </Link>
 
                 <Link
                   href="/profile/packages"
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    isPackagesActive
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${isPackagesActive
+                      ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
+                      : 'text-text-secondary hover:bg-ink-surface/80'
+                    }`}
                 >
                   套餐
                 </Link>
 
                 <Link
                   href="/profile/vouchers"
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    pathname?.startsWith('/profile/vouchers')
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${pathname?.startsWith('/profile/vouchers')
+                      ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
+                      : 'text-text-secondary hover:bg-ink-surface/80'
+                    }`}
                 >
                   优惠券
                 </Link>
@@ -96,25 +92,24 @@ export default function Navbar() {
                 {session.user.role === 'admin' && (
                   <Link
                     href="/admin/dashboard"
-                    className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      pathname?.startsWith('/admin')
-                        ? 'bg-red-100 text-red-700'
-                        : 'text-red-600 hover:bg-red-50'
-                    }`}
+                    className={`px-3 py-2 rounded-md text-sm font-medium ${pathname?.startsWith('/admin')
+                        ? 'bg-danger/10 text-danger ring-1 ring-danger/30'
+                        : 'text-danger hover:bg-danger/10'
+                      }`}
                   >
                     管理后台
                   </Link>
                 )}
 
                 {/* Notification Bell */}
-                <NotificationBell 
+                <NotificationBell
                   userId={session.user.id}
                   onClick={() => setNotificationPanelOpen(true)}
                 />
 
                 {/* User Menu */}
                 <div className="relative group">
-                  <button className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                  <button className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-ink-surface/80">
                     <span>{session.user.name || session.user.phone || session.user.email || '用户'}</span>
                     <svg
                       className="w-4 h-4"
@@ -132,16 +127,16 @@ export default function Navbar() {
                   </button>
 
                   <div className="absolute right-0 top-full pt-2 z-50 opacity-0 invisible pointer-events-none transition group-hover:opacity-100 group-hover:visible group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:visible group-focus-within:pointer-events-auto">
-                    <div className="w-48 bg-white rounded-md shadow-lg py-1">
+                    <div className="w-48 glass-strong rounded-md py-1">
                       <Link
                         href="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="block px-4 py-2 text-sm text-text-secondary hover:bg-ink-surface/80"
                       >
                         个人中心
                       </Link>
                       <button
                         onClick={handleSignOut}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="block w-full text-left px-4 py-2 text-sm text-text-secondary hover:bg-ink-surface/80"
                       >
                         退出登录
                       </button>
@@ -149,27 +144,29 @@ export default function Navbar() {
                   </div>
                 </div>
               </>
-            ) : (
+            ) : status === 'unauthenticated' ? (
               <>
                 <Link
                   href="/login"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-ink-surface/80"
                 >
                   登录
                 </Link>
                 <Link
                   href="/signup"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                  className="px-3 py-2 rounded-md text-sm font-semibold text-text-onAccent bg-accent hover:shadow-glow"
                 >
                   注册
                 </Link>
               </>
+            ) : (
+              <div className="h-8 w-16" /> // Placeholder while loading
             )}
           </div>
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
-            <button className="text-gray-700 hover:text-blue-600">
+            <button className="text-text-secondary hover:text-text-primary">
               <svg
                 className="h-6 w-6"
                 fill="none"
@@ -190,7 +187,7 @@ export default function Navbar() {
 
       {/* Notification Panel */}
       {session && (
-        <NotificationPanel 
+        <NotificationPanel
           userId={session.user.id}
           isOpen={notificationPanelOpen}
           onClose={() => setNotificationPanelOpen(false)}

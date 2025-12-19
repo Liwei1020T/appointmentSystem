@@ -41,10 +41,10 @@ export default function ReferralLeaderboardPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-ink flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-4" />
-          <p className="text-sm text-gray-500">加载中...</p>
+          <Loader2 className="w-8 h-8 text-accent animate-spin mx-auto mb-4" />
+          <p className="text-sm text-text-tertiary">加载中...</p>
         </div>
       </div>
     );
@@ -53,18 +53,18 @@ export default function ReferralLeaderboardPage() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow p-6 max-w-sm w-full text-center">
-          <div className="bg-red-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
+      <div className="min-h-screen bg-ink flex items-center justify-center p-4">
+        <div className="bg-ink-surface rounded-lg border border-border-subtle p-6 max-w-sm w-full text-center">
+          <div className="bg-danger/15 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">⚠️</span>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="text-lg font-semibold text-text-primary mb-2">
             加载失败
           </h3>
-          <p className="text-sm text-gray-500 mb-4">{error}</p>
+          <p className="text-sm text-text-tertiary mb-4">{error}</p>
           <button
             onClick={loadLeaderboard}
-            className="w-full bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors"
+            className="w-full bg-accent text-text-onAccent rounded-lg px-4 py-2 text-sm font-medium hover:shadow-glow transition-colors"
           >
             重试
           </button>
@@ -74,51 +74,51 @@ export default function ReferralLeaderboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-ink pb-20">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-ink border-b border-border-subtle sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            <ArrowLeft className="w-5 h-5 text-text-secondary" />
           </button>
-          <h1 className="text-lg font-bold text-gray-900">邀请排行榜</h1>
+          <h1 className="text-lg font-bold text-text-primary">邀请排行榜</h1>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* 排行榜说明 */}
-        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-6 text-white mb-6">
+        <div className="bg-gradient-to-r from-accent/30 via-ink-surface to-ink-elevated rounded-lg p-6 text-text-primary mb-6 border border-border-subtle">
           <div className="flex items-center gap-3 mb-3">
-            <Trophy className="w-8 h-8" />
+            <Trophy className="w-8 h-8 text-accent" />
             <div>
               <h2 className="text-xl font-bold">邀请达人榜</h2>
-              <p className="text-sm text-white/90">邀请越多，奖励越丰厚</p>
+              <p className="text-sm text-text-secondary">邀请越多，奖励越丰厚</p>
             </div>
           </div>
         </div>
 
         {/* 排行榜列表 */}
         {leaderboard.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-            <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <Trophy className="w-8 h-8 text-gray-400" />
+          <div className="bg-ink-surface rounded-lg border border-border-subtle p-8 text-center">
+            <div className="bg-ink-elevated rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <Trophy className="w-8 h-8 text-text-tertiary" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-text-primary mb-2">
               暂无排行数据
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-text-tertiary">
               成为第一个邀请好友的用户吧！
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-200">
+          <div className="bg-ink-surface rounded-lg border border-border-subtle divide-y divide-border-subtle">
             {leaderboard.map((entry) => (
               <div
                 key={entry.userId}
-                className="p-4 hover:bg-gray-50 transition-colors"
+                className="p-4 hover:bg-ink-elevated transition-colors"
               >
                 <div className="flex items-center gap-4">
                   {/* 排名图标 */}
@@ -128,25 +128,25 @@ export default function ReferralLeaderboardPage() {
 
                   {/* 用户信息 */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">
+                    <p className="text-sm font-semibold text-text-primary truncate">
                       {entry.fullName}
                     </p>
                   </div>
 
                   {/* 邀请数据 */}
                   <div className="flex-shrink-0 text-right">
-                    <p className="text-lg font-bold text-blue-600">
+                    <p className="text-lg font-bold text-accent">
                       {entry.referralCount}
                     </p>
-                    <p className="text-xs text-gray-500">邀请人数</p>
+                    <p className="text-xs text-text-tertiary">邀请人数</p>
                   </div>
 
                   {/* 积分奖励 */}
                   <div className="flex-shrink-0 text-right">
-                    <p className="text-sm font-medium text-green-600">
+                    <p className="text-sm font-medium text-success">
                       +{entry.totalPoints}
                     </p>
-                    <p className="text-xs text-gray-500">积分</p>
+                    <p className="text-xs text-text-tertiary">积分</p>
                   </div>
                 </div>
               </div>
@@ -155,8 +155,8 @@ export default function ReferralLeaderboardPage() {
         )}
 
         {/* 提示信息 */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
-          <p className="text-xs text-blue-800">
+        <div className="bg-ink-elevated border border-border-subtle rounded-lg p-4 mt-6">
+          <p className="text-xs text-text-secondary">
             💡 <span className="font-semibold">提示：</span>
             排行榜每小时更新一次，邀请越多排名越高！
           </p>
@@ -172,26 +172,26 @@ export default function ReferralLeaderboardPage() {
 function getRankIcon(rank: number) {
   if (rank === 1) {
     return (
-      <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full w-10 h-10 flex items-center justify-center shadow-lg">
-        <Trophy className="w-5 h-5 text-white" />
+      <div className="bg-gradient-to-br from-accent to-accent/80 rounded-full w-10 h-10 flex items-center justify-center shadow-glow">
+        <Trophy className="w-5 h-5 text-ink" />
       </div>
     );
   } else if (rank === 2) {
     return (
-      <div className="bg-gradient-to-br from-gray-300 to-gray-400 rounded-full w-10 h-10 flex items-center justify-center shadow-md">
-        <Medal className="w-5 h-5 text-white" />
+      <div className="bg-gradient-to-br from-ink-elevated to-ink-surface rounded-full w-10 h-10 flex items-center justify-center shadow-sm border border-border-subtle">
+        <Medal className="w-5 h-5 text-text-primary" />
       </div>
     );
   } else if (rank === 3) {
     return (
-      <div className="bg-gradient-to-br from-orange-400 to-orange-600 rounded-full w-10 h-10 flex items-center justify-center shadow-md">
-        <Award className="w-5 h-5 text-white" />
+      <div className="bg-gradient-to-br from-warning/60 to-warning/90 rounded-full w-10 h-10 flex items-center justify-center shadow-sm">
+        <Award className="w-5 h-5 text-ink" />
       </div>
     );
   } else {
     return (
-      <div className="bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center">
-        <span className="text-sm font-bold text-gray-600">{rank}</span>
+      <div className="bg-ink-elevated rounded-full w-10 h-10 flex items-center justify-center border border-border-subtle">
+        <span className="text-sm font-bold text-text-secondary">{rank}</span>
       </div>
     );
   }

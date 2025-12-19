@@ -153,16 +153,16 @@ export default function RestockModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-ink/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-ink-surface rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border-subtle">
         {/* 标题栏 */}
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">补货管理</h2>
+        <div className="sticky top-0 bg-ink-surface border-b border-border-subtle px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-text-primary">补货管理</h2>
           <button
             onClick={handleClose}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1 hover:bg-ink-elevated rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-text-secondary" />
           </button>
         </div>
 
@@ -170,30 +170,30 @@ export default function RestockModal({
         <div className="p-6 space-y-6">
           {/* 成功提示 */}
           {success && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-              <p className="text-green-800">补货成功！库存已更新。</p>
+            <div className="bg-success/15 border border-success/40 rounded-lg p-4 flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-success" />
+              <p className="text-success">补货成功！库存已更新。</p>
             </div>
           )}
 
           {/* 错误提示 */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600" />
-              <p className="text-red-800">{error}</p>
+            <div className="bg-danger/15 border border-danger/40 rounded-lg p-4 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-danger" />
+              <p className="text-danger">{error}</p>
             </div>
           )}
 
           {/* 选择球线 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              选择球线 <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              选择球线 <span className="text-danger">*</span>
             </label>
             <select
               value={selectedStringId}
               onChange={(e) => setSelectedStringId(e.target.value)}
               disabled={loading || success}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:bg-gray-50"
+              className="w-full px-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent disabled:opacity-50 disabled:bg-ink-elevated"
             >
               <option value="">-- 请选择球线 --</option>
               {strings.map((string) => (
@@ -205,8 +205,8 @@ export default function RestockModal({
 
             {/* 当前球线信息 */}
             {selectedString && (
-              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center gap-2 text-sm text-blue-900">
+              <div className="mt-3 p-3 bg-info-soft border border-border-subtle rounded-lg">
+                <div className="flex items-center gap-2 text-sm text-text-primary">
                   <Package className="w-4 h-4" />
                   <span className="font-medium">当前库存：</span>
                   <span className="text-lg font-bold">{selectedString.currentStock}</span>
@@ -224,8 +224,8 @@ export default function RestockModal({
 
           {/* 补货数量 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              补货数量 <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              补货数量 <span className="text-danger">*</span>
             </label>
             <input
               type="number"
@@ -233,13 +233,13 @@ export default function RestockModal({
               value={quantity}
               onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
               disabled={loading || success}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:bg-gray-50"
+              className="w-full px-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent disabled:opacity-50 disabled:bg-ink-elevated"
               placeholder="输入补货数量"
             />
             {selectedString && quantity > 0 && (
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-text-secondary">
                 补货后库存：
-                <span className="font-semibold text-green-600 ml-1">
+                <span className="font-semibold text-success ml-1">
                   {selectedString.currentStock + quantity}
                 </span>
               </p>
@@ -248,11 +248,11 @@ export default function RestockModal({
 
           {/* 成本价（可选） */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              成本价 (RM) <span className="text-gray-500 text-xs">(可选)</span>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              成本价 (RM) <span className="text-text-tertiary text-xs">(可选)</span>
             </label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
               <input
                 type="number"
                 step="0.01"
@@ -260,28 +260,28 @@ export default function RestockModal({
                 value={costPerUnit}
                 onChange={(e) => setCostPerUnit(e.target.value)}
                 disabled={loading || success}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:bg-gray-50"
+                className="w-full pl-10 pr-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent disabled:opacity-50 disabled:bg-ink-elevated"
                 placeholder="例如: 18.50"
               />
             </div>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-text-tertiary">
               填写本次进货的单价，系统将自动计算平均成本
             </p>
           </div>
 
           {/* 补货原因 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              补货说明 <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              补货说明 <span className="text-danger">*</span>
             </label>
             <div className="relative">
-              <FileText className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+              <FileText className="absolute left-3 top-3 w-5 h-5 text-text-tertiary" />
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 disabled={loading || success}
                 rows={3}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:bg-gray-50"
+                className="w-full pl-10 pr-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent disabled:opacity-50 disabled:bg-ink-elevated"
                 placeholder="例如：从 Yonex Malaysia 供应商采购，发票号 INV-2024-001"
               />
             </div>
@@ -289,22 +289,22 @@ export default function RestockModal({
         </div>
 
         {/* 底部按钮 */}
-        <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4 flex items-center justify-end gap-3">
+        <div className="sticky bottom-0 bg-ink-elevated border-t border-border-subtle px-6 py-4 flex items-center justify-end gap-3">
           <button
             onClick={handleClose}
             disabled={loading}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
+            className="px-4 py-2 border border-border-subtle rounded-lg text-text-secondary hover:bg-ink-surface transition-colors disabled:opacity-50"
           >
             取消
           </button>
           <button
             onClick={handleRestock}
             disabled={loading || success || !selectedStringId || quantity <= 0 || !reason.trim()}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-2 bg-accent hover:shadow-glow text-text-onAccent rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-text-onAccent border-t-transparent rounded-full animate-spin" />
                 <span>处理中...</span>
               </>
             ) : (

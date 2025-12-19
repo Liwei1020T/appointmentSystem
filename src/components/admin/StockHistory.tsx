@@ -59,9 +59,9 @@ export default function StockHistory({ stringId, limit = 50 }: StockHistoryProps
 
   // 获取变动类型颜色
   const getTypeColor = (type: string) => {
-    if (type === 'restock' || type === 'return') return 'text-green-600 bg-green-50';
-    if (type === 'order_deduction' || type === 'manual_deduction') return 'text-red-600 bg-red-50';
-    return 'text-blue-600 bg-blue-50';
+    if (type === 'restock' || type === 'return') return 'text-success bg-success/10';
+    if (type === 'order_deduction' || type === 'manual_deduction') return 'text-danger bg-danger/10';
+    return 'text-info bg-info-soft';
   };
 
   // 格式化日期
@@ -78,66 +78,66 @@ export default function StockHistory({ stringId, limit = 50 }: StockHistoryProps
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200">
+    <div className="bg-ink-surface rounded-lg border border-border-subtle">
       {/* 标题栏 */}
-      <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+      <div className="px-6 py-4 border-b border-border-subtle flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <History className="w-5 h-5 text-gray-600" />
-          <h3 className="font-semibold text-gray-900">库存变动历史</h3>
+          <History className="w-5 h-5 text-text-secondary" />
+          <h3 className="font-semibold text-text-primary">库存变动历史</h3>
           {!loading && history.length > 0 && (
-            <span className="text-sm text-gray-500">({history.length} 条记录)</span>
+            <span className="text-sm text-text-tertiary">({history.length} 条记录)</span>
           )}
         </div>
 
         <button
           onClick={loadHistory}
           disabled={loading}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+          className="p-2 hover:bg-ink-elevated rounded-lg transition-colors disabled:opacity-50"
           title="刷新"
         >
-          <RefreshCw className={`w-4 h-4 text-gray-600 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 text-text-secondary ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
       {/* 加载状态 */}
       {loading && (
         <div className="text-center py-12">
-          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-3 text-gray-400" />
-          <p className="text-sm text-gray-500">加载中...</p>
+          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-3 text-text-tertiary" />
+          <p className="text-sm text-text-tertiary">加载中...</p>
         </div>
       )}
 
       {/* 错误状态 */}
       {error && !loading && (
         <div className="text-center py-12">
-          <p className="text-sm text-red-600">{error}</p>
+          <p className="text-sm text-danger">{error}</p>
         </div>
       )}
 
       {/* 空状态 */}
       {!loading && !error && history.length === 0 && (
         <div className="text-center py-12">
-          <Package className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <p className="text-sm text-gray-500">暂无库存变动记录</p>
+          <Package className="w-12 h-12 mx-auto mb-3 text-text-tertiary" />
+          <p className="text-sm text-text-tertiary">暂无库存变动记录</p>
         </div>
       )}
 
       {/* 历史记录列表 */}
       {!loading && !error && history.length > 0 && (
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-border-subtle">
           {history.map((log) => {
             const quantityChange = log.quantity_change ?? log.change ?? 0;
             const quantityBefore = log.quantity_before ?? 0;
             const quantityAfter = log.quantity_after ?? 0;
             return (
-            <div key={log.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+            <div key={log.id} className="px-6 py-4 hover:bg-ink-elevated transition-colors">
               <div className="flex items-start gap-4">
                 {/* 变动图标 */}
                 <div className="mt-1">
                   {quantityChange > 0 ? (
-                    <TrendingUp className="w-5 h-5 text-green-600" />
+                    <TrendingUp className="w-5 h-5 text-success" />
                   ) : (
-                    <TrendingDown className="w-5 h-5 text-red-600" />
+                    <TrendingDown className="w-5 h-5 text-danger" />
                   )}
                 </div>
 
@@ -153,22 +153,22 @@ export default function StockHistory({ stringId, limit = 50 }: StockHistoryProps
 
                     {/* 球线名称（如果不是单个球线查看） */}
                     {!stringId && log.string && (
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-medium text-text-primary">
                         {log.string.brand} {log.string.model}
                       </span>
                     )}
 
                     {/* 时间 */}
-                    <span className="text-xs text-gray-500">{formatDate(log.created_at)}</span>
+                    <span className="text-xs text-text-tertiary">{formatDate(log.created_at)}</span>
                   </div>
 
                   {/* 数量变化 */}
                   <div className="flex items-center gap-3 text-sm mb-1">
-                    <span className="text-gray-600">
+                    <span className="text-text-secondary">
                       库存：{quantityBefore} →{' '}
                       <span
                         className={`font-semibold ${
-                          quantityChange > 0 ? 'text-green-600' : 'text-red-600'
+                          quantityChange > 0 ? 'text-success' : 'text-danger'
                         }`}
                       >
                         {quantityAfter}
@@ -176,7 +176,7 @@ export default function StockHistory({ stringId, limit = 50 }: StockHistoryProps
                     </span>
                     <span
                       className={`font-medium ${
-                        quantityChange > 0 ? 'text-green-600' : 'text-red-600'
+                        quantityChange > 0 ? 'text-success' : 'text-danger'
                       }`}
                     >
                       ({quantityChange > 0 ? '+' : ''}
@@ -186,7 +186,7 @@ export default function StockHistory({ stringId, limit = 50 }: StockHistoryProps
 
                   {/* 备注 */}
                   {(log.notes || log.reason) && (
-                    <p className="text-sm text-gray-600 mb-1">
+                    <p className="text-sm text-text-secondary mb-1">
                       <span className="font-medium">说明：</span>
                       {log.notes || log.reason}
                     </p>
@@ -194,14 +194,14 @@ export default function StockHistory({ stringId, limit = 50 }: StockHistoryProps
 
                   {/* 操作人 */}
                   {log.creator && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-text-tertiary">
                       操作人：{log.creator.full_name || log.creator.fullName || '未知'}
                     </p>
                   )}
 
                   {/* 关联订单 */}
                   {(log.reference_id || log.referenceId) && log.type === 'order_deduction' && (
-                    <p className="text-xs text-gray-500">订单ID：{log.reference_id || log.referenceId}</p>
+                    <p className="text-xs text-text-tertiary">订单ID：{log.reference_id || log.referenceId}</p>
                   )}
                 </div>
               </div>
@@ -212,8 +212,8 @@ export default function StockHistory({ stringId, limit = 50 }: StockHistoryProps
 
       {/* 底部提示 */}
       {!loading && !error && history.length >= limit && (
-        <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 text-center">
-          <p className="text-xs text-gray-500">仅显示最近 {limit} 条记录</p>
+        <div className="px-6 py-3 bg-ink-elevated border-t border-border-subtle text-center">
+          <p className="text-xs text-text-tertiary">仅显示最近 {limit} 条记录</p>
         </div>
       )}
     </div>

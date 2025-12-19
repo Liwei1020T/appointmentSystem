@@ -214,9 +214,9 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   // 错误状态
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="min-h-screen bg-ink p-4">
         <Card className="p-6 text-center max-w-md mx-auto mt-12">
-          <p className="text-red-600 mb-4">{error || '订单不存在'}</p>
+          <p className="text-danger mb-4">{error || '订单不存在'}</p>
           <Button onClick={() => router.push('/orders')}>返回订单列表</Button>
         </Card>
       </div>
@@ -251,19 +251,19 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
     order.status === 'pending' && !hasCompletedPayment && !hasPendingCashPayment && finalAmount > 0 && !order.use_package;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-ink">
       {/* 顶部导航 */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+      <div className="glass-surface border-b border-border-subtle sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="text-slate-600 hover:text-slate-900"
+            className="text-text-secondary hover:text-text-primary"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-lg font-semibold text-slate-900">订单详情</h1>
+          <h1 className="text-lg font-semibold text-text-primary">订单详情</h1>
         </div>
       </div>
 
@@ -272,8 +272,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
         <Card className="p-6">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">{order.string?.brand} {order.string?.model}</h2>
-              <div className="text-xs text-slate-500 mt-1">
+              <h2 className="text-xl font-bold text-text-primary">{order.string?.brand} {order.string?.model}</h2>
+              <div className="text-xs text-text-tertiary mt-1">
                 下单时间: {formatDate(createdAt, 'yyyy/MM/dd HH:mm')}
               </div>
             </div>
@@ -298,30 +298,30 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
         {/* 球线信息 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">球线信息</h2>
-          <div className="bg-slate-50 rounded-lg p-4 mb-4">
+          <h2 className="text-lg font-semibold text-text-primary mb-4">球线信息</h2>
+          <div className="bg-ink-elevated rounded-lg p-4 mb-4 border border-border-subtle">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl">🎾</span>
               <div>
-                <div className="font-semibold text-slate-900">{order.string?.brand} {order.string?.model}</div>
-                <div className="text-xs text-slate-500">{order.string?.specification || '标准规格'}</div>
+                <div className="font-semibold text-text-primary">{order.string?.brand} {order.string?.model}</div>
+                <div className="text-xs text-text-tertiary">{order.string?.specification || '标准规格'}</div>
               </div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-blue-50 rounded-lg p-3">
-              <div className="text-xs text-blue-600 mb-1">横线拉力</div>
-              <div className="text-lg font-bold text-blue-900">{(order as any).tension_horizontal || order.tension} 磅</div>
+            <div className="bg-ink-elevated rounded-lg p-3 border border-border-subtle">
+              <div className="text-xs text-text-tertiary mb-1">横线拉力</div>
+              <div className="text-lg font-bold text-text-primary font-mono">{(order as any).tension_horizontal || order.tension} 磅</div>
             </div>
-            <div className="bg-blue-50 rounded-lg p-3">
-              <div className="text-xs text-blue-600 mb-1">竖线拉力</div>
-              <div className="text-lg font-bold text-blue-900">{(order as any).tension_vertical || order.tension} 磅</div>
+            <div className="bg-ink-elevated rounded-lg p-3 border border-border-subtle">
+              <div className="text-xs text-text-tertiary mb-1">竖线拉力</div>
+              <div className="text-lg font-bold text-text-primary font-mono">{(order as any).tension_vertical || order.tension} 磅</div>
             </div>
           </div>
           {((order as any).racket_brand || (order as any).racket_model) && (
-            <div className="mt-3 pt-3 border-t border-slate-200">
-              <div className="text-xs text-slate-500 mb-1">球拍信息</div>
-              <div className="text-sm text-slate-900">
+            <div className="mt-3 pt-3 border-t border-border-subtle">
+              <div className="text-xs text-text-tertiary mb-1">球拍信息</div>
+              <div className="text-sm text-text-primary">
                 {(order as any).racket_brand} {(order as any).racket_model}
               </div>
             </div>
@@ -330,40 +330,40 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
         {/* 现金支付待确认提示 - 仅在订单pending状态时显示 */}
         {hasPendingCashPayment && order.status === 'pending' && (
-          <Card className="p-6 border-2 border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50">
+          <Card className="p-6 border-2 border-warning/40 bg-ink-elevated">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-2xl">
+                <div className="w-12 h-12 bg-warning/15 rounded-full flex items-center justify-center text-2xl border border-warning/30">
                   💵
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">现金支付待确认</h2>
-                  <p className="text-sm text-gray-600">
+                  <h2 className="text-lg font-bold text-text-primary">现金支付待确认</h2>
+                  <p className="text-sm text-text-secondary">
                     请到店支付现金
                   </p>
                 </div>
               </div>
-              <div className="bg-yellow-400 text-yellow-900 text-xs font-bold px-4 py-2 rounded-full shadow-sm">
+              <div className="bg-warning text-text-primary text-xs font-bold px-4 py-2 rounded-full shadow-sm">
                 待收款
               </div>
             </div>
             
-            <div className="bg-white border-2 border-yellow-300 rounded-xl p-4 shadow-sm">
+            <div className="bg-ink-surface border-2 border-warning/40 rounded-xl p-4 shadow-sm">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 bg-warning/15 rounded-full flex items-center justify-center flex-shrink-0 border border-warning/30">
                   <span className="text-2xl">⏳</span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-base font-semibold text-gray-900 mb-2">
+                  <p className="text-base font-semibold text-text-primary mb-2">
                     等待管理员确认收款
                   </p>
-                  <div className="bg-yellow-50 rounded-lg p-3 mb-3">
+                  <div className="bg-ink-elevated rounded-lg p-3 mb-3 border border-border-subtle">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-700">应付金额</span>
-                      <span className="text-xl font-bold text-yellow-900">RM {Number(finalAmount).toFixed(2)}</span>
+                      <span className="text-sm text-text-tertiary">应付金额</span>
+                      <span className="text-xl font-bold text-text-primary font-mono">RM {Number(finalAmount).toFixed(2)}</span>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">
+                  <p className="text-sm text-text-secondary leading-relaxed">
                     📍 请携带现金到店支付。管理员确认收款后，将立即开始为您处理穿线服务。
                   </p>
                 </div>
@@ -394,20 +394,20 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">订单待支付</h2>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <h2 className="text-lg font-semibold text-text-primary">订单待支付</h2>
+                    <p className="text-sm text-text-tertiary mt-1">
                       请完成支付以确认订单
                     </p>
                   </div>
-                  <div className="bg-red-100 text-red-700 text-xs font-medium px-3 py-1 rounded-full">
+                  <div className="bg-danger/15 text-danger text-xs font-medium px-3 py-1 rounded-full">
                     未支付
                   </div>
                 </div>
                 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="bg-ink-elevated border border-border-subtle rounded-lg p-4 mb-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-blue-900">应付金额</span>
-                    <span className="text-2xl font-bold text-blue-900">
+                    <span className="text-sm text-text-tertiary">应付金额</span>
+                    <span className="text-2xl font-bold text-text-primary font-mono">
                       RM {Number(finalAmount).toFixed(2)}
                     </span>
                   </div>
@@ -427,42 +427,42 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
         {/* 价格明细 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">💰 价格明细</h2>
+          <h2 className="text-lg font-semibold text-text-primary mb-4">💰 价格明细</h2>
           <div className="space-y-3">
             <div className="flex justify-between py-2">
-              <span className="text-slate-600">球线价格</span>
-              <span className="font-semibold text-slate-900">RM {Number(order.price).toFixed(2)}</span>
+              <span className="text-text-tertiary">球线价格</span>
+              <span className="font-semibold text-text-primary font-mono">RM {Number(order.price).toFixed(2)}</span>
             </div>
 
             {discountAmount > 0 && (
-              <div className="flex justify-between py-2 bg-orange-50 -mx-2 px-2 rounded">
-                <span className="text-orange-700 flex items-center gap-1">
+              <div className="flex justify-between py-2 bg-warning/10 -mx-2 px-2 rounded border border-warning/30">
+                <span className="text-warning flex items-center gap-1">
                   <span>🎁</span> 优惠金额
                 </span>
-                <span className="font-bold text-orange-600">- RM {Number(discountAmount).toFixed(2)}</span>
+                <span className="font-bold text-warning font-mono">- RM {Number(discountAmount).toFixed(2)}</span>
               </div>
             )}
 
             {order.use_package && (
-              <div className="space-y-2 py-3 px-3 bg-green-50 border border-green-100 rounded-lg">
+              <div className="space-y-2 py-3 px-3 bg-success/10 border border-success/30 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-green-700 flex items-center gap-1 font-semibold">
+                  <span className="text-success flex items-center gap-1 font-semibold">
                     <span>🎁</span> 套餐支付
                   </span>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-200 text-green-800">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-success/20 text-success">
                     套餐抵扣
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-sm text-slate-600">
-                  <span className="font-medium text-slate-900">{packageName}</span>
+                <div className="flex items-center justify-between text-sm text-text-secondary">
+                  <span className="font-medium text-text-primary">{packageName}</span>
                   {packageRemainingCount !== undefined ? (
-                    <span className="text-xs text-slate-500">{packageRemainingCount} 次剩余</span>
+                    <span className="text-xs text-text-tertiary">{packageRemainingCount} 次剩余</span>
                   ) : (
-                    <span className="text-xs text-slate-500">剩余次数未知</span>
+                    <span className="text-xs text-text-tertiary">剩余次数未知</span>
                   )}
                 </div>
                 {packageExpiry && (
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-text-tertiary">
                     有效期至 {formatDate(packageExpiry, 'yyyy-MM-dd')}
                   </div>
                 )}
@@ -470,24 +470,24 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             )}
 
             {order.voucher_id && (
-              <div className="flex justify-between items-center py-2 bg-purple-50 -mx-2 px-2 rounded">
-                <span className="text-purple-700 flex items-center gap-1">
+              <div className="flex justify-between items-center py-2 bg-info/10 -mx-2 px-2 rounded border border-info/30">
+                <span className="text-info flex items-center gap-1">
                   <span>🎫</span> 使用优惠券
                 </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-200 text-purple-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-info/20 text-info">
                   {order.voucher?.voucher?.name || '优惠券'}
                 </span>
               </div>
             )}
 
-            <div className="pt-4 mt-2 border-t-2 border-slate-300 flex justify-between items-center bg-blue-50 -mx-2 px-2 py-3 rounded-lg">
-              <span className="text-lg font-bold text-slate-900">实付金额</span>
-              <span className="text-2xl font-black text-blue-600">
+            <div className="pt-4 mt-2 border-t-2 border-border-subtle flex justify-between items-center bg-ink-elevated -mx-2 px-2 py-3 rounded-lg">
+              <span className="text-lg font-bold text-text-primary">实付金额</span>
+              <span className="text-2xl font-black text-accent font-mono">
                 RM {finalAmount.toFixed(2)}
               </span>
             </div>
             {order.use_package && (
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-text-tertiary mt-1">
                 套餐支付已覆盖本次服务，无需额外支付。
               </p>
             )}
@@ -503,10 +503,10 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
               if (!payment) return null;
 
               const statusColors: Record<string, string> = {
-                completed: 'bg-green-50 text-green-700 border-green-200',
-                pending: 'bg-amber-50 text-amber-700 border-amber-200',
-                pending_verification: 'bg-blue-50 text-blue-700 border-blue-200',
-                failed: 'bg-red-50 text-red-700 border-red-200',
+                completed: 'bg-success/10 text-success border-success/30',
+                pending: 'bg-warning/10 text-warning border-warning/30',
+                pending_verification: 'bg-info/10 text-info border-info/30',
+                failed: 'bg-danger/10 text-danger border-danger/30',
               };
 
               const statusLabels: Record<string, string> = {
@@ -550,58 +550,58 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                      <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
                         {provider.icon} 支付信息
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${badge}`}>
                           {displayStatus}
                         </span>
                       </h2>
-                      <p className="text-xs text-slate-500 mt-1">支付渠道：{provider.label}</p>
+                      <p className="text-xs text-text-tertiary mt-1">支付渠道：{provider.label}</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs text-slate-500">支付金额</div>
-                      <div className="text-xl font-bold text-slate-900">
+                      <div className="text-xs text-text-tertiary">支付金额</div>
+                      <div className="text-xl font-bold text-text-primary font-mono">
                         RM {Number(payment.amount ?? finalAmount).toFixed(2)}
                       </div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
-                      <div className="text-xs text-slate-500">支付方式</div>
-                      <div className="text-sm font-medium text-slate-900 flex items-center gap-2 mt-1">
+                    <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
+                      <div className="text-xs text-text-tertiary">支付方式</div>
+                      <div className="text-sm font-medium text-text-primary flex items-center gap-2 mt-1">
                         <span>{provider.icon}</span>
                         <span>{provider.label}</span>
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
-                      <div className="text-xs text-slate-500">支付状态</div>
-                      <div className="text-sm font-medium text-slate-900 mt-1">{displayStatus}</div>
+                    <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
+                      <div className="text-xs text-text-tertiary">支付状态</div>
+                      <div className="text-sm font-medium text-text-primary mt-1">{displayStatus}</div>
                     </div>
 
                     {(payment as any).transaction_id && (
-                      <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 col-span-2">
-                        <div className="text-xs text-slate-500">交易单号</div>
-                        <div className="text-sm font-mono text-slate-900 mt-1 break-all">
+                      <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle col-span-2">
+                        <div className="text-xs text-text-tertiary">交易单号</div>
+                        <div className="text-sm font-mono text-text-primary mt-1 break-all">
                           {(payment as any).transaction_id}
                         </div>
                       </div>
                     )}
 
                     {(payment as any).created_at && (
-                      <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
-                        <div className="text-xs text-slate-500">发起时间</div>
-                        <div className="text-sm font-medium text-slate-900 mt-1">
+                      <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
+                        <div className="text-xs text-text-tertiary">发起时间</div>
+                        <div className="text-sm font-medium text-text-primary mt-1">
                           {formatDate((payment as any).created_at, 'yyyy-MM-dd HH:mm')}
                         </div>
                       </div>
                     )}
 
                     {(payment as any).updated_at && (
-                      <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
-                        <div className="text-xs text-slate-500">最近更新</div>
-                        <div className="text-sm font-medium text-slate-900 mt-1">
+                      <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
+                        <div className="text-xs text-text-tertiary">最近更新</div>
+                        <div className="text-sm font-medium text-text-primary mt-1">
                           {formatDate((payment as any).updated_at, 'yyyy-MM-dd HH:mm')}
                         </div>
                       </div>
@@ -616,35 +616,35 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
         {/* 客户备注 */}
         {order.notes && !order.notes.includes('快捷操作') && !order.notes.includes('管理员') && (
           <Card className="p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-3">订单备注</h2>
-            <p className="text-slate-700">{order.notes}</p>
+            <h2 className="text-lg font-semibold text-text-primary mb-3">订单备注</h2>
+            <p className="text-text-secondary">{order.notes}</p>
           </Card>
         )}
 
         {/* 订单信息 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">订单信息</h2>
+          <h2 className="text-lg font-semibold text-text-primary mb-4">订单信息</h2>
           <div className="space-y-4">
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="text-xs text-slate-500 mb-1">订单编号</div>
-              <div className="font-mono font-semibold text-slate-900">#{generateShortCode(order.id)}</div>
-              <div className="text-xs text-slate-400 mt-1 break-all">{order.id}</div>
+            <div className="bg-ink-elevated rounded-lg p-4 border border-border-subtle">
+              <div className="text-xs text-text-tertiary mb-1">订单编号</div>
+              <div className="font-mono font-semibold text-text-primary">#{generateShortCode(order.id)}</div>
+              <div className="text-xs text-text-tertiary mt-1 break-all">{order.id}</div>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <div className="text-xs text-slate-500 mb-1">📅 下单时间</div>
-                <div className="text-slate-900 font-medium">{formatDate(createdAt, 'yyyy-MM-dd HH:mm')}</div>
+                <div className="text-xs text-text-tertiary mb-1">📅 下单时间</div>
+                <div className="text-text-primary font-medium">{formatDate(createdAt, 'yyyy-MM-dd HH:mm')}</div>
               </div>
               {updatedAt && createdAt && updatedAt !== createdAt && (
                 <div>
-                  <div className="text-xs text-slate-500 mb-1">🔄 更新时间</div>
-                  <div className="text-slate-900 font-medium">{formatDate(updatedAt, 'yyyy-MM-dd HH:mm')}</div>
+                  <div className="text-xs text-text-tertiary mb-1">🔄 更新时间</div>
+                  <div className="text-text-primary font-medium">{formatDate(updatedAt, 'yyyy-MM-dd HH:mm')}</div>
                 </div>
               )}
               {order.completed_at && (
                 <div>
-                  <div className="text-xs text-slate-500 mb-1">✅ 完成时间</div>
-                  <div className="text-slate-900 font-medium">{formatDate(order.completed_at, 'yyyy-MM-dd HH:mm')}</div>
+                  <div className="text-xs text-text-tertiary mb-1">✅ 完成时间</div>
+                  <div className="text-text-primary font-medium">{formatDate(order.completed_at, 'yyyy-MM-dd HH:mm')}</div>
                 </div>
               )}
             </div>
@@ -660,7 +660,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             {review ? (
               /* 已有评价 */
               <Card className="p-6">
-                <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
                   <span>⭐</span> 我的评价
                 </h2>
                 <ReviewCard review={review} />
@@ -674,24 +674,24 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
               />
             ) : (
               /* 评价入口（完成即显示，避免 canReview 异常阻塞） */
-              <Card className="p-6 text-center bg-gradient-to-br from-purple-50 to-blue-50 border-2 border-purple-200">
-                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Card className="p-6 text-center bg-ink-elevated border-2 border-accent-border">
+                <div className="w-16 h-16 bg-ink-surface rounded-full flex items-center justify-center mx-auto mb-4 border border-border-subtle">
                   <span className="text-4xl">⭐</span>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">
+                <h3 className="text-xl font-bold text-text-primary mb-2">
                   订单已完成，快来评价吧！
                 </h3>
-                <p className="text-slate-600 mb-4">
+                <p className="text-text-secondary mb-4">
                   分享您的体验，帮助我们做得更好
                 </p>
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 inline-block">
-                  <p className="text-sm font-medium text-yellow-900">
+                <div className="bg-ink-surface border border-border-subtle rounded-lg p-3 mb-4 inline-block">
+                  <p className="text-sm font-medium text-text-primary">
                     🎁 评价奖励：<span className="text-lg font-bold">+10 积分</span>
                   </p>
                 </div>
                 <Button 
                   onClick={() => setShowReviewForm(true)}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  className="bg-accent text-text-onAccent hover:shadow-glow"
                 >
                   ✍️ 立即评价
                 </Button>
@@ -703,7 +703,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
       {/* 底部操作栏 */}
       {order.status === 'pending' && !hasPendingCashPayment && needsPayment && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-slate-200 p-4 shadow-lg safe-area-pb">
+        <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-border-subtle p-4 shadow-lg safe-area-pb">
           <div className="max-w-2xl mx-auto flex gap-3">
             <Button
               variant="secondary"
@@ -716,7 +716,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
               variant="primary"
               onClick={() => setShowPayment(true)}
               fullWidth
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              className="bg-accent text-text-onAccent hover:shadow-glow"
             >
               💳 立即支付
             </Button>
@@ -725,21 +725,21 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
       )}
       
       {order.status === 'pending' && hasPendingCashPayment && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-yellow-100 to-orange-100 border-t-2 border-yellow-300 p-4 shadow-lg safe-area-pb">
+        <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-warning/40 p-4 shadow-lg safe-area-pb">
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">💵</span>
-                <span className="font-semibold text-gray-900">现金支付待确认</span>
+                <span className="font-semibold text-text-primary">现金支付待确认</span>
               </div>
-              <span className="text-lg font-bold text-yellow-900">RM {finalAmount.toFixed(2)}</span>
+              <span className="text-lg font-bold text-text-primary font-mono">RM {finalAmount.toFixed(2)}</span>
             </div>
-            <p className="text-sm text-gray-600 mb-3">请到店支付现金，管理员确认后开始处理</p>
+            <p className="text-sm text-text-secondary mb-3">请到店支付现金，管理员确认后开始处理</p>
             <Button
               variant="secondary"
               onClick={() => setShowCancelModal(true)}
               fullWidth
-              className="bg-white hover:bg-gray-50"
+              className="bg-ink-surface hover:bg-ink-elevated"
             >
               ❌ 取消订单
             </Button>
@@ -748,7 +748,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
       )}
       
       {order.status === 'pending' && !needsPayment && !hasPendingCashPayment && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-slate-200 p-4 shadow-lg safe-area-pb">
+        <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-border-subtle p-4 shadow-lg safe-area-pb">
           <div className="max-w-2xl mx-auto">
             <Button
               variant="secondary"
@@ -768,7 +768,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
         title="取消订单"
       >
         <div className="space-y-4">
-          <p className="text-slate-700">
+          <p className="text-text-secondary">
             确定要取消这个订单吗？取消后无法恢复。
           </p>
           <div className="flex gap-3">

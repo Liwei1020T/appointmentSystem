@@ -89,17 +89,17 @@ export default function FeaturedReviews() {
   const currentReview = reviews[currentIndex];
 
   return (
-    <section className="py-16 bg-gradient-to-br from-blue-50 to-purple-50">
+    <section className="py-16 bg-ink-elevated">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full mb-4">
-            <Star className="w-5 h-5 fill-yellow-500 text-yellow-500" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-soft text-text-primary rounded-full mb-4 border border-accent-border">
+            <Star className="w-5 h-5 fill-accent text-accent" />
             <span className="font-medium">客户好评</span>
           </div>
-          <h2 className="text-3xl font-bold text-slate-900 mb-3">
+          <h2 className="text-3xl font-bold text-text-primary mb-3">
             真实用户评价
           </h2>
-          <p className="text-slate-600">
+          <p className="text-text-tertiary">
             来自数百位满意客户的真实反馈
           </p>
         </div>
@@ -110,7 +110,7 @@ export default function FeaturedReviews() {
               <StarRating value={currentReview.rating} readonly size="lg" />
             </div>
 
-            <blockquote className="text-lg text-slate-700 text-center mb-6 italic">
+            <blockquote className="text-lg text-text-secondary text-center mb-6 italic">
               &ldquo;{currentReview.comment}&rdquo;
             </blockquote>
 
@@ -119,7 +119,7 @@ export default function FeaturedReviews() {
                 {currentReview.tags.map((tag, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full"
+                    className="px-3 py-1 bg-ink-elevated text-text-secondary text-sm rounded-full border border-border-subtle"
                   >
                     {tag}
                   </span>
@@ -128,17 +128,17 @@ export default function FeaturedReviews() {
             )}
 
             <div className="text-center">
-              <p className="font-semibold text-slate-900">
+              <p className="font-semibold text-text-primary">
                 {currentReview.is_anonymous
                   ? '匿名用户'
                   : currentReview.user?.full_name}
               </p>
               {currentReview.order?.string && (
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-text-secondary">
                   {currentReview.order.string.brand} {currentReview.order.string.model}
                 </p>
               )}
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-text-tertiary mt-1">
                 {formatDate(currentReview.created_at)}
               </p>
             </div>
@@ -149,18 +149,18 @@ export default function FeaturedReviews() {
             <>
               <button
                 onClick={prevReview}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 p-3 bg-white rounded-full shadow-lg hover:bg-slate-50 transition-colors"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 p-3 glass-strong rounded-full hover:bg-ink-elevated transition-colors"
                 aria-label="上一条评价"
               >
-                <ChevronLeft className="w-6 h-6 text-slate-600" />
+                <ChevronLeft className="w-6 h-6 text-text-secondary" />
               </button>
 
               <button
                 onClick={nextReview}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 p-3 bg-white rounded-full shadow-lg hover:bg-slate-50 transition-colors"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 p-3 glass-strong rounded-full hover:bg-ink-elevated transition-colors"
                 aria-label="下一条评价"
               >
-                <ChevronRight className="w-6 h-6 text-slate-600" />
+                <ChevronRight className="w-6 h-6 text-text-secondary" />
               </button>
             </>
           )}
@@ -173,8 +173,8 @@ export default function FeaturedReviews() {
                 onClick={() => setCurrentIndex(idx)}
                 className={`w-2 h-2 rounded-full transition-all ${
                   idx === currentIndex
-                    ? 'bg-blue-600 w-8'
-                    : 'bg-slate-300 hover:bg-slate-400'
+                    ? 'bg-accent w-8'
+                    : 'bg-ink-surface hover:bg-ink-elevated'
                 }`}
                 aria-label={`查看第 ${idx + 1} 条评价`}
               />

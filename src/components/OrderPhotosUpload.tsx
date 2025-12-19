@@ -29,10 +29,10 @@ interface OrderPhotosUploadProps {
 }
 
 const PHOTO_TYPES = [
-  { value: 'before', label: '穿线前', color: 'bg-blue-100 text-blue-700' },
-  { value: 'after', label: '穿线后', color: 'bg-green-100 text-green-700' },
-  { value: 'detail', label: '细节图', color: 'bg-purple-100 text-purple-700' },
-  { value: 'other', label: '其他', color: 'bg-gray-100 text-gray-700' },
+  { value: 'before', label: '穿线前', color: 'bg-info-soft text-info' },
+  { value: 'after', label: '穿线后', color: 'bg-success/15 text-success' },
+  { value: 'detail', label: '细节图', color: 'bg-accent/15 text-accent' },
+  { value: 'other', label: '其他', color: 'bg-ink-elevated text-text-secondary' },
 ];
 
 export default function OrderPhotosUpload({
@@ -201,19 +201,19 @@ export default function OrderPhotosUpload({
   return (
     <div className="space-y-6">
       {/* 上传区域 */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
+      <div className="bg-ink-surface rounded-lg border border-border-subtle p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Camera className="w-5 h-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-slate-900">上传照片</h3>
+          <Camera className="w-5 h-5 text-accent" />
+          <h3 className="text-lg font-semibold text-text-primary">上传照片</h3>
         </div>
 
         {loading && (
-          <div className="text-sm text-slate-500 mb-2">正在加载已上传的照片...</div>
+          <div className="text-sm text-text-tertiary mb-2">正在加载已上传的照片...</div>
         )}
 
         {/* 照片类型选择 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-slate-700 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             照片类型
           </label>
           <div className="flex flex-wrap gap-2">
@@ -224,7 +224,7 @@ export default function OrderPhotosUpload({
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   selectedType === type.value
                     ? type.color
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-ink-elevated text-text-secondary hover:bg-ink-elevated'
                 }`}
               >
                 {type.label}
@@ -235,7 +235,7 @@ export default function OrderPhotosUpload({
 
         {/* 照片说明 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-slate-700 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             照片说明（可选）
           </label>
           <input
@@ -243,7 +243,7 @@ export default function OrderPhotosUpload({
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
             placeholder="例如：BG66UM 26磅，横竖线清晰"
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border focus:border-transparent"
           />
         </div>
 
@@ -273,8 +273,8 @@ export default function OrderPhotosUpload({
 
       {/* 已上传照片列表 */}
       {photos.length > 0 && (
-        <div className="bg-white rounded-lg border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">
+        <div className="bg-ink-surface rounded-lg border border-border-subtle p-6">
+          <h3 className="text-lg font-semibold text-text-primary mb-4">
             已上传照片 ({photos.length})
           </h3>
 
@@ -285,7 +285,7 @@ export default function OrderPhotosUpload({
               return (
                 <div
                   key={photo.id}
-                  className="relative group rounded-lg overflow-hidden border border-slate-200"
+                  className="relative group rounded-lg overflow-hidden border border-border-subtle"
                 >
                   {/* 照片 */}
                   <img
@@ -306,41 +306,41 @@ export default function OrderPhotosUpload({
                     {index > 0 && (
                       <button
                         onClick={() => handleMovePhoto(photo.id, 'up')}
-                        className="p-1.5 bg-white rounded-lg shadow hover:bg-slate-50"
+                        className="p-1.5 bg-ink-surface rounded-lg shadow hover:bg-ink-elevated"
                         title="上移"
                       >
-                        <MoveUp className="w-4 h-4 text-slate-600" />
+                        <MoveUp className="w-4 h-4 text-text-secondary" />
                       </button>
                     )}
                     {index < photos.length - 1 && (
                       <button
                         onClick={() => handleMovePhoto(photo.id, 'down')}
-                        className="p-1.5 bg-white rounded-lg shadow hover:bg-slate-50"
+                        className="p-1.5 bg-ink-surface rounded-lg shadow hover:bg-ink-elevated"
                         title="下移"
                       >
-                        <MoveDown className="w-4 h-4 text-slate-600" />
+                        <MoveDown className="w-4 h-4 text-text-secondary" />
                       </button>
                     )}
                     <button
                       onClick={() => handleDeletePhoto(photo.id)}
                       disabled={deleting === photo.id}
-                      className="p-1.5 bg-white rounded-lg shadow hover:bg-red-50"
+                      className="p-1.5 bg-ink-surface rounded-lg shadow hover:bg-danger/10"
                       title="删除"
                     >
-                      <X className="w-4 h-4 text-red-600" />
+                      <X className="w-4 h-4 text-danger" />
                     </button>
                   </div>
 
                   {/* 说明文字 */}
                   {photo.caption && (
-                    <div className="p-3 bg-slate-50">
-                      <p className="text-sm text-slate-700">{photo.caption}</p>
+                    <div className="p-3 bg-ink-elevated">
+                      <p className="text-sm text-text-secondary">{photo.caption}</p>
                     </div>
                   )}
 
                   {/* 上传时间 */}
-                  <div className="p-2 bg-slate-50 border-t border-slate-200">
-                    <p className="text-xs text-slate-500">
+                  <div className="p-2 bg-ink-elevated border-t border-border-subtle">
+                    <p className="text-xs text-text-tertiary">
                       {new Date(photo.created_at).toLocaleString('zh-CN')}
                     </p>
                   </div>

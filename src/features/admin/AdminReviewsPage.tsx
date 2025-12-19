@@ -250,19 +250,19 @@ export default function AdminReviewsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-ink">
         <Spinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8">
+    <div className="min-h-screen bg-ink py-8">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">评价管理</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <h1 className="text-2xl font-bold text-text-primary">评价管理</h1>
+          <p className="mt-1 text-sm text-text-secondary">
             管理客户评价并及时回复
           </p>
         </div>
@@ -272,12 +272,12 @@ export default function AdminReviewsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <Card className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <MessageSquare className="w-6 h-6 text-blue-600" />
+                <div className="p-3 bg-info-soft rounded-lg">
+                  <MessageSquare className="w-6 h-6 text-info" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600">总评价数</p>
-                  <p className="text-2xl font-bold text-slate-900">
+                  <p className="text-sm text-text-secondary">总评价数</p>
+                  <p className="text-2xl font-bold text-text-primary">
                     {stats.total_reviews}
                   </p>
                 </div>
@@ -286,12 +286,12 @@ export default function AdminReviewsPage() {
 
             <Card className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <Star className="w-6 h-6 text-yellow-600" />
+                <div className="p-3 bg-warning/15 rounded-lg">
+                  <Star className="w-6 h-6 text-warning" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600">平均评分</p>
-                  <p className="text-2xl font-bold text-slate-900">
+                  <p className="text-sm text-text-secondary">平均评分</p>
+                  <p className="text-2xl font-bold text-text-primary">
                     {stats.average_rating.toFixed(1)}
                   </p>
                 </div>
@@ -300,12 +300,12 @@ export default function AdminReviewsPage() {
 
             <Card className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
+                <div className="p-3 bg-success/15 rounded-lg">
+                  <TrendingUp className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600">好评率</p>
-                  <p className="text-2xl font-bold text-slate-900">
+                  <p className="text-sm text-text-secondary">好评率</p>
+                  <p className="text-2xl font-bold text-text-primary">
                     {stats.total_reviews > 0
                       ? (((stats.rating_5 + stats.rating_4) / stats.total_reviews) * 100).toFixed(0)
                       : 0}
@@ -317,12 +317,12 @@ export default function AdminReviewsPage() {
 
             <Card className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <Award className="w-6 h-6 text-purple-600" />
+                <div className="p-3 bg-accent/15 rounded-lg">
+                  <Award className="w-6 h-6 text-accent" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600">5星评价</p>
-                  <p className="text-2xl font-bold text-slate-900">
+                  <p className="text-sm text-text-secondary">5星评价</p>
+                  <p className="text-2xl font-bold text-text-primary">
                     {stats.rating_5}
                   </p>
                 </div>
@@ -334,7 +334,7 @@ export default function AdminReviewsPage() {
         {/* 评分分布 */}
         {stats && stats.total_reviews > 0 && (
           <Card className="p-6 mb-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">
               评分分布
             </h3>
             <div className="space-y-2">
@@ -347,16 +347,16 @@ export default function AdminReviewsPage() {
 
                 return (
                   <div key={rating} className="flex items-center gap-3">
-                    <div className="w-12 text-sm text-slate-600 flex items-center gap-1">
-                      {rating} <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                    <div className="w-12 text-sm text-text-secondary flex items-center gap-1">
+                      {rating} <Star className="w-3 h-3 fill-warning text-warning" />
                     </div>
-                    <div className="flex-1 bg-slate-200 rounded-full h-2">
+                    <div className="flex-1 bg-ink-elevated rounded-full h-2">
                       <div
-                        className="bg-yellow-500 h-2 rounded-full transition-all"
+                        className="bg-warning h-2 rounded-full transition-all"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <div className="w-16 text-sm text-slate-600 text-right">
+                    <div className="w-16 text-sm text-text-secondary text-right">
                       {count} ({percentage.toFixed(0)}%)
                     </div>
                   </div>
@@ -371,23 +371,23 @@ export default function AdminReviewsPage() {
           <div className="flex flex-col md:flex-row gap-4">
             {/* 搜索框 */}
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="搜索评价、用户、订单号..."
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border focus:border-transparent"
               />
             </div>
 
             {/* 评分筛选 */}
             <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-slate-400" />
+              <Filter className="w-5 h-5 text-text-tertiary" />
               <select
                 value={filterRating}
                 onChange={(e) => setFilterRating(e.target.value as FilterRating)}
-                className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border focus:border-transparent"
               >
                 <option value="all">所有评分</option>
                 <option value="5">5星</option>
@@ -414,8 +414,8 @@ export default function AdminReviewsPage() {
         <div className="space-y-4">
           {filteredReviews.length === 0 ? (
             <Card className="p-12 text-center">
-              <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-600">
+              <MessageSquare className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
+              <p className="text-text-secondary">
                 {searchQuery || filterRating !== 'all'
                   ? '没有找到匹配的评价'
                   : '暂无评价'}
@@ -427,18 +427,18 @@ export default function AdminReviewsPage() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold">
+                      <div className="w-10 h-10 bg-accent/15 rounded-full flex items-center justify-center">
+                        <span className="text-accent font-semibold">
                           {review.is_anonymous
                             ? '?'
                             : (review.user?.full_name?.[0] || 'U')}
                         </span>
                       </div>
                       <div>
-                        <p className="font-medium text-slate-900">
+                        <p className="font-medium text-text-primary">
                           {review.is_anonymous ? '匿名用户' : review.user?.full_name}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-text-tertiary">
                           {formatDate(review.created_at)}
                         </p>
                       </div>
@@ -446,13 +446,13 @@ export default function AdminReviewsPage() {
 
                     <div className="flex items-center gap-2 mb-3">
                       <StarRating value={review.rating} readonly size="sm" />
-                      <span className="text-sm text-slate-600">
+                      <span className="text-sm text-text-secondary">
                         订单 #{review.order?.order_number}
                       </span>
                     </div>
 
                     {review.order?.string && (
-                      <p className="text-sm text-slate-600 mb-3">
+                      <p className="text-sm text-text-secondary mb-3">
                         {review.order.string.brand} {review.order.string.model}
                       </p>
                     )}
@@ -469,23 +469,23 @@ export default function AdminReviewsPage() {
                 </div>
 
                 {/* 详细评分 */}
-                <div className="grid grid-cols-3 gap-4 mb-4 p-3 bg-slate-50 rounded-lg">
+                <div className="grid grid-cols-3 gap-4 mb-4 p-3 bg-ink-elevated rounded-lg border border-border-subtle">
                   <div>
-                    <p className="text-xs text-slate-500 mb-1">服务态度</p>
+                    <p className="text-xs text-text-tertiary mb-1">服务态度</p>
                     <StarRating value={review.service_rating} readonly size="xs" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 mb-1">穿线质量</p>
+                    <p className="text-xs text-text-tertiary mb-1">穿线质量</p>
                     <StarRating value={review.quality_rating} readonly size="xs" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 mb-1">服务速度</p>
+                    <p className="text-xs text-text-tertiary mb-1">服务速度</p>
                     <StarRating value={review.speed_rating} readonly size="xs" />
                   </div>
                 </div>
 
                 {/* 评价内容 */}
-                <p className="text-slate-700 mb-3">{review.comment}</p>
+                <p className="text-text-secondary mb-3">{review.comment}</p>
 
                 {/* 标签 */}
                 {review.tags && review.tags.length > 0 && (
@@ -493,7 +493,7 @@ export default function AdminReviewsPage() {
                     {review.tags.map((tag, idx) => (
                       <span
                         key={idx}
-                        className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
+                        className="px-2 py-1 bg-info-soft text-info text-xs rounded-full"
                       >
                         {tag}
                       </span>
@@ -503,12 +503,12 @@ export default function AdminReviewsPage() {
 
                 {/* 管理员回复 */}
                 {review.admin_reply && (
-                  <div className="mt-4 p-4 bg-amber-50 border-l-4 border-amber-400 rounded">
-                    <p className="text-xs text-amber-600 font-medium mb-1">
+                  <div className="mt-4 p-4 bg-warning/15 border-l-4 border-warning rounded">
+                    <p className="text-xs text-warning font-medium mb-1">
                       管理员回复
                     </p>
-                    <p className="text-sm text-slate-700">{review.admin_reply}</p>
-                    <p className="text-xs text-slate-500 mt-2">
+                    <p className="text-sm text-text-secondary">{review.admin_reply}</p>
+                    <p className="text-xs text-text-tertiary mt-2">
                       {formatDate(review.admin_reply_at!)}
                     </p>
                   </div>
@@ -528,20 +528,20 @@ export default function AdminReviewsPage() {
         <div className="space-y-4">
           {selectedReview && (
             <>
-              <div className="p-4 bg-slate-50 rounded-lg">
+              <div className="p-4 bg-ink-elevated rounded-lg border border-border-subtle">
                 <div className="flex items-center gap-2 mb-2">
                   <StarRating value={selectedReview.rating} readonly size="sm" />
-                  <span className="text-sm text-slate-600">
+                  <span className="text-sm text-text-secondary">
                     {selectedReview.is_anonymous
                       ? '匿名用户'
                       : selectedReview.user?.full_name}
                   </span>
                 </div>
-                <p className="text-sm text-slate-700">{selectedReview.comment}</p>
+                <p className="text-sm text-text-secondary">{selectedReview.comment}</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
                   回复内容
                 </label>
                 <textarea
@@ -549,7 +549,7 @@ export default function AdminReviewsPage() {
                   onChange={(e) => setReplyText(e.target.value)}
                   placeholder="输入您的回复..."
                   rows={4}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border focus:border-transparent resize-none"
                 />
               </div>
 

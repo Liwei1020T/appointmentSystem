@@ -9,7 +9,7 @@
   }
   
   body {
-    @apply text-slate-700 bg-slate-50;
+    @apply text-text-primary bg-ink;
   }
 }
 
@@ -21,5 +21,28 @@
   
   .active\:scale-97:active {
     transform: scale(0.97);
+  }
+
+  .glass-surface {
+    background: rgba(30, 41, 59, 0.55);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(226, 232, 240, 0.1);
+    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.35);
+  }
+
+  .glass-strong {
+    background: rgba(30, 41, 59, 0.75);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(226, 232, 240, 0.14);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

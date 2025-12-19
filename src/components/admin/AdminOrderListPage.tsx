@@ -93,13 +93,13 @@ export default function AdminOrderListPage() {
 
   const getStatusBadge = (status: OrderStatus) => {
     const styles: Record<OrderStatus, string> = {
-      pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      confirmed: 'bg-blue-100 text-blue-700 border-blue-200',
-      processing: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-      in_progress: 'bg-purple-100 text-purple-700 border-purple-200',
-      ready: 'bg-teal-100 text-teal-700 border-teal-200',
-      completed: 'bg-green-100 text-green-700 border-green-200',
-      cancelled: 'bg-red-100 text-red-700 border-red-200',
+      pending: 'bg-warning/15 text-warning border-warning/40',
+      confirmed: 'bg-info-soft text-info border-info/40',
+      processing: 'bg-info-soft text-info border-info/40',
+      in_progress: 'bg-accent/15 text-accent border-accent/40',
+      ready: 'bg-success/15 text-success border-success/40',
+      completed: 'bg-success/15 text-success border-success/40',
+      cancelled: 'bg-danger/15 text-danger border-danger/40',
     };
     return styles[status];
   };
@@ -129,18 +129,18 @@ export default function AdminOrderListPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-ink-elevated">
       {/* Header */}
-      <div className="bg-white border-b shadow-sm">
+      <div className="bg-ink-surface border-b shadow-sm">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">订单管理</h1>
-              <p className="text-sm text-gray-600 mt-1">管理所有客户订单</p>
+              <h1 className="text-2xl font-bold text-text-primary">订单管理</h1>
+              <p className="text-sm text-text-secondary mt-1">管理所有客户订单</p>
             </div>
             <button
               onClick={() => router.push('/admin/dashboard')}
-              className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-ink-elevated rounded-lg transition-colors"
             >
               返回仪表板
             </button>
@@ -154,11 +154,11 @@ export default function AdminOrderListPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="搜索订单（用户名、邮箱、订单ID）"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+              className="flex-1 px-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent"
             />
             <button
               onClick={handleSearch}
-              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="px-6 py-2 bg-accent text-text-onAccent rounded-lg hover:shadow-glow transition-colors"
             >
               搜索
             </button>
@@ -178,8 +178,8 @@ export default function AdminOrderListPage() {
                 }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   filterStatus === filter.status
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-accent text-text-onAccent'
+                    : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
                 }`}
               >
                 {filter.label}
@@ -194,23 +194,23 @@ export default function AdminOrderListPage() {
 
       {/* Stats Bar */}
       {stats && (
-        <div className="bg-white border-b px-6 py-4">
+        <div className="bg-ink-surface border-b px-6 py-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <div className="text-sm text-gray-600">今日订单</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.todayTotal ?? 0}</div>
+              <div className="text-sm text-text-secondary">今日订单</div>
+              <div className="text-2xl font-bold text-text-primary">{stats.todayTotal ?? 0}</div>
             </div>
             <div>
-              <div className="text-sm text-gray-600">今日营业额</div>
-              <div className="text-2xl font-bold text-purple-600">RM {(stats.todayRevenue ?? 0).toFixed(2)}</div>
+              <div className="text-sm text-text-secondary">今日营业额</div>
+              <div className="text-2xl font-bold text-accent">RM {(stats.todayRevenue ?? 0).toFixed(2)}</div>
             </div>
             <div>
-              <div className="text-sm text-gray-600">总订单</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+              <div className="text-sm text-text-secondary">总订单</div>
+              <div className="text-2xl font-bold text-text-primary">{stats.total}</div>
             </div>
             <div>
-              <div className="text-sm text-gray-600">待处理</div>
-              <div className="text-2xl font-bold text-orange-600">{stats.pending + stats.confirmed + (stats.in_progress ?? 0)}</div>
+              <div className="text-sm text-text-secondary">待处理</div>
+              <div className="text-2xl font-bold text-warning">{stats.pending + stats.confirmed + (stats.in_progress ?? 0)}</div>
             </div>
           </div>
         </div>
@@ -220,80 +220,80 @@ export default function AdminOrderListPage() {
       <div className="p-6">
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent"></div>
-            <p className="text-gray-500 mt-4">加载中...</p>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
+            <p className="text-text-tertiary mt-4">加载中...</p>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-            <p className="text-red-600">{error}</p>
+          <div className="bg-danger/15 border border-danger/40 rounded-lg p-4 text-center">
+            <p className="text-danger">{error}</p>
           </div>
         ) : orders.length === 0 ? (
-          <div className="bg-white rounded-lg p-12 text-center">
+          <div className="bg-ink-surface rounded-lg p-12 text-center">
             <div className="text-6xl mb-4">📭</div>
-            <p className="text-gray-600 mb-2">暂无订单</p>
-            <p className="text-sm text-gray-500">没有找到符合条件的订单</p>
+            <p className="text-text-secondary mb-2">暂无订单</p>
+            <p className="text-sm text-text-tertiary">没有找到符合条件的订单</p>
           </div>
         ) : (
           <>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-ink-surface rounded-lg shadow-sm border border-border-subtle overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-ink-elevated border-b border-border-subtle">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         订单信息
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         客户
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         球线
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         金额
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         状态
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         操作
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-border-subtle">
                     {orders.map((order) => (
                       <tr
                         key={order.id}
-                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                        className="hover:bg-ink-elevated transition-colors cursor-pointer"
                         onClick={() => router.push(`/admin/orders/${order.id}`)}
                       >
                         <td className="px-6 py-4">
-                          <div className="text-sm font-mono text-gray-900">
+                          <div className="text-sm font-mono text-text-primary">
                             #{generateShortCode(order.id)}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-text-tertiary">
                             {formatDate(order.created_at || order.createdAt, 'yyyy/MM/dd HH:mm:ss')}
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-text-primary">
                             {order.user?.full_name || order.user?.fullName || '-'}
                           </div>
-                          <div className="text-xs text-gray-500">{order.user?.phone || '-'}</div>
+                          <div className="text-xs text-text-tertiary">{order.user?.phone || '-'}</div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">
+                          <div className="text-sm text-text-primary">
                             {order.string?.model ||
                               order.string?.name ||
                               order.stringInventory?.model ||
                               '-'}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-text-tertiary">
                             {order.string?.brand || order.stringInventory?.brand || '-'}
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm font-semibold text-gray-900">
+                          <div className="text-sm font-semibold text-text-primary">
                             {(() => {
                               const totalAmount = Number(
                                 order.total_price ??
@@ -307,7 +307,7 @@ export default function AdminOrderListPage() {
                             })()}
                           </div>
                           {(Number(order.voucher_discount ?? 0) > 0) && (
-                            <div className="text-xs text-green-600">
+                            <div className="text-xs text-success">
                               {(() => {
                                 const voucherDiscount = Number(order.voucher_discount ?? 0);
                                 return `-RM ${voucherDiscount.toFixed(2)}`;
@@ -345,7 +345,7 @@ export default function AdminOrderListPage() {
                                     loadOrders();
                                   }
                                 }}
-                                className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors"
+                                className="px-2 py-1 text-xs bg-info-soft text-info rounded hover:bg-info/20 transition-colors"
                                 title="开始穿线"
                               >
                                 ⚙️ 开始
@@ -365,7 +365,7 @@ export default function AdminOrderListPage() {
                                     loadOrders();
                                   }
                                 }}
-                                className="px-2 py-1 text-xs bg-green-50 text-green-700 rounded hover:bg-green-100 transition-colors"
+                                className="px-2 py-1 text-xs bg-success/15 text-success rounded hover:bg-success/25 transition-colors"
                                 title="完成订单"
                               >
                                 ✓ 完成
@@ -376,7 +376,7 @@ export default function AdminOrderListPage() {
                                 e.stopPropagation();
                                 router.push(`/admin/orders/${order.id}`);
                               }}
-                              className="text-purple-600 hover:text-purple-700 text-sm font-medium"
+                              className="text-accent hover:text-accent/80 text-sm font-medium"
                             >
                               详情
                             </button>
@@ -392,14 +392,14 @@ export default function AdminOrderListPage() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-6 flex items-center justify-between">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-text-secondary">
                   显示 {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalOrders)} / 共 {totalOrders} 条
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 border border-border-subtle rounded-lg text-sm font-medium text-text-secondary hover:bg-ink-elevated disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     上一页
                   </button>
@@ -421,8 +421,8 @@ export default function AdminOrderListPage() {
                           onClick={() => setCurrentPage(pageNum)}
                           className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
                             currentPage === pageNum
-                              ? 'bg-purple-600 text-white'
-                              : 'text-gray-700 hover:bg-gray-100'
+                              ? 'bg-accent text-text-onAccent'
+                              : 'text-text-secondary hover:bg-ink-elevated'
                           }`}
                         >
                           {pageNum}
@@ -433,7 +433,7 @@ export default function AdminOrderListPage() {
                   <button
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 border border-border-subtle rounded-lg text-sm font-medium text-text-secondary hover:bg-ink-elevated disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     下一页
                   </button>

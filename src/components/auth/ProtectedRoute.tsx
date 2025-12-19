@@ -33,7 +33,7 @@ export default function ProtectedRoute({
   if (status === 'loading') {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-600">加载中...</div>
+        <div className="text-text-secondary">加载中...</div>
       </div>
     );
   }

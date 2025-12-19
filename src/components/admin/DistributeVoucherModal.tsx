@@ -135,71 +135,71 @@ export default function DistributeVoucherModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-ink/70 flex items-center justify-center p-4 z-50">
+      <div className="bg-ink-surface rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border-subtle">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold">分发优惠券</h2>
-          <p className="text-gray-600 mt-1">优惠券代码: {voucherCode}</p>
+        <div className="p-6 border-b border-border-subtle">
+          <h2 className="text-2xl font-bold text-text-primary">分发优惠券</h2>
+          <p className="text-text-secondary mt-1">优惠券代码: {voucherCode}</p>
         </div>
 
         {/* Content */}
         <div className="p-6 space-y-6">
           {/* Distribution Type Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-text-secondary mb-3">
               分发对象
             </label>
             <div className="space-y-2">
               {/* All Users */}
-              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+              <label className="flex items-center p-3 border border-border-subtle rounded-lg cursor-pointer hover:bg-ink-elevated/70">
                 <input
                   type="radio"
                   name="distributionType"
                   value="all"
                   checked={distributionType === 'all'}
                   onChange={() => setDistributionType('all')}
-                  className="w-4 h-4 text-blue-600"
+                  className="w-4 h-4 text-accent"
                 />
                 <div className="ml-3">
-                  <div className="font-medium">所有用户</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="font-medium text-text-primary">所有用户</div>
+                  <div className="text-sm text-text-tertiary">
                     将优惠券分发给系统中所有用户
                   </div>
                 </div>
               </label>
 
               {/* Specific Users */}
-              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+              <label className="flex items-center p-3 border border-border-subtle rounded-lg cursor-pointer hover:bg-ink-elevated/70">
                 <input
                   type="radio"
                   name="distributionType"
                   value="specific"
                   checked={distributionType === 'specific'}
                   onChange={() => setDistributionType('specific')}
-                  className="w-4 h-4 text-blue-600"
+                  className="w-4 h-4 text-accent"
                 />
                 <div className="ml-3">
-                  <div className="font-medium">指定用户</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="font-medium text-text-primary">指定用户</div>
+                  <div className="text-sm text-text-tertiary">
                     选择特定用户接收优惠券
                   </div>
                 </div>
               </label>
 
               {/* By Tier */}
-              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+              <label className="flex items-center p-3 border border-border-subtle rounded-lg cursor-pointer hover:bg-ink-elevated/70">
                 <input
                   type="radio"
                   name="distributionType"
                   value="tier"
                   checked={distributionType === 'tier'}
                   onChange={() => setDistributionType('tier')}
-                  className="w-4 h-4 text-blue-600"
+                  className="w-4 h-4 text-accent"
                 />
                 <div className="ml-3">
-                  <div className="font-medium">按等级分发</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="font-medium text-text-primary">按等级分发</div>
+                  <div className="text-sm text-text-tertiary">
                     根据用户等级分发（需要系统支持用户等级）
                   </div>
                 </div>
@@ -216,49 +216,49 @@ export default function DistributeVoucherModal({
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="搜索用户姓名、邮箱或手机"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent"
                 />
                 <button
                   onClick={selectAllFiltered}
-                  className="px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+                  className="px-3 py-2 text-sm bg-accent/15 text-accent rounded-lg hover:bg-accent/25"
                 >
                   全选
                 </button>
                 <button
                   onClick={deselectAll}
-                  className="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                  className="px-3 py-2 text-sm bg-ink-elevated text-text-secondary rounded-lg hover:bg-ink-surface"
                 >
                   取消全选
                 </button>
               </div>
 
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-text-secondary">
                 已选择 {selectedUserIds.length} 个用户
               </div>
 
-              <div className="border border-gray-200 rounded-lg max-h-64 overflow-y-auto">
+              <div className="border border-border-subtle rounded-lg max-h-64 overflow-y-auto">
                 {loading ? (
-                  <div className="p-4 text-center text-gray-500">加载中...</div>
+                  <div className="p-4 text-center text-text-tertiary">加载中...</div>
                 ) : filteredUsers.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">
+                  <div className="p-4 text-center text-text-tertiary">
                     {searchTerm ? '未找到匹配的用户' : '暂无用户'}
                   </div>
                 ) : (
-                  <div className="divide-y">
+                  <div className="divide-y divide-border-subtle">
                     {filteredUsers.map((user) => (
                       <label
                         key={user.id}
-                        className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
+                        className="flex items-center p-3 hover:bg-ink-elevated/70 cursor-pointer"
                       >
                         <input
                           type="checkbox"
                           checked={selectedUserIds.includes(user.id)}
                           onChange={() => toggleUserSelection(user.id)}
-                          className="w-4 h-4 text-blue-600 rounded"
+                          className="w-4 h-4 text-accent rounded"
                         />
                         <div className="ml-3">
-                          <div className="font-medium">{user.full_name}</div>
-                          <div className="text-sm text-gray-500">
+                          <div className="font-medium text-text-primary">{user.full_name}</div>
+                          <div className="text-sm text-text-tertiary">
                             {user.phone || user.email || '-'}
                           </div>
                         </div>
@@ -273,29 +273,29 @@ export default function DistributeVoucherModal({
           {/* Tier Selection */}
           {distributionType === 'tier' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 选择用户等级
               </label>
               <select
                 value={selectedTier}
                 onChange={(e) => setSelectedTier(e.target.value as any)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent"
               >
                 <option value="bronze">青铜会员</option>
                 <option value="silver">白银会员</option>
                 <option value="gold">黄金会员</option>
                 <option value="platinum">白金会员</option>
               </select>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-text-tertiary mt-2">
                 注意：此功能需要用户表中有 tier 字段
               </p>
             </div>
           )}
 
           {/* Distribution Summary */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="font-medium text-blue-900 mb-2">分发预览</div>
-            <div className="text-sm text-blue-700">
+          <div className="bg-info-soft border border-border-subtle rounded-lg p-4">
+            <div className="font-medium text-text-primary mb-2">分发预览</div>
+            <div className="text-sm text-text-secondary">
               {distributionType === 'all' && '将分发给所有用户（避免重复）'}
               {distributionType === 'specific' &&
                 `将分发给 ${selectedUserIds.length} 个选定用户`}
@@ -306,25 +306,25 @@ export default function DistributeVoucherModal({
                   ]
                 } 会员`}
             </div>
-            <div className="text-xs text-blue-600 mt-2">
+            <div className="text-xs text-text-tertiary mt-2">
               系统将自动跳过已拥有此优惠券的用户
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+        <div className="p-6 bg-ink-elevated border-t border-border-subtle flex justify-end gap-3">
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+            className="px-4 py-2 border border-border-subtle rounded-lg text-text-secondary hover:bg-ink-surface disabled:opacity-50"
           >
             取消
           </button>
           <button
             onClick={handleDistribute}
             disabled={loading || (distributionType === 'specific' && selectedUserIds.length === 0)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+            className="px-4 py-2 bg-accent text-text-onAccent rounded-lg hover:shadow-glow disabled:opacity-50"
           >
             {loading ? '分发中...' : '确认分发'}
           </button>

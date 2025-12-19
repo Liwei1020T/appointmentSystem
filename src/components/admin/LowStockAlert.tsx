@@ -51,21 +51,21 @@ export default function LowStockAlert({ threshold = 3, onRestockClick }: LowStoc
 
   // 获取库存状态颜色
   const getStockColor = (stock: number) => {
-    if (stock === 0) return 'text-red-600';
-    if (stock === 1) return 'text-orange-600';
-    return 'text-yellow-600';
+    if (stock === 0) return 'text-danger';
+    if (stock === 1) return 'text-warning';
+    return 'text-warning';
   };
 
   return (
-    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+    <div className="bg-warning/10 border border-warning/40 rounded-lg p-4 mb-6">
       {/* 标题栏 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-yellow-600" />
-          <h3 className="font-semibold text-yellow-900">
+          <AlertTriangle className="w-5 h-5 text-warning" />
+          <h3 className="font-semibold text-warning">
             库存预警
             {!loading && lowStockStrings.length > 0 && (
-              <span className="ml-2 text-sm font-normal text-yellow-700">
+              <span className="ml-2 text-sm font-normal text-text-secondary">
                 ({lowStockStrings.length} 种球线库存不足)
               </span>
             )}
@@ -76,16 +76,16 @@ export default function LowStockAlert({ threshold = 3, onRestockClick }: LowStoc
         <button
           onClick={loadLowStockStrings}
           disabled={loading}
-          className="p-1 hover:bg-yellow-100 rounded transition-colors disabled:opacity-50"
+          className="p-1 hover:bg-warning/15 rounded transition-colors disabled:opacity-50"
           title="刷新"
         >
-          <RefreshCw className={`w-4 h-4 text-yellow-700 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 text-warning ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
       {/* 加载状态 */}
       {loading && (
-        <div className="text-center py-4 text-yellow-700">
+        <div className="text-center py-4 text-text-secondary">
           <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" />
           <p className="text-sm">加载中...</p>
         </div>
@@ -93,7 +93,7 @@ export default function LowStockAlert({ threshold = 3, onRestockClick }: LowStoc
 
       {/* 错误状态 */}
       {error && !loading && (
-        <div className="text-center py-4 text-red-600">
+        <div className="text-center py-4 text-danger">
           <p className="text-sm">{error}</p>
         </div>
       )}
@@ -104,17 +104,17 @@ export default function LowStockAlert({ threshold = 3, onRestockClick }: LowStoc
           {lowStockStrings.map((item) => (
             <div
               key={item.id}
-              className="bg-white border border-yellow-200 rounded-lg p-3 flex items-center justify-between hover:shadow-sm transition-shadow"
+              className="bg-ink-surface border border-warning/40 rounded-lg p-3 flex items-center justify-between hover:shadow-sm transition-shadow"
             >
               {/* 球线信息 */}
               <div className="flex items-center gap-3 flex-1">
-                <Package className="w-5 h-5 text-gray-400" />
+                <Package className="w-5 h-5 text-text-tertiary" />
                 
                 <div className="flex-1">
-                  <div className="font-medium text-gray-900">
+                  <div className="font-medium text-text-primary">
                     {item.brand} {item.model}
                   </div>
-                  <div className="text-sm text-gray-500">{item.model}</div>
+                  <div className="text-sm text-text-tertiary">{item.model}</div>
                 </div>
 
                 {/* 当前库存 */}
@@ -122,16 +122,16 @@ export default function LowStockAlert({ threshold = 3, onRestockClick }: LowStoc
                   <div className={`text-2xl font-bold ${getStockColor(item.stock)}`}>
                     {item.stock}
                   </div>
-                  <div className="text-xs text-gray-500">当前库存</div>
+                  <div className="text-xs text-text-tertiary">当前库存</div>
                 </div>
 
                 {/* 成本价（可选） */}
                 {item.costPrice && (
                   <div className="text-center">
-                    <div className="text-sm font-medium text-gray-700">
+                    <div className="text-sm font-medium text-text-secondary">
                       RM {Number(item.costPrice).toFixed(2)}
                     </div>
-                    <div className="text-xs text-gray-500">成本价</div>
+                    <div className="text-xs text-text-tertiary">成本价</div>
                   </div>
                 )}
               </div>
@@ -139,7 +139,7 @@ export default function LowStockAlert({ threshold = 3, onRestockClick }: LowStoc
               {/* 补货按钮 */}
               <button
                 onClick={() => onRestockClick?.(item.id)}
-                className="ml-4 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-medium transition-colors"
+                className="ml-4 px-4 py-2 bg-warning hover:bg-warning/90 text-text-primary rounded-lg text-sm font-medium transition-colors"
               >
                 立即补货
               </button>
@@ -150,8 +150,8 @@ export default function LowStockAlert({ threshold = 3, onRestockClick }: LowStoc
 
       {/* 提示信息 */}
       {!loading && !error && lowStockStrings.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-yellow-200">
-          <p className="text-xs text-yellow-700">
+        <div className="mt-4 pt-4 border-t border-warning/40">
+          <p className="text-xs text-text-secondary">
             <strong>提示：</strong>
             当球线库存低于 {threshold} 时会显示预警。建议及时补货以确保正常营业。
           </p>

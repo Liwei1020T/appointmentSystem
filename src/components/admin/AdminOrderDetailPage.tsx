@@ -156,13 +156,13 @@ export default function AdminOrderDetailPage() {
 
   const getStatusBadge = (status: OrderStatus) => {
     const styles: Record<OrderStatus, string> = {
-      pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      confirmed: 'bg-blue-100 text-blue-700 border-blue-200',
-      processing: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-      in_progress: 'bg-purple-100 text-purple-700 border-purple-200',
-      ready: 'bg-teal-100 text-teal-700 border-teal-200',
-      completed: 'bg-green-100 text-green-700 border-green-200',
-      cancelled: 'bg-red-100 text-red-700 border-red-200',
+      pending: 'bg-warning/15 text-warning border-warning/40',
+      confirmed: 'bg-info-soft text-info border-info/40',
+      processing: 'bg-info-soft text-info border-info/40',
+      in_progress: 'bg-accent/15 text-accent border-accent/40',
+      ready: 'bg-success/15 text-success border-success/40',
+      completed: 'bg-success/15 text-success border-success/40',
+      cancelled: 'bg-danger/15 text-danger border-danger/40',
     };
     return styles[status];
   };
@@ -195,10 +195,10 @@ export default function AdminOrderDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-ink-elevated">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent mb-4"></div>
-          <p className="text-gray-600">加载中...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent mb-4"></div>
+          <p className="text-text-secondary">加载中...</p>
         </div>
       </div>
     );
@@ -206,13 +206,13 @@ export default function AdminOrderDetailPage() {
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-ink-elevated p-6">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <p className="text-red-600 mb-4">{error || '订单不存在'}</p>
+          <div className="bg-danger/15 border border-danger/40 rounded-lg p-6 text-center">
+            <p className="text-danger mb-4">{error || '订单不存在'}</p>
             <button
               onClick={() => router.push('/admin/orders')}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="px-4 py-2 bg-danger text-text-primary rounded-lg hover:bg-danger/90 transition-colors"
             >
               返回订单列表
             </button>
@@ -225,20 +225,20 @@ export default function AdminOrderDetailPage() {
   const nextStatuses = getNextStatus(order.status);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-ink-elevated">
       {/* Header */}
-      <div className="bg-white border-b shadow-sm">
+      <div className="bg-ink-surface border-b shadow-sm">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <button
                 onClick={() => router.push('/admin/orders')}
-                className="text-sm text-gray-600 hover:text-gray-900 mb-2 flex items-center gap-1"
+                className="text-sm text-text-secondary hover:text-text-primary mb-2 flex items-center gap-1"
               >
                 ← 返回订单列表
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">订单详情</h1>
-              <p className="text-sm text-gray-600 mt-1 font-mono">#{order.id}</p>
+              <h1 className="text-2xl font-bold text-text-primary">订单详情</h1>
+              <p className="text-sm text-text-secondary mt-1 font-mono">#{order.id}</p>
             </div>
             <div className="flex items-center gap-3">
               <span
@@ -280,7 +280,7 @@ export default function AdminOrderDetailPage() {
                     }
                   }}
                   disabled={updating}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-success text-text-primary rounded-lg hover:bg-success/90 transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span>✅</span>
                   {updating ? '处理中...' : '确认收款'}
@@ -305,7 +305,7 @@ export default function AdminOrderDetailPage() {
                       }
                     }
                   }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
+                  className="px-4 py-2 bg-info text-text-primary rounded-lg hover:bg-info/90 transition-colors font-medium flex items-center gap-2"
                 >
                   <span>💳</span>
                   确认TNG收款
@@ -314,7 +314,7 @@ export default function AdminOrderDetailPage() {
               
               {/* 现金支付提示标签 */}
               {payment && payment.status === 'pending' && payment.provider === 'cash' && (
-                <span className="px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg text-sm font-medium">
+                <span className="px-3 py-2 bg-warning/15 text-warning rounded-lg text-sm font-medium">
                   💵 现金待收款
                 </span>
               )}
@@ -323,7 +323,7 @@ export default function AdminOrderDetailPage() {
               {order.status !== 'completed' && order.status !== 'cancelled' && (
                 <button
                   onClick={() => setShowCompleteModal(true)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2"
+                  className="px-4 py-2 bg-success text-text-primary rounded-lg hover:bg-success/90 transition-colors font-medium flex items-center gap-2"
                 >
                   <span>✓</span>
                   已完成
@@ -340,21 +340,21 @@ export default function AdminOrderDetailPage() {
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Order Info */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">订单信息</h2>
+            <div className="bg-ink-surface rounded-xl p-6 shadow-sm border border-border-subtle">
+              <h2 className="text-lg font-semibold text-text-primary mb-4">订单信息</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">球线型号</div>
-                  <div className="font-medium text-gray-900">
+                  <div className="text-sm text-text-secondary mb-1">球线型号</div>
+                  <div className="font-medium text-text-primary">
                     {order.string?.model || order.string?.name || order.stringInventory?.model || '-'}
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-text-tertiary">
                     {order.string?.brand || order.stringInventory?.brand || '-'}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">价格</div>
-                  <div className="font-medium text-gray-900">
+                  <div className="text-sm text-text-secondary mb-1">价格</div>
+                  <div className="font-medium text-text-primary">
                     {(() => {
                       const price = Number(
                         order.total_price ??
@@ -368,8 +368,8 @@ export default function AdminOrderDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">横线拉力</div>
-                  <div className="font-medium text-gray-900">
+                  <div className="text-sm text-text-secondary mb-1">横线拉力</div>
+                  <div className="font-medium text-text-primary">
                     {(() => {
                       const h = (order as any).tension_horizontal ?? (order as any).tension ?? order.tension;
                       return h ? `${h} lbs` : '-';
@@ -377,8 +377,8 @@ export default function AdminOrderDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">竖线拉力</div>
-                  <div className="font-medium text-gray-900">
+                  <div className="text-sm text-text-secondary mb-1">竖线拉力</div>
+                  <div className="font-medium text-text-primary">
                     {(() => {
                       const v = (order as any).tension_vertical ?? (order as any).tension ?? order.tension;
                       return v ? `${v} lbs` : '-';
@@ -386,53 +386,53 @@ export default function AdminOrderDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">球拍品牌</div>
-                  <div className="font-medium text-gray-900">{order.racket_brand}</div>
+                  <div className="text-sm text-text-secondary mb-1">球拍品牌</div>
+                  <div className="font-medium text-text-primary">{order.racket_brand}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">球拍型号</div>
-                  <div className="font-medium text-gray-900">{order.racket_model}</div>
+                  <div className="text-sm text-text-secondary mb-1">球拍型号</div>
+                  <div className="font-medium text-text-primary">{order.racket_model}</div>
                 </div>
               </div>
               {order.notes && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="text-sm text-gray-600 mb-1">客户备注</div>
-                  <div className="text-gray-900 bg-gray-50 p-3 rounded-lg">{order.notes}</div>
+                <div className="mt-4 pt-4 border-t border-border-subtle">
+                  <div className="text-sm text-text-secondary mb-1">客户备注</div>
+                  <div className="text-text-primary bg-ink-elevated p-3 rounded-lg">{order.notes}</div>
                 </div>
               )}
             </div>
 
             {/* Payment Info */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-ink-surface rounded-xl p-6 shadow-sm border border-border-subtle">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">支付信息</h2>
+                <h2 className="text-lg font-semibold text-text-primary">支付信息</h2>
                 {/* 退款功能已移除 */}
               </div>
               {payment ? (
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">支付方式</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="text-text-secondary">支付方式</span>
+                    <span className="font-medium text-text-primary">
                       {payment.provider === 'cash' ? '💵 现金支付' : 
                        payment.provider === 'tng' ? '💳 TNG' : 
                        payment.payment_method || payment.method || payment.provider || '-'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">支付状态</span>
+                    <span className="text-text-secondary">支付状态</span>
                     <div className="flex items-center gap-2">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${
                           isPaymentConfirmed
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-yellow-100 text-yellow-700'
+                            ? 'bg-success/15 text-success'
+                            : 'bg-warning/15 text-warning'
                         }`}
                       >
                         {isPaymentConfirmed ? '已支付' : '待确认'}
                       </span>
                       {/* 现金支付待确认时显示提示 */}
                       {payment.provider === 'cash' && !isPaymentConfirmed && payment.status === 'pending' && (
-                        <span className="text-xs text-yellow-600">
+                        <span className="text-xs text-warning">
                           点击"确认收款并开始穿线"确认
                         </span>
                       )}
@@ -440,15 +440,15 @@ export default function AdminOrderDetailPage() {
                   </div>
                   {payment.amount && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">支付金额</span>
-                      <span className="font-medium text-gray-900">
+                      <span className="text-text-secondary">支付金额</span>
+                      <span className="font-medium text-text-primary">
                         RM {Number(payment.amount).toFixed(2)}
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between pt-3 border-t border-gray-200">
-                    <span className="text-gray-600">球线价格</span>
-                    <span className="font-medium text-gray-900">
+                  <div className="flex justify-between pt-3 border-t border-border-subtle">
+                    <span className="text-text-secondary">球线价格</span>
+                    <span className="font-medium text-text-primary">
                       RM {(() => {
                         const price = order.string?.price ?? (order as any).price ?? (order as any).final_price ?? 0;
                         return Number(price).toFixed(2);
@@ -456,14 +456,14 @@ export default function AdminOrderDetailPage() {
                     </span>
                   </div>
                   {(order.voucher_discount ?? 0) > 0 && (
-                    <div className="flex justify-between text-green-600">
+                    <div className="flex justify-between text-success">
                       <span>优惠券折扣</span>
                       <span>-RM {Number(order.voucher_discount).toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between pt-3 border-t border-gray-200">
-                    <span className="text-lg font-semibold text-gray-900">订单总额</span>
-                    <span className="text-lg font-bold text-purple-600">
+                  <div className="flex justify-between pt-3 border-t border-border-subtle">
+                    <span className="text-lg font-semibold text-text-primary">订单总额</span>
+                    <span className="text-lg font-bold text-accent">
                       RM {(() => {
                         const totalAmount = Number(
                           order.total_price ??
@@ -478,14 +478,14 @@ export default function AdminOrderDetailPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-500">暂无支付信息</p>
+                <p className="text-text-tertiary">暂无支付信息</p>
               )}
             </div>
 
             {/* Payment Receipt Verification */}
             {payment && (
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">支付收据审核</h2>
+              <div className="bg-ink-surface rounded-xl p-6 shadow-sm border border-border-subtle">
+                <h2 className="text-lg font-semibold text-text-primary mb-4">支付收据审核</h2>
                 <PaymentReceiptVerifier
                   receiptUrl={payment.receipt_url || ''}
                   paymentStatus={payment.payment_status || payment.status || 'pending'}
@@ -511,20 +511,20 @@ export default function AdminOrderDetailPage() {
           {/* Right Column */}
           <div className="space-y-6">
             {/* Customer Info */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">客户信息</h2>
+            <div className="bg-ink-surface rounded-xl p-6 shadow-sm border border-border-subtle">
+              <h2 className="text-lg font-semibold text-text-primary mb-4">客户信息</h2>
               <div className="space-y-3">
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">姓名</div>
-                  <div className="font-medium text-gray-900">{order.user?.full_name || order.user?.fullName || '-'}</div>
+                  <div className="text-sm text-text-secondary mb-1">姓名</div>
+                  <div className="font-medium text-text-primary">{order.user?.full_name || order.user?.fullName || '-'}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">联系方式</div>
-                  <div className="text-gray-900">{order.user?.phone || order.user?.email || '-'}</div>
+                  <div className="text-sm text-text-secondary mb-1">联系方式</div>
+                  <div className="text-text-primary">{order.user?.phone || order.user?.email || '-'}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">电话</div>
-                  <div className="font-medium text-gray-900">{order.user?.phone || '-'}</div>
+                  <div className="text-sm text-text-secondary mb-1">电话</div>
+                  <div className="font-medium text-text-primary">{order.user?.phone || '-'}</div>
                 </div>
               </div>
             </div>
@@ -554,17 +554,17 @@ export default function AdminOrderDetailPage() {
 
       {/* Status Update Modal */}
       {showStatusModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">更新订单状态</h3>
+        <div className="fixed inset-0 bg-ink/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-ink-surface rounded-2xl p-6 max-w-md w-full shadow-xl">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">更新订单状态</h3>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">新状态</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">新状态</label>
                 <select
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value as OrderStatus)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent"
                 >
                   {nextStatuses.map((status) => (
                     <option key={status} value={status}>
@@ -575,12 +575,12 @@ export default function AdminOrderDetailPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">备注（可选）</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">备注（可选）</label>
                 <textarea
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent"
                   placeholder="添加备注信息..."
                 />
               </div>
@@ -590,14 +590,14 @@ export default function AdminOrderDetailPage() {
               <button
                 onClick={() => setShowStatusModal(false)}
                 disabled={updating}
-                className="flex-1 px-4 py-3 rounded-lg font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-3 rounded-lg font-medium text-text-secondary bg-ink-elevated hover:bg-ink-surface transition-colors disabled:opacity-50"
               >
                 取消
               </button>
               <button
                 onClick={handleUpdateStatus}
                 disabled={updating}
-                className="flex-1 px-4 py-3 rounded-lg font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-3 rounded-lg font-medium text-text-onAccent bg-accent hover:shadow-glow transition-colors disabled:opacity-50"
               >
                 {updating ? '更新中...' : '确认更新'}
               </button>
@@ -608,45 +608,45 @@ export default function AdminOrderDetailPage() {
 
       {/* Complete Order Modal */}
       {showCompleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
+        <div className="fixed inset-0 bg-ink/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-ink-surface rounded-2xl p-6 max-w-md w-full shadow-xl">
             <div className="text-center mb-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-success/15 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">✓</span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">完成订单</h3>
-              <p className="text-sm text-gray-600 mt-2">
+              <h3 className="text-lg font-semibold text-text-primary">完成订单</h3>
+              <p className="text-sm text-text-secondary mt-2">
                 完成订单将自动执行以下操作：
               </p>
             </div>
 
-            <div className="bg-blue-50 rounded-lg p-4 mb-6 space-y-2 text-sm">
+            <div className="bg-info-soft rounded-lg p-4 mb-6 space-y-2 text-sm">
               <div className="flex items-start gap-2">
-                <span className="text-blue-600 mt-0.5">✓</span>
-                <span className="text-blue-900">扣减球线库存 (11米)</span>
+                <span className="text-info mt-0.5">✓</span>
+                <span className="text-text-primary">扣减球线库存 (11米)</span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="text-blue-600 mt-0.5">✓</span>
-                <span className="text-blue-900">计算并记录利润</span>
+                <span className="text-info mt-0.5">✓</span>
+                <span className="text-text-primary">计算并记录利润</span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="text-blue-600 mt-0.5">✓</span>
-                <span className="text-blue-900">发放积分给用户 (订单金额 × 10%)</span>
+                <span className="text-info mt-0.5">✓</span>
+                <span className="text-text-primary">发放积分给用户 (订单金额 × 10%)</span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="text-blue-600 mt-0.5">✓</span>
-                <span className="text-blue-900">发送完成通知</span>
+                <span className="text-info mt-0.5">✓</span>
+                <span className="text-text-primary">发送完成通知</span>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">备注（可选）</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">备注（可选）</label>
                 <textarea
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent"
                   placeholder="添加完成备注..."
                 />
               </div>
@@ -659,18 +659,18 @@ export default function AdminOrderDetailPage() {
                   setAdminNotes('');
                 }}
                 disabled={completing}
-                className="flex-1 px-4 py-3 rounded-lg font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-3 rounded-lg font-medium text-text-secondary bg-ink-elevated hover:bg-ink-surface transition-colors disabled:opacity-50"
               >
                 取消
               </button>
               <button
                 onClick={handleCompleteOrder}
                 disabled={completing}
-                className="flex-1 px-4 py-3 rounded-lg font-medium text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 rounded-lg font-medium text-text-primary bg-success hover:bg-success/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {completing ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-text-primary border-t-transparent rounded-full animate-spin"></div>
                     处理中...
                   </>
                 ) : (

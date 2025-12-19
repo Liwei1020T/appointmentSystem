@@ -181,8 +181,8 @@ export default function OrderList({ initialStatus }: OrderListProps) {
             onClick={() => handleStatusChange(filter.value)}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
               activeStatus === filter.value
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-slate-700 hover:bg-slate-100'
+                ? 'bg-accent text-text-onAccent'
+                : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
             }`}
           >
             {filter.label}
@@ -200,7 +200,7 @@ export default function OrderList({ initialStatus }: OrderListProps) {
       {/* 错误提示 */}
       {error && !loading && (
         <Card className="p-6 text-center">
-          <p className="text-red-600">{error}</p>
+          <p className="text-danger">{error}</p>
           <Button onClick={() => loadOrders(activeStatus === 'all' ? undefined : activeStatus)} className="mt-4">
             重试
           </Button>
@@ -218,10 +218,10 @@ export default function OrderList({ initialStatus }: OrderListProps) {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-slate-900">
+                  <h3 className="font-semibold text-text-primary">
                     {order.string?.brand} {order.string?.model}
                   </h3>
-                  <p className="text-sm text-slate-600 mt-1">
+                  <p className="text-sm text-text-secondary mt-1">
                     {order.string?.specification}
                   </p>
                 </div>
@@ -230,12 +230,12 @@ export default function OrderList({ initialStatus }: OrderListProps) {
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-slate-600">拉力</p>
-                  <p className="font-medium text-slate-900">{order.tension} 磅</p>
+                  <p className="text-text-tertiary">拉力</p>
+                  <p className="font-medium text-text-primary">{order.tension} 磅</p>
                 </div>
                 <div>
-                  <p className="text-slate-600">价格</p>
-                  <p className="font-medium text-slate-900">
+                  <p className="text-text-tertiary">价格</p>
+                  <p className="font-medium text-text-primary font-mono">
                     RM {Number(order.final_price ?? order.price ?? 0).toFixed(2)}
                   </p>
                 </div>
@@ -243,7 +243,7 @@ export default function OrderList({ initialStatus }: OrderListProps) {
 
               {order.use_package && (
                 <div className="mt-3 flex items-center gap-2">
-                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
+                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-success/15 text-success">
                     使用套餐
                   </span>
                 </div>
@@ -251,14 +251,14 @@ export default function OrderList({ initialStatus }: OrderListProps) {
 
               {(order.discount_amount ?? 0) > 0 && !order.use_package && (
                 <div className="mt-3 flex items-center gap-2">
-                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-700">
+                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-warning/15 text-warning">
                     优惠 RM {Number(order.discount_amount ?? 0).toFixed(2)}
                   </span>
                 </div>
               )}
 
-              <div className="mt-3 pt-3 border-t border-slate-200">
-                <p className="text-xs text-slate-500">
+              <div className="mt-3 pt-3 border-t border-border-subtle">
+                <p className="text-xs text-text-tertiary">
                   下单时间：{order.created_at || order.createdAt ? formatDate(order.created_at || order.createdAt!) : '未知'}
                 </p>
               </div>
@@ -270,7 +270,7 @@ export default function OrderList({ initialStatus }: OrderListProps) {
       {/* 空状态 */}
       {!loading && !error && orders.length === 0 && (
         <Card className="p-12 text-center">
-          <div className="text-slate-400 mb-4">
+          <div className="text-text-tertiary mb-4">
             <svg
               className="w-16 h-16 mx-auto"
               fill="none"
@@ -285,8 +285,8 @@ export default function OrderList({ initialStatus }: OrderListProps) {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">暂无订单</h3>
-          <p className="text-slate-600 mb-6">
+          <h3 className="text-lg font-semibold text-text-primary mb-2">暂无订单</h3>
+          <p className="text-text-secondary mb-6">
             {activeStatus === 'all' ? '您还没有任何订单' : `暂无${statusFilters.find(f => f.value === activeStatus)?.label}订单`}
           </p>
           <Button onClick={() => router.push('/booking')}>立即预约</Button>

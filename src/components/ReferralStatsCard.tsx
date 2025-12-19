@@ -24,22 +24,22 @@ export default function ReferralStatsCard({
       icon: Users,
       label: '邀请人数',
       value: totalReferrals,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      color: 'text-accent',
+      bgColor: 'bg-accent/15',
     },
     {
       icon: Award,
       label: '成功奖励',
       value: successfulReferrals,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
+      color: 'text-success',
+      bgColor: 'bg-success/15',
     },
     {
       icon: TrendingUp,
       label: '累计积分',
       value: totalRewards,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      color: 'text-info',
+      bgColor: 'bg-info-soft',
     },
   ];
 
@@ -50,15 +50,15 @@ export default function ReferralStatsCard({
         return (
           <div
             key={index}
-            className="bg-white rounded-lg p-4 border border-gray-200"
+            className="bg-ink-surface rounded-lg p-4 border border-border-subtle"
           >
             <div className={`${stat.bgColor} rounded-lg w-10 h-10 flex items-center justify-center mb-3`}>
               <Icon className={`w-5 h-5 ${stat.color}`} />
             </div>
-            <p className="text-2xl font-bold text-gray-900 mb-1">
+            <p className="text-2xl font-bold text-text-primary mb-1">
               {stat.value}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-text-tertiary">
               {stat.label}
             </p>
           </div>

@@ -82,31 +82,31 @@ export default function MyOrdersPage() {
       case 'pending':
         return {
           label: '待处理',
-          color: 'bg-yellow-100 text-yellow-800',
+          color: 'bg-warning/15 text-warning',
           icon: <Clock className="w-4 h-4" />,
         };
       case 'in_progress':
         return {
           label: '处理中',
-          color: 'bg-blue-100 text-blue-800',
+          color: 'bg-info-soft text-info',
           icon: <Package className="w-4 h-4" />,
         };
       case 'completed':
         return {
           label: '已完成',
-          color: 'bg-green-100 text-green-800',
+          color: 'bg-success/15 text-success',
           icon: <CheckCircle2 className="w-4 h-4" />,
         };
       case 'cancelled':
         return {
           label: '已取消',
-          color: 'bg-red-100 text-red-800',
+          color: 'bg-danger/15 text-danger',
           icon: <XCircle className="w-4 h-4" />,
         };
       default:
         return {
           label: status,
-          color: 'bg-gray-100 text-gray-800',
+          color: 'bg-ink-elevated text-text-secondary',
           icon: <Package className="w-4 h-4" />,
         };
     }
@@ -144,36 +144,36 @@ export default function MyOrdersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-ink">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent mb-4"></div>
-          <p className="text-gray-600">加载中...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent mb-4"></div>
+          <p className="text-text-tertiary">加载中...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-ink py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* 标题 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">我的订单</h1>
-          <p className="text-gray-600">查看和管理您的所有订单</p>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">我的订单</h1>
+          <p className="text-text-tertiary">查看和管理您的所有订单</p>
         </div>
 
         {/* 搜索和筛选 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="bg-ink-surface rounded-lg shadow-sm border border-border-subtle p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             {/* 搜索框 */}
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-tertiary w-5 h-5" />
               <input
                 type="text"
                 placeholder="搜索订单号、球线品牌或型号..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-border-subtle rounded-lg focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink bg-ink-surface text-text-primary placeholder:text-text-tertiary"
               />
             </div>
 
@@ -191,8 +191,8 @@ export default function MyOrdersPage() {
                   onClick={() => setSelectedStatus(status.value as OrderStatus)}
                   className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                     selectedStatus === status.value
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-accent text-text-onAccent'
+                      : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
                   }`}
                 >
                   {status.label}
@@ -202,29 +202,29 @@ export default function MyOrdersPage() {
           </div>
 
           {/* 统计信息 */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-border-subtle">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
-                <p className="text-sm text-gray-600">总订单</p>
+                <p className="text-2xl font-bold text-text-primary font-mono">{orders.length}</p>
+                <p className="text-sm text-text-tertiary">总订单</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-yellow-600">
+                <p className="text-2xl font-bold text-warning font-mono">
                   {orders.filter((o) => o.status === 'pending').length}
                 </p>
-                <p className="text-sm text-gray-600">待处理</p>
+                <p className="text-sm text-text-tertiary">待处理</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">
+                <p className="text-2xl font-bold text-info font-mono">
                   {orders.filter((o) => o.status === 'in_progress').length}
                 </p>
-                <p className="text-sm text-gray-600">处理中</p>
+                <p className="text-sm text-text-tertiary">处理中</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-bold text-success font-mono">
                   {orders.filter((o) => o.status === 'completed').length}
                 </p>
-                <p className="text-sm text-gray-600">已完成</p>
+                <p className="text-sm text-text-tertiary">已完成</p>
               </div>
             </div>
           </div>
@@ -232,17 +232,17 @@ export default function MyOrdersPage() {
 
         {/* 订单列表 */}
         {filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-            <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">暂无订单</h3>
-            <p className="text-gray-600 mb-6">
+          <div className="bg-ink-surface rounded-lg shadow-sm border border-border-subtle p-12 text-center">
+            <Package className="w-16 h-16 text-text-tertiary mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-text-primary mb-2">暂无订单</h3>
+            <p className="text-text-secondary mb-6">
               {searchQuery || selectedStatus !== 'all'
                 ? '没有找到符合条件的订单'
                 : '您还没有任何订单'}
             </p>
             <button
               onClick={() => router.push('/booking')}
-              className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+              className="px-6 py-2 bg-accent hover:shadow-glow text-text-onAccent rounded-lg font-medium transition-colors"
             >
               立即预约
             </button>
@@ -256,13 +256,13 @@ export default function MyOrdersPage() {
               return (
                 <div
                   key={order.id}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                  className="bg-ink-surface rounded-lg shadow-sm border border-border-subtle hover:shadow-md transition-shadow"
                 >
                   <div className="p-6">
                     {/* 订单头部 */}
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                       <div className="flex items-center gap-3 mb-2 md:mb-0">
-                        <span className="text-lg font-semibold text-gray-900">
+                        <span className="text-lg font-semibold text-text-primary">
                           {order.id}
                         </span>
                         <span
@@ -272,7 +272,7 @@ export default function MyOrdersPage() {
                           {statusConfig.label}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-text-tertiary">
                         <Calendar className="w-4 h-4" />
                         {order.created_at || order.createdAt ? formatDate((order.created_at || order.createdAt)!.toString()) : '未知'}
                       </div>
@@ -281,29 +281,29 @@ export default function MyOrdersPage() {
                     {/* 订单内容 */}
                     <div className="grid md:grid-cols-2 gap-4 mb-4">
                       <div>
-                        <p className="text-sm text-gray-600 mb-1">球线信息</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-sm text-text-tertiary mb-1">球线信息</p>
+                        <p className="font-medium text-text-primary">
                           {order.string?.brand} {order.string?.model}
                         </p>
                         {order.string?.specification && (
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-text-secondary">
                             {order.string.specification}
                           </p>
                         )}
                         {order.tension && (
-                          <p className="text-sm text-gray-600">拉力: {order.tension} lbs</p>
+                          <p className="text-sm text-text-secondary">拉力: {order.tension} lbs</p>
                         )}
                       </div>
 
                       <div>
-                        <p className="text-sm text-gray-600 mb-1">支付信息</p>
+                        <p className="text-sm text-text-tertiary mb-1">支付信息</p>
                         <div className="flex items-center gap-2 mb-1">
-                          <DollarSign className="w-4 h-4 text-gray-600" />
-                          <span className="text-xl font-bold text-gray-900">
+                          <DollarSign className="w-4 h-4 text-text-tertiary" />
+                          <span className="text-xl font-bold text-text-primary font-mono">
                             RM {Number(finalAmount).toFixed(2)}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-text-secondary">
                           支付状态: {getPaymentStatusLabel(paymentStatus)}
                         </p>
                       </div>
@@ -311,9 +311,9 @@ export default function MyOrdersPage() {
 
                     {/* 备注 */}
                     {order.notes && (
-                      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-600">备注</p>
-                        <p className="text-sm text-gray-900">{order.notes}</p>
+                      <div className="mb-4 p-3 bg-ink-elevated rounded-lg border border-border-subtle">
+                        <p className="text-sm text-text-tertiary">备注</p>
+                        <p className="text-sm text-text-primary">{order.notes}</p>
                       </div>
                     )}
 
@@ -321,7 +321,7 @@ export default function MyOrdersPage() {
                     <div className="flex justify-end">
                       <button
                         onClick={() => router.push(`/orders/${order.id}`)}
-                        className="flex items-center gap-2 px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 text-accent hover:bg-ink-elevated rounded-lg font-medium transition-colors"
                       >
                         查看详情
                         <ChevronRight className="w-4 h-4" />

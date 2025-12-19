@@ -232,17 +232,17 @@ export default function AdminNotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-ink-elevated p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Notification Management</h1>
-          <p className="text-gray-600 mt-2">Manage SMS and Push notifications</p>
+          <h1 className="text-3xl font-bold text-text-primary">Notification Management</h1>
+          <p className="text-text-secondary mt-2">Manage SMS and Push notifications</p>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b border-gray-200">
+        <div className="bg-ink-surface rounded-lg shadow mb-6">
+          <div className="border-b border-border-subtle">
             <nav className="flex -mb-px">
               {[
                 { id: 'logs', label: 'Notification Logs' },
@@ -255,8 +255,8 @@ export default function AdminNotificationsPage() {
                   onClick={() => setActiveTab(tab.id as TabType)}
                   className={`px-6 py-3 text-sm font-medium ${
                     activeTab === tab.id
-                      ? 'border-b-2 border-blue-500 text-blue-600'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'border-b-2 border-accent text-accent'
+                      : 'text-text-tertiary hover:text-text-secondary'
                   }`}
                 >
                   {tab.label}
@@ -268,8 +268,8 @@ export default function AdminNotificationsPage() {
           <div className="p-6">
             {loading ? (
               <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="text-gray-500 mt-4">Loading...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
+                <p className="text-text-tertiary mt-4">Loading...</p>
               </div>
             ) : (
               <>
@@ -281,7 +281,7 @@ export default function AdminNotificationsPage() {
                       <select
                         value={logFilters.type}
                         onChange={(e) => setLogFilters({...logFilters, type: e.target.value})}
-                        className="border border-gray-300 rounded-lg px-4 py-2"
+                        className="border border-border-subtle rounded-lg px-4 py-2"
                       >
                         <option value="all">All Types</option>
                         <option value="sms">SMS</option>
@@ -291,7 +291,7 @@ export default function AdminNotificationsPage() {
                       <select
                         value={logFilters.status}
                         onChange={(e) => setLogFilters({...logFilters, status: e.target.value})}
-                        className="border border-gray-300 rounded-lg px-4 py-2"
+                        className="border border-border-subtle rounded-lg px-4 py-2"
                       >
                         <option value="all">All Statuses</option>
                         <option value="pending">Pending</option>
@@ -303,7 +303,7 @@ export default function AdminNotificationsPage() {
                       <select
                         value={logFilters.event_type}
                         onChange={(e) => setLogFilters({...logFilters, event_type: e.target.value})}
-                        className="border border-gray-300 rounded-lg px-4 py-2"
+                        className="border border-border-subtle rounded-lg px-4 py-2"
                       >
                         <option value="all">All Events</option>
                         <option value="order_created">Order Created</option>
@@ -317,7 +317,7 @@ export default function AdminNotificationsPage() {
                         type="date"
                         value={logFilters.date_from}
                         onChange={(e) => setLogFilters({...logFilters, date_from: e.target.value})}
-                        className="border border-gray-300 rounded-lg px-4 py-2"
+                        className="border border-border-subtle rounded-lg px-4 py-2"
                         placeholder="From"
                       />
 
@@ -325,7 +325,7 @@ export default function AdminNotificationsPage() {
                         type="date"
                         value={logFilters.date_to}
                         onChange={(e) => setLogFilters({...logFilters, date_to: e.target.value})}
-                        className="border border-gray-300 rounded-lg px-4 py-2"
+                        className="border border-border-subtle rounded-lg px-4 py-2"
                         placeholder="To"
                       />
                     </div>
@@ -333,13 +333,13 @@ export default function AdminNotificationsPage() {
                     <div className="flex gap-4 mb-6">
                       <button
                         onClick={loadNotifications}
-                        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                        className="bg-accent text-text-onAccent px-6 py-2 rounded-lg hover:shadow-glow"
                       >
                         Apply Filters
                       </button>
                       <button
                         onClick={exportToCSV}
-                        className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+                        className="bg-success text-text-primary px-6 py-2 rounded-lg hover:bg-success/90"
                       >
                         Export to CSV
                       </button>
@@ -347,57 +347,57 @@ export default function AdminNotificationsPage() {
 
                     {/* Notifications Table */}
                     <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                      <table className="min-w-full divide-y divide-border-subtle">
+                        <thead className="bg-ink-elevated">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase">Date</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase">User</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase">Type</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase">Event</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase">Message</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase">Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-ink-surface divide-y divide-border-subtle">
                           {notifications.map(notification => (
                             <tr key={notification.id}>
-                              <td className="px-6 py-4 text-sm text-gray-900">
+                              <td className="px-6 py-4 text-sm text-text-primary">
                                 {new Date(notification.created_at).toLocaleString()}
                               </td>
-                              <td className="px-6 py-4 text-sm text-gray-900">
+                              <td className="px-6 py-4 text-sm text-text-primary">
                                 {notification.users?.full_name || notification.user_id.slice(0, 8)}
                               </td>
                               <td className="px-6 py-4 text-sm">
                                 <span className={`px-2 py-1 rounded-full text-xs ${
-                                  notification.type === 'sms' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                                  notification.type === 'sms' ? 'bg-info-soft text-info' : 'bg-accent/15 text-accent'
                                 }`}>
                                   {notification.type.toUpperCase()}
                                 </span>
                               </td>
-                              <td className="px-6 py-4 text-sm text-gray-600">{notification.event_type}</td>
+                              <td className="px-6 py-4 text-sm text-text-secondary">{notification.event_type}</td>
                               <td className="px-6 py-4 text-sm">
                                 <span className={`px-2 py-1 rounded-full text-xs ${
                                   notification.status === 'sent' || notification.status === 'delivered'
-                                    ? 'bg-green-100 text-green-800'
+                                    ? 'bg-success/15 text-success'
                                     : notification.status === 'failed'
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-yellow-100 text-yellow-800'
+                                    ? 'bg-danger/15 text-danger'
+                                    : 'bg-warning/15 text-warning'
                                 }`}>
                                   {notification.status}
                                 </span>
                               </td>
-                              <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
+                              <td className="px-6 py-4 text-sm text-text-secondary max-w-xs truncate">
                                 {notification.body}
                                 {notification.error_message && (
-                                  <div className="text-red-600 text-xs mt-1">{notification.error_message}</div>
+                                  <div className="text-danger text-xs mt-1">{notification.error_message}</div>
                                 )}
                               </td>
                               <td className="px-6 py-4 text-sm">
                                 {notification.status === 'failed' && (
                                   <button
                                     onClick={() => handleRetry(notification.id)}
-                                    className="text-blue-600 hover:text-blue-800"
+                                    className="text-accent hover:text-text-primary"
                                   >
                                     Retry
                                   </button>
@@ -409,7 +409,7 @@ export default function AdminNotificationsPage() {
                       </table>
 
                       {notifications.length === 0 && (
-                        <div className="text-center py-12 text-gray-500">
+                        <div className="text-center py-12 text-text-tertiary">
                           No notifications found
                         </div>
                       )}
@@ -422,19 +422,19 @@ export default function AdminNotificationsPage() {
                   <div>
                     <div className="space-y-4">
                       {templates.map(template => (
-                        <div key={template.id} className="border border-gray-200 rounded-lg p-4">
+                        <div key={template.id} className="border border-border-subtle rounded-lg p-4">
                           <div className="flex items-center justify-between mb-4">
                             <div>
                               <h3 className="text-lg font-semibold">{template.name}</h3>
-                              <p className="text-sm text-gray-600">Event: {template.event_type}</p>
+                              <p className="text-sm text-text-secondary">Event: {template.event_type}</p>
                             </div>
                             <div className="flex gap-2">
                               <span className={`px-3 py-1 rounded-full text-xs ${
-                                template.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                template.is_active ? 'bg-success/15 text-success' : 'bg-ink-elevated text-text-secondary'
                               }`}>
                                 {template.is_active ? 'Active' : 'Inactive'}
                               </span>
-                              <span className="px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                              <span className="px-3 py-1 rounded-full text-xs bg-info-soft text-info">
                                 {template.type.toUpperCase()}
                               </span>
                             </div>
@@ -444,11 +444,11 @@ export default function AdminNotificationsPage() {
                             <div className="space-y-4">
                               {(template.type === 'sms' || template.type === 'both') && (
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">SMS Content</label>
+                                  <label className="block text-sm font-medium text-text-secondary mb-2">SMS Content</label>
                                   <textarea
                                     value={editingTemplate.sms_content || ''}
                                     onChange={(e) => setEditingTemplate({...editingTemplate, sms_content: e.target.value})}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                                    className="w-full border border-border-subtle rounded-lg px-4 py-2"
                                     rows={3}
                                   />
                                 </div>
@@ -457,20 +457,20 @@ export default function AdminNotificationsPage() {
                               {(template.type === 'push' || template.type === 'both') && (
                                 <>
                                   <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Push Title</label>
+                                    <label className="block text-sm font-medium text-text-secondary mb-2">Push Title</label>
                                     <input
                                       type="text"
                                       value={editingTemplate.push_title || ''}
                                       onChange={(e) => setEditingTemplate({...editingTemplate, push_title: e.target.value})}
-                                      className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                                      className="w-full border border-border-subtle rounded-lg px-4 py-2"
                                     />
                                   </div>
                                   <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Push Body</label>
+                                    <label className="block text-sm font-medium text-text-secondary mb-2">Push Body</label>
                                     <textarea
                                       value={editingTemplate.push_body || ''}
                                       onChange={(e) => setEditingTemplate({...editingTemplate, push_body: e.target.value})}
-                                      className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                                      className="w-full border border-border-subtle rounded-lg px-4 py-2"
                                       rows={3}
                                     />
                                   </div>
@@ -484,19 +484,19 @@ export default function AdminNotificationsPage() {
                                   onChange={(e) => setEditingTemplate({...editingTemplate, is_active: e.target.checked})}
                                   className="rounded"
                                 />
-                                <label className="text-sm text-gray-700">Active</label>
+                                <label className="text-sm text-text-secondary">Active</label>
                               </div>
 
                               <div className="flex gap-2">
                                 <button
                                   onClick={handleSaveTemplate}
-                                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                                  className="bg-accent text-text-onAccent px-4 py-2 rounded-lg hover:shadow-glow"
                                 >
                                   Save
                                 </button>
                                 <button
                                   onClick={() => setEditingTemplate(null)}
-                                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+                                  className="bg-ink-elevated text-text-secondary px-4 py-2 rounded-lg hover:bg-ink-surface"
                                 >
                                   Cancel
                                 </button>
@@ -506,28 +506,28 @@ export default function AdminNotificationsPage() {
                             <div>
                               {template.sms_content && (
                                 <div className="mb-2">
-                                  <span className="text-sm font-medium text-gray-700">SMS:</span>
-                                  <p className="text-sm text-gray-600 mt-1">{template.sms_content}</p>
+                                  <span className="text-sm font-medium text-text-secondary">SMS:</span>
+                                  <p className="text-sm text-text-secondary mt-1">{template.sms_content}</p>
                                 </div>
                               )}
                               {template.push_title && (
                                 <div className="mb-2">
-                                  <span className="text-sm font-medium text-gray-700">Push:</span>
-                                  <p className="text-sm text-gray-900 mt-1 font-medium">{template.push_title}</p>
-                                  <p className="text-sm text-gray-600">{template.push_body}</p>
+                                  <span className="text-sm font-medium text-text-secondary">Push:</span>
+                                  <p className="text-sm text-text-primary mt-1 font-medium">{template.push_title}</p>
+                                  <p className="text-sm text-text-secondary">{template.push_body}</p>
                                 </div>
                               )}
 
                               <div className="flex gap-2 mt-4">
                                 <button
                                   onClick={() => setEditingTemplate(template)}
-                                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                                  className="bg-accent text-text-onAccent px-4 py-2 rounded-lg hover:shadow-glow"
                                 >
                                   Edit
                                 </button>
                                 <button
                                   onClick={() => handleTestTemplate(template)}
-                                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                                  className="bg-success text-text-primary px-4 py-2 rounded-lg hover:bg-success/90"
                                 >
                                   Test
                                 </button>
@@ -544,11 +544,11 @@ export default function AdminNotificationsPage() {
                 {activeTab === 'stats' && stats && (
                   <div>
                     <div className="mb-6">
-                      <label className="text-sm font-medium text-gray-700 mr-4">Time Period:</label>
+                      <label className="text-sm font-medium text-text-secondary mr-4">Time Period:</label>
                       <select
                         value={statsDays}
                         onChange={(e) => setStatsDays(Number(e.target.value))}
-                        className="border border-gray-300 rounded-lg px-4 py-2"
+                        className="border border-border-subtle rounded-lg px-4 py-2"
                       >
                         <option value={7}>Last 7 days</option>
                         <option value={30}>Last 30 days</option>
@@ -556,7 +556,7 @@ export default function AdminNotificationsPage() {
                       </select>
                       <button
                         onClick={loadStats}
-                        className="ml-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                        className="ml-4 bg-accent text-text-onAccent px-4 py-2 rounded-lg hover:shadow-glow"
                       >
                         Refresh
                       </button>
@@ -564,40 +564,40 @@ export default function AdminNotificationsPage() {
 
                     {/* KPI Cards */}
                     <div className="grid grid-cols-4 gap-6 mb-6">
-                      <div className="bg-blue-50 rounded-lg p-6">
-                        <div className="text-sm text-gray-600 mb-2">Total Sent</div>
-                        <div className="text-3xl font-bold text-blue-600">{stats.total_sent}</div>
+                      <div className="bg-info-soft rounded-lg p-6 border border-border-subtle">
+                        <div className="text-sm text-text-secondary mb-2">Total Sent</div>
+                        <div className="text-3xl font-bold text-accent">{stats.total_sent}</div>
                       </div>
-                      <div className="bg-red-50 rounded-lg p-6">
-                        <div className="text-sm text-gray-600 mb-2">Failed</div>
-                        <div className="text-3xl font-bold text-red-600">{stats.total_failed}</div>
+                      <div className="bg-danger/10 rounded-lg p-6 border border-border-subtle">
+                        <div className="text-sm text-text-secondary mb-2">Failed</div>
+                        <div className="text-3xl font-bold text-danger">{stats.total_failed}</div>
                       </div>
-                      <div className="bg-green-50 rounded-lg p-6">
-                        <div className="text-sm text-gray-600 mb-2">Delivery Rate</div>
-                        <div className="text-3xl font-bold text-green-600">{stats.delivery_rate.toFixed(1)}%</div>
+                      <div className="bg-success/10 rounded-lg p-6 border border-border-subtle">
+                        <div className="text-sm text-text-secondary mb-2">Delivery Rate</div>
+                        <div className="text-3xl font-bold text-success">{stats.delivery_rate.toFixed(1)}%</div>
                       </div>
-                      <div className="bg-purple-50 rounded-lg p-6">
-                        <div className="text-sm text-gray-600 mb-2">SMS vs Push</div>
-                        <div className="text-lg font-bold text-purple-600">
+                      <div className="bg-accent/10 rounded-lg p-6 border border-border-subtle">
+                        <div className="text-sm text-text-secondary mb-2">SMS vs Push</div>
+                        <div className="text-lg font-bold text-accent">
                           {stats.sms_count} / {stats.push_count}
                         </div>
                       </div>
                     </div>
 
                     {/* Event Type Distribution */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <div className="bg-ink-surface rounded-lg border border-border-subtle p-6">
                       <h3 className="text-lg font-semibold mb-4">Notifications by Event Type</h3>
                       <div className="space-y-3">
                         {(stats.by_event || []).map(event => (
                           <div key={event.event_type} className="flex items-center">
-                            <div className="w-40 text-sm text-gray-700">{event.event_type}</div>
-                            <div className="flex-1 bg-gray-200 rounded-full h-6">
+                            <div className="w-40 text-sm text-text-secondary">{event.event_type}</div>
+                            <div className="flex-1 bg-ink-elevated rounded-full h-6">
                               <div
-                                className="bg-blue-600 h-6 rounded-full"
+                                className="bg-accent h-6 rounded-full"
                                 style={{ width: `${stats.total_sent ? (event.count / stats.total_sent) * 100 : 0}%` }}
                               ></div>
                             </div>
-                            <div className="w-16 text-right text-sm font-medium text-gray-900">{event.count}</div>
+                            <div className="w-16 text-right text-sm font-medium text-text-primary">{event.count}</div>
                           </div>
                         ))}
                       </div>
@@ -608,44 +608,44 @@ export default function AdminNotificationsPage() {
                 {/* Tab 4: Devices */}
                 {activeTab === 'devices' && (
                   <div>
-                    <p className="text-gray-600 mb-4">
+                    <p className="text-text-secondary mb-4">
                       Registered devices for push notifications. Inactive devices (not used for 90+ days) are automatically cleaned up.
                     </p>
 
                     <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                      <table className="min-w-full divide-y divide-border-subtle">
+                        <thead className="bg-ink-elevated">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Device Type</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Device Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Used</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase">User</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase">Device Type</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase">Device Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase">Last Used</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase">Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-ink-surface divide-y divide-border-subtle">
                           {devices.map(device => (
                             <tr key={device.id}>
-                              <td className="px-6 py-4 text-sm text-gray-900">
+                              <td className="px-6 py-4 text-sm text-text-primary">
                                 {device.users?.full_name || device.user_id.slice(0, 8)}
                               </td>
                               <td className="px-6 py-4 text-sm">
                                 <span className={`px-2 py-1 rounded-full text-xs ${
-                                  device.device_type === 'ios' ? 'bg-gray-100 text-gray-800' :
-                                  device.device_type === 'android' ? 'bg-green-100 text-green-800' :
-                                  'bg-blue-100 text-blue-800'
+                                  device.device_type === 'ios' ? 'bg-ink-elevated text-text-secondary' :
+                                  device.device_type === 'android' ? 'bg-success/15 text-success' :
+                                  'bg-info-soft text-info'
                                 }`}>
                                   {device.device_type.toUpperCase()}
                                 </span>
                               </td>
-                              <td className="px-6 py-4 text-sm text-gray-600">{device.device_name || 'Unknown'}</td>
-                              <td className="px-6 py-4 text-sm text-gray-600">
+                              <td className="px-6 py-4 text-sm text-text-secondary">{device.device_name || 'Unknown'}</td>
+                              <td className="px-6 py-4 text-sm text-text-secondary">
                                 {device.last_used_at ? new Date(device.last_used_at).toLocaleDateString() : 'Never'}
                               </td>
                               <td className="px-6 py-4 text-sm">
                                 <span className={`px-2 py-1 rounded-full text-xs ${
-                                  device.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                  device.is_active ? 'bg-success/15 text-success' : 'bg-ink-elevated text-text-secondary'
                                 }`}>
                                   {device.is_active ? 'Active' : 'Inactive'}
                                 </span>
@@ -654,7 +654,7 @@ export default function AdminNotificationsPage() {
                                 {device.is_active && (
                                   <button
                                     onClick={() => {/* Deactivate device */}}
-                                    className="text-red-600 hover:text-red-800"
+                                    className="text-danger hover:text-danger/80"
                                   >
                                     Deactivate
                                   </button>
@@ -666,7 +666,7 @@ export default function AdminNotificationsPage() {
                       </table>
 
                       {devices.length === 0 && (
-                        <div className="text-center py-12 text-gray-500">
+                        <div className="text-center py-12 text-text-tertiary">
                           No devices registered yet
                         </div>
                       )}

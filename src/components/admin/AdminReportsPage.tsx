@@ -145,10 +145,10 @@ export default function AdminReportsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-ink flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading reports...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
+          <p className="mt-4 text-text-secondary">Loading reports...</p>
         </div>
       </div>
     );
@@ -156,8 +156,8 @@ export default function AdminReportsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center text-red-600">
+      <div className="min-h-screen bg-ink flex items-center justify-center">
+        <div className="text-center text-danger">
           <p className="text-xl font-semibold">Error loading reports</p>
           <p className="mt-2">{error}</p>
         </div>
@@ -166,19 +166,19 @@ export default function AdminReportsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-ink py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">📊 Reports & Analytics</h1>
-          <p className="mt-2 text-gray-600">Business insights and performance metrics</p>
+          <h1 className="text-3xl font-bold text-text-primary">📊 Reports & Analytics</h1>
+          <p className="mt-2 text-text-secondary">Business insights and performance metrics</p>
         </div>
 
         {/* Date Range Selector */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="bg-ink-surface rounded-lg shadow-sm p-6 mb-6">
           <div className="flex items-center gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 Start Date
               </label>
               <input
@@ -187,11 +187,11 @@ export default function AdminReportsPage() {
                 onChange={(e) =>
                   setDateRange({ ...dateRange, startDate: e.target.value })
                 }
-                className="border border-gray-300 rounded-lg px-3 py-2"
+                className="border border-border-subtle rounded-lg px-3 py-2"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 End Date
               </label>
               <input
@@ -200,7 +200,7 @@ export default function AdminReportsPage() {
                 onChange={(e) =>
                   setDateRange({ ...dateRange, endDate: e.target.value })
                 }
-                className="border border-gray-300 rounded-lg px-3 py-2"
+                className="border border-border-subtle rounded-lg px-3 py-2"
               />
             </div>
             <div className="flex gap-2 mt-6">
@@ -214,7 +214,7 @@ export default function AdminReportsPage() {
                     endDate: end.toISOString().split('T')[0],
                   });
                 }}
-                className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
+                className="px-3 py-2 text-sm bg-ink-elevated hover:bg-ink-elevated rounded-lg"
               >
                 Last 7 Days
               </button>
@@ -228,7 +228,7 @@ export default function AdminReportsPage() {
                     endDate: end.toISOString().split('T')[0],
                   });
                 }}
-                className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
+                className="px-3 py-2 text-sm bg-ink-elevated hover:bg-ink-elevated rounded-lg"
               >
                 Last 30 Days
               </button>
@@ -242,7 +242,7 @@ export default function AdminReportsPage() {
                     endDate: end.toISOString().split('T')[0],
                   });
                 }}
-                className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
+                className="px-3 py-2 text-sm bg-ink-elevated hover:bg-ink-elevated rounded-lg"
               >
                 Last 3 Months
               </button>
@@ -252,7 +252,7 @@ export default function AdminReportsPage() {
 
         {/* Tabs */}
         <div className="mb-6">
-          <div className="flex gap-2 border-b border-gray-200">
+          <div className="flex gap-2 border-b border-border-subtle">
             {[
               { id: 'overview', label: 'Overview' },
               { id: 'products', label: 'Products' },
@@ -262,11 +262,10 @@ export default function AdminReportsPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-4 py-2 font-medium ${
-                  activeTab === tab.id
-                    ? 'border-b-2 border-blue-600 text-blue-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
+                className={`px-4 py-2 font-medium ${activeTab === tab.id
+                  ? 'border-b-2 border-accent text-accent'
+                  : 'text-text-secondary hover:text-text-primary'
+                  }`}
               >
                 {tab.label}
               </button>
@@ -279,45 +278,45 @@ export default function AdminReportsPage() {
           <div className="space-y-6">
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <p className="text-sm text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
+              <div className="bg-ink-surface rounded-lg shadow-sm p-6">
+                <p className="text-sm text-text-secondary">Total Revenue</p>
+                <p className="text-2xl font-bold text-text-primary mt-2">
                   RM {revenueReport?.totalRevenue.toFixed(2) || '0.00'}
                 </p>
               </div>
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <p className="text-sm text-gray-600">Total Profit</p>
-                <p className="text-2xl font-bold text-green-600 mt-2">
+              <div className="bg-ink-surface rounded-lg shadow-sm p-6">
+                <p className="text-sm text-text-secondary">Total Profit</p>
+                <p className="text-2xl font-bold text-success mt-2">
                   RM {profitAnalysis?.totalProfit.toFixed(2) || '0.00'}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-text-tertiary mt-1">
                   Margin: {profitAnalysis?.profitMargin.toFixed(1) || '0'}%
                 </p>
               </div>
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <p className="text-sm text-gray-600">Total Orders</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
+              <div className="bg-ink-surface rounded-lg shadow-sm p-6">
+                <p className="text-sm text-text-secondary">Total Orders</p>
+                <p className="text-2xl font-bold text-text-primary mt-2">
                   {salesStats?.totalOrders || 0}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-text-tertiary mt-1">
                   Completion: {salesStats?.completionRate?.toFixed(1) || '0'}%
                 </p>
               </div>
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <p className="text-sm text-gray-600">Avg Order Value</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
+              <div className="bg-ink-surface rounded-lg shadow-sm p-6">
+                <p className="text-sm text-text-secondary">Avg Order Value</p>
+                <p className="text-2xl font-bold text-text-primary mt-2">
                   RM {revenueReport?.averageOrderValue?.toFixed(2) || '0.00'}
                 </p>
               </div>
             </div>
 
             {/* Revenue Chart */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-ink-surface rounded-lg shadow-sm p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Revenue Trend</h2>
+                <h2 className="text-lg font-semibold text-text-primary">Revenue Trend</h2>
                 <button
                   onClick={() => handleExport('revenue')}
-                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-3 py-1 text-sm bg-accent text-text-onAccent rounded-lg hover:shadow-glow"
                 >
                   Export CSV
                 </button>
@@ -336,76 +335,75 @@ export default function AdminReportsPage() {
             </div>
 
             {/* Profit Breakdown */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-ink-surface rounded-lg shadow-sm p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Profit by Product</h2>
+                <h2 className="text-lg font-semibold text-text-primary">Profit by Product</h2>
                 <button
                   onClick={() => handleExport('profit')}
-                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-3 py-1 text-sm bg-accent text-text-onAccent rounded-lg hover:shadow-glow"
                 >
                   Export CSV
                 </button>
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-border-subtle">
                   <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <tr className="bg-ink">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">
                         Product
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">
                         Type
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase">
                         Qty
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase">
                         Revenue
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase">
                         Cost
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase">
                         Profit
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase">
                         Margin
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-ink-surface divide-y divide-border-subtle">
                     {(profitAnalysis?.profitByProduct || [])
                       .sort((a, b) => b.profit - a.profit)
                       .slice(0, 10)
                       .map((product, index) => (
                         <tr key={index}>
-                          <td className="px-4 py-3 text-sm text-gray-900">
+                          <td className="px-4 py-3 text-sm text-text-primary">
                             {product.productName}
                           </td>
                           <td className="px-4 py-3 text-sm">
                             <span
-                              className={`px-2 py-1 rounded-full text-xs ${
-                                product.productType === 'string'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-green-100 text-green-800'
-                              }`}
+                              className={`px-2 py-1 rounded-full text-xs ${product.productType === 'string'
+                                ? 'bg-info-soft text-info'
+                                : 'bg-success/15 text-success'
+                                }`}
                             >
                               {product.productType}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-sm text-right text-gray-900">
+                          <td className="px-4 py-3 text-sm text-right text-text-primary">
                             {product.quantity}
                           </td>
-                          <td className="px-4 py-3 text-sm text-right text-gray-900">
+                          <td className="px-4 py-3 text-sm text-right text-text-primary">
                             RM {product.revenue.toFixed(2)}
                           </td>
-                          <td className="px-4 py-3 text-sm text-right text-gray-600">
+                          <td className="px-4 py-3 text-sm text-right text-text-secondary">
                             RM {product.cost.toFixed(2)}
                           </td>
-                          <td className="px-4 py-3 text-sm text-right font-semibold text-green-600">
+                          <td className="px-4 py-3 text-sm text-right font-semibold text-success">
                             RM {product.profit.toFixed(2)}
                           </td>
-                          <td className="px-4 py-3 text-sm text-right text-gray-900">
+                          <td className="px-4 py-3 text-sm text-right text-text-primary">
                             {product.margin.toFixed(1)}%
                           </td>
                         </tr>
@@ -416,32 +414,32 @@ export default function AdminReportsPage() {
             </div>
 
             {/* Sales Stats */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-ink-surface rounded-lg shadow-sm p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Sales Statistics</h2>
+                <h2 className="text-lg font-semibold text-text-primary">Sales Statistics</h2>
                 <button
                   onClick={() => handleExport('sales')}
-                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-3 py-1 text-sm bg-accent text-text-onAccent rounded-lg hover:shadow-glow"
                 >
                   Export CSV
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <p className="text-sm text-gray-600">Package Usage Rate</p>
-                  <p className="text-xl font-bold text-blue-600 mt-1">
+                  <p className="text-sm text-text-secondary">Package Usage Rate</p>
+                  <p className="text-xl font-bold text-accent mt-1">
                     {salesStats?.packageUsageRate?.toFixed(1) || '0'}%
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Voucher Usage Rate</p>
-                  <p className="text-xl font-bold text-purple-600 mt-1">
+                  <p className="text-sm text-text-secondary">Voucher Usage Rate</p>
+                  <p className="text-xl font-bold text-accent mt-1">
                     {salesStats?.voucherUsageRate?.toFixed(1) || '0'}%
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Completion Rate</p>
-                  <p className="text-xl font-bold text-green-600 mt-1">
+                  <p className="text-sm text-text-secondary">Completion Rate</p>
+                  <p className="text-xl font-bold text-success mt-1">
                     {salesStats?.completionRate?.toFixed(1) || '0'}%
                   </p>
                 </div>
@@ -475,53 +473,53 @@ export default function AdminReportsPage() {
         {activeTab === 'products' && (
           <div className="space-y-6">
             {/* Top Strings */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-ink-surface rounded-lg shadow-sm p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Top Selling Strings</h2>
+                <h2 className="text-lg font-semibold text-text-primary">Top Selling Strings</h2>
                 <button
                   onClick={() => handleExport('strings')}
-                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-3 py-1 text-sm bg-accent text-text-onAccent rounded-lg hover:shadow-glow"
                 >
                   Export CSV
                 </button>
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-border-subtle">
                   <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <tr className="bg-ink">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">
                         Rank
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">
                         String Name
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase">
                         Quantity
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase">
                         Revenue
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase">
                         Avg Tension
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-ink-surface divide-y divide-border-subtle">
                     {topStrings.map((string, index) => (
                       <tr key={string.stringId}>
-                        <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                        <td className="px-4 py-3 text-sm font-semibold text-text-primary">
                           #{index + 1}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
+                        <td className="px-4 py-3 text-sm text-text-primary">
                           {string.stringName}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right text-gray-900">
+                        <td className="px-4 py-3 text-sm text-right text-text-primary">
                           {string.quantity}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right text-gray-900">
+                        <td className="px-4 py-3 text-sm text-right text-text-primary">
                           RM {string.revenue.toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right text-gray-600">
+                        <td className="px-4 py-3 text-sm text-right text-text-secondary">
                           {string.avgTension?.toFixed(1) || '0'} lbs
                         </td>
                       </tr>
@@ -532,67 +530,66 @@ export default function AdminReportsPage() {
             </div>
 
             {/* Top Packages */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-ink-surface rounded-lg shadow-sm p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Top Selling Packages</h2>
+                <h2 className="text-lg font-semibold text-text-primary">Top Selling Packages</h2>
                 <button
                   onClick={() => handleExport('packages')}
-                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-3 py-1 text-sm bg-accent text-text-onAccent rounded-lg hover:shadow-glow"
                 >
                   Export CSV
                 </button>
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-border-subtle">
                   <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <tr className="bg-ink">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">
                         Rank
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">
                         Package Name
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase">
                         Sold
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase">
                         Used
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase">
                         Revenue
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase">
                         Utilization
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-ink-surface divide-y divide-border-subtle">
                     {topPackages.map((pkg, index) => (
                       <tr key={pkg.packageId}>
-                        <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                        <td className="px-4 py-3 text-sm font-semibold text-text-primary">
                           #{index + 1}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
+                        <td className="px-4 py-3 text-sm text-text-primary">
                           {pkg.packageName}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right text-gray-900">
+                        <td className="px-4 py-3 text-sm text-right text-text-primary">
                           {pkg.soldCount}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right text-gray-900">
+                        <td className="px-4 py-3 text-sm text-right text-text-primary">
                           {pkg.usedCount}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right text-gray-900">
+                        <td className="px-4 py-3 text-sm text-right text-text-primary">
                           RM {pkg.revenue.toFixed(2)}
                         </td>
                         <td className="px-4 py-3 text-sm text-right">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs ${
-                              (pkg.utilizationRate || 0) >= 80
-                                ? 'bg-green-100 text-green-800'
-                                : (pkg.utilizationRate || 0) >= 50
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}
+                            className={`px-2 py-1 rounded-full text-xs ${(pkg.utilizationRate || 0) >= 80
+                              ? 'bg-success/15 text-success'
+                              : (pkg.utilizationRate || 0) >= 50
+                                ? 'bg-warning/15 text-warning'
+                                : 'bg-danger/15 text-danger'
+                              }`}
                           >
                             {pkg.utilizationRate?.toFixed(1) || '0'}%
                           </span>
@@ -605,8 +602,8 @@ export default function AdminReportsPage() {
             </div>
 
             {/* String Revenue Chart */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-ink-surface rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-text-primary mb-4">
                 String Revenue Comparison
               </h2>
               <ResponsiveContainer width="100%" height={400}>
@@ -629,33 +626,33 @@ export default function AdminReportsPage() {
           <div className="space-y-6">
             {/* User Growth Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <p className="text-sm text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
+              <div className="bg-ink-surface rounded-lg shadow-sm p-6">
+                <p className="text-sm text-text-secondary">Total Users</p>
+                <p className="text-2xl font-bold text-text-primary mt-2">
                   {userGrowth?.totalUsers || 0}
                 </p>
               </div>
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <p className="text-sm text-gray-600">New Users (30 days)</p>
-                <p className="text-2xl font-bold text-blue-600 mt-2">
+              <div className="bg-ink-surface rounded-lg shadow-sm p-6">
+                <p className="text-sm text-text-secondary">New Users (30 days)</p>
+                <p className="text-2xl font-bold text-accent mt-2">
                   {userGrowth?.newUsers || 0}
                 </p>
               </div>
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <p className="text-sm text-gray-600">Growth Rate</p>
-                <p className="text-2xl font-bold text-green-600 mt-2">
+              <div className="bg-ink-surface rounded-lg shadow-sm p-6">
+                <p className="text-sm text-text-secondary">Growth Rate</p>
+                <p className="text-2xl font-bold text-success mt-2">
                   {userGrowth?.growthRate?.toFixed(1) || '0'}%
                 </p>
               </div>
             </div>
 
             {/* User Growth Chart */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-ink-surface rounded-lg shadow-sm p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">User Growth Trend</h2>
+                <h2 className="text-lg font-semibold text-text-primary">User Growth Trend</h2>
                 <button
                   onClick={() => handleExport('users')}
-                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-3 py-1 text-sm bg-accent text-text-onAccent rounded-lg hover:shadow-glow"
                 >
                   Export CSV
                 </button>
@@ -687,8 +684,8 @@ export default function AdminReportsPage() {
             </div>
 
             {/* User Acquisition Source */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-ink-surface rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-text-primary mb-4">
                 User Acquisition Source
               </h2>
               <ResponsiveContainer width="100%" height={250}>
@@ -718,8 +715,8 @@ export default function AdminReportsPage() {
         {activeTab === 'trends' && (
           <div className="space-y-6">
             {/* Orders by Hour */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-ink-surface rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-text-primary mb-4">
                 Orders by Hour of Day
               </h2>
               <ResponsiveContainer width="100%" height={300}>
@@ -734,8 +731,8 @@ export default function AdminReportsPage() {
             </div>
 
             {/* Orders by Day of Week */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-ink-surface rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-text-primary mb-4">
                 Orders by Day of Week
               </h2>
               <ResponsiveContainer width="100%" height={300}>
@@ -750,8 +747,8 @@ export default function AdminReportsPage() {
             </div>
 
             {/* Orders by Month */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-ink-surface rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-text-primary mb-4">
                 Monthly Order Trends
               </h2>
               <ResponsiveContainer width="100%" height={300}>

@@ -147,9 +147,9 @@ export default function PaymentReceiptUploader({
   };
 
   return (
-    <div className="rounded-lg border-2 border-dashed border-gray-300 bg-white p-6">
-      <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-        <ImageIcon className="h-5 w-5 text-blue-600" />
+    <div className="rounded-lg border-2 border-dashed border-border-subtle bg-ink-surface p-6">
+      <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-text-primary">
+        <ImageIcon className="h-5 w-5 text-accent" />
         上传支付收据
       </h3>
 
@@ -159,8 +159,8 @@ export default function PaymentReceiptUploader({
           className={`
             relative cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-all
             ${dragActive
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-gray-300 bg-gray-50 hover:border-blue-400 hover:bg-blue-50'
+              ? 'border-accent-border bg-ink-elevated'
+              : 'border-border-subtle bg-ink-elevated hover:border-accent-border hover:bg-ink-elevated'
             }
             ${uploading ? 'pointer-events-none opacity-50' : ''}
           `}
@@ -181,17 +181,17 @@ export default function PaymentReceiptUploader({
 
           {uploading ? (
             <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-              <p className="text-sm text-gray-600">上传中...</p>
+              <Loader2 className="h-12 w-12 animate-spin text-accent" />
+              <p className="text-sm text-text-secondary">上传中...</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3">
-              <Upload className="h-12 w-12 text-gray-400" />
+              <Upload className="h-12 w-12 text-text-tertiary" />
               <div>
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-text-primary">
                   点击或拖拽图片到此处
                 </p>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-text-tertiary">
                   支持 JPG、PNG 格式，最大 5MB
                 </p>
               </div>
@@ -201,7 +201,7 @@ export default function PaymentReceiptUploader({
       ) : (
         // 预览区域
         <div className="space-y-4">
-          <div className="relative rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <div className="relative rounded-lg border border-border-subtle bg-ink-elevated p-4">
             <img
               src={previewUrl}
               alt="Payment Receipt"
@@ -211,7 +211,7 @@ export default function PaymentReceiptUploader({
             {!uploading && (
               <button
                 onClick={handleRemove}
-                className="absolute right-2 top-2 rounded-full bg-red-500 p-2 text-white shadow-lg hover:bg-red-600"
+                className="absolute right-2 top-2 rounded-full bg-danger p-2 text-text-primary shadow-lg hover:bg-danger/90"
                 title="移除收据"
               >
                 <X className="h-4 w-4" />
@@ -220,13 +220,13 @@ export default function PaymentReceiptUploader({
           </div>
 
           {receiptUrl && !uploading && (
-            <div className="flex items-center gap-2 rounded-lg bg-green-50 p-3">
-              <Check className="h-5 w-5 text-green-600" />
+            <div className="flex items-center gap-2 rounded-lg bg-success/10 p-3">
+              <Check className="h-5 w-5 text-success" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-green-900">
+                <p className="text-sm font-medium text-success">
                   收据已上传成功
                 </p>
-                <p className="text-xs text-green-700">
+                <p className="text-xs text-text-secondary">
                   管理员将在 1-2 个工作日内审核
                 </p>
               </div>
@@ -235,7 +235,7 @@ export default function PaymentReceiptUploader({
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="w-full rounded-lg border border-border-subtle px-4 py-2 text-sm font-medium text-text-secondary hover:bg-ink-elevated"
             disabled={uploading}
           >
             重新上传
@@ -244,9 +244,9 @@ export default function PaymentReceiptUploader({
       )}
 
       {/* 温馨提示 */}
-      <div className="mt-4 flex gap-2 rounded-lg bg-blue-50 p-3">
-        <AlertCircle className="h-5 w-5 shrink-0 text-blue-600" />
-        <div className="text-xs text-blue-800">
+      <div className="mt-4 flex gap-2 rounded-lg bg-info-soft p-3">
+        <AlertCircle className="h-5 w-5 shrink-0 text-info" />
+        <div className="text-xs text-text-secondary">
           <p className="font-semibold">上传要求：</p>
           <ul className="mt-1 list-inside list-disc space-y-1">
             <li>请确保收据图片清晰可见</li>

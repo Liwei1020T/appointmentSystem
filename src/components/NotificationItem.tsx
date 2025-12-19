@@ -38,8 +38,8 @@ export default function NotificationItem({
 
   return (
     <div
-      className={`relative p-4 hover:bg-gray-50 transition-colors ${
-        !notification.is_read ? 'bg-blue-50/30' : ''
+      className={`relative p-4 hover:bg-ink-elevated transition-colors ${
+        !notification.is_read ? 'bg-accent/10' : ''
       }`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
@@ -53,43 +53,43 @@ export default function NotificationItem({
         {/* 内容 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h4 className={`text-sm font-medium ${!notification.is_read ? 'text-gray-900' : 'text-gray-700'}`}>
+            <h4 className={`text-sm font-medium ${!notification.is_read ? 'text-text-primary' : 'text-text-secondary'}`}>
               {notification.title}
             </h4>
 
             {/* 未读标记 */}
             {!notification.is_read && (
-              <Circle className="flex-shrink-0 w-2 h-2 fill-blue-600 text-blue-600 mt-1" />
+              <Circle className="flex-shrink-0 w-2 h-2 fill-accent text-accent mt-1" />
             )}
           </div>
 
-          <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+          <p className="text-sm text-text-secondary mb-2 line-clamp-2">
             {notification.message}
           </p>
 
-          <p className="text-xs text-gray-500">{timeText}</p>
+          <p className="text-xs text-text-tertiary">{timeText}</p>
         </div>
       </div>
 
       {/* 操作按钮（鼠标悬停显示） */}
       {showActions && (
-        <div className="absolute top-2 right-2 flex gap-1 bg-white shadow-md rounded-lg p-1">
+        <div className="absolute top-2 right-2 flex gap-1 bg-ink-surface shadow-md rounded-lg p-1 border border-border-subtle">
           {!notification.is_read && (
             <button
               onClick={() => onMarkAsRead(notification.id)}
-              className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+              className="p-1.5 hover:bg-ink-elevated rounded transition-colors"
               title="标记为已读"
             >
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
+              <CheckCircle2 className="w-4 h-4 text-success" />
             </button>
           )}
 
           <button
             onClick={() => onDelete(notification.id)}
-            className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+            className="p-1.5 hover:bg-ink-elevated rounded transition-colors"
             title="删除"
           >
-            <Trash2 className="w-4 h-4 text-red-600" />
+            <Trash2 className="w-4 h-4 text-danger" />
           </button>
         </div>
       )}

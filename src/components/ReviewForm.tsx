@@ -125,13 +125,13 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
 
   return (
     <Card className="p-6">
-      <h2 className="text-lg font-semibold text-slate-900 mb-6">订单评价</h2>
+      <h2 className="text-lg font-semibold text-text-primary mb-6">订单评价</h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 总体评分 */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            总体评分 <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-text-secondary mb-2">
+            总体评分 <span className="text-danger">*</span>
           </label>
           <StarRating
             value={rating}
@@ -143,11 +143,11 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
 
         {/* 详细评分 */}
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-slate-700">详细评分</h3>
+          <h3 className="text-sm font-medium text-text-secondary">详细评分</h3>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600">服务态度</span>
+              <span className="text-sm text-text-secondary">服务态度</span>
               <StarRating
                 value={serviceRating}
                 onChange={setServiceRating}
@@ -156,7 +156,7 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600">穿线质量</span>
+              <span className="text-sm text-text-secondary">穿线质量</span>
               <StarRating
                 value={qualityRating}
                 onChange={setQualityRating}
@@ -165,7 +165,7 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600">服务速度</span>
+              <span className="text-sm text-text-secondary">服务速度</span>
               <StarRating
                 value={speedRating}
                 onChange={setSpeedRating}
@@ -177,7 +177,7 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
 
         {/* 评价标签 */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             选择标签（可选）
           </label>
           <div className="flex flex-wrap gap-2">
@@ -188,8 +188,8 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
                 onClick={() => handleTagToggle(tag)}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                   selectedTags.includes(tag)
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    ? 'bg-accent text-text-onAccent'
+                    : 'bg-ink-elevated text-text-secondary hover:bg-ink-elevated'
                 }`}
               >
                 {tag}
@@ -200,18 +200,18 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
 
         {/* 评价内容 */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            评价内容 <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-text-secondary mb-2">
+            评价内容 <span className="text-danger">*</span>
           </label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="分享您的使用体验，帮助其他用户做出选择（至少 10 个字）"
             rows={5}
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className="w-full px-3 py-2 border border-border-subtle rounded-lg focus:ring-2 focus:ring-accent-border focus:border-transparent resize-none"
             required
           />
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-text-tertiary">
             {comment.length} / 500 字
           </p>
         </div>
@@ -256,18 +256,18 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
             id="anonymous"
             checked={isAnonymous}
             onChange={(e) => setIsAnonymous(e.target.checked)}
-            className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-2 focus:ring-blue-500"
+            className="w-4 h-4 text-accent border-border-subtle rounded focus:ring-2 focus:ring-accent-border"
           />
-          <label htmlFor="anonymous" className="text-sm text-slate-700">
+          <label htmlFor="anonymous" className="text-sm text-text-secondary">
             匿名评价
           </label>
         </div>
 
         {/* 提示信息 */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-info-soft border border-border-subtle rounded-lg p-4">
           <div className="flex items-start gap-2">
             <svg
-              className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+              className="w-5 h-5 text-accent mt-0.5 flex-shrink-0"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -277,9 +277,9 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
                 clipRule="evenodd"
               />
             </svg>
-            <div className="text-sm text-blue-700">
+            <div className="text-sm text-text-secondary">
               <p className="font-medium mb-1">温馨提示</p>
-              <ul className="list-disc list-inside space-y-0.5 text-blue-600">
+              <ul className="list-disc list-inside space-y-0.5 text-accent">
                 <li>提交评价后将获得 10 积分奖励</li>
                 <li>评价一经提交无法删除，请谨慎填写</li>
                 <li>请文明评价，尊重他人</li>

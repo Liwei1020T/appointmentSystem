@@ -61,19 +61,19 @@ export const Modal: React.FC<ModalProps> = ({
       
       {/* Modal */}
       <div 
-        className={`relative bg-white rounded-2xl shadow-xl w-full ${sizes[size]} max-h-[90vh] overflow-y-auto`}
+        className={`relative glass-strong rounded-2xl shadow-xl w-full ${sizes[size]} max-h-[90vh] overflow-y-auto`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
       >
         {title && (
-          <div className="px-6 py-4 border-b border-slate-200">
-            <h2 id="modal-title" className="text-xl font-semibold text-slate-900">
+          <div className="px-6 py-4 border-b border-border-subtle">
+            <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
               {title}
             </h2>
           </div>
         )}
-        <div className="px-6 py-4">
+        <div className="px-6 py-4 text-text-secondary">
           {children}
         </div>
       </div>

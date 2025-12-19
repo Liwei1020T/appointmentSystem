@@ -15,6 +15,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Camera, Upload, X, Loader2, User } from 'lucide-react';
 import { uploadAvatar, deleteImage } from '@/services/imageUploadService';
 
@@ -65,7 +66,7 @@ export default function AvatarUploader({
     }
 
     setIsUploading(true);
-    
+
     // 显示预览
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
@@ -73,7 +74,7 @@ export default function AvatarUploader({
     try {
       // 上传图片
       const result = await uploadAvatar(userId, file);
-      
+
       if (result.success && result.url) {
         onUploadSuccess?.(result.url);
         setPreviewUrl(null);
@@ -122,7 +123,7 @@ export default function AvatarUploader({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     if (!editable || isUploading) return;
 
     const file = e.dataTransfer.files[0];
@@ -134,7 +135,7 @@ export default function AvatarUploader({
   // 删除头像
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (!currentAvatarUrl) return;
 
     try {
@@ -144,7 +145,7 @@ export default function AvatarUploader({
         const path = urlParts[1];
         await deleteImage('avatars', path);
       }
-      
+
       onDelete?.();
     } catch (error) {
       console.error('删除头像失败:', error);
@@ -163,7 +164,7 @@ export default function AvatarUploader({
           relative rounded-full overflow-hidden
           ${sizeClasses[size]}
           ${editable ? 'cursor-pointer group' : ''}
-          ${isDragging ? 'ring-4 ring-blue-500' : ''}
+          ${isDragging ? 'ring-4 ring-accent-border' : ''}
           ${isUploading ? 'opacity-50' : ''}
           transition-all
         `}
@@ -174,28 +175,31 @@ export default function AvatarUploader({
       >
         {/* 头像图片或首字母 */}
         {displayUrl ? (
-          <img
+          <Image
             src={displayUrl}
             alt="用户头像"
+            width={128}
+            height={128}
             className="w-full h-full object-cover"
+            priority={size === 'lg'}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+          <div className="w-full h-full bg-gradient-to-br from-accent/40 to-info/40 flex items-center justify-center text-text-primary font-semibold">
             {getInitials()}
           </div>
         )}
 
         {/* 上传中遮罩 */}
         {isUploading && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 text-white animate-spin" />
+          <div className="absolute inset-0 bg-ink/60 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 text-text-primary animate-spin" />
           </div>
         )}
 
         {/* 悬停遮罩（可编辑时） */}
         {editable && !isUploading && (
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition-all">
-            <Camera className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/40 flex items-center justify-center transition-all">
+            <Camera className="w-8 h-8 text-text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         )}
 
@@ -203,7 +207,7 @@ export default function AvatarUploader({
         {editable && currentAvatarUrl && !isUploading && (
           <button
             onClick={handleDelete}
-            className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+            className="absolute top-0 right-0 bg-danger text-text-primary rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-danger/90"
           >
             <X className="w-4 h-4" />
           </button>
@@ -213,10 +217,10 @@ export default function AvatarUploader({
       {/* 上传提示 */}
       {editable && !isUploading && (
         <div className="text-center">
-          <p className="text-sm text-gray-600 mb-1">
+          <p className="text-sm text-text-secondary mb-1">
             点击或拖拽上传头像
           </p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-text-tertiary">
             支持 JPG、PNG、WebP（最大5MB）
           </p>
         </div>
@@ -224,7 +228,7 @@ export default function AvatarUploader({
 
       {/* 上传中提示 */}
       {isUploading && (
-        <p className="text-sm text-blue-600">
+        <p className="text-sm text-accent">
           上传中...
         </p>
       )}

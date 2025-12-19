@@ -9,7 +9,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Button, Card, Badge, Toast, Spinner, Checkbox } from '@/components';
 import { useSession } from 'next-auth/react';
 import StringSelector from '@/features/booking/StringSelector';
@@ -17,7 +16,7 @@ import TensionInput from '@/features/booking/TensionInput';
 import VoucherSelector from '@/features/booking/VoucherSelector';
 import { StringInventory, UserVoucher } from '@/types';
 import { formatCurrency } from '@/lib/utils';
-import { hasAvailablePackage, getPriorityPackage } from '@/services/packageService';
+import { hasAvailablePackage } from '@/services/packageService';
 import { calculateDiscount } from '@/services/voucherService';
 import { getUserStats, type MembershipTierInfo } from '@/services/profileService';
 
@@ -225,7 +224,7 @@ export default function BookingFlow() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-ink flex items-center justify-center">
         <Spinner size="large" />
       </div>
     );
@@ -236,21 +235,21 @@ export default function BookingFlow() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-ink">
       {/* 顶部导航栏 */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+      <div className="glass-surface border-b border-border-subtle sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
           <button
             onClick={() => step === 1 ? router.push('/') : handleBack()}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
           >
-            <svg className="w-5 h-5 text-slate-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 text-text-secondary" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
               <path d="M15 19l-7-7 7-7"></path>
             </svg>
           </button>
           <div>
-            <h1 className="text-lg font-bold text-slate-900">立即预约</h1>
-            <p className="text-xs text-slate-600">
+            <h1 className="text-lg font-bold text-text-primary">立即预约</h1>
+            <p className="text-xs text-text-tertiary">
               步骤 {step}/4
             </p>
           </div>
@@ -266,10 +265,10 @@ export default function BookingFlow() {
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                   num < step
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-accent text-text-onAccent'
                     : num === step
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-200 text-slate-600'
+                    ? 'bg-accent text-text-onAccent'
+                    : 'bg-ink-elevated text-text-tertiary'
                 }`}
               >
                 {num < step ? '✓' : num}
@@ -277,7 +276,7 @@ export default function BookingFlow() {
               {num < 4 && (
                 <div
                   className={`flex-1 h-1 mx-2 ${
-                    num < step ? 'bg-blue-600' : 'bg-slate-200'
+                    num < step ? 'bg-accent' : 'bg-ink-elevated'
                   }`}
                 />
               )}
@@ -288,13 +287,13 @@ export default function BookingFlow() {
         {/* 步骤 1: 选择球线 */}
         {step === 1 && (
           <div>
-            <h2 className="text-xl font-bold text-slate-900 mb-4">选择球线</h2>
+            <h2 className="text-xl font-bold text-text-primary mb-4">选择球线</h2>
             <StringSelector
               selectedString={selectedString}
               onSelect={setSelectedString}
             />
             {errors.string && (
-              <p className="text-sm text-red-600 mt-2">{errors.string}</p>
+              <p className="text-sm text-danger mt-2">{errors.string}</p>
             )}
           </div>
         )}
@@ -302,7 +301,7 @@ export default function BookingFlow() {
         {/* 步骤 2: 输入拉力 */}
         {step === 2 && (
           <div>
-            <h2 className="text-xl font-bold text-slate-900 mb-4">设置拉力</h2>
+            <h2 className="text-xl font-bold text-text-primary mb-4">设置拉力</h2>
             <TensionInput
               tension={tension}
               onTensionChange={setTension}
@@ -314,7 +313,7 @@ export default function BookingFlow() {
         {/* 步骤 3: 选择优惠 */}
         {step === 3 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">选择优惠</h2>
+            <h2 className="text-xl font-bold text-text-primary mb-4">选择优惠</h2>
 
             {/* 套餐选项 */}
             {packageAvailable && (
@@ -330,7 +329,7 @@ export default function BookingFlow() {
                       }
                     }}
                   />
-                  <p className="text-xs text-slate-600 mt-2 ml-6">
+                  <p className="text-xs text-text-tertiary mt-2 ml-6">
                     使用套餐后，本次穿线免费，套餐次数 -1
                   </p>
                 </div>
@@ -351,24 +350,24 @@ export default function BookingFlow() {
         {/* 步骤 4: 确认订单 */}
         {step === 4 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">确认订单</h2>
+            <h2 className="text-xl font-bold text-text-primary mb-4">确认订单</h2>
 
             {/* 订单摘要 */}
             <Card>
               <div className="p-4 space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium text-slate-700 mb-2">球线信息</h3>
-                  <p className="font-semibold text-slate-900">
+                  <h3 className="text-sm font-medium text-text-tertiary mb-2">球线信息</h3>
+                  <p className="font-semibold text-text-primary">
                     {selectedString?.brand} {selectedString?.model}
                   </p>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-text-secondary">
                     {selectedString?.specification}
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-slate-700 mb-2">拉力</h3>
-                  <p className="font-semibold text-slate-900">{tension} 磅</p>
+                  <h3 className="text-sm font-medium text-text-tertiary mb-2">拉力</h3>
+                  <p className="font-semibold text-text-primary">{tension} 磅</p>
                 </div>
 
                 {usePackage && (
@@ -379,8 +378,8 @@ export default function BookingFlow() {
 
                 {selectedVoucher && !usePackage && (
                   <div>
-                    <h3 className="text-sm font-medium text-slate-700 mb-2">优惠券</h3>
-                    <p className="text-sm text-slate-900">
+                    <h3 className="text-sm font-medium text-text-tertiary mb-2">优惠券</h3>
+                    <p className="text-sm text-text-primary">
                       {selectedVoucher.voucher?.description}
                     </p>
                   </div>
@@ -391,14 +390,14 @@ export default function BookingFlow() {
             {/* 备注 */}
             <Card>
               <div className="p-4">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-text-tertiary mb-2">
                   备注（可选）
                 </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="特殊要求或备注..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full px-3 py-2 border border-border-subtle rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink bg-ink-surface text-text-primary placeholder:text-text-tertiary"
                   rows={3}
                 />
               </div>
@@ -408,39 +407,39 @@ export default function BookingFlow() {
             <Card>
               <div className="p-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">原价</span>
-                  <span className="text-slate-900">{formatCurrency(original)}</span>
+                  <span className="text-text-tertiary">原价</span>
+                  <span className="text-text-primary font-mono">{formatCurrency(original)}</span>
                 </div>
                 {!usePackage && membershipDiscount > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">
+                    <span className="text-text-tertiary">
                       {membershipInfo?.label || '会员折扣'}
                     </span>
-                    <span className="text-emerald-600">
+                    <span className="text-success">
                       -{formatCurrency(membershipDiscount)}
                     </span>
                   </div>
                 )}
                 {discount > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">优惠</span>
-                    <span className="text-green-600">-{formatCurrency(discount)}</span>
+                    <span className="text-text-tertiary">优惠</span>
+                    <span className="text-success">-{formatCurrency(discount)}</span>
                   </div>
                 )}
                 {usePackage && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">套餐抵扣</span>
-                    <span className="text-green-600">-{formatCurrency(original)}</span>
+                    <span className="text-text-tertiary">套餐抵扣</span>
+                    <span className="text-success">-{formatCurrency(original)}</span>
                   </div>
                 )}
-                <div className="border-t border-slate-200 pt-2 flex justify-between items-center">
-                  <span className="font-semibold text-slate-900">应付金额</span>
-                  <span className="text-2xl font-bold text-blue-600">
+                <div className="border-t border-border-subtle pt-2 flex justify-between items-center">
+                  <span className="font-semibold text-text-primary">应付金额</span>
+                  <span className="text-2xl font-bold text-accent font-mono">
                     {formatCurrency(final)}
                   </span>
                 </div>
                 {!usePackage && membershipInfo && membershipInfo.discountRate > 0 && (
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-text-tertiary mt-1">
                     {membershipInfo.label} 额外享 {membershipInfo.discountRate}% 会员折扣
                   </p>
                 )}
@@ -451,7 +450,7 @@ export default function BookingFlow() {
       </div>
 
       {/* 底部操作栏 */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 safe-area-pb">
+      <div className="fixed bottom-0 left-0 right-0 glass-surface border-t border-border-subtle safe-area-pb">
         <div className="max-w-2xl mx-auto px-4 py-4">
           {step < 4 ? (
             <Button

@@ -132,17 +132,17 @@ export default function MyVouchersPage() {
     color: string;
   } => {
     if (voucher.used) {
-      return { text: '已使用', color: 'gray' };
+      return { text: '已使用', color: 'neutral' };
     }
     if (isExpired(voucher)) {
-      return { text: '已过期', color: 'red' };
+      return { text: '已过期', color: 'error' };
     }
-    return { text: '可使用', color: 'green' };
+    return { text: '可使用', color: 'success' };
   };
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-ink flex items-center justify-center">
         <Spinner size="large" />
       </div>
     );
@@ -153,16 +153,16 @@ export default function MyVouchersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-ink pb-24">
       {/* 顶部导航 */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+      <div className="glass-surface border-b border-border-subtle sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
           >
             <svg
-              className="w-5 h-5 text-slate-600"
+              className="w-5 h-5 text-text-secondary"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -173,15 +173,15 @@ export default function MyVouchersPage() {
               <path d="M15 19l-7-7 7-7"></path>
             </svg>
           </button>
-          <h1 className="text-lg font-bold text-slate-900">我的优惠券</h1>
+          <h1 className="text-lg font-bold text-text-primary">我的优惠券</h1>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* 错误提示 */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="bg-danger/10 border border-danger/30 rounded-lg p-4">
+            <p className="text-sm text-danger">{error}</p>
           </div>
         )}
 
@@ -190,24 +190,24 @@ export default function MyVouchersPage() {
           <div className="grid grid-cols-3 gap-3">
             <Card>
               <div className="p-4 text-center">
-                <p className="text-xs text-slate-600 mb-1">可用</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-xs text-text-tertiary mb-1">可用</p>
+                <p className="text-2xl font-bold text-success font-mono">
                   {stats.activeVouchers ?? stats.available ?? 0}
                 </p>
               </div>
             </Card>
             <Card>
               <div className="p-4 text-center">
-                <p className="text-xs text-slate-600 mb-1">已用</p>
-                <p className="text-2xl font-bold text-gray-600">
+                <p className="text-xs text-text-tertiary mb-1">已用</p>
+                <p className="text-2xl font-bold text-text-secondary font-mono">
                   {stats.usedVouchers ?? stats.used ?? 0}
                 </p>
               </div>
             </Card>
             <Card>
               <div className="p-4 text-center">
-                <p className="text-xs text-slate-600 mb-1">已过期</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-xs text-text-tertiary mb-1">已过期</p>
+                <p className="text-2xl font-bold text-danger font-mono">
                   {stats.expiredVouchers ?? stats.expired ?? 0}
                 </p>
               </div>
@@ -221,8 +221,8 @@ export default function MyVouchersPage() {
             onClick={() => setFilter('available')}
             className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
               filter === 'available'
-                ? 'bg-green-600 text-white'
-                : 'bg-white text-slate-700 hover:bg-slate-50'
+                ? 'bg-success text-text-primary'
+                : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
             }`}
           >
             可用
@@ -231,8 +231,8 @@ export default function MyVouchersPage() {
             onClick={() => setFilter('used')}
             className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
               filter === 'used'
-                ? 'bg-gray-600 text-white'
-                : 'bg-white text-slate-700 hover:bg-slate-50'
+                ? 'bg-ink-surface text-text-primary'
+                : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
             }`}
           >
             已使用
@@ -241,8 +241,8 @@ export default function MyVouchersPage() {
             onClick={() => setFilter('expired')}
             className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
               filter === 'expired'
-                ? 'bg-red-600 text-white'
-                : 'bg-white text-slate-700 hover:bg-slate-50'
+                ? 'bg-danger text-text-primary'
+                : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
             }`}
           >
             已过期
@@ -251,8 +251,8 @@ export default function MyVouchersPage() {
             onClick={() => setFilter('all')}
             className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
               filter === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-slate-700 hover:bg-slate-50'
+                ? 'bg-accent text-text-onAccent'
+                : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
             }`}
           >
             全部
@@ -264,9 +264,9 @@ export default function MyVouchersPage() {
           {displayVouchers.length === 0 ? (
             <Card>
               <div className="p-8 text-center">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-ink-elevated rounded-full flex items-center justify-center mx-auto mb-4 border border-border-subtle">
                   <svg
-                    className="w-8 h-8 text-slate-400"
+                    className="w-8 h-8 text-text-tertiary"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -277,10 +277,10 @@ export default function MyVouchersPage() {
                     <path d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                <h3 className="text-lg font-semibold text-text-primary mb-2">
                   暂无优惠券
                 </h3>
-                <p className="text-slate-600 mb-4">
+                <p className="text-text-secondary mb-4">
                   {filter === 'available'
                     ? '您还没有可用的优惠券'
                     : filter === 'used'
@@ -291,7 +291,7 @@ export default function MyVouchersPage() {
                 </p>
                 <button
                   onClick={() => router.push('/vouchers/exchange')}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-accent text-text-onAccent text-sm font-medium rounded-lg hover:shadow-glow transition-colors"
                 >
                   去兑换优惠券
                 </button>
@@ -311,12 +311,12 @@ export default function MyVouchersPage() {
                       <div
                         className={`w-16 h-16 bg-gradient-to-br rounded-lg flex items-center justify-center flex-shrink-0 ${
                           voucher.used || isExpired(voucher)
-                            ? 'from-gray-400 to-gray-500'
-                            : 'from-blue-500 to-purple-600'
+                            ? 'from-slate-600 to-slate-500'
+                            : 'from-ink-elevated to-ink-surface'
                         }`}
                       >
                         <svg
-                          className="w-8 h-8 text-white"
+                          className="w-8 h-8 text-accent"
                           fill="none"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -332,11 +332,11 @@ export default function MyVouchersPage() {
                       <div className="flex-1">
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <h3 className="text-lg font-bold text-slate-900 mb-1">
+                            <h3 className="text-lg font-bold text-text-primary mb-1">
                               {voucherData.name}
                             </h3>
                             <div className="flex items-center gap-2">
-                              <Badge variant="blue">
+                              <Badge variant="info">
                                 {getDiscountText(voucher)}
                               </Badge>
                               <Badge variant={status.color as any}>
@@ -346,11 +346,11 @@ export default function MyVouchersPage() {
                           </div>
                         </div>
 
-                        <p className="text-sm text-slate-600 mb-3">
+                        <p className="text-sm text-text-secondary mb-3">
                           {voucherData.description}
                         </p>
 
-                        <div className="space-y-1 text-xs text-slate-500">
+                        <div className="space-y-1 text-xs text-text-tertiary">
                           {voucherData.min_purchase && (
                             <p>• 最低消费: RM {voucherData.min_purchase}</p>
                           )}
@@ -380,12 +380,12 @@ export default function MyVouchersPage() {
         {displayVouchers.length > 0 && filter === 'available' && (
           <Card>
             <div className="p-4 text-center">
-              <p className="text-sm text-slate-600 mb-3">
+              <p className="text-sm text-text-secondary mb-3">
                 在下单时可以选择使用优惠券
               </p>
               <button
                 onClick={() => router.push('/booking')}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-accent text-text-onAccent text-sm font-medium rounded-lg hover:shadow-glow transition-colors"
               >
                 立即预约
               </button>

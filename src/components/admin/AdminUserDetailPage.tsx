@@ -176,10 +176,10 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
 
   function getStatusBadge(status: string) {
     const badges = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      in_progress: 'bg-blue-100 text-blue-800',
-      completed: 'bg-green-100 text-green-800',
-      cancelled: 'bg-red-100 text-red-800',
+      pending: 'bg-warning/15 text-warning',
+      in_progress: 'bg-info-soft text-info',
+      completed: 'bg-success/15 text-success',
+      cancelled: 'bg-danger/15 text-danger',
     };
     
     const labels = {
@@ -190,7 +190,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
     };
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-800'}`}>
+      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${badges[status as keyof typeof badges] || 'bg-ink-elevated text-text-secondary'}`}>
         {labels[status as keyof typeof labels] || status}
       </span>
     );
@@ -198,9 +198,9 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
 
   function getVoucherStatusBadge(status: string) {
     const badges = {
-      available: 'bg-green-100 text-green-800',
-      used: 'bg-gray-100 text-gray-800',
-      expired: 'bg-red-100 text-red-800',
+      available: 'bg-success/15 text-success',
+      used: 'bg-ink-elevated text-text-secondary',
+      expired: 'bg-danger/15 text-danger',
     };
     
     const labels = {
@@ -218,9 +218,9 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
 
   function getRoleBadge(role: string) {
     const badges = {
-      user: 'bg-blue-100 text-blue-800',
-      admin: 'bg-purple-100 text-purple-800',
-      super_admin: 'bg-red-100 text-red-800',
+      user: 'bg-info-soft text-info',
+      admin: 'bg-accent/15 text-accent',
+      super_admin: 'bg-danger/15 text-danger',
     };
     
     const labels = {
@@ -239,7 +239,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
   if (loading && !user) {
     return (
       <div className="p-6 max-w-7xl mx-auto">
-        <div className="text-center py-12 text-gray-500">加载中...</div>
+        <div className="text-center py-12 text-text-tertiary">加载中...</div>
       </div>
     );
   }
@@ -247,7 +247,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
   if (error || !user) {
     return (
       <div className="p-6 max-w-7xl mx-auto">
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+        <div className="bg-danger/10 border border-danger/40 text-danger px-4 py-3 rounded-lg">
           {error || '用户不存在'}
         </div>
       </div>
@@ -270,17 +270,17 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push('/admin/users')}
-            className="text-gray-600 hover:text-gray-900"
+            className="text-text-secondary hover:text-text-primary"
           >
             ← 返回列表
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">{user.full_name}</h1>
+          <h1 className="text-3xl font-bold text-text-primary">{user.full_name}</h1>
           {getRoleBadge(user.role)}
           <span
             className={`px-3 py-1 rounded-full text-sm font-semibold ${
               user.is_blocked
-                ? 'bg-red-100 text-red-800'
-                : 'bg-green-100 text-green-800'
+                ? 'bg-danger/15 text-danger'
+                : 'bg-success/15 text-success'
             }`}
           >
             {user.is_blocked ? '已封禁' : '正常'}
@@ -290,13 +290,13 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
         <div className="flex gap-2">
           <button
             onClick={() => setShowPointsModal(true)}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            className="px-4 py-2 bg-accent text-text-onAccent rounded-lg hover:shadow-glow"
           >
             调整积分
           </button>
           <button
             onClick={handleChangeRole}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-accent text-text-onAccent rounded-lg hover:shadow-glow"
           >
             更改角色
           </button>
@@ -304,8 +304,8 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
             onClick={handleBlockUser}
             className={`px-4 py-2 rounded-lg ${
               user.is_blocked
-                ? 'bg-green-600 text-white hover:bg-green-700'
-                : 'bg-red-600 text-white hover:bg-red-700'
+                ? 'bg-success text-text-primary hover:bg-success/90'
+                : 'bg-danger text-text-primary hover:bg-danger/90'
             }`}
           >
             {user.is_blocked ? '解除封禁' : '封禁用户'}
@@ -317,38 +317,38 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* User Info */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-ink-surface rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4">用户信息</h2>
             <div className="space-y-3">
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">联系方式</span>
+                <span className="text-text-secondary">联系方式</span>
                 <span className="font-medium">{user.phone || user.email || '-'}</span>
               </div>
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">手机</span>
+                <span className="text-text-secondary">手机</span>
                 <span className="font-medium">{user.phone || '-'}</span>
               </div>
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">当前积分</span>
-                <span className="font-bold text-purple-600">{user.points}</span>
+                <span className="text-text-secondary">当前积分</span>
+                <span className="font-bold text-accent">{user.points}</span>
               </div>
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">邀请码</span>
-                <span className="font-mono text-blue-600">{user.referral_code || '-'}</span>
+                <span className="text-text-secondary">邀请码</span>
+                <span className="font-mono text-accent">{user.referral_code || '-'}</span>
               </div>
               {user.referred_by && (
                 <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-600">推荐人</span>
-                  <span className="font-mono text-gray-600">{user.referred_by}</span>
+                  <span className="text-text-secondary">推荐人</span>
+                  <span className="font-mono text-text-secondary">{user.referred_by}</span>
                 </div>
               )}
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">注册时间</span>
+                <span className="text-text-secondary">注册时间</span>
                 <span className="text-sm">{formatDateTime(user.created_at || user.createdAt as any)}</span>
               </div>
               {(user.updated_at || user.updatedAt) && (
                 <div className="flex justify-between py-2">
-                  <span className="text-gray-600">更新时间</span>
+                  <span className="text-text-secondary">更新时间</span>
                   <span className="text-sm">{formatDateTime((user.updated_at || user.updatedAt) as any)}</span>
                 </div>
               )}
@@ -356,38 +356,38 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
           </div>
 
           {/* Orders History */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-ink-surface rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4">订单历史</h2>
             {orders.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">暂无订单</div>
+              <div className="text-center py-8 text-text-tertiary">暂无订单</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-ink-elevated">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">球线</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">拉力</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">价格</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">使用套餐</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">时间</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">球线</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">拉力</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">价格</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">状态</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">使用套餐</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">时间</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-border-subtle">
                     {orders.map((order) => (
-                      <tr key={order.id} className="hover:bg-gray-50">
+                      <tr key={order.id} className="hover:bg-ink-elevated">
                         <td className="px-4 py-3">
                           <div className="font-medium">{order.string?.name || '-'}</div>
-                          <div className="text-sm text-gray-500">{order.string?.brand || '-'}</div>
+                          <div className="text-sm text-text-tertiary">{order.string?.brand || '-'}</div>
                         </td>
                         <td className="px-4 py-3">{order.tension || '-'} lbs</td>
                         <td className="px-4 py-3 font-semibold">{formatCurrency(order.price || order.totalAmount || 0)}</td>
                         <td className="px-4 py-3">{getStatusBadge(order.status)}</td>
                         <td className="px-4 py-3">
                           {order.use_package ? (
-                            <span className="text-green-600 text-xs">✓</span>
+                            <span className="text-success text-xs">✓</span>
                           ) : (
-                            <span className="text-gray-400 text-xs">-</span>
+                            <span className="text-text-tertiary text-xs">-</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-sm">{formatDate((order.created_at || order.createdAt) as any)}</td>
@@ -400,19 +400,19 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
           </div>
 
           {/* Points Log */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-ink-surface rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4">积分记录</h2>
             {pointsLog.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">暂无积分记录</div>
+              <div className="text-center py-8 text-text-tertiary">暂无积分记录</div>
             ) : (
               <div className="space-y-2">
                 {pointsLog.map((log) => (
                   <div key={log.id} className="flex justify-between items-center py-2 border-b">
                     <div>
                       <div className="font-medium">{log.source || log.reason || '-'}</div>
-                      <div className="text-sm text-gray-500">{formatDateTime((log.created_at || log.createdAt) as any)}</div>
+                      <div className="text-sm text-text-tertiary">{formatDateTime((log.created_at || log.createdAt) as any)}</div>
                     </div>
-                    <div className={`font-bold ${(log.amount || log.points || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <div className={`font-bold ${(log.amount || log.points || 0) > 0 ? 'text-success' : 'text-danger'}`}>
                       {(log.amount || log.points || 0) > 0 ? '+' : ''}{log.amount || log.points || 0}
                     </div>
                   </div>
@@ -425,46 +425,46 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Stats */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-ink-surface rounded-lg shadow p-6">
             <h3 className="text-lg font-bold mb-4">统计数据</h3>
             <div className="space-y-3">
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">总订单</span>
+                <span className="text-text-secondary">总订单</span>
                 <span className="font-bold">{totalOrders}</span>
               </div>
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">已完成</span>
-                <span className="font-bold text-green-600">{completedOrders}</span>
+                <span className="text-text-secondary">已完成</span>
+                <span className="font-bold text-success">{completedOrders}</span>
               </div>
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">总消费</span>
-                <span className="font-bold text-blue-600">{formatCurrency(totalSpent)}</span>
+                <span className="text-text-secondary">总消费</span>
+                <span className="font-bold text-accent">{formatCurrency(totalSpent)}</span>
               </div>
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">活跃套餐</span>
+                <span className="text-text-secondary">活跃套餐</span>
                 <span className="font-bold">{activePackages.length}</span>
               </div>
               <div className="flex justify-between py-2">
-                <span className="text-gray-600">可用优惠券</span>
+                <span className="text-text-secondary">可用优惠券</span>
                 <span className="font-bold">{availableVouchers.length}</span>
               </div>
             </div>
           </div>
 
           {/* Packages */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-ink-surface rounded-lg shadow p-6">
             <h3 className="text-lg font-bold mb-4">拥有套餐</h3>
             {packages.length === 0 ? (
-              <div className="text-center py-4 text-gray-500 text-sm">暂无套餐</div>
+              <div className="text-center py-4 text-text-tertiary text-sm">暂无套餐</div>
             ) : (
               <div className="space-y-3">
                 {packages.map((pkg) => (
                   <div key={pkg.id} className="border rounded-lg p-3">
                     <div className="font-medium">{pkg.package?.name || pkg.packageName || '-'}</div>
-                    <div className="text-sm text-gray-600 mt-1">
+                    <div className="text-sm text-text-secondary mt-1">
                       剩余: {pkg.remaining || pkg.remainingSessions || 0} / {pkg.package?.times || pkg.totalSessions || 0}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-text-tertiary mt-1">
                       到期: {formatDate((pkg.expiry || pkg.expiryDate) as any)}
                     </div>
                   </div>
@@ -474,25 +474,25 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
           </div>
 
           {/* Vouchers */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-ink-surface rounded-lg shadow p-6">
             <h3 className="text-lg font-bold mb-4">拥有优惠券</h3>
             {vouchers.length === 0 ? (
-              <div className="text-center py-4 text-gray-500 text-sm">暂无优惠券</div>
+              <div className="text-center py-4 text-text-tertiary text-sm">暂无优惠券</div>
             ) : (
               <div className="space-y-3">
                 {vouchers.map((voucher) => (
                   <div key={voucher.id} className="border rounded-lg p-3">
                     <div className="flex justify-between items-start">
-                      <div className="font-medium text-blue-600">{voucher.voucher?.code || voucher.code || '-'}</div>
+                      <div className="font-medium text-accent">{voucher.voucher?.code || voucher.code || '-'}</div>
                       {getVoucherStatusBadge(voucher.status || (voucher.isUsed ? 'used' : 'available'))}
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">
+                    <div className="text-sm text-text-secondary mt-1">
                       {voucher.voucher?.type === 'fixed_amount'
                         ? formatCurrency(voucher.voucher?.value || voucher.discountValue || 0)
                         : `${voucher.voucher?.value || voucher.discountValue || 0}%`}
                     </div>
                     {(voucher.used_at || voucher.usedAt) && (
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-text-tertiary mt-1">
                         使用: {formatDate((voucher.used_at || voucher.usedAt) as any)}
                       </div>
                     )}
@@ -507,19 +507,19 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
       {/* Points Adjustment Modal */}
       {showPointsModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className="bg-ink-surface rounded-lg max-w-md w-full p-6">
             <h2 className="text-xl font-bold mb-4">调整积分</h2>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text-secondary mb-1">
                   当前积分
                 </label>
-                <div className="text-2xl font-bold text-purple-600">{user.points}</div>
+                <div className="text-2xl font-bold text-accent">{user.points}</div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text-secondary mb-1">
                   调整金额
                 </label>
                 <input
@@ -527,15 +527,15 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
                   value={pointsAmount}
                   onChange={(e) => setPointsAmount(parseInt(e.target.value) || 0)}
                   placeholder="正数增加，负数减少"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
                 />
-                <div className="text-sm text-gray-500 mt-1">
+                <div className="text-sm text-text-tertiary mt-1">
                   调整后: {user.points + pointsAmount}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text-secondary mb-1">
                   调整原因
                 </label>
                 <textarea
@@ -543,7 +543,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
                   onChange={(e) => setPointsReason(e.target.value)}
                   rows={3}
                   placeholder="请输入调整原因"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
                 />
               </div>
             </div>
@@ -555,14 +555,14 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
                   setPointsAmount(0);
                   setPointsReason('');
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                className="px-4 py-2 border border-border-subtle rounded-lg text-text-secondary hover:bg-ink-elevated"
               >
                 取消
               </button>
               <button
                 onClick={handleAdjustPoints}
                 disabled={loading || pointsAmount === 0 || !pointsReason}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                className="px-4 py-2 bg-accent text-text-onAccent rounded-lg hover:shadow-glow disabled:bg-ink-elevated"
               >
                 {loading ? '处理中...' : '确认调整'}
               </button>

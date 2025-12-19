@@ -63,8 +63,8 @@ export default function AdminOrderProgress({
         status: 'completed',
         description: formatDate(createdAt),
         icon: CheckCircle,
-        color: 'text-green-600',
-        bgColor: 'bg-green-50',
+        color: 'text-success',
+        bgColor: 'bg-success/15',
       },
     ];
 
@@ -75,8 +75,8 @@ export default function AdminOrderProgress({
         status: 'cancelled',
         description: formatDate(cancelledAt || updatedAt || createdAt),
         icon: XCircle,
-        color: 'text-red-600',
-        bgColor: 'bg-red-50',
+        color: 'text-danger',
+        bgColor: 'bg-danger/15',
       });
       return steps;
     }
@@ -89,8 +89,8 @@ export default function AdminOrderProgress({
         status: 'pending',
         description: '待开始',
         icon: Clock,
-        color: 'text-gray-400',
-        bgColor: 'bg-gray-50',
+        color: 'text-text-tertiary',
+        bgColor: 'bg-ink-elevated',
         action: {
           label: '开始穿线',
           nextStatus: 'in_progress',
@@ -104,8 +104,8 @@ export default function AdminOrderProgress({
         status: currentStatus === 'in_progress' ? 'in_progress' : 'completed',
         description: formatDate(updatedAt || createdAt),
         icon: currentStatus === 'in_progress' ? PlayCircle : CheckCircle,
-        color: currentStatus === 'in_progress' ? 'text-blue-600' : 'text-green-600',
-        bgColor: currentStatus === 'in_progress' ? 'bg-blue-50' : 'bg-green-50',
+        color: currentStatus === 'in_progress' ? 'text-info' : 'text-success',
+        bgColor: currentStatus === 'in_progress' ? 'bg-info-soft' : 'bg-success/15',
       });
     }
 
@@ -117,8 +117,8 @@ export default function AdminOrderProgress({
         status: 'completed',
         description: formatDate(completedAt || updatedAt || createdAt),
         icon: CheckCircle,
-        color: 'text-green-600',
-        bgColor: 'bg-green-50',
+        color: 'text-success',
+        bgColor: 'bg-success/15',
       });
     } else if (currentStatus === 'in_progress') {
       steps.push({
@@ -127,8 +127,8 @@ export default function AdminOrderProgress({
         status: 'pending',
         description: '待完成',
         icon: Clock,
-        color: 'text-gray-400',
-        bgColor: 'bg-gray-50',
+        color: 'text-text-tertiary',
+        bgColor: 'bg-ink-elevated',
         action: {
           label: '完成订单',
           nextStatus: 'completed',
@@ -142,8 +142,8 @@ export default function AdminOrderProgress({
         status: 'pending',
         description: '等待处理',
         icon: Clock,
-        color: 'text-gray-400',
-        bgColor: 'bg-gray-50',
+        color: 'text-text-tertiary',
+        bgColor: 'bg-ink-elevated',
       });
     }
 
@@ -185,11 +185,11 @@ export default function AdminOrderProgress({
   const steps = generateSteps();
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+    <div className="bg-ink-surface rounded-xl p-6 shadow-sm border border-border-subtle">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">服务进度</h2>
+        <h2 className="text-lg font-semibold text-text-primary">服务进度</h2>
         {currentStatus === 'in_progress' && (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 animate-pulse">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-info-soft text-info animate-pulse">
             <PlayCircle className="w-4 h-4 mr-1" />
             处理中
           </span>
@@ -214,8 +214,8 @@ export default function AdminOrderProgress({
                     className={`
                       w-12 h-12 rounded-full flex items-center justify-center
                       ${step.bgColor} border-2
-                      ${isActive ? 'border-blue-400 ring-4 ring-blue-100' : 'border-transparent'}
-                      ${isCompleted ? 'border-green-400' : ''}
+                      ${isActive ? 'border-info/60 ring-4 ring-info/20' : 'border-transparent'}
+                      ${isCompleted ? 'border-success/50' : ''}
                       ${isPending ? 'opacity-50' : ''}
                       transition-all duration-300
                     `}
@@ -229,7 +229,7 @@ export default function AdminOrderProgress({
                     <div 
                       className={`
                         w-0.5 h-12 my-1
-                        ${isCompleted ? 'bg-green-300' : 'bg-gray-200'}
+                        ${isCompleted ? 'bg-success/40' : 'bg-border-subtle'}
                         transition-colors duration-300
                       `}
                     />
@@ -243,7 +243,7 @@ export default function AdminOrderProgress({
                       <div className={`font-medium ${step.color} ${isActive ? 'text-lg' : 'text-base'}`}>
                         {step.label}
                       </div>
-                      <div className={`text-sm mt-1 ${isPending ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <div className={`text-sm mt-1 ${isPending ? 'text-text-tertiary' : 'text-text-secondary'}`}>
                         {step.description}
                       </div>
                     </div>
@@ -264,8 +264,8 @@ export default function AdminOrderProgress({
                         className={`
                           px-4 py-2 rounded-lg font-medium text-sm
                           ${step.action.nextStatus === 'completed' 
-                            ? 'bg-green-600 hover:bg-green-700 text-white' 
-                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                            ? 'bg-success hover:bg-success/90 text-text-primary' 
+                            : 'bg-accent hover:shadow-glow text-text-onAccent'
                           }
                           disabled:opacity-50 disabled:cursor-not-allowed
                           transition-colors
@@ -278,7 +278,7 @@ export default function AdminOrderProgress({
                     )}
 
                     {isActionActive && updating && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-text-secondary">
                         <Loader2 className="w-4 h-4 animate-spin" />
                         更新中...
                       </div>
@@ -293,7 +293,7 @@ export default function AdminOrderProgress({
 
       {/* 取消按钮 (仅当订单未完成或取消时显示) */}
       {currentStatus !== 'completed' && currentStatus !== 'cancelled' && (
-        <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="mt-6 pt-6 border-t border-border-subtle">
           <button
             onClick={() => {
               if (confirm('确认取消订单？此操作不可恢复。')) {
@@ -301,7 +301,7 @@ export default function AdminOrderProgress({
               }
             }}
             disabled={updating}
-            className="w-full px-4 py-2 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 text-sm text-danger border border-danger/40 rounded-lg hover:bg-danger/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             取消订单
           </button>

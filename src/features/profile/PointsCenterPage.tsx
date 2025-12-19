@@ -213,76 +213,76 @@ export default function PointsCenterPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-ink">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent mb-4"></div>
-          <p className="text-gray-600">加载中...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent mb-4"></div>
+          <p className="text-text-secondary">加载中...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-ink py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* 标题 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">积分中心</h1>
-          <p className="text-gray-600">查看积分余额、明细和兑换优惠</p>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">积分中心</h1>
+          <p className="text-text-secondary">查看积分余额、明细和兑换优惠</p>
         </div>
 
         {/* 积分总览 */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {/* 当前积分 */}
-          <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg shadow-lg p-6 text-white col-span-1 md:col-span-1">
+          <div className="bg-gradient-to-br from-accent/25 via-ink-surface to-ink-elevated rounded-lg border border-border-subtle p-6 text-text-primary col-span-1 md:col-span-1">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium opacity-90">当前积分</h3>
-              <Coins className="w-6 h-6 opacity-80" />
+              <h3 className="text-lg font-medium text-text-secondary">当前积分</h3>
+              <Coins className="w-6 h-6 text-accent" />
             </div>
             <p className="text-5xl font-bold mb-2">{currentPoints}</p>
-            <p className="text-purple-100 text-sm">可用于兑换优惠券</p>
+            <p className="text-text-secondary text-sm">可用于兑换优惠券</p>
           </div>
 
           {/* 累计获得 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-ink-surface rounded-lg border border-border-subtle p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-600">累计获得</h3>
-              <div className="p-2 bg-green-100 rounded-lg">
-                <TrendingUp className="w-5 h-5 text-green-600" />
+              <h3 className="text-sm font-medium text-text-secondary">累计获得</h3>
+              <div className="p-2 bg-success/15 rounded-lg">
+                <TrendingUp className="w-5 h-5 text-success" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-gray-900 mb-1">{totalEarned}</p>
-            <p className="text-sm text-gray-600">总获得积分</p>
+            <p className="text-3xl font-bold text-text-primary mb-1">{totalEarned}</p>
+            <p className="text-sm text-text-secondary">总获得积分</p>
           </div>
 
           {/* 累计消费 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-ink-surface rounded-lg border border-border-subtle p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-600">累计消费</h3>
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <TrendingDown className="w-5 h-5 text-orange-600" />
+              <h3 className="text-sm font-medium text-text-secondary">累计消费</h3>
+              <div className="p-2 bg-warning/15 rounded-lg">
+                <TrendingDown className="w-5 h-5 text-warning" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-gray-900 mb-1">{totalSpent}</p>
-            <p className="text-sm text-gray-600">已兑换积分</p>
+            <p className="text-3xl font-bold text-text-primary mb-1">{totalSpent}</p>
+            <p className="text-sm text-text-secondary">已兑换积分</p>
           </div>
         </div>
 
         {/* 兑换优惠券 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
-          <div className="p-6 border-b border-gray-200">
+        <div className="bg-ink-surface rounded-lg border border-border-subtle mb-8">
+          <div className="p-6 border-b border-border-subtle">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-purple-600" />
-              <h2 className="text-xl font-semibold text-gray-900">积分兑换</h2>
+              <Sparkles className="w-6 h-6 text-accent" />
+              <h2 className="text-xl font-semibold text-text-primary">积分兑换</h2>
             </div>
-            <p className="text-sm text-gray-600 mt-1">使用积分兑换优惠券</p>
+            <p className="text-sm text-text-secondary mt-1">使用积分兑换优惠券</p>
           </div>
 
           <div className="p-6">
             {availableVouchers.length === 0 ? (
               <div className="text-center py-8">
-                <Gift className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-600">暂无可兑换优惠券</p>
+                <Gift className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
+                <p className="text-text-secondary">暂无可兑换优惠券</p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 gap-4">
@@ -292,31 +292,31 @@ export default function PointsCenterPage() {
                   return (
                     <div
                       key={voucher.id}
-                      className={`border-2 rounded-lg p-4 ${
+                      className={`border rounded-lg p-4 ${
                         canRedeem
-                          ? 'border-purple-200 bg-purple-50'
-                          : 'border-gray-200 bg-gray-50 opacity-60'
+                          ? 'border-accent-border bg-ink-elevated'
+                          : 'border-border-subtle bg-ink-surface/60 opacity-70'
                       }`}
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900 mb-1">
+                          <h3 className="font-semibold text-text-primary mb-1">
                             {voucher.discount_type === 'percentage'
                               ? `${voucher.discount_value}% OFF`
                               : `RM ${voucher.discount_value} OFF`}
                           </h3>
-                          <p className="text-sm text-gray-600">{voucher.description}</p>
+                          <p className="text-sm text-text-secondary">{voucher.description}</p>
                           {voucher.min_purchase > 0 && (
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-text-tertiary mt-1">
                               最低消费: RM {voucher.min_purchase}
                             </p>
                           )}
                         </div>
-                        <Ticket className="w-6 h-6 text-purple-600" />
+                        <Ticket className="w-6 h-6 text-accent" />
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1 text-purple-600 font-semibold">
+                        <div className="flex items-center gap-1 text-accent font-semibold">
                           <Coins className="w-4 h-4" />
                           {voucher.points_required} 积分
                         </div>
@@ -326,8 +326,8 @@ export default function PointsCenterPage() {
                           disabled={!canRedeem || redeeming === voucher.id}
                           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                             canRedeem
-                              ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              ? 'bg-accent text-text-onAccent hover:shadow-glow'
+                              : 'bg-ink-elevated text-text-tertiary cursor-not-allowed'
                           } ${redeeming === voucher.id ? 'opacity-50' : ''}`}
                         >
                           {redeeming === voucher.id ? '兑换中...' : '立即兑换'}
@@ -342,42 +342,42 @@ export default function PointsCenterPage() {
         </div>
 
         {/* 积分明细 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
+        <div className="bg-ink-surface rounded-lg border border-border-subtle">
+          <div className="p-6 border-b border-border-subtle">
             <div className="flex items-center gap-2">
-              <Calendar className="w-6 h-6 text-purple-600" />
-              <h2 className="text-xl font-semibold text-gray-900">积分明细</h2>
+              <Calendar className="w-6 h-6 text-accent" />
+              <h2 className="text-xl font-semibold text-text-primary">积分明细</h2>
             </div>
           </div>
 
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-border-subtle">
             {pointsLogs.length === 0 ? (
               <div className="p-12 text-center">
-                <Coins className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-600">暂无积分记录</p>
+                <Coins className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
+                <p className="text-text-secondary">暂无积分记录</p>
               </div>
             ) : (
               pointsLogs.map((log) => (
-                <div key={log.id} className="p-4 hover:bg-gray-50 transition-colors">
+                <div key={log.id} className="p-4 hover:bg-ink-elevated transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
                       <div
                         className={`p-2 rounded-lg ${
                           log.type === 'earned'
-                            ? 'bg-green-100'
+                            ? 'bg-success/15'
                             : log.type === 'spent'
-                            ? 'bg-orange-100'
-                            : 'bg-gray-100'
+                            ? 'bg-warning/15'
+                            : 'bg-ink-elevated'
                         }`}
                       >
                         {getSourceIcon(log.source)}
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-text-primary">
                           {getSourceLabel(log.source)}
                         </p>
-                        <p className="text-sm text-gray-600">{log.description}</p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-sm text-text-secondary">{log.description}</p>
+                        <p className="text-xs text-text-tertiary mt-1">
                           {formatDate(log.created_at)}
                         </p>
                       </div>
@@ -387,10 +387,10 @@ export default function PointsCenterPage() {
                       <p
                         className={`text-xl font-bold ${
                           log.type === 'earned'
-                            ? 'text-green-600'
+                            ? 'text-success'
                             : log.type === 'spent'
-                            ? 'text-orange-600'
-                            : 'text-gray-600'
+                            ? 'text-warning'
+                            : 'text-text-secondary'
                         }`}
                       >
                         {log.type === 'earned' ? '+' : ''}
@@ -410,8 +410,8 @@ export default function PointsCenterPage() {
             <div
               className={`flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg ${
                 toast.type === 'success'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-red-600 text-white'
+                  ? 'bg-success text-text-primary'
+                  : 'bg-danger text-text-primary'
               }`}
             >
               {toast.type === 'success' ? (

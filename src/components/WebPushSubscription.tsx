@@ -110,12 +110,12 @@ export default function WebPushSubscription() {
 
   if (!supported) {
     return (
-      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <div className="p-4 bg-ink-elevated rounded-lg border border-border-subtle">
         <div className="flex items-start gap-3">
           <span className="text-2xl">⚠️</span>
           <div>
-            <h3 className="font-semibold text-gray-900 mb-1">不支持 Web Push</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="font-semibold text-text-primary mb-1">不支持 Web Push</h3>
+            <p className="text-sm text-text-secondary">
               您的浏览器不支持 Web Push 通知功能。
               <br />
               请使用 Chrome、Firefox、Edge 或 Safari 等现代浏览器。
@@ -128,12 +128,12 @@ export default function WebPushSubscription() {
 
   if (permission === 'denied') {
     return (
-      <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+      <div className="p-4 bg-danger/15 rounded-lg border border-danger/40">
         <div className="flex items-start gap-3">
           <span className="text-2xl">🔕</span>
           <div>
-            <h3 className="font-semibold text-red-900 mb-1">通知权限被拒绝</h3>
-            <p className="text-sm text-red-700">
+            <h3 className="font-semibold text-danger mb-1">通知权限被拒绝</h3>
+            <p className="text-sm text-danger">
               您已拒绝通知权限。如需启用：
               <br />
               1. 点击地址栏的锁图标
@@ -151,13 +151,13 @@ export default function WebPushSubscription() {
   }
 
   return (
-    <div className="p-4 bg-white rounded-lg border border-gray-200">
+    <div className="p-4 bg-ink-surface rounded-lg border border-border-subtle">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <span className="text-2xl">🔔</span>
           <div>
-            <h3 className="font-semibold text-gray-900">浏览器推送通知</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="font-semibold text-text-primary">浏览器推送通知</h3>
+            <p className="text-sm text-text-secondary">
               {subscribed 
                 ? '已启用 - 即使关闭页面也能收到通知' 
                 : '启用后可在订单状态更新时收到实时通知'}
@@ -166,19 +166,19 @@ export default function WebPushSubscription() {
         </div>
 
         {subscribed ? (
-          <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
+          <span className="px-3 py-1 bg-success/15 text-success text-sm font-medium rounded-full">
             已启用
           </span>
         ) : (
-          <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-full">
+          <span className="px-3 py-1 bg-ink-elevated text-text-secondary text-sm font-medium rounded-full">
             未启用
           </span>
         )}
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="mb-4 p-3 bg-danger/15 border border-danger/40 rounded-lg">
+          <p className="text-sm text-danger">{error}</p>
         </div>
       )}
 
@@ -187,7 +187,7 @@ export default function WebPushSubscription() {
           <button
             onClick={handleSubscribe}
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-2 bg-accent text-text-onAccent font-medium rounded-lg hover:shadow-glow transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? '处理中...' : '启用推送通知'}
           </button>
@@ -196,14 +196,14 @@ export default function WebPushSubscription() {
             <button
               onClick={handleTest}
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-success text-text-primary font-medium rounded-lg hover:bg-success/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? '发送中...' : '发送测试通知'}
             </button>
             <button
               onClick={handleUnsubscribe}
               disabled={loading}
-              className="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-ink-elevated text-text-secondary font-medium rounded-lg hover:bg-ink-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? '处理中...' : '禁用'}
             </button>
@@ -211,9 +211,9 @@ export default function WebPushSubscription() {
         )}
       </div>
 
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <h4 className="text-sm font-medium text-gray-900 mb-2">通知类型：</h4>
-        <ul className="text-sm text-gray-600 space-y-1">
+      <div className="mt-4 pt-4 border-t border-border-subtle">
+        <h4 className="text-sm font-medium text-text-primary mb-2">通知类型：</h4>
+        <ul className="text-sm text-text-secondary space-y-1">
           <li>✅ 订单状态更新（创建、确认、完成、取消）</li>
           <li>✅ 支付确认（成功、失败、退款）</li>
           <li>✅ 积分获得提醒</li>
@@ -223,8 +223,8 @@ export default function WebPushSubscription() {
       </div>
 
       {subscribed && (
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-700">
+        <div className="mt-4 p-3 bg-info-soft border border-border-subtle rounded-lg">
+          <p className="text-sm text-info">
             💡 即使关闭网页，您也能在浏览器或系统通知中心收到重要更新！
           </p>
         </div>

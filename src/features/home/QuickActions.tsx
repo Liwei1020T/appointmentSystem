@@ -12,36 +12,50 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Card } from '@/components';
-
 interface QuickActionProps {
   icon: React.ReactNode;
   title: string;
   description: string;
   onClick: () => void;
-  color?: string;
+  tone?: 'accent' | 'info' | 'success' | 'warning';
 }
 
-function QuickActionButton({ icon, title, description, onClick, color = 'blue' }: QuickActionProps) {
-  const colorClasses = {
-    blue: 'bg-blue-50 hover:bg-blue-100 text-blue-600',
-    green: 'bg-green-50 hover:bg-green-100 text-green-600',
-    purple: 'bg-purple-50 hover:bg-purple-100 text-purple-600',
-    orange: 'bg-orange-50 hover:bg-orange-100 text-orange-600',
+function QuickActionButton({ icon, title, description, onClick, tone = 'accent' }: QuickActionProps) {
+  const toneStyles = {
+    accent: {
+      border: 'border-l-accent',
+      iconBg: 'bg-accent-soft',
+      iconText: 'text-accent',
+    },
+    info: {
+      border: 'border-l-info',
+      iconBg: 'bg-info-soft',
+      iconText: 'text-info',
+    },
+    success: {
+      border: 'border-l-success',
+      iconBg: 'bg-success/15',
+      iconText: 'text-success',
+    },
+    warning: {
+      border: 'border-l-warning',
+      iconBg: 'bg-warning/15',
+      iconText: 'text-warning',
+    },
   };
 
   return (
     <button
       onClick={onClick}
-      className={`${colorClasses[color as keyof typeof colorClasses]} rounded-lg p-4 transition-colors w-full text-left`}
+      className={`rounded-xl border border-border-subtle border-l-2 ${toneStyles[tone].border} bg-ink-surface hover:bg-ink-elevated/80 transition-colors w-full text-left p-4`}
     >
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+        <div className={`w-10 h-10 flex items-center justify-center flex-shrink-0 rounded-lg border border-border-subtle ${toneStyles[tone].iconBg} ${toneStyles[tone].iconText}`}>
           {icon}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-sm mb-1">{title}</h3>
-          <p className="text-xs opacity-75 line-clamp-2">{description}</p>
+          <h3 className="font-semibold text-sm mb-1 text-text-primary">{title}</h3>
+          <p className="text-xs text-text-tertiary line-clamp-2">{description}</p>
         </div>
       </div>
     </button>
@@ -61,7 +75,7 @@ export default function QuickActions() {
       title: '立即预约',
       description: '选择球线、拉力，快速下单',
       onClick: () => router.push('/booking'),
-      color: 'blue',
+      tone: 'accent',
     },
     {
       icon: (
@@ -72,7 +86,7 @@ export default function QuickActions() {
       title: '查看订单',
       description: '查看所有订单状态',
       onClick: () => router.push('/orders'),
-      color: 'green',
+      tone: 'info',
     },
     {
       icon: (
@@ -83,7 +97,7 @@ export default function QuickActions() {
       title: '购买套餐',
       description: '购买优惠配套，省更多',
       onClick: () => router.push('/packages'),
-      color: 'purple',
+      tone: 'success',
     },
     {
       icon: (
@@ -94,7 +108,7 @@ export default function QuickActions() {
       title: '兑换优惠券',
       description: '使用积分兑换折扣券',
       onClick: () => router.push('/vouchers/exchange'),
-      color: 'orange',
+      tone: 'warning',
     },
   ];
 

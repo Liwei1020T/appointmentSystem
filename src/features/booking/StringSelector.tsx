@@ -96,8 +96,8 @@ export default function StringSelector({ selectedString, onSelect }: StringSelec
           onClick={() => setSelectedBrand('')}
           className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
             selectedBrand === ''
-              ? 'bg-blue-600 text-white'
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              ? 'bg-accent text-text-onAccent'
+              : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
           }`}
         >
           全部
@@ -108,8 +108,8 @@ export default function StringSelector({ selectedString, onSelect }: StringSelec
             onClick={() => setSelectedBrand(brand)}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
               selectedBrand === brand
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                ? 'bg-accent text-text-onAccent'
+                : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
             }`}
           >
             {brand}
@@ -120,7 +120,7 @@ export default function StringSelector({ selectedString, onSelect }: StringSelec
       {/* 球线列表 */}
       {filteredStrings.length === 0 ? (
         <Card>
-          <div className="p-6 text-center text-slate-600">
+          <div className="p-6 text-center text-text-tertiary">
             <p>没有找到球线</p>
           </div>
         </Card>
@@ -132,18 +132,18 @@ export default function StringSelector({ selectedString, onSelect }: StringSelec
               onClick={() => onSelect(string)}
               className={`cursor-pointer transition-all ${
                 selectedString?.id === string.id
-                  ? 'ring-2 ring-blue-600 bg-blue-50'
-                  : 'hover:bg-slate-50'
+                  ? 'ring-2 ring-accent-border bg-ink-elevated'
+                  : 'hover:bg-ink-elevated/70'
               }`}
             >
               <div className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-slate-900">
+                    <h3 className="font-semibold text-text-primary">
                       {string.brand} {string.model}
                     </h3>
                     {string.specification && (
-                      <p className="text-sm text-slate-600 mt-1">
+                      <p className="text-sm text-text-secondary mt-1">
                         {string.specification}
                       </p>
                     )}
@@ -152,16 +152,16 @@ export default function StringSelector({ selectedString, onSelect }: StringSelec
                         库存: {string.stock}
                       </Badge>
                       {string.stock < 5 && (
-                        <span className="text-xs text-yellow-600">库存紧张</span>
+                        <span className="text-xs text-warning">库存紧张</span>
                       )}
                     </div>
                   </div>
                   <div className="text-right ml-4">
-                    <p className="text-lg font-bold text-blue-600">
+                    <p className="text-lg font-bold text-accent font-mono">
                         {formatCurrency(Number(string.sellingPrice) || 0)}
                     </p>
                     {string.costPrice && (
-                      <p className="text-xs text-slate-500 line-through">
+                      <p className="text-xs text-text-tertiary line-through">
                         {formatCurrency(Number(string.costPrice))}
                       </p>
                     )}
@@ -169,8 +169,8 @@ export default function StringSelector({ selectedString, onSelect }: StringSelec
                 </div>
                 
                 {selectedString?.id === string.id && (
-                  <div className="mt-3 pt-3 border-t border-blue-200">
-                    <div className="flex items-center text-sm text-blue-600">
+                  <div className="mt-3 pt-3 border-t border-accent-border">
+                    <div className="flex items-center text-sm text-accent">
                       <svg className="w-5 h-5 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                         <path d="M5 13l4 4L19 7"></path>
                       </svg>

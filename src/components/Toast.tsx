@@ -23,10 +23,10 @@ export const Toast: React.FC<ToastProps> = ({
   duration = 3000 
 }) => {
   const styles = {
-    success: 'bg-green-600',
-    error: 'bg-red-600',
-    warning: 'bg-amber-500',
-    info: 'bg-blue-600'
+    success: 'border-l-success',
+    error: 'border-l-danger',
+    warning: 'border-l-warning',
+    info: 'border-l-info'
   };
   
   const icons = {
@@ -46,17 +46,17 @@ export const Toast: React.FC<ToastProps> = ({
       <div 
         className={`
           ${styles[type]} 
-          text-white px-4 py-3 rounded-lg shadow-lg 
+          text-text-primary px-4 py-3 rounded-lg shadow-lg 
           flex items-center gap-3 min-w-[280px] max-w-md
-          animate-in slide-in-from-top-5 fade-in
+          glass-strong border border-border-subtle border-l-4 animate-in slide-in-from-top-5 fade-in
         `}
         role="alert"
       >
-        <span className="text-lg font-bold">{icons[type]}</span>
+        <span className="text-lg font-bold text-text-secondary">{icons[type]}</span>
         <span className="flex-1">{message}</span>
         <button 
           onClick={onClose} 
-          className="text-white/80 hover:text-white transition-colors"
+          className="text-text-tertiary hover:text-text-primary transition-colors"
           aria-label="Close"
         >
           ✕

@@ -32,10 +32,10 @@ const PHOTO_TYPE_LABELS: Record<string, string> = {
 };
 
 const PHOTO_TYPE_COLORS: Record<string, string> = {
-  before: 'bg-blue-600',
-  after: 'bg-green-600',
-  detail: 'bg-purple-600',
-  other: 'bg-gray-600',
+  before: 'bg-info text-text-primary',
+  after: 'bg-success text-text-primary',
+  detail: 'bg-accent text-text-onAccent',
+  other: 'bg-ink-elevated text-text-secondary',
 };
 
 export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps) {
@@ -96,10 +96,10 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
+      <div className="bg-ink-surface rounded-lg border border-border-subtle p-6">
         <div className="flex items-center justify-center py-12">
           <Spinner size="md" />
-          <span className="ml-2 text-slate-600">加载照片中...</span>
+          <span className="ml-2 text-text-secondary">加载照片中...</span>
         </div>
       </div>
     );
@@ -107,22 +107,22 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
 
   if (photos.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
+      <div className="bg-ink-surface rounded-lg border border-border-subtle p-6">
         <div className="flex items-center gap-2 mb-2">
-          <Camera className="w-5 h-5 text-slate-400" />
-          <h3 className="text-lg font-semibold text-slate-900">穿线照片</h3>
+          <Camera className="w-5 h-5 text-text-tertiary" />
+          <h3 className="text-lg font-semibold text-text-primary">穿线照片</h3>
         </div>
-        <p className="text-sm text-slate-500">暂无照片，订单完成后管理员会上传穿线照片</p>
+        <p className="text-sm text-text-tertiary">暂无照片，订单完成后管理员会上传穿线照片</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-6">
+    <div className="bg-ink-surface rounded-lg border border-border-subtle p-6">
       <div className="flex items-center gap-2 mb-4">
-        <Camera className="w-5 h-5 text-blue-600" />
-        <h3 className="text-lg font-semibold text-slate-900">穿线照片</h3>
-        <span className="text-sm text-slate-500">({photos.length})</span>
+        <Camera className="w-5 h-5 text-accent" />
+        <h3 className="text-lg font-semibold text-text-primary">穿线照片</h3>
+        <span className="text-sm text-text-tertiary">({photos.length})</span>
       </div>
 
       {/* 照片网格 */}
@@ -131,7 +131,7 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
           <div
             key={photo.id}
             onClick={() => openLightbox(index)}
-            className="relative group cursor-pointer rounded-lg overflow-hidden border border-slate-200 hover:shadow-lg transition-shadow"
+            className="relative group cursor-pointer rounded-lg overflow-hidden border border-border-subtle hover:shadow-lg transition-shadow"
           >
             {/* 缩略图 */}
             <img
@@ -142,20 +142,20 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
 
             {/* 类型标签 */}
             <div className="absolute top-2 left-2">
-              <span className={`px-2 py-1 ${PHOTO_TYPE_COLORS[photo.photo_type]} text-white text-xs rounded`}>
+              <span className={`px-2 py-1 ${PHOTO_TYPE_COLORS[photo.photo_type]} text-xs rounded`}>
                 {PHOTO_TYPE_LABELS[photo.photo_type]}
               </span>
             </div>
 
             {/* 放大图标 */}
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-              <ZoomIn className="w-8 h-8 text-white" />
+            <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+              <ZoomIn className="w-8 h-8 text-text-primary" />
             </div>
 
             {/* 说明文字 */}
             {photo.caption && (
-              <div className="p-2 bg-slate-50">
-                <p className="text-xs text-slate-700 line-clamp-2">{photo.caption}</p>
+              <div className="p-2 bg-ink-elevated">
+                <p className="text-xs text-text-secondary line-clamp-2">{photo.caption}</p>
               </div>
             )}
           </div>
@@ -164,22 +164,22 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
 
       {/* Lightbox 模态框 */}
       {showLightbox && (
-        <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-ink/95 z-50 flex items-center justify-center">
           {/* 关闭按钮 */}
           <button
             onClick={() => setShowLightbox(false)}
-            className="absolute top-4 right-4 p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full transition-colors z-10"
+            className="absolute top-4 right-4 p-2 bg-ink-elevated/40 hover:bg-ink-elevated/70 rounded-full transition-colors z-10"
           >
-            <X className="w-6 h-6 text-white" />
+            <X className="w-6 h-6 text-text-primary" />
           </button>
 
           {/* 上一张 */}
           {photos.length > 1 && (
             <button
               onClick={prevPhoto}
-              className="absolute left-4 p-3 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full transition-colors z-10"
+              className="absolute left-4 p-3 bg-ink-elevated/40 hover:bg-ink-elevated/70 rounded-full transition-colors z-10"
             >
-              <ChevronLeft className="w-8 h-8 text-white" />
+              <ChevronLeft className="w-8 h-8 text-text-primary" />
             </button>
           )}
 
@@ -193,13 +193,13 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
 
             {/* 照片信息 */}
             <div className="mt-4 text-center">
-              <div className={`inline-block px-3 py-1 ${PHOTO_TYPE_COLORS[photos[currentIndex].photo_type]} text-white text-sm rounded mb-2`}>
+              <div className={`inline-block px-3 py-1 ${PHOTO_TYPE_COLORS[photos[currentIndex].photo_type]} text-sm rounded mb-2`}>
                 {PHOTO_TYPE_LABELS[photos[currentIndex].photo_type]}
               </div>
               {photos[currentIndex].caption && (
-                <p className="text-white text-sm">{photos[currentIndex].caption}</p>
+                <p className="text-text-primary text-sm">{photos[currentIndex].caption}</p>
               )}
-              <p className="text-slate-400 text-xs mt-2">
+              <p className="text-text-tertiary text-xs mt-2">
                 {currentIndex + 1} / {photos.length}
               </p>
             </div>
@@ -209,22 +209,22 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
           {photos.length > 1 && (
             <button
               onClick={nextPhoto}
-              className="absolute right-4 p-3 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full transition-colors z-10"
+              className="absolute right-4 p-3 bg-ink-elevated/40 hover:bg-ink-elevated/70 rounded-full transition-colors z-10"
             >
-              <ChevronRight className="w-8 h-8 text-white" />
+              <ChevronRight className="w-8 h-8 text-text-primary" />
             </button>
           )}
 
           {/* 缩略图导航 */}
           {photos.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black bg-opacity-50 p-2 rounded-lg max-w-full overflow-x-auto">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-ink-elevated/80 p-2 rounded-lg max-w-full overflow-x-auto border border-border-subtle">
               {photos.map((photo, index) => (
                 <button
                   key={photo.id}
                   onClick={() => setCurrentIndex(index)}
                   className={`w-16 h-16 rounded overflow-hidden border-2 transition-all flex-shrink-0 ${
                     index === currentIndex
-                      ? 'border-blue-500 scale-110'
+                      ? 'border-accent scale-110'
                       : 'border-transparent opacity-60 hover:opacity-100'
                   }`}
                 >

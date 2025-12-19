@@ -79,7 +79,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-ink">
       {/* Sidebar - Hidden on mobile */}
       <div className="hidden lg:block">
         <Sidebar items={sidebarItems} />

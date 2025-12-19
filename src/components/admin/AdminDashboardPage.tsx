@@ -67,40 +67,26 @@ export default function AdminDashboardPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/admin/stats');
+      const response = await fetch('/api/admin/dashboard-stats?limit=5');
       if (!response.ok) {
-        throw new Error('Failed to load stats');
+        throw new Error('Failed to load dashboard data');
       }
       const data = await response.json();
 
-      setStats({
-        todayOrders: Number(data.todayOrders) || 0,
-        todayRevenue: Number(data.todayRevenue) || 0,
-        monthOrders: Number(data.monthOrders) || 0,
-        monthRevenue: Number(data.monthRevenue) || 0,
-        activePackages: Number(data.activePackages) || Number(data.active_package_count) || 0,
-        lowStockItems: Number(data.lowStockItems) || Number(data.lowStockCount) || 0,
-        pendingOrders: Number(data.pendingOrders) || 0,
-      });
+      if (data.stats) {
+        setStats({
+          todayOrders: Number(data.stats.todayOrders) || 0,
+          todayRevenue: Number(data.stats.todayRevenue) || 0,
+          monthOrders: Number(data.stats.monthOrders) || 0,
+          monthRevenue: Number(data.stats.monthRevenue) || 0,
+          activePackages: Number(data.stats.activePackages) || 0,
+          lowStockItems: Number(data.stats.lowStockItems) || 0,
+          pendingOrders: Number(data.stats.pendingOrders) || 0,
+        });
+      }
 
-      const ordersResponse = await fetch('/api/admin/orders?limit=5');
-      if (ordersResponse.ok) {
-        const ordersPayload = await ordersResponse.json().catch(() => ({}));
-        const ordersData = ordersPayload?.data ?? ordersPayload;
-        const rawList = ordersData?.orders ?? ordersData;
-        const recentList = Array.isArray(rawList) ? rawList.slice(0, 5) : [];
-        setRecentOrders(
-          recentList.map((order) => ({
-            id: order.id,
-            user_name: order.user?.fullName || order.user?.email || '用户',
-            string_name: order.string ? `${order.string.brand || ''} ${order.string.model || ''}`.trim() : '',
-            total_price: Number(order.price || order.total_price || 0),
-            status: order.status,
-            created_at: order.createdAt || order.created_at || new Date().toISOString(),
-          }))
-        );
-      } else {
-        setRecentOrders([]);
+      if (data.recentOrders) {
+        setRecentOrders(data.recentOrders);
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -122,13 +108,13 @@ export default function AdminDashboardPage() {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-700',
-      confirmed: 'bg-blue-100 text-blue-700',
-      in_progress: 'bg-purple-100 text-purple-700',
-      completed: 'bg-green-100 text-green-700',
-      cancelled: 'bg-red-100 text-red-700',
+      pending: 'bg-warning/15 text-warning',
+      confirmed: 'bg-info-soft text-info',
+      in_progress: 'bg-accent/15 text-accent',
+      completed: 'bg-success/15 text-success',
+      cancelled: 'bg-danger/15 text-danger',
     };
-    return styles[status] || 'bg-gray-100 text-gray-700';
+    return styles[status] || 'bg-ink-elevated text-text-secondary';
   };
 
   const getStatusLabel = (status: string) => {
@@ -144,31 +130,31 @@ export default function AdminDashboardPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-ink">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent mb-4"></div>
-          <p className="text-gray-600">加载中...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent mb-4"></div>
+          <p className="text-text-secondary">加载中...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-ink">
       {/* Top Navigation */}
-      <div className="bg-white border-b shadow-sm">
+      <div className="bg-ink border-b border-border-subtle">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-2xl">🏸</span>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">管理员仪表板</h1>
-                <p className="text-sm text-gray-600">欢迎回来, {admin?.name || admin?.email}</p>
+                <h1 className="text-xl font-bold text-text-primary">管理员仪表板</h1>
+                <p className="text-sm text-text-secondary">欢迎回来, {admin?.name || admin?.email}</p>
               </div>
             </div>
             <button
               onClick={() => router.push('/api/auth/signout')}
-              className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-ink-elevated rounded-lg transition-colors"
             >
               登出
             </button>
@@ -184,117 +170,117 @@ export default function AdminDashboardPage() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Today Orders */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-ink-surface rounded-xl p-6 border border-border-subtle">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-600">今日订单</span>
+              <span className="text-sm font-medium text-text-secondary">今日订单</span>
               <span className="text-2xl">📋</span>
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-1">{stats.todayOrders}</div>
-            <div className="text-sm text-gray-500">营业额: RM {stats.todayRevenue.toFixed(2)}</div>
+            <div className="text-3xl font-bold text-text-primary mb-1">{stats.todayOrders}</div>
+            <div className="text-sm text-text-tertiary">营业额: RM {stats.todayRevenue.toFixed(2)}</div>
           </div>
 
           {/* Month Orders */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-ink-surface rounded-xl p-6 border border-border-subtle">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-600">本月订单</span>
+              <span className="text-sm font-medium text-text-secondary">本月订单</span>
               <span className="text-2xl">📊</span>
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-1">{stats.monthOrders}</div>
-            <div className="text-sm text-gray-500">营业额: RM {stats.monthRevenue.toFixed(2)}</div>
+            <div className="text-3xl font-bold text-text-primary mb-1">{stats.monthOrders}</div>
+            <div className="text-sm text-text-tertiary">营业额: RM {stats.monthRevenue.toFixed(2)}</div>
           </div>
 
           {/* Pending Orders */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-ink-surface rounded-xl p-6 border border-border-subtle">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-600">待处理订单</span>
+              <span className="text-sm font-medium text-text-secondary">待处理订单</span>
               <span className="text-2xl">⏳</span>
             </div>
-            <div className="text-3xl font-bold text-orange-600 mb-1">{stats.pendingOrders}</div>
-            <div className="text-sm text-gray-500">需要处理</div>
+            <div className="text-3xl font-bold text-warning mb-1">{stats.pendingOrders}</div>
+            <div className="text-sm text-text-tertiary">需要处理</div>
           </div>
 
           {/* Low Stock */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-ink-surface rounded-xl p-6 border border-border-subtle">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-600">低库存提醒</span>
+              <span className="text-sm font-medium text-text-secondary">低库存提醒</span>
               <span className="text-2xl">⚠️</span>
             </div>
-            <div className="text-3xl font-bold text-red-600 mb-1">{stats.lowStockItems}</div>
-            <div className="text-sm text-gray-500">需要补货</div>
+            <div className="text-3xl font-bold text-danger mb-1">{stats.lowStockItems}</div>
+            <div className="text-sm text-text-tertiary">需要补货</div>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">快速操作</h2>
+        <div className="bg-ink-surface rounded-xl p-6 border border-border-subtle mb-8">
+          <h2 className="text-lg font-semibold text-text-primary mb-4">快速操作</h2>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <button
               onClick={() => router.push('/admin/orders')}
-              className="p-4 border-2 border-purple-200 rounded-xl hover:bg-purple-50 transition-colors"
+              className="p-4 border border-border-subtle rounded-xl hover:bg-ink-elevated transition-colors"
             >
               <div className="text-3xl mb-2">📦</div>
-              <div className="text-sm font-medium text-gray-900">订单管理</div>
+              <div className="text-sm font-medium text-text-primary">订单管理</div>
             </button>
             <button
               onClick={() => router.push('/admin/inventory')}
-              className="p-4 border-2 border-blue-200 rounded-xl hover:bg-blue-50 transition-colors"
+              className="p-4 border border-border-subtle rounded-xl hover:bg-ink-elevated transition-colors"
             >
               <div className="text-3xl mb-2">📦</div>
-              <div className="text-sm font-medium text-gray-900">库存管理</div>
+              <div className="text-sm font-medium text-text-primary">库存管理</div>
             </button>
             <button
               onClick={() => router.push('/admin/packages')}
-              className="p-4 border-2 border-green-200 rounded-xl hover:bg-green-50 transition-colors"
+              className="p-4 border border-border-subtle rounded-xl hover:bg-ink-elevated transition-colors"
             >
               <div className="text-3xl mb-2">🎁</div>
-              <div className="text-sm font-medium text-gray-900">套餐管理</div>
+              <div className="text-sm font-medium text-text-primary">套餐管理</div>
             </button>
             <button
               onClick={() => router.push('/admin/vouchers')}
-              className="p-4 border-2 border-orange-200 rounded-xl hover:bg-orange-50 transition-colors"
+              className="p-4 border border-border-subtle rounded-xl hover:bg-ink-elevated transition-colors"
             >
               <div className="text-3xl mb-2">🎫</div>
-              <div className="text-sm font-medium text-gray-900">优惠券管理</div>
+              <div className="text-sm font-medium text-text-primary">优惠券管理</div>
             </button>
             <button
               onClick={() => router.push('/admin/reports')}
-              className="p-4 border-2 border-pink-200 rounded-xl hover:bg-pink-50 transition-colors"
+              className="p-4 border border-border-subtle rounded-xl hover:bg-ink-elevated transition-colors"
             >
               <div className="text-3xl mb-2">📊</div>
-              <div className="text-sm font-medium text-gray-900">营业报表</div>
+              <div className="text-sm font-medium text-text-primary">营业报表</div>
             </button>
           </div>
         </div>
 
         {/* Recent Orders */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">最近订单</h2>
+        <div className="bg-ink-surface rounded-xl border border-border-subtle">
+          <div className="p-6 border-b border-border-subtle">
+            <h2 className="text-lg font-semibold text-text-primary">最近订单</h2>
           </div>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-border-subtle">
             {recentOrders.length === 0 ? (
               <div className="p-12 text-center">
                 <div className="text-4xl mb-2">📭</div>
-                <p className="text-gray-500">暂无订单</p>
+                <p className="text-text-tertiary">暂无订单</p>
               </div>
             ) : (
               recentOrders.map((order) => (
-                <div key={order.id} className="p-4 hover:bg-gray-50 transition-colors">
+                <div key={order.id} className="p-4 hover:bg-ink-elevated transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium text-gray-900">{order.user_name}</p>
+                        <p className="font-medium text-text-primary">{order.user_name}</p>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(order.status)}`}>
                           {getStatusLabel(order.status)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600">{order.string_name}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-sm text-text-secondary">{order.string_name}</p>
+                      <p className="text-xs text-text-tertiary">
                         {new Date(order.created_at).toLocaleString('zh-CN')}
                       </p>
                     </div>
                     <div className="text-right ml-4">
-                      <p className="text-lg font-bold text-gray-900">RM {order.total_price.toFixed(2)}</p>
+                      <p className="text-lg font-bold text-text-primary">RM {order.total_price.toFixed(2)}</p>
                     </div>
                   </div>
                 </div>

@@ -21,12 +21,12 @@ export const Badge: React.FC<BadgeProps> = ({
   className = ''
 }) => {
   const variants = {
-    success: 'bg-green-100 text-green-700',
-    warning: 'bg-amber-100 text-amber-700',
-    error: 'bg-red-100 text-red-700',
-    info: 'bg-sky-100 text-sky-700',
-    neutral: 'bg-slate-100 text-slate-700',
-    blue: 'bg-blue-100 text-blue-700'
+    success: 'bg-success/15 text-success',
+    warning: 'bg-warning/15 text-warning',
+    error: 'bg-danger/15 text-danger',
+    info: 'bg-info-soft text-info',
+    neutral: 'bg-ink-elevated text-text-secondary border border-border-subtle',
+    blue: 'bg-info-soft text-info'
   };
   
   const sizes = {
