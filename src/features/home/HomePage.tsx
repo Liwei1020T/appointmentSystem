@@ -209,63 +209,6 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* 最近订单 */}
-        {recentOrders.length > 0 ? (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-text-primary">最近订单</h2>
-              <Link href="/orders" className="text-accent text-sm font-medium hover:text-text-primary">
-                查看全部 →
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {recentOrders.map(order => (
-                <Card key={order.id} className="p-4 hover:shadow-md transition">
-                  <Link href={`/orders/${order.id}`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-text-primary">
-                            {order.string_brand} {order.string_name}
-                          </h3>
-                          {order.use_package && (
-                            <Badge variant="info" className="text-xs">套餐</Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-text-secondary">拉力: {order.tension} 磅</p>
-                        <p className="text-xs text-text-tertiary mt-1">
-                          {new Date(order.created_at || order.createdAt || new Date()).toLocaleDateString('zh-CN')}
-                        </p>
-                      </div>
-                      <div className="text-right ml-4">
-                        <div className="font-bold text-text-primary mb-2 font-mono">RM {Number(order.price || order.final_price || order.finalPrice || 0).toFixed(2)}</div>
-                        <Badge variant={getStatusVariant(order.status)}>
-                          {getStatusLabel(order.status)}
-                        </Badge>
-                      </div>
-                    </div>
-                  </Link>
-                </Card>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <Card className="p-8 text-center">
-            <div className="w-16 h-16 bg-ink-elevated rounded-full flex items-center justify-center mx-auto mb-4 border border-border-subtle">
-              <svg className="w-8 h-8 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-text-primary mb-2">暂无订单</h3>
-            <p className="text-text-secondary mb-4">开始您的第一次穿线服务预约吧</p>
-            <Link href="/booking">
-              <Button>
-                立即预约
-              </Button>
-            </Link>
-          </Card>
-        )}
-
         {/* 帮助与支持 */}
         <Card>
           <div className="p-6">
