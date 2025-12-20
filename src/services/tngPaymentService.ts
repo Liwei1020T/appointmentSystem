@@ -15,7 +15,7 @@ export async function verifyTngPayment(
   transactionId: string
 ): Promise<PaymentResult> {
   try {
-    const response = await fetch('/api/payment/tng/verify', {
+    const response = await fetch('/api/payments/tng/verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId, transactionId }),
@@ -34,7 +34,7 @@ export async function verifyTngPayment(
 
 export async function getTngQRCode(orderId: string, amount: number): Promise<string | null> {
   try {
-    const response = await fetch('/api/payment/tng/qr', {
+    const response = await fetch('/api/payments/tng/qr', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId, amount }),
@@ -66,7 +66,7 @@ export async function getTNGPayment(
   paymentId: string
 ): Promise<{ payment: PaymentResult | null; error: string | null }> {
   try {
-    const response = await fetch(`/api/payment/tng/${paymentId}`);
+    const response = await fetch(`/api/payments/tng/${paymentId}`);
     const data = await response.json();
     if (!response.ok) {
       return { payment: null, error: data.error || 'Failed to get TNG payment' };
