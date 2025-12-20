@@ -10,7 +10,7 @@ import {
   generatePaymentReference,
   getPaymentInstructions,
 } from '@/lib/payment-helpers';
-import { uploadPaymentProof } from '@/services/payment.service';
+import { uploadPaymentProof } from '@/services/paymentService';
 import { validateProofFile } from '@/lib/payment-helpers';
 
 interface PaymentPageProps {
@@ -235,10 +235,9 @@ export default function PaymentPage({
                 onClick={handleUpload}
                 disabled={!selectedFile || uploading}
                 className={`w-full py-3 px-4 rounded-lg font-medium text-text-onAccent
-                  ${
-                    !selectedFile || uploading
-                      ? 'bg-ink-elevated text-text-tertiary cursor-not-allowed'
-                      : 'bg-accent hover:shadow-glow'
+                  ${!selectedFile || uploading
+                    ? 'bg-ink-elevated text-text-tertiary cursor-not-allowed'
+                    : 'bg-accent hover:shadow-glow'
                   }`}
               >
                 {uploading ? '上传中...' : '提交支付凭证'}

@@ -7,7 +7,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { submitReview, SubmitReviewParams, OrderReview } from '@/services/review.service';
+import { submitReview, SubmitReviewParams, OrderReview } from '@/services/reviewService';
 import StarRating from '@/components/StarRating';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
@@ -186,11 +186,10 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
                 key={tag}
                 type="button"
                 onClick={() => handleTagToggle(tag)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  selectedTags.includes(tag)
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedTags.includes(tag)
                     ? 'bg-accent text-text-onAccent'
                     : 'bg-ink-elevated text-text-secondary hover:bg-ink-elevated'
-                }`}
+                  }`}
               >
                 {tag}
               </button>

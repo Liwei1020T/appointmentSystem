@@ -9,7 +9,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { getUserOrders, OrderWithDetails } from '@/services/order.service';
+import { getUserOrders, OrderWithDetails } from '@/services/orderService';
 import {
   Package,
   Clock,
@@ -189,11 +189,10 @@ export default function MyOrdersPage() {
                 <button
                   key={status.value}
                   onClick={() => setSelectedStatus(status.value as OrderStatus)}
-                  className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                    selectedStatus === status.value
+                  className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${selectedStatus === status.value
                       ? 'bg-accent text-text-onAccent'
                       : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
-                  }`}
+                    }`}
                 >
                   {status.label}
                 </button>

@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAvailablePackages, Package } from '@/services/package.service';
+import { getAvailablePackages, Package } from '@/services/packageService';
 import PackageCard from '@/components/PackageCard';
 import Spinner from '@/components/Spinner';
 import Card from '@/components/Card';

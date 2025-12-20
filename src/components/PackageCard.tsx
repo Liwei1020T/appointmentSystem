@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Package } from '@/services/package.service';
+import { Package } from '@/services/packageService';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 
@@ -38,9 +38,8 @@ export default function PackageCard({
 
   return (
     <Card
-      className={`p-6 relative ${
-        isRecommended ? 'ring-2 ring-accent-border' : ''
-      } ${disabled ? 'opacity-60' : ''}`}
+      className={`p-6 relative ${isRecommended ? 'ring-2 ring-accent-border' : ''
+        } ${disabled ? 'opacity-60' : ''}`}
     >
       {/* 推荐标签 */}
       {isRecommended && (

@@ -3,7 +3,7 @@
  * Re-export from auth.service.ts for backward compatibility
  */
 
-export * from './auth.service';
+export * from './authService';
 
 /**
  * 管理员登录

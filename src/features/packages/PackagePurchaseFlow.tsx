@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { buyPackage, getPackageById, Package } from '@/services/package.service';
+import { buyPackage, getPackageById, Package } from '@/services/packageService';
 import { uploadPaymentReceipt, PaymentMethod } from '@/services/paymentService';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
@@ -215,19 +215,17 @@ export default function PackagePurchaseFlow() {
           {[1, 2, 3, 4].map((s) => (
             <div key={s} className="flex items-center">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                  s <= step
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${s <= step
                     ? 'bg-accent text-text-onAccent'
                     : 'bg-ink-elevated text-text-tertiary'
-                }`}
+                  }`}
               >
                 {s < step ? '✓' : s}
               </div>
               {s < 4 && (
                 <div
-                  className={`w-12 h-1 ${
-                    s < step ? 'bg-accent' : 'bg-ink-elevated'
-                  }`}
+                  className={`w-12 h-1 ${s < step ? 'bg-accent' : 'bg-ink-elevated'
+                    }`}
                 />
               )}
             </div>
@@ -281,11 +279,10 @@ export default function PackagePurchaseFlow() {
                 <button
                   key={method.value}
                   onClick={() => setPaymentMethod(method.value)}
-                  className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-                    paymentMethod === method.value
+                  className={`w-full p-4 rounded-lg border-2 text-left transition-all ${paymentMethod === method.value
                       ? 'border-accent-border bg-ink-elevated'
                       : 'border-border-subtle hover:border-accent-border'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{method.icon}</span>
@@ -382,8 +379,8 @@ export default function PackagePurchaseFlow() {
               {paymentMethod === 'cash'
                 ? '管理员确认收款后，套餐将自动生效并显示在“我的套餐”。'
                 : receiptUploaded
-                ? '管理员审核通过后，套餐将自动生效并显示在“我的套餐”。'
-                : '请先上传收据以提交审核。'}
+                  ? '管理员审核通过后，套餐将自动生效并显示在“我的套餐”。'
+                  : '请先上传收据以提交审核。'}
             </p>
             <Button onClick={() => router.push('/profile/packages')}>查看我的套餐</Button>
           </Card>

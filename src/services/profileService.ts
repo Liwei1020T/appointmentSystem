@@ -235,3 +235,31 @@ export async function logout(): Promise<{ success: boolean }> {
     return { success: false };
   }
 }
+
+/**
+ * 获取用户积分信息
+ */
+export async function getPoints(): Promise<{ balance: number; logs: any[] }> {
+  const response = await fetch('/api/points');
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || '获取积分失败');
+  }
+
+  return data.data;
+}
+
+/**
+ * 获取推荐记录
+ */
+export async function getReferrals(): Promise<any> {
+  const response = await fetch('/api/referrals');
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || '获取推荐记录失败');
+  }
+
+  return data.data;
+}

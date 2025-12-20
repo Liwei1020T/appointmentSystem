@@ -9,7 +9,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, Badge, Spinner } from '@/components';
-import { getUserPackageSummary } from '@/services/package.service';
+import { getUserPackageSummary } from '@/services/packageService';
 import { UserPackage } from '@/types';
 import { formatDate } from '@/lib/utils';
 
@@ -82,12 +82,12 @@ export default function PackageSummary() {
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-text-primary">我的套餐</h2>
-            <button
-              onClick={() => router.push('/profile/packages')}
-              className="text-sm text-accent hover:text-text-primary font-medium"
-            >
-              查看全部
-            </button>
+          <button
+            onClick={() => router.push('/profile/packages')}
+            className="text-sm text-accent hover:text-text-primary font-medium"
+          >
+            查看全部
+          </button>
         </div>
 
         {/* 总剩余次数 */}

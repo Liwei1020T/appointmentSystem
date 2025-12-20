@@ -9,9 +9,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { getOrderById, cancelOrder } from '@/services/order.service';
+import { getOrderById, cancelOrder } from '@/services/orderService';
 import { subscribeToOrderUpdates } from '@/services/realtimeService';
-import { getOrderReview, canReviewOrder, OrderReview } from '@/services/review.service';
+import { getOrderReview, canReviewOrder, OrderReview } from '@/services/reviewService';
 import {
   getOrderStatusNotification,
   showBrowserNotification,
@@ -51,10 +51,10 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   const [canReview, setCanReview] = useState<boolean>(false);
   const [showPayment, setShowPayment] = useState<boolean>(false);
   const [realtimeChannel, setRealtimeChannel] = useState<any>(null);
-  const [toast, setToast] = useState<{ 
-    show: boolean; 
-    message: string; 
-    type: 'success' | 'error' | 'info' 
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'error' | 'info'
   }>({
     show: false,
     message: '',
@@ -105,8 +105,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             notification.type === 'error'
               ? 'error'
               : notification.type === 'success'
-              ? 'success'
-              : 'info';
+                ? 'success'
+                : 'info';
           setToast({
             show: true,
             message: notification.message,
@@ -242,7 +242,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
   const hasPendingPayment =
     order.payments?.some((p: any) => p.status === 'pending') || false;
-  
+
   const hasPendingCashPayment =
     order.payments?.some((p: any) => p.status === 'pending' && p.provider === 'cash') || false;
 
@@ -279,7 +279,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             </div>
             <OrderStatusBadge status={order.status as OrderStatus} />
           </div>
-          
+
           {/* 横向时间线 */}
           <OrderTimeline
             currentStatus={order.status as any}
@@ -347,7 +347,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                 待收款
               </div>
             </div>
-            
+
             <div className="bg-ink-surface border-2 border-warning/40 rounded-xl p-4 shadow-sm">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-warning/15 rounded-full flex items-center justify-center flex-shrink-0 border border-warning/30">
@@ -403,7 +403,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                     未支付
                   </div>
                 </div>
-                
+
                 <div className="bg-ink-elevated border border-border-subtle rounded-lg p-4 mb-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-text-tertiary">应付金额</span>
@@ -531,8 +531,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                 providerKey.includes('cash')
                   ? providerMap.cash
                   : providerKey.includes('tng')
-                  ? providerMap.tng
-                  : providerMap.tng;
+                    ? providerMap.tng
+                    : providerMap.tng;
 
               const rawStatus =
                 (payment as any).status ||
@@ -689,7 +689,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                     🎁 评价奖励：<span className="text-lg font-bold">+10 积分</span>
                   </p>
                 </div>
-                <Button 
+                <Button
                   onClick={() => setShowReviewForm(true)}
                   className="bg-accent text-text-onAccent hover:shadow-glow"
                 >
@@ -723,7 +723,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
           </div>
         </div>
       )}
-      
+
       {order.status === 'pending' && hasPendingCashPayment && (
         <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-warning/40 p-4 shadow-lg safe-area-pb">
           <div className="max-w-2xl mx-auto">
@@ -746,7 +746,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
           </div>
         </div>
       )}
-      
+
       {order.status === 'pending' && !needsPayment && !hasPendingCashPayment && (
         <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-border-subtle p-4 shadow-lg safe-area-pb">
           <div className="max-w-2xl mx-auto">

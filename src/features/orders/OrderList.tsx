@@ -10,10 +10,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { getUserOrders, OrderWithDetails } from '@/services/order.service';
+import { getUserOrders, OrderWithDetails } from '@/services/orderService';
 import { subscribeToUserOrders, RealtimeSubscription } from '@/services/realtimeService';
-import { 
-  getOrderStatusNotification, 
+import {
+  getOrderStatusNotification,
   showBrowserNotification,
   playNotificationSound,
   OrderStatus as OrderStatusType
@@ -39,10 +39,10 @@ export default function OrderList({ initialStatus }: OrderListProps) {
   const [error, setError] = useState<string>('');
   const [activeStatus, setActiveStatus] = useState<OrderStatus | 'all'>(initialStatus || 'all');
   const [realtimeChannel, setRealtimeChannel] = useState<RealtimeSubscription | null>(null);
-  const [toast, setToast] = useState<{ 
-    show: boolean; 
-    message: string; 
-    type: 'success' | 'error' | 'info' 
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'error' | 'info'
   }>({ show: false, message: '', type: 'info' });
 
   // 状态筛选选项
@@ -87,10 +87,10 @@ export default function OrderList({ initialStatus }: OrderListProps) {
             // 检查状态是否变化
             if (old.status !== newData.status) {
               // 显示通知
-              const orderInfo = order.string 
-                ? `${order.string.brand} ${order.string.model}` 
+              const orderInfo = order.string
+                ? `${order.string.brand} ${order.string.model}`
                 : '订单';
-              
+
               const notification = getOrderStatusNotification(
                 old.status as OrderStatusType,
                 newData.status as OrderStatusType,
@@ -103,8 +103,8 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                 notification.type === 'error'
                   ? 'error'
                   : notification.type === 'success'
-                  ? 'success'
-                  : 'info';
+                    ? 'success'
+                    : 'info';
               setToast({
                 show: true,
                 message: notification.message,
@@ -136,7 +136,7 @@ export default function OrderList({ initialStatus }: OrderListProps) {
       loadOrders(activeStatus === 'all' ? undefined : activeStatus);
     } else if (eventType === 'DELETE') {
       // 订单被删除
-      setOrders((prevOrders) => 
+      setOrders((prevOrders) =>
         prevOrders.filter((order) => order.id !== old.id)
       );
     }
@@ -179,11 +179,10 @@ export default function OrderList({ initialStatus }: OrderListProps) {
           <button
             key={filter.value}
             onClick={() => handleStatusChange(filter.value)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              activeStatus === filter.value
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${activeStatus === filter.value
                 ? 'bg-accent text-text-onAccent'
                 : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
-            }`}
+              }`}
           >
             {filter.label}
           </button>

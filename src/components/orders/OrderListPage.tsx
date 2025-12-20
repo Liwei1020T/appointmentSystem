@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getUserOrders, type OrderWithDetails } from '@/services/order.service';
+import { getUserOrders, type OrderWithDetails } from '@/services/orderService';
 import { formatAmount } from '@/lib/payment-helpers';
 import Link from 'next/link';
 
@@ -100,11 +100,10 @@ export default function OrderListPage() {
             <button
               key={item.value}
               onClick={() => setFilter(item.value)}
-              className={`px-4 py-2 rounded-lg whitespace-nowrap ${
-                filter === item.value
+              className={`px-4 py-2 rounded-lg whitespace-nowrap ${filter === item.value
                   ? 'bg-accent text-text-onAccent'
                   : 'bg-ink-elevated text-text-secondary border border-border-subtle'
-              }`}
+                }`}
             >
               {item.label}
             </button>

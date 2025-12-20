@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getUserPackages, UserPackageWithPackage } from '@/services/package.service';
+import { getUserPackages, UserPackageWithPackage } from '@/services/packageService';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 import Spinner from '@/components/Spinner';
@@ -120,21 +120,19 @@ export default function MyPackagesPage() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowExpired(false)}
-              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                !showExpired
+              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${!showExpired
                   ? 'bg-accent text-text-onAccent'
                   : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
-              }`}
+                }`}
             >
               有效套餐 ({validPackages.length})
             </button>
             <button
               onClick={() => setShowExpired(true)}
-              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                showExpired
+              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${showExpired
                   ? 'bg-accent text-text-onAccent'
                   : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
-              }`}
+                }`}
             >
               已过期 ({expiredPackages.length})
             </button>
@@ -156,17 +154,17 @@ export default function MyPackagesPage() {
           </Card>
         )}
 
-	        {/* 套餐列表 */}
-	        {!loading && !error && displayPackages.length > 0 && (
-	          <div className="space-y-3">
-	            {displayPackages.map((pkg) => {
-	              const isValid = isPackageValid(pkg);
-	              const expiry = getExpiryValue(pkg);
-	              const daysRemaining = expiry ? calculateDaysRemaining(expiry) : null;
-	              const packageInfo = pkg.package;
-	              const packageTimes = packageInfo?.times ?? 0;
-	              const usedTimes = Math.max(packageTimes - pkg.remaining, 0);
-	              const usagePercentage = packageTimes > 0 ? (usedTimes / packageTimes) * 100 : 0;
+        {/* 套餐列表 */}
+        {!loading && !error && displayPackages.length > 0 && (
+          <div className="space-y-3">
+            {displayPackages.map((pkg) => {
+              const isValid = isPackageValid(pkg);
+              const expiry = getExpiryValue(pkg);
+              const daysRemaining = expiry ? calculateDaysRemaining(expiry) : null;
+              const packageInfo = pkg.package;
+              const packageTimes = packageInfo?.times ?? 0;
+              const usedTimes = Math.max(packageTimes - pkg.remaining, 0);
+              const usagePercentage = packageTimes > 0 ? (usedTimes / packageTimes) * 100 : 0;
 
               return (
                 <Card
@@ -199,11 +197,10 @@ export default function MyPackagesPage() {
                     </div>
                     <div className="w-full bg-ink-elevated rounded-full h-2">
                       <div
-                        className={`h-2 rounded-full ${
-                          usagePercentage === 100
+                        className={`h-2 rounded-full ${usagePercentage === 100
                             ? 'bg-ink-surface'
                             : 'bg-accent'
-                        }`}
+                          }`}
                         style={{ width: `${usagePercentage}%` }}
                       />
                     </div>
@@ -217,22 +214,22 @@ export default function MyPackagesPage() {
                         {pkg.remaining} 次
                       </p>
                     </div>
-	                    <div>
-	                      <p className="text-text-tertiary">有效期</p>
-	                      {expiry ? (
-	                        <div>
-	                          <p className="font-semibold text-text-primary">
-	                            {daysRemaining !== null && daysRemaining > 0
-	                              ? `剩余 ${daysRemaining} 天`
-	                              : '已过期'}
-	                          </p>
-	                          <p className="text-xs text-text-tertiary mt-0.5">
-	                            {new Date(expiry).toLocaleDateString('zh-CN')}
-	                          </p>
-	                        </div>
-	                      ) : (
-	                        <p className="font-semibold text-success">永久有效</p>
-	                      )}
+                    <div>
+                      <p className="text-text-tertiary">有效期</p>
+                      {expiry ? (
+                        <div>
+                          <p className="font-semibold text-text-primary">
+                            {daysRemaining !== null && daysRemaining > 0
+                              ? `剩余 ${daysRemaining} 天`
+                              : '已过期'}
+                          </p>
+                          <p className="text-xs text-text-tertiary mt-0.5">
+                            {new Date(expiry).toLocaleDateString('zh-CN')}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="font-semibold text-success">永久有效</p>
+                      )}
                     </div>
                   </div>
 

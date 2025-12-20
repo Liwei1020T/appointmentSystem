@@ -9,7 +9,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { OrderReview } from '@/services/review.service';
+import { OrderReview } from '@/services/reviewService';
 import Card from '@/components/Card';
 import Spinner from '@/components/Spinner';
 import Button from '@/components/Button';

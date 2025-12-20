@@ -1,356 +1,316 @@
 /**
- * Notification Service - Alias
- * Re-export from notification.service.ts
+ * Notification Service - 统一通知服务
+ * Consolidated from notification.service.ts
  */
 
-export * from './notification.service';
-
-export interface NotificationLog {
+// Type exports for Notification components
+export interface Notification {
   id: string;
   userId: string;
-  user_id: string;
-  type: string;
-  channel: string;
-  recipient: string;
-  subject: string | null;
+  user_id?: string;
+  title: string;
   message: string;
-  body?: string;
-  status: string;
-  metadata: Record<string, unknown> | null;
-  sentAt: Date | null;
-  sent_at: Date | null;
-  createdAt: Date;
-  created_at: Date;
-  read?: boolean;
-  is_read?: boolean;
-  read_at?: Date | null;
-  priority?: 'low' | 'normal' | 'high' | string;
-  title?: string;
-  // Additional optional properties for compatibility
-  event_type?: string;
-  error_message?: string | null;
+  type: string;
+  actionUrl?: string | null;
+  action_url?: string | null;
+  priority?: string | null;
+  read: boolean;
+  is_read: boolean;
+  createdAt: string | Date;
+  created_at: string | Date;
 }
 
-// Alias for backwards compatibility
-export type Notification = NotificationLog;
+// Admin notification types
+export interface NotificationLog {
+  id: string;
+  user_id: string;
+  type: 'sms' | 'push';
+  event_type: string;
+  title?: string;
+  body: string;
+  status: 'pending' | 'sent' | 'failed' | 'delivered';
+  error_message?: string | null;
+  provider_response?: any;
+  created_at: string;
+  sent_at?: string | null;
+}
 
 export interface NotificationTemplate {
   id: string;
   name: string;
-  type: string;
-  subject: string;
-  body: string;
-  isActive: boolean;
-  // Additional fields for SMS and Push notifications (both camelCase and snake_case for compatibility)
-  sms_content?: string;
-  push_title?: string;
-  push_body?: string;
-  is_active?: boolean;
-  event_type?: string;
-  eventType?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  event_type: string;
+  type: 'sms' | 'push' | 'both';
+  sms_content?: string | null;
+  push_title?: string | null;
+  push_body?: string | null;
+  variables: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface NotificationStats {
-  total: number;
-  sent: number;
-  failed: number;
-  pending: number;
-  // Additional stats properties
-  delivery_rate: number;
+  total_sent: number;
+  total_failed: number;
   sms_count: number;
   push_count: number;
-  by_event?: { event_type: string; count: number }[];
-  total_sent?: number;
-  total_failed?: number;
+  delivery_rate: number;
+  by_event: { event_type: string; count: number }[];
+}
+
+export interface UserDevice {
+  id: string;
+  user_id: string;
+  device_type: 'ios' | 'android' | 'web';
+  device_token: string;
+  device_name?: string | null;
+  is_active: boolean;
+  created_at: string;
+  last_used_at?: string | null;
+}
+
+export interface NotificationData {
+  /**
+   * Normalized notification objects for UI components.
+   * Notes:
+   * - Backend (Prisma) uses `read`, `createdAt`.
+   * - UI legacy expects `is_read`, `created_at`.
+   */
+  notifications: Notification[];
+  unreadCount: number;
 }
 
 /**
- * 获取所有通知（管理员）
+ * Convert backend notifications into the UI's legacy-friendly shape.
  */
-export async function getAllNotifications(
-  page = 1,
-  limit = 20
-): Promise<{ data: any[]; total: number; error: string | null }> {
-  try {
-    const response = await fetch(`/api/admin/notifications?page=${page}&limit=${limit}`);
-    const data = await response.json();
-    if (!response.ok) {
-      return { data: [], total: 0, error: data.error || 'Failed to fetch notifications' };
-    }
-    return { data: data.data || [], total: data.total || 0, error: null };
-  } catch (error: any) {
-    return { data: [], total: 0, error: error.message || 'Failed to fetch notifications' };
+function normalizeNotification(raw: any) {
+  const read = Boolean(raw?.read ?? raw?.is_read ?? false);
+  const createdAt = raw?.createdAt ?? raw?.created_at ?? new Date().toISOString();
+  return {
+    ...raw,
+    read,
+    createdAt,
+    is_read: read,
+    created_at: createdAt,
+  };
+}
+
+/**
+ * 获取通知列表
+ */
+export async function getNotifications(
+  unreadOnly = false,
+  limit?: number
+): Promise<NotificationData> {
+  const params = new URLSearchParams();
+  if (unreadOnly) params.append('unread', 'true');
+  if (limit) params.append('limit', limit.toString());
+
+  const response = await fetch(`/api/notifications?${params.toString()}`);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || '获取通知失败');
+  }
+
+  const payload = data?.data ?? data;
+  return {
+    unreadCount: Number(payload?.unreadCount ?? 0) || 0,
+    notifications: Array.isArray(payload?.notifications)
+      ? payload.notifications.map(normalizeNotification)
+      : [],
+  };
+}
+
+/**
+ * 标记单个通知为已读
+ */
+export async function markAsRead(notificationId: string): Promise<void> {
+  const response = await fetch('/api/notifications', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ notificationId }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || '标记失败');
   }
 }
 
 /**
- * 获取所有通知模板
+ * 标记所有通知为已读
+ */
+export async function markAllAsRead(): Promise<void> {
+  const response = await fetch('/api/notifications', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ markAll: true }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || '标记失败');
+  }
+}
+
+/**
+ * 获取未读通知数量
+ */
+export async function getUnreadCount(userId?: string): Promise<{ count: number }> {
+  const data = await getNotifications(true);
+  return { count: data.unreadCount };
+}
+
+/**
+ * 删除通知
+ */
+export async function deleteNotification(notificationId: string): Promise<void> {
+  const response = await fetch(`/api/notifications/${notificationId}`, {
+    method: 'DELETE',
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || '删除失败');
+  }
+}
+
+/**
+ * 重试失败的通知
+ */
+export async function retryFailedNotification(notificationId: string): Promise<void> {
+  const response = await fetch(`/api/admin/notifications/${notificationId}/retry`, {
+    method: 'POST',
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || '重试失败');
+  }
+}
+
+/**
+ * Admin: 获取通知统计
+ */
+export async function getNotificationStats(days = 7): Promise<{ data: NotificationStats | null; error: string | null }> {
+  try {
+    const response = await fetch(`/api/admin/notifications/stats?days=${days}`);
+    const result = await response.json();
+    if (!response.ok) {
+      return { data: null, error: result.error || 'Failed to fetch stats' };
+    }
+    return { data: result.data, error: null };
+  } catch (error: any) {
+    return { data: null, error: error.message };
+  }
+}
+
+/**
+ * Admin: 获取所有通知记录
+ */
+export async function getAllNotifications(filters?: {
+  type?: string;
+  status?: string;
+  event_type?: string;
+  date_from?: string;
+  date_to?: string;
+}): Promise<{ data: NotificationLog[]; error: string | null }> {
+  try {
+    const params = new URLSearchParams();
+    if (filters?.type) params.append('type', filters.type);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.event_type) params.append('event_type', filters.event_type);
+    if (filters?.date_from) params.append('date_from', filters.date_from);
+    if (filters?.date_to) params.append('date_to', filters.date_to);
+
+    const response = await fetch(`/api/admin/notifications?${params.toString()}`);
+    const result = await response.json();
+    if (!response.ok) {
+      return { data: [], error: result.error || 'Failed to fetch notifications' };
+    }
+    return { data: result.data || [], error: null };
+  } catch (error: any) {
+    return { data: [], error: error.message };
+  }
+}
+
+/**
+ * Admin: 获取所有通知模板
  */
 export async function getAllTemplates(): Promise<{ data: NotificationTemplate[]; error: string | null }> {
   try {
     const response = await fetch('/api/admin/notifications/templates');
-    const data = await response.json();
+    const result = await response.json();
     if (!response.ok) {
-      return { data: [], error: data.error || 'Failed to fetch templates' };
+      return { data: [], error: result.error || 'Failed to fetch templates' };
     }
-    return { data: data.data || [], error: null };
+    return { data: result.data || [], error: null };
   } catch (error: any) {
-    return { data: [], error: error.message || 'Failed to fetch templates' };
+    return { data: [], error: error.message };
   }
 }
 
 /**
- * 获取通知统计
- */
-export async function getNotificationStats(days?: number): Promise<{ data: NotificationStats | null; error: string | null }> {
-  try {
-    const queryParams = days ? `?days=${days}` : '';
-    const response = await fetch(`/api/admin/notifications/stats${queryParams}`);
-    const data = await response.json();
-    if (!response.ok) {
-      return { data: null, error: data.error || 'Failed to fetch stats' };
-    }
-    return { data: data.data || null, error: null };
-  } catch (error: any) {
-    return { data: null, error: error.message || 'Failed to fetch stats' };
-  }
-}
-
-/**
- * 更新通知模板
+ * Admin: 更新通知模板
  */
 export async function updateTemplate(
   templateId: string,
-  updates: Partial<NotificationTemplate>
-): Promise<{ success: boolean; error: string | null }> {
-  try {
-    const response = await fetch(`/api/admin/notifications/templates/${templateId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      return { success: false, error: data.error || 'Failed to update template' };
-    }
-    return { success: true, error: null };
-  } catch (error: any) {
-    return { success: false, error: error.message || 'Failed to update template' };
+  data: Partial<NotificationTemplate>
+): Promise<void> {
+  const response = await fetch(`/api/admin/notifications/templates/${templateId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.error || 'Failed to update template');
   }
 }
 
 /**
- * 测试发送通知
+ * Admin: 测试通知
  */
 export async function testNotification(
   userId: string,
-  eventType?: string,
-  variables?: Record<string, unknown>
-): Promise<{ success: boolean; error: string | null }> {
-  try {
-    const response = await fetch('/api/admin/notifications/test', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, eventType, variables }),
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      return { success: false, error: data.error || 'Failed to send test notification' };
-    }
-    return { success: true, error: null };
-  } catch (error: any) {
-    return { success: false, error: error.message || 'Failed to send test notification' };
+  eventType: string,
+  variables: Record<string, any>
+): Promise<void> {
+  const response = await fetch('/api/admin/notifications/test', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, eventType, variables }),
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.error || 'Failed to send test notification');
   }
 }
 
 /**
- * Retry a failed notification
+ * Admin: 获取用户设备列表
  */
-export async function retryFailedNotification(
-  notificationId: string
-): Promise<{ success: boolean; error: string | null }> {
+export async function getUserDevices(userId?: string): Promise<{ data: UserDevice[]; error: string | null }> {
   try {
-    const response = await fetch(`/api/admin/notifications/${notificationId}/retry`, {
-      method: 'POST',
-    });
-    const data = await response.json();
+    const params = userId ? `?userId=${userId}` : '';
+    const response = await fetch(`/api/admin/notifications/devices${params}`);
+    const result = await response.json();
     if (!response.ok) {
-      return { success: false, error: data.error || 'Failed to retry notification' };
+      return { data: [], error: result.error || 'Failed to fetch devices' };
     }
-    return { success: true, error: null };
+    return { data: result.data || [], error: null };
   } catch (error: any) {
-    return { success: false, error: error.message || 'Failed to retry notification' };
-  }
-}
-
-/**
- * User Device interface
- */
-export interface UserDevice {
-  id: string;
-  userId: string;
-  user_id: string;
-  deviceType: string;
-  device_type: string;
-  device_name?: string;
-  deviceToken: string | null;
-  pushSubscription: string | null;
-  isActive: boolean;
-  is_active: boolean;
-  lastActiveAt: Date;
-  last_active_at: Date;
-  createdAt: Date;
-  created_at: Date;
-  updatedAt: Date;
-  updated_at: Date;
-  // Additional properties
-  last_used_at?: Date | null;
-  users?: { full_name: string };
-}
-
-/**
- * Get user devices
- */
-export async function getUserDevices(): Promise<{ data: UserDevice[]; error: string | null }> {
-  try {
-    const response = await fetch('/api/admin/notifications/devices');
-    const data = await response.json();
-    if (!response.ok) {
-      return { data: [], error: data.error || 'Failed to fetch devices' };
-    }
-    return { data: data.devices || [], error: null };
-  } catch (error: any) {
-    return { data: [], error: error.message || 'Failed to fetch devices' };
-  }
-}
-
-/**
- * 获取通知图标
- */
-export function getNotificationIcon(type: string): string {
-  const icons: Record<string, string> = {
-    order: '📦',
-    order_confirmed: '✅',
-    order_completed: '🎉',
-    order_cancelled: '❌',
-    payment: '💳',
-    referral: '👥',
-    points: '⭐',
-    voucher: '🎟️',
-    system: '📢',
-    reminder: '⏰',
-    promotion: '🎁',
-  };
-  return icons[type] || '📬';
-}
-
-/**
- * 获取通知颜色
- */
-export function getNotificationColor(type: string): string {
-  const colors: Record<string, string> = {
-    order: 'text-info bg-info-soft',
-    order_confirmed: 'text-success bg-success/15',
-    order_completed: 'text-success bg-success/15',
-    order_cancelled: 'text-danger bg-danger/15',
-    payment: 'text-accent bg-accent/15',
-    referral: 'text-warning bg-warning/15',
-    points: 'text-warning bg-warning/15',
-    voucher: 'text-accent bg-accent/15',
-    system: 'text-text-secondary bg-ink-elevated',
-    reminder: 'text-info bg-info-soft',
-    promotion: 'text-danger bg-danger/15',
-  };
-  return colors[type] || 'text-text-secondary bg-ink-elevated';
-}
-
-/**
- * 格式化通知时间
- */
-export function formatNotificationTime(date: Date | string | null | undefined): string {
-  if (!date) return '未知时间';
-  const d = date instanceof Date ? date : new Date(date);
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMin < 1) return '刚刚';
-  if (diffMin < 60) return `${diffMin} 分钟前`;
-  if (diffHours < 24) return `${diffHours} 小时前`;
-  if (diffDays < 7) return `${diffDays} 天前`;
-  return d.toLocaleDateString('zh-CN');
-}
-
-/**
- * 通知偏好设置
- */
-export interface NotificationPreferences {
-  email: boolean;
-  sms: boolean;
-  push: boolean;
-  orderUpdates: boolean;
-  promotions: boolean;
-  reminders: boolean;
-  // Extended snake_case options for component compatibility
-  email_enabled?: boolean;
-  email_order_updates?: boolean;
-  email_payment_updates?: boolean;
-  email_promotions?: boolean;
-  email_reminders?: boolean;
-  sms_enabled?: boolean;
-  sms_order_updates?: boolean;
-  sms_payment_updates?: boolean;
-  push_enabled?: boolean;
-  push_order_updates?: boolean;
-  push_payment_updates?: boolean;
-  push_promotions?: boolean;
-  push_reminders?: boolean;
-  [key: string]: boolean | undefined;
-}
-
-/**
- * 获取通知偏好设置
- */
-export async function getNotificationPreferences(): Promise<{ data: NotificationPreferences | null; error: string | null }> {
-  try {
-    const response = await fetch('/api/notifications/preferences');
-    const data = await response.json();
-    if (!response.ok) {
-      return { data: null, error: data.error || '获取偏好设置失败' };
-    }
-    return { data: data.preferences || data.data || {
-      email: true,
-      sms: true,
-      push: true,
-      orderUpdates: true,
-      promotions: true,
-      reminders: true,
-    }, error: null };
-  } catch (error: any) {
-    return { data: null, error: error.message || '获取偏好设置失败' };
-  }
-}
-
-/**
- * 更新通知偏好设置
- */
-export async function updateNotificationPreferences(prefs: Partial<NotificationPreferences>): Promise<{ success: boolean; error: string | null }> {
-  try {
-    const response = await fetch('/api/notifications/preferences', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(prefs),
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      return { success: false, error: data.error || '更新偏好设置失败' };
-    }
-    return { success: true, error: null };
-  } catch (error: any) {
-    return { success: false, error: error.message || '更新偏好设置失败' };
+    return { data: [], error: error.message };
   }
 }

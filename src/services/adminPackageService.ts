@@ -3,7 +3,7 @@
  * Re-export from package.service.ts for backward compatibility
  */
 
-export * from './package.service';
+export * from './packageService';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Package = any;
@@ -135,12 +135,12 @@ export interface PackageStats {
 }
 
 export async function getPackageStats(): Promise<{ stats: PackageStats; data?: PackageStats; error: string | null }> {
-  const defaultStats: PackageStats = { 
-    totalPackages: 0, 
+  const defaultStats: PackageStats = {
+    totalPackages: 0,
     total_packages: 0,
-    activePackages: 0, 
+    activePackages: 0,
     active_packages: 0,
-    totalSales: 0, 
+    totalSales: 0,
     total_sales: 0,
     totalRevenue: 0,
     total_revenue: 0,

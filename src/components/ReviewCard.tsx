@@ -7,7 +7,7 @@
 'use client';
 
 import React from 'react';
-import { OrderReview } from '@/services/review.service';
+import { OrderReview } from '@/services/reviewService';
 import StarRating from '@/components/StarRating';
 import Card from '@/components/Card';
 import { formatDate } from '@/lib/utils';
