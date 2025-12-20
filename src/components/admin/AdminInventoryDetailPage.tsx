@@ -20,7 +20,7 @@ import {
   type StringInventory,
   type StockLog,
   type StockChangeType,
-} from '@/services/inventory.service';
+} from '@/services/inventoryService';
 
 interface AdminInventoryDetailPageProps {
   stringId: string;
@@ -79,7 +79,7 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
       }
 
       setString(fetchedString);
-      
+
       setFormData({
         name: fetchedString.model,
         brand: fetchedString.brand,
@@ -198,7 +198,7 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
   // Get stock status badge
   const getStockBadge = () => {
     if (!string) return null;
-    
+
     if (string.stock === 0) {
       return <span className="px-3 py-1 text-sm font-medium bg-danger/15 text-danger rounded-full">缺货</span>;
     } else if (string.stock < string.minimumStock) {
@@ -321,7 +321,7 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
             {/* Basic Info Card */}
             <div className="bg-ink-surface rounded-lg shadow-sm p-6">
               <h2 className="text-lg font-semibold text-text-primary mb-4">基本信息</h2>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
@@ -432,7 +432,7 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
             {/* Stock History Card */}
             <div className="bg-ink-surface rounded-lg shadow-sm p-6">
               <h2 className="text-lg font-semibold text-text-primary mb-4">库存变更记录</h2>
-              
+
               {stockLogs.length === 0 ? (
                 <p className="text-text-tertiary text-center py-8">暂无库存变更记录</p>
               ) : (
@@ -478,7 +478,7 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
             {/* Profit Stats Card */}
             <div className="bg-ink-surface rounded-lg shadow-sm p-6">
               <h3 className="text-sm font-medium text-text-secondary mb-4">利润分析</h3>
-              
+
               <div className="space-y-3">
                 <div>
                   <p className="text-xs text-text-tertiary">成本价</p>
@@ -504,7 +504,7 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
             {/* Stock Info Card */}
             <div className="bg-ink-surface rounded-lg shadow-sm p-6">
               <h3 className="text-sm font-medium text-text-secondary mb-4">库存信息</h3>
-              
+
               <div className="space-y-3">
                 <div>
                   <p className="text-xs text-text-tertiary">当前库存</p>
@@ -527,7 +527,7 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
             {/* Timestamps Card */}
             <div className="bg-ink-surface rounded-lg shadow-sm p-6">
               <h3 className="text-sm font-medium text-text-secondary mb-4">时间信息</h3>
-              
+
               <div className="space-y-2 text-sm">
                 <div>
                   <p className="text-text-tertiary">创建时间</p>
@@ -547,7 +547,7 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-ink-surface rounded-lg p-6 max-w-md w-full mx-4">
               <h3 className="text-lg font-semibold text-text-primary mb-4">调整库存</h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
@@ -555,9 +555,9 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
                   </label>
                   <select
                     value={stockAdjustmentData.type}
-                    onChange={(e) => setStockAdjustmentData(prev => ({ 
-                      ...prev, 
-                      type: e.target.value as StockChangeType 
+                    onChange={(e) => setStockAdjustmentData(prev => ({
+                      ...prev,
+                      type: e.target.value as StockChangeType
                     }))}
                     className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
                   >
@@ -575,9 +575,9 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
                   <input
                     type="number"
                     value={stockAdjustmentData.changeAmount}
-                    onChange={(e) => setStockAdjustmentData(prev => ({ 
-                      ...prev, 
-                      changeAmount: parseInt(e.target.value) 
+                    onChange={(e) => setStockAdjustmentData(prev => ({
+                      ...prev,
+                      changeAmount: parseInt(e.target.value)
                     }))}
                     className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
                     placeholder={stockAdjustmentData.type === 'deduction' ? '输入负数或正数后选择出库' : '输入数量'}
@@ -593,9 +593,9 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
                   </label>
                   <textarea
                     value={stockAdjustmentData.reason}
-                    onChange={(e) => setStockAdjustmentData(prev => ({ 
-                      ...prev, 
-                      reason: e.target.value 
+                    onChange={(e) => setStockAdjustmentData(prev => ({
+                      ...prev,
+                      reason: e.target.value
                     }))}
                     rows={3}
                     className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
@@ -635,7 +635,7 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
                 确定要删除 <span className="font-semibold">{string?.brand} {string?.model}</span> 吗？
                 此操作不可撤销。
               </p>
-              
+
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
