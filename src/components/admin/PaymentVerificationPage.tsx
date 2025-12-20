@@ -17,7 +17,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { getPendingPayments, rejectPayment } from '@/services/payment.service';
+import { getPendingPayments, rejectPayment } from '@/services/paymentService';
 import { formatAmount } from '@/lib/payment-helpers';
 
 interface PaymentUser {
@@ -78,10 +78,10 @@ async function confirmPaymentByProvider(payment: Payment): Promise<void> {
     payment.provider === 'cash'
       ? await fetch(endpoint, { method: 'POST' })
       : await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
-        });
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
 
   const data = await response.json().catch(() => null);
   if (!response.ok) {
