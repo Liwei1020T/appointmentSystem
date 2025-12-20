@@ -81,6 +81,66 @@ export interface NotificationData {
 }
 
 /**
+ * 获取通知图标
+ */
+export function getNotificationIcon(type: string): string {
+  const icons: Record<string, string> = {
+    order: '📦',
+    package: '🎁',
+    promo: '🎉',
+    system: '⚙️',
+    payment: '💰',
+    points: '⭐',
+    referral: '👥',
+    sms: '📱',
+    push: '🔔',
+  };
+  return icons[type] || '🔔';
+}
+
+/**
+ * 获取通知颜色类
+ */
+export function getNotificationColor(typeOrPriority: string): string {
+  const colors: Record<string, string> = {
+    order: 'bg-info-soft text-info',
+    package: 'bg-success/15 text-success',
+    promo: 'bg-warning/15 text-warning',
+    system: 'bg-ink-elevated text-text-secondary',
+    payment: 'bg-accent/15 text-accent',
+    points: 'bg-warning/15 text-warning',
+    referral: 'bg-success/15 text-success',
+    high: 'bg-danger/15 text-danger',
+    medium: 'bg-warning/15 text-warning',
+    low: 'bg-info-soft text-info',
+  };
+  return colors[typeOrPriority] || 'bg-ink-elevated text-text-secondary';
+}
+
+/**
+ * 格式化通知时间
+ */
+export function formatNotificationTime(dateInput: string | Date): string {
+  const date = new Date(dateInput);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return '刚刚';
+  if (diffMins < 60) return `${diffMins} 分钟前`;
+  if (diffHours < 24) return `${diffHours} 小时前`;
+  if (diffDays < 7) return `${diffDays} 天前`;
+
+  return date.toLocaleDateString('zh-CN', {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+
+/**
  * Convert backend notifications into the UI's legacy-friendly shape.
  */
 function normalizeNotification(raw: any) {
