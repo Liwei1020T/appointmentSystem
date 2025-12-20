@@ -101,7 +101,7 @@ export default function RecentOrders() {
           {orders.map((order) => {
             const status = statusConfig[order.status as keyof typeof statusConfig];
             const badgeVariant = status?.variant ?? 'neutral';
-            
+
             return (
               <div
                 key={order.id}
@@ -124,7 +124,7 @@ export default function RecentOrders() {
 
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-text-tertiary">
-                    {formatDate(order.created_at)}
+                    {formatDate(order.created_at || (order as any).createdAt)}
                   </span>
                   <span className="font-semibold text-text-primary font-mono">
                     {formatCurrency(order.final_price ?? order.price ?? 0)}
