@@ -3,7 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import NotificationBell from '@/components/NotificationBell';
 import NotificationPanel from '@/components/NotificationPanel';
 
@@ -31,6 +31,11 @@ export default function Navbar() {
   const handleSignOut = async () => {
     await signOut({ callbackUrl: '/login' });
   };
+
+  // 路由变化时自动关闭通知面板，避免遮挡新页面内容
+  useEffect(() => {
+    setNotificationPanelOpen(false);
+  }, [pathname]);
 
   return (
     <nav className="glass-surface border-b border-border-subtle sticky top-0 z-40">
@@ -104,7 +109,7 @@ export default function Navbar() {
                 {/* Notification Bell */}
                 <NotificationBell
                   userId={session.user.id}
-                  onClick={() => setNotificationPanelOpen(true)}
+                  onClick={() => setNotificationPanelOpen((open) => !open)}
                 />
 
                 {/* User Menu */}

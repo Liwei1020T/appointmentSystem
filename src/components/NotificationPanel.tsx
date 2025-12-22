@@ -55,6 +55,20 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
     }
   }, [isOpen, userId, filter]);
 
+  // 监听 Esc 键，方便快速关闭通知面板
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   // 标记单个通知为已读
   const handleMarkAsRead = async (notificationId: string) => {
     await markAsRead(notificationId);
@@ -81,12 +95,17 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
     <>
       {/* 遮罩层 */}
       <div
-        className="fixed inset-0 bg-black/20 z-40"
+        className="fixed inset-x-0 bottom-0 top-16 bg-black/20 backdrop-blur-[1px] z-30"
         onClick={onClose}
       />
 
       {/* 侧边面板 */}
-      <div className="fixed right-0 top-0 h-full w-full sm:w-96 bg-ink-surface shadow-2xl z-50 flex flex-col">
+      <div
+        className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-full sm:w-96 bg-ink-surface shadow-2xl z-50 flex flex-col border-l border-border-subtle rounded-l-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-label="通知面板"
+      >
         {/* 标题栏 */}
         <div className="flex items-center justify-between p-4 border-b border-border-subtle bg-ink-elevated">
           <div className="flex items-center gap-2">
@@ -98,12 +117,16 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
             )}
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-ink-surface/20 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5 text-text-primary" />
-          </button>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:inline text-xs text-text-tertiary">点击空白或按 Esc 关闭</span>
+            <button
+              onClick={onClose}
+              className="p-1 hover:bg-ink-surface/20 rounded-lg transition-colors"
+              aria-label="关闭通知面板"
+            >
+              <X className="w-5 h-5 text-text-primary" />
+            </button>
+          </div>
         </div>
 
         {/* 操作栏 */}
@@ -116,6 +139,7 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
                 ? 'bg-accent text-text-onAccent'
                 : 'bg-ink-surface text-text-secondary hover:bg-ink-elevated'
                 }`}
+              aria-pressed={filter === 'all'}
             >
               全部
             </button>
@@ -125,8 +149,9 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
                 ? 'bg-accent text-text-onAccent'
                 : 'bg-ink-surface text-text-secondary hover:bg-ink-elevated'
                 }`}
+              aria-pressed={filter === 'unread'}
             >
-              未读
+              未读{unreadCount > 0 ? ` (${unreadCount})` : ''}
             </button>
           </div>
 

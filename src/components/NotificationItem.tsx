@@ -35,12 +35,25 @@ export default function NotificationItem({
   const icon = getNotificationIcon(notification.type);
   const colorClass = getNotificationColor(notification.priority || notification.type);
   const timeText = formatNotificationTime(notification.created_at);
+  // 让类型展示更直观
+  const typeLabelMap: Record<string, string> = {
+    order: '订单',
+    package: '套餐',
+    promo: '优惠',
+    system: '系统',
+    payment: '支付',
+    points: '积分',
+    referral: '邀请',
+    sms: '短信',
+    push: '推送',
+  };
+  const typeLabel = typeLabelMap[notification.type] || '通知';
 
   const isUnread = notification.is_read === false || notification.read === false;
 
   return (
     <div
-      className={`relative p-4 bg-ink-elevated hover:bg-ink-surface transition-colors border-b border-border-subtle ${isUnread ? 'border-l-4 border-l-accent' : ''}`}
+      className={`relative p-4 bg-ink-elevated hover:bg-ink-surface transition-colors border-b border-border-subtle ${isUnread ? 'border-l-4 border-l-accent' : 'opacity-90'}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
@@ -53,9 +66,15 @@ export default function NotificationItem({
         {/* 内容 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h4 className={`text-sm font-medium ${isUnread ? 'text-text-primary' : 'text-text-secondary'}`}>
-              {notification.title}
-            </h4>
+            <div className="flex items-center gap-2 min-w-0">
+              <h4 className={`text-sm font-medium truncate ${isUnread ? 'text-text-primary' : 'text-text-secondary'}`}>
+                {notification.title}
+              </h4>
+              <span className="flex-shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-ink-surface text-text-tertiary">
+                {typeLabel}
+              </span>
+            </div>
+            <span className="text-xs text-text-tertiary whitespace-nowrap">{timeText}</span>
 
             {/* 未读标记 */}
             {isUnread && (
@@ -66,8 +85,6 @@ export default function NotificationItem({
           <p className="text-sm text-text-secondary mb-2 line-clamp-2">
             {notification.message}
           </p>
-
-          <p className="text-xs text-text-tertiary">{timeText}</p>
         </div>
       </div>
 
