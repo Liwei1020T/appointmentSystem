@@ -13,11 +13,13 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAllOrders, getOrderStats, searchOrders } from '@/services/adminOrderService';
 import type { AdminOrder, OrderStatus, OrderStats } from '@/services/adminOrderService';
 import { generateShortCode, formatDate } from '@/lib/utils';
+import { Button, Input, Tabs } from '@/components';
+import { Search } from 'lucide-react';
 
 type FilterStatus = 'all' | OrderStatus;
 
@@ -38,12 +40,13 @@ export default function AdminOrderListPage() {
     loadStats();
   }, [filterStatus, currentPage]);
 
-  const loadOrders = async () => {
+  const loadOrders = async (pageOverride?: number) => {
     setLoading(true);
     setError(null);
 
+    const targetPage = pageOverride ?? currentPage;
     const filters: any = {
-      page: currentPage,
+      page: targetPage,
       limit: pageSize,
     };
 
@@ -68,15 +71,16 @@ export default function AdminOrderListPage() {
     setStats(fetchedStats);
   };
 
-  const handleSearch = async () => {
+  const handleSearch = async (pageOverride?: number) => {
     if (!searchTerm.trim()) {
       loadOrders();
       return;
     }
 
     setLoading(true);
+    const targetPage = pageOverride ?? currentPage;
     const { orders: searchResults, total, error: searchError } = await searchOrders(searchTerm, {
-      page: currentPage,
+      page: targetPage,
       limit: pageSize,
       status: filterStatus !== 'all' ? filterStatus : undefined,
     });
@@ -128,96 +132,123 @@ export default function AdminOrderListPage() {
     { status: 'cancelled', label: '已取消', count: stats?.cancelled },
   ];
 
+  const filterTabs = useMemo(
+    () =>
+      filters.map((filter) => ({
+        id: filter.status,
+        label:
+          filter.count !== undefined
+            ? `${filter.label} (${filter.count})`
+            : filter.label,
+      })),
+    [filters]
+  );
+
   return (
     <div className="min-h-screen bg-ink-elevated">
       {/* Header */}
-      <div className="bg-ink-surface border-b shadow-sm">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
+      <div className="bg-ink-surface border-b border-border-subtle sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 py-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-text-primary">订单管理</h1>
               <p className="text-sm text-text-secondary mt-1">管理所有客户订单</p>
             </div>
-            <button
-              onClick={() => router.push('/admin/dashboard')}
-              className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-ink-elevated rounded-lg transition-colors"
-            >
-              返回仪表板
-            </button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => router.push('/admin/dashboard')}
+              >
+                返回仪表板
+              </Button>
+            </div>
           </div>
 
           {/* Search Bar */}
-          <div className="flex gap-2">
-            <input
-              type="text"
+          <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto]">
+            <Input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="搜索订单（用户名、邮箱、订单ID）"
-              className="flex-1 px-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent"
-            />
-            <button
-              onClick={handleSearch}
-              className="px-6 py-2 bg-accent text-text-onAccent rounded-lg hover:shadow-glow transition-colors"
-            >
-              搜索
-            </button>
-          </div>
-        </div>
-
-        {/* Filter Tabs */}
-        <div className="px-6 overflow-x-auto">
-          <div className="flex gap-2 pb-2">
-            {filters.map((filter) => (
-              <button
-                key={filter.status}
-                onClick={() => {
-                  setFilterStatus(filter.status);
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
                   setCurrentPage(1);
-                  setSearchTerm('');
+                  handleSearch(1);
+                }
+              }}
+              placeholder="搜索订单（用户名、邮箱、订单ID）"
+              leftIcon={<Search className="h-4 w-4" />}
+            />
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  setCurrentPage(1);
+                  handleSearch(1);
                 }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                  filterStatus === filter.status
-                    ? 'bg-accent text-text-onAccent'
-                    : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
-                }`}
               >
-                {filter.label}
-                {filter.count !== undefined && (
-                  <span className="ml-2 opacity-75">({filter.count})</span>
-                )}
-              </button>
-            ))}
+                搜索
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setSearchTerm('');
+                  setCurrentPage(1);
+                  loadOrders(1);
+                }}
+              >
+                清除
+              </Button>
+            </div>
+          </div>
+
+          {/* Filter Tabs */}
+          <div className="mt-4 overflow-x-auto">
+            <Tabs
+              tabs={filterTabs}
+              activeTab={filterStatus}
+              onChange={(tabId) => {
+                setFilterStatus(tabId as FilterStatus);
+                setCurrentPage(1);
+                setSearchTerm('');
+              }}
+              className="min-w-max"
+            />
           </div>
         </div>
       </div>
 
       {/* Stats Bar */}
       {stats && (
-        <div className="bg-ink-surface border-b px-6 py-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <div className="text-sm text-text-secondary">今日订单</div>
-              <div className="text-2xl font-bold text-text-primary">{stats.todayTotal ?? 0}</div>
-            </div>
-            <div>
-              <div className="text-sm text-text-secondary">今日营业额</div>
-              <div className="text-2xl font-bold text-accent">RM {(stats.todayRevenue ?? 0).toFixed(2)}</div>
-            </div>
-            <div>
-              <div className="text-sm text-text-secondary">总订单</div>
-              <div className="text-2xl font-bold text-text-primary">{stats.total}</div>
-            </div>
-            <div>
-              <div className="text-sm text-text-secondary">待处理</div>
-              <div className="text-2xl font-bold text-warning">{stats.pending + stats.confirmed + (stats.in_progress ?? 0)}</div>
+        <div className="bg-ink-surface border-b border-border-subtle">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <div className="text-sm text-text-secondary">今日订单</div>
+                <div className="text-2xl font-bold text-text-primary font-mono">{stats.todayTotal ?? 0}</div>
+              </div>
+              <div>
+                <div className="text-sm text-text-secondary">今日营业额</div>
+                <div className="text-2xl font-bold text-accent font-mono">
+                  RM {(stats.todayRevenue ?? 0).toFixed(2)}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-text-secondary">总订单</div>
+                <div className="text-2xl font-bold text-text-primary font-mono">{stats.total}</div>
+              </div>
+              <div>
+                <div className="text-sm text-text-secondary">待处理</div>
+                <div className="text-2xl font-bold text-warning font-mono">
+                  {stats.pending + stats.confirmed + (stats.in_progress ?? 0)}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {/* Order List */}
-      <div className="p-6">
+      <div className="max-w-7xl mx-auto px-6 py-6">
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
@@ -249,7 +280,7 @@ export default function AdminOrderListPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         球线
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
                         金额
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
@@ -292,7 +323,7 @@ export default function AdminOrderListPage() {
                             {order.string?.brand || order.stringInventory?.brand || '-'}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 text-right">
                           <div className="text-sm font-semibold text-text-primary">
                             {(() => {
                               const totalAmount = Number(
@@ -345,7 +376,7 @@ export default function AdminOrderListPage() {
                                     loadOrders();
                                   }
                                 }}
-                                className="px-2 py-1 text-xs bg-info-soft text-info rounded hover:bg-info/20 transition-colors"
+                                className="px-2.5 py-1 text-xs bg-info-soft text-info rounded-md hover:bg-info/20 transition-colors"
                                 title="开始穿线"
                               >
                                 ⚙️ 开始
@@ -365,7 +396,7 @@ export default function AdminOrderListPage() {
                                     loadOrders();
                                   }
                                 }}
-                                className="px-2 py-1 text-xs bg-success/15 text-success rounded hover:bg-success/25 transition-colors"
+                                className="px-2.5 py-1 text-xs bg-success/15 text-success rounded-md hover:bg-success/25 transition-colors"
                                 title="完成订单"
                               >
                                 ✓ 完成

@@ -19,6 +19,7 @@ import {
   ShoppingCart,
   History,
 } from 'lucide-react';
+import { getPackageUsage, getUserPackagesForProfile } from '@/services/packageService';
 
 interface UserPackage {
   id: string;
@@ -71,11 +72,9 @@ export default function MyPackagesPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/packages/my');
-      const data = await response.json();
-      
-      if (response.ok && data.packages) {
-        setPackages(data.packages);
+      const result = await getUserPackagesForProfile();
+      if (Array.isArray(result.packages)) {
+        setPackages(result.packages);
       }
     } catch (error) {
       console.error('Failed to load packages:', error);
@@ -86,10 +85,8 @@ export default function MyPackagesPage() {
 
   const loadUsageHistory = async (packageId: string) => {
     try {
-      const response = await fetch(`/api/packages/${packageId}/usage`);
-      const result = await response.json();
-      
-      if (response.ok && result.usage) {
+      const result = await getPackageUsage(packageId);
+      if (Array.isArray(result.usage)) {
         setUsageLogs(result.usage);
       }
     } catch (error) {

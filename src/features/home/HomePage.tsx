@@ -265,24 +265,6 @@ export default function HomePage() {
             </Link>
           </Card>
         )}
-
-        {/* 帮助与支持 */}
-        <Card>
-          <div className="p-6">
-            <h3 className="text-sm font-semibold text-text-primary mb-3">需要帮助？</h3>
-            <div className="space-y-2">
-              <button className="w-full text-left px-4 py-3 bg-ink-elevated hover:bg-ink-surface rounded-lg transition-colors text-sm text-text-secondary border border-border-subtle">
-                📞 联系客服
-              </button>
-              <button className="w-full text-left px-4 py-3 bg-ink-elevated hover:bg-ink-surface rounded-lg transition-colors text-sm text-text-secondary border border-border-subtle">
-                ❓ 常见问题
-              </button>
-              <button className="w-full text-left px-4 py-3 bg-ink-elevated hover:bg-ink-surface rounded-lg transition-colors text-sm text-text-secondary border border-border-subtle">
-                📍 门店位置
-              </button>
-            </div>
-          </div>
-        </Card>
       </div>
     </div>
   );

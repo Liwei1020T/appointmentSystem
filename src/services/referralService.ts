@@ -3,6 +3,8 @@
  * 处理推荐/邀请相关逻辑
  */
 
+import { getReferralsAction } from '@/actions/referrals.actions';
+
 export interface ReferralLog {
   id: string;
   referrer_id?: string;
@@ -41,17 +43,12 @@ export interface ReferralStats {
  */
 export async function getReferralStats(): Promise<ReferralStats> {
   try {
-    const response = await fetch('/api/referrals');
-    if (!response.ok) {
-      throw new Error('Failed to fetch referral stats');
-    }
-    
-    const data = await response.json();
+    const data = await getReferralsAction();
     return {
-      referralCode: data.referralCode || '',
-      totalReferrals: data.totalReferrals || 0,
-      totalRewards: data.totalRewards || 0,
-      referrals: data.referrals || [],
+      referralCode: data?.referralCode || '',
+      totalReferrals: data?.stats?.totalReferrals || 0,
+      totalRewards: data?.stats?.totalRewards || 0,
+      referrals: data?.referrals || [],
     };
   } catch (error) {
     console.error('Error fetching referral stats:', error);

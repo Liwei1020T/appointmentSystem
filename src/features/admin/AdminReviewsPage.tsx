@@ -19,6 +19,7 @@ import StarRating from '@/components/StarRating';
 import Modal from '@/components/Modal';
 import Toast from '@/components/Toast';
 import { formatDate } from '@/lib/utils';
+import { getAdminReviewStats, getAdminReviews, replyReview } from '@/services/reviewService';
 import { 
   Star, 
   MessageSquare, 
@@ -106,13 +107,7 @@ export default function AdminReviewsPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/admin/reviews');
-      if (!response.ok) {
-        throw new Error('加载评价列表失败');
-      }
-      const raw = await response.json().catch(() => ({}));
-      const payload = raw?.data ?? raw;
-      const list = Array.isArray(payload) ? payload : Array.isArray(payload?.reviews) ? payload.reviews : [];
+      const list = await getAdminReviews();
       setReviews(list);
       setFilteredReviews(list);
     } catch (error) {
@@ -129,12 +124,8 @@ export default function AdminReviewsPage() {
   // 加载统计数据
   const loadStats = async () => {
     try {
-      const response = await fetch('/api/admin/reviews/stats');
-      if (response.ok) {
-        const raw = await response.json().catch(() => ({}));
-        const payload = raw?.data ?? raw;
-        setStats(payload || null);
-      }
+      const payload = await getAdminReviewStats();
+      setStats(payload || null);
     } catch (error) {
       console.error('Failed to load review stats:', error);
     }
@@ -192,15 +183,7 @@ export default function AdminReviewsPage() {
     setSubmitting(true);
 
     try {
-      const response = await fetch(`/api/admin/reviews/${selectedReview.id}/reply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reply: replyText.trim() }),
-      });
-
-      if (!response.ok) {
-        throw new Error('回复失败');
-      }
+      await replyReview(selectedReview.id, replyText.trim());
 
       setToast({
         show: true,

@@ -15,6 +15,8 @@ String Service Platform 是一个面向羽毛球穿线业务的全栈数字管�
 - **服务端（Supabase + Serverless Functions）**  
 - **通知服务（SMS / Push Notification）**  
 
+> Note (2025-12-20): The current Next.js implementation uses Prisma + NextAuth, and internal UI calls are progressively migrated to **Server Actions** under `src/actions/*`. External inbound endpoints (auth callbacks, payment webhooks, uploads) remain as API routes.
+
 系统旨在实现穿线业务的：
 
 - 自动化预约流程  

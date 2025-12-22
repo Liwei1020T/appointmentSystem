@@ -13,6 +13,7 @@ import Button from '@/components/Button';
 import { formatDate } from '@/lib/utils';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { getFeaturedReviews } from '@/services/reviewService';
 
 interface Review {
   id: string;
@@ -43,17 +44,7 @@ export default function FeaturedReviews() {
 
   const loadFeaturedReviews = async () => {
     try {
-      const response = await fetch('/api/reviews/featured');
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setReviews([]);
-        return;
-      }
-      const data = Array.isArray(result?.data)
-        ? result.data
-        : Array.isArray(result?.reviews)
-        ? result.reviews
-        : [];
+      const data = await getFeaturedReviews();
       const normalized = data.map((review: any) => ({
         ...review,
         user: Array.isArray(review?.user) ? review.user[0] : review?.user,

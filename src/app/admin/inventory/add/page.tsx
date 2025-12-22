@@ -10,20 +10,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-async function createString(data: any) {
-  const response = await fetch('/api/admin/inventory', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    return { string: null, error: error.message || 'Failed to create string' };
-  }
-  const string = await response.json();
-  return { string, error: null };
-}
+import { createInventoryItemAction } from '@/actions/inventory.actions';
 
 function AddStringForm() {
   const router = useRouter();
@@ -70,18 +57,25 @@ function AddStringForm() {
     setSaving(true);
     setError(null);
 
-    const { string: newString, error: createError } = await createString({
-      name: formData.name,
-      brand: formData.brand,
-      cost_price: formData.cost_price,
-      selling_price: formData.selling_price,
-      stock_quantity: formData.stock_quantity,
-      minimum_stock: formData.minimum_stock,
-      description: formData.description || undefined,
-    });
+    let newString;
+    try {
+      newString = await createInventoryItemAction({
+        name: formData.name,
+        brand: formData.brand,
+        cost_price: formData.cost_price,
+        selling_price: formData.selling_price,
+        stock_quantity: formData.stock_quantity,
+        minimum_stock: formData.minimum_stock,
+        description: formData.description || undefined,
+      });
+    } catch (err: any) {
+      setError(err.message || 'Failed to create string');
+      setSaving(false);
+      return;
+    }
 
-    if (createError || !newString) {
-      setError(createError || 'Failed to create string');
+    if (!newString) {
+      setError('Failed to create string');
       setSaving(false);
       return;
     }

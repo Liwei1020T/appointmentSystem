@@ -1,4 +1,13 @@
 import { MembershipTierId } from '@/lib/membership';
+import {
+  changePasswordAction,
+  generateReferralCodeAction,
+  getUserProfileAction,
+  getUserStatsAction,
+  updateUserProfileAction,
+} from '@/actions/profile.actions';
+import { getPointsAction } from '@/actions/points.actions';
+import { getReferralsAction } from '@/actions/referrals.actions';
 
 /**
  * Profile Service
@@ -34,14 +43,7 @@ export interface UpdateProfileParams {
 
 export async function getUserProfile(userId?: string): Promise<{ profile?: UserProfile; error?: any }> {
   try {
-    const response = await fetch('/api/profile');
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { error: new Error(errorData.error || 'Failed to fetch profile') };
-    }
-    const payload = await response.json();
-    // API routes use { success, data } wrappers; keep backward compatibility if unwrapped.
-    const profile = payload?.data ?? payload;
+    const profile = await getUserProfileAction();
     return { profile };
   } catch (error: any) {
     console.error('Failed to fetch user profile:', error);
@@ -55,12 +57,8 @@ export async function updateUserProfile(data: {
   email?: string;
 }): Promise<boolean> {
   try {
-    const response = await fetch('/api/profile', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    return response.ok;
+    await updateUserProfileAction(data);
+    return true;
   } catch (error) {
     console.error('Failed to update profile:', error);
     return false;
@@ -72,19 +70,11 @@ export async function changePassword(
   newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const response = await fetch('/api/user/password', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ currentPassword, newPassword }),
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      return { success: false, error: data.error || '修改密码失败' };
-    }
+    await changePasswordAction({ currentPassword, newPassword });
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to change password:', error);
-    return { success: false, error: 'Network error' };
+    return { success: false, error: error.message || 'Network error' };
   }
 }
 
@@ -93,21 +83,7 @@ export async function changePassword(
  */
 export async function updateProfile(data: UpdateProfileParams): Promise<{ success: boolean; error: string | null }> {
   try {
-    const payload = {
-      fullName: data.fullName ?? data.full_name,
-      phone: data.phone,
-      address: data.address,
-      avatar_url: data.avatar_url,
-    };
-    const response = await fetch('/api/profile', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { success: false, error: errorData.error || 'Failed to update profile' };
-    }
+    await updateUserProfileAction(data);
     return { success: true, error: null };
   } catch (error: any) {
     console.error('Failed to update profile:', error);
@@ -148,13 +124,7 @@ export interface UserStats {
  */
 export async function getUserStats(): Promise<UserStats> {
   try {
-    const response = await fetch('/api/user/stats');
-    if (!response.ok) {
-      throw new Error('Failed to fetch user stats');
-    }
-    const payload = await response.json();
-    // API routes use { success, data } wrappers; keep backward compatibility if unwrapped.
-    const data = payload?.data ?? payload;
+    const data = await getUserStatsAction();
     const membership = data?.membership || {
       tier: 'standard' as MembershipTierId,
       label: '普通会员',
@@ -203,17 +173,8 @@ export async function getUserStats(): Promise<UserStats> {
  */
 export async function generateReferralCode(): Promise<{ code: string; error: string | null }> {
   try {
-    const response = await fetch('/api/profile/referral-code', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { code: '', error: errorData.error || 'Failed to generate referral code' };
-    }
-    const payload = await response.json();
-    const code = payload?.data?.code ?? payload?.code ?? '';
-    return { code, error: null };
+    const result = await generateReferralCodeAction();
+    return { code: result.code, error: null };
   } catch (error: any) {
     console.error('Failed to generate referral code:', error);
     return { code: '', error: error.message || 'Network error' };
@@ -240,26 +201,12 @@ export async function logout(): Promise<{ success: boolean }> {
  * 获取用户积分信息
  */
 export async function getPoints(): Promise<{ balance: number; logs: any[] }> {
-  const response = await fetch('/api/points');
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || '获取积分失败');
-  }
-
-  return data.data;
+  return getPointsAction();
 }
 
 /**
  * 获取推荐记录
  */
 export async function getReferrals(): Promise<any> {
-  const response = await fetch('/api/referrals');
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || '获取推荐记录失败');
-  }
-
-  return data.data;
+  return getReferralsAction();
 }

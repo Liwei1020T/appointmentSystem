@@ -26,6 +26,8 @@
 
 ## Overview
 
+**Note (2025-12-20):** Internal UI flows for profile, points, referrals, vouchers, stats, notifications, orders, payments, packages, reviews, and inventory (including admin orders/payments/reviews/inventory) now use Next.js Server Actions in `src/actions/*`. The legacy `/api/*` routes for these areas were removed. External inbound endpoints (e.g., NextAuth callbacks, payment webhooks, uploads, order photos) remain as API routes.
+
 ### Base URL
 
 ```
@@ -1056,6 +1058,8 @@ All authenticated endpoints require:
 ---
 
 ## Notification APIs
+
+**Note (2025-12-20):** User notification list/mark/delete now use Server Actions in `src/actions/notifications.actions.ts`. The legacy `/api/notifications*` routes were removed.
 
 ### 27. Get User Notifications
 

@@ -38,7 +38,7 @@ export default function Navbar() {
   }, [pathname]);
 
   return (
-    <nav className="glass-surface border-b border-border-subtle sticky top-0 z-40">
+    <nav className="glass-strong border-b border-border-subtle sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
@@ -57,8 +57,8 @@ export default function Navbar() {
                 <Link
                   href="/booking"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/booking')
-                      ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
-                      : 'text-text-secondary hover:bg-ink-surface/80'
+                    ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
+                    : 'text-text-secondary hover:bg-ink-surface/80'
                     }`}
                 >
                   预约穿线
@@ -67,8 +67,8 @@ export default function Navbar() {
                 <Link
                   href="/orders"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/orders')
-                      ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
-                      : 'text-text-secondary hover:bg-ink-surface/80'
+                    ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
+                    : 'text-text-secondary hover:bg-ink-surface/80'
                     }`}
                 >
                   我的订单
@@ -77,8 +77,8 @@ export default function Navbar() {
                 <Link
                   href="/profile/packages"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${isPackagesActive
-                      ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
-                      : 'text-text-secondary hover:bg-ink-surface/80'
+                    ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
+                    : 'text-text-secondary hover:bg-ink-surface/80'
                     }`}
                 >
                   套餐
@@ -87,8 +87,8 @@ export default function Navbar() {
                 <Link
                   href="/profile/vouchers"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${pathname?.startsWith('/profile/vouchers')
-                      ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
-                      : 'text-text-secondary hover:bg-ink-surface/80'
+                    ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
+                    : 'text-text-secondary hover:bg-ink-surface/80'
                     }`}
                 >
                   优惠券
@@ -98,8 +98,8 @@ export default function Navbar() {
                   <Link
                     href="/admin/dashboard"
                     className={`px-3 py-2 rounded-md text-sm font-medium ${pathname?.startsWith('/admin')
-                        ? 'bg-danger/10 text-danger ring-1 ring-danger/30'
-                        : 'text-danger hover:bg-danger/10'
+                      ? 'bg-danger/10 text-danger ring-1 ring-danger/30'
+                      : 'text-danger hover:bg-danger/10'
                       }`}
                   >
                     管理后台

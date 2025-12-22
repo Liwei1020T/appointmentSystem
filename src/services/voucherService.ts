@@ -4,6 +4,14 @@
  */
 
 import { UserVoucher, Voucher } from '.prisma/client';
+import {
+  getRedeemableVouchersAction,
+  getUserVouchersAction,
+  getUserVouchersMappedAction,
+  getVoucherStatsAction,
+  redeemVoucherAction,
+  redeemVoucherWithPointsAction,
+} from '@/actions/vouchers.actions';
 
 export interface UserVoucherWithVoucher extends UserVoucher {
   voucher: Voucher;
@@ -16,19 +24,25 @@ export async function getUserVouchers(
   status?: 'active' | 'used' | 'expired'
 ): Promise<{ vouchers?: UserVoucherWithVoucher[]; error?: string }> {
   try {
-    const params = new URLSearchParams();
-    if (status) params.append('status', status);
-
-    const response = await fetch(`/api/vouchers/user?${params.toString()}`);
-    const data = await response.json();
-
-    if (!response.ok) {
-      return { error: data.error || '获取优惠券失败' };
-    }
-
-    return { vouchers: data.data || [] };
+    const vouchers = await getUserVouchersAction(status);
+    return { vouchers };
   } catch (error) {
     console.error('Error getting user vouchers:', error);
+    return { error: '获取优惠券失败' };
+  }
+}
+
+/**
+ * 获取用户优惠券（UI 显示用）
+ */
+export async function getUserVouchersForProfile(
+  status?: 'active' | 'used' | 'expired'
+): Promise<{ vouchers?: any[]; error?: string }> {
+  try {
+    const vouchers = await getUserVouchersMappedAction(status);
+    return { vouchers };
+  } catch (error) {
+    console.error('Error getting user vouchers for profile:', error);
     return { error: '获取优惠券失败' };
   }
 }
@@ -40,21 +54,7 @@ export async function redeemVoucher(
   code: string,
   usePoints = false
 ): Promise<any> {
-  const response = await fetch('/api/vouchers/redeem', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ code, usePoints }),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || '兑换优惠券失败');
-  }
-
-  return data.data;
+  return redeemVoucherAction({ code, usePoints });
 }
 
 /**
@@ -117,13 +117,8 @@ export function validateVoucherForOrder(voucher: any, orderAmount: number): { va
  */
 export async function getRedeemableVouchers(): Promise<{ vouchers: Voucher[]; error: string | null }> {
   try {
-    const response = await fetch('/api/vouchers/redeemable');
-    const data = await response.json();
-    if (!response.ok) {
-      return { vouchers: [], error: data.error || '获取可兑换优惠券失败' };
-    }
-    const payload = data?.data?.vouchers ?? data?.data ?? [];
-    return { vouchers: Array.isArray(payload) ? payload : [], error: null };
+    const vouchers = await getRedeemableVouchersAction();
+    return { vouchers: Array.isArray(vouchers) ? vouchers : [], error: null };
   } catch (error: any) {
     return { vouchers: [], error: error.message || '获取可兑换优惠券失败' };
   }
@@ -137,17 +132,8 @@ export async function redeemVoucherWithPoints(
   points?: number
 ): Promise<{ success: boolean; userVoucher?: any; error: string | null }> {
   try {
-    const response = await fetch('/api/vouchers/redeem-with-points', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ voucherId, points }),
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      return { success: false, error: data.error || '兑换失败' };
-    }
-    const payload = data?.data?.userVoucher ?? data?.userVoucher ?? data?.data;
-    return { success: true, userVoucher: payload, error: null };
+    const result = await redeemVoucherWithPointsAction({ voucherId, points });
+    return { success: true, userVoucher: result.userVoucher, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || '兑换失败' };
   }
@@ -216,12 +202,7 @@ export interface VoucherStats {
  */
 export async function getVoucherStats(): Promise<VoucherStats> {
   try {
-    const response = await fetch('/api/vouchers/stats');
-    if (!response.ok) {
-      throw new Error('Failed to fetch voucher stats');
-    }
-    const data = await response.json();
-    const payload = data?.data ?? data;
+    const payload = await getVoucherStatsAction();
     return {
       totalVouchers: payload.totalVouchers || payload.total || 0,
       usedVouchers: payload.usedVouchers || payload.used || 0,

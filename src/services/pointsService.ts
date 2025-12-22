@@ -3,6 +3,12 @@
  * 积分系统服务
  */
 
+import {
+  getPointsAction,
+  getPointsHistoryAction,
+  getPointsStatsAction,
+} from '@/actions/points.actions';
+
 export type PointsLogType = 'EARN' | 'REDEEM' | 'earn' | 'redeem' | 'spend' | 'expire' | 'order' | 'referral' | 'review' | 'registration' | 'admin_adjust' | string;
 
 export interface PointsLog {
@@ -42,12 +48,7 @@ export interface PointsStats {
 
 export async function getPointsBalance(userId?: string): Promise<{ balance: number; error: string | null }> {
   try {
-    const response = await fetch('/api/points');
-    const data = await response.json();
-    if (!response.ok) {
-      return { balance: 0, error: data.error || '获取积分余额失败' };
-    }
-    const payload = data?.data || data;
+    const payload = await getPointsAction();
     const rawBalance = payload?.balance ?? payload?.points ?? 0;
     const balance = Number.isFinite(Number(rawBalance)) ? Number(rawBalance) : 0;
     return { balance, error: null };
@@ -62,16 +63,8 @@ export async function getPointsHistory(
   limit?: number
 ): Promise<{ logs: PointsLog[]; error: string | null }> {
   try {
-    const params = new URLSearchParams();
-    if (filterType) params.append('type', filterType);
-    if (limit) params.append('limit', limit.toString());
-    
-    const response = await fetch(`/api/points/history?${params.toString()}`);
-    const data = await response.json();
-    if (!response.ok) {
-      return { logs: [], error: data.error || '获取积分记录失败' };
-    }
-    const payload = data?.data?.logs ?? data?.logs ?? data?.history ?? data?.data ?? [];
+    const data = await getPointsHistoryAction({ type: filterType, limit });
+    const payload = data?.logs ?? [];
     return { logs: Array.isArray(payload) ? payload : [], error: null };
   } catch (error: any) {
     console.error('Failed to fetch points history:', error);
@@ -81,9 +74,7 @@ export async function getPointsHistory(
 
 export async function getPointsStats(userId: string): Promise<PointsStats> {
   try {
-    const response = await fetch('/api/points/stats');
-    const data = await response.json();
-    const payload = data?.data ?? data;
+    const payload = await getPointsStatsAction();
     return {
       totalPoints: payload.totalPoints || 0,
       earnedThisMonth: payload.earnedThisMonth || 0,

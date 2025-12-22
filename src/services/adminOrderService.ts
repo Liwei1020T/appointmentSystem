@@ -3,6 +3,13 @@
  * 管理员订单管理功能
  */
 
+import {
+  getAdminOrderByIdAction,
+  getAdminOrderStatsAction,
+  getAdminOrdersAction,
+  updateAdminOrderStatusAction,
+} from '@/actions/admin-orders.actions';
+
 export type OrderStatus =
   | 'pending'
   | 'confirmed'
@@ -80,20 +87,13 @@ export async function getAllOrders(filters?: {
   limit?: number;
 }): Promise<{ orders: AdminOrder[]; total: number; error: { message: string } | null }> {
   try {
-    const params = new URLSearchParams();
-    if (filters?.page) params.append('page', filters.page.toString());
-    if (filters?.limit) params.append('limit', filters.limit.toString());
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.startDate) params.append('startDate', filters.startDate);
-    if (filters?.endDate) params.append('endDate', filters.endDate);
-
-    const response = await fetch(`/api/admin/orders?${params.toString()}`);
-    const data = await response.json();
-    if (!response.ok) {
-      return { orders: [], total: 0, error: { message: data.error || 'Failed to fetch orders' } };
-    }
-    const payload = data.data || data;
-    return { orders: payload.orders || [], total: payload.total || payload.pagination?.total || 0, error: null };
+    const payload = await getAdminOrdersAction({
+      status: filters?.status,
+      q: undefined,
+      page: filters?.page,
+      limit: filters?.limit,
+    });
+    return { orders: payload.orders || [], total: payload.pagination?.total || 0, error: null };
   } catch (error: any) {
     console.error('Failed to fetch orders:', error);
     return { orders: [], total: 0, error: { message: error.message || 'Failed to fetch orders' } };
@@ -102,14 +102,8 @@ export async function getAllOrders(filters?: {
 
 export async function getOrderById(orderId: string): Promise<{ order: AdminOrder | null; error: { message: string } | null }> {
   try {
-    const response = await fetch(`/api/admin/orders/${orderId}`);
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      return { order: null, error: { message: data.error || 'Failed to fetch order' } };
-    }
-    const data = await response.json();
-    const payload = data.data || data;
-    return { order: payload, error: null };
+    const order = await getAdminOrderByIdAction(orderId);
+    return { order, error: null };
   } catch (error: any) {
     console.error('Failed to fetch order:', error);
     return { order: null, error: { message: error.message || 'Failed to fetch order' } };
@@ -122,17 +116,8 @@ export async function updateOrderStatus(
   notes?: string
 ): Promise<{ order: AdminOrder | null; error: { message: string } | null }> {
   try {
-    const response = await fetch(`/api/admin/orders/${orderId}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, notes }),
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      return { order: null, error: { message: data.error || 'Failed to update order status' } };
-    }
-    const payload = data.data || data;
-    return { order: payload.order || payload, error: null };
+    const order = await updateAdminOrderStatusAction(orderId, status, notes);
+    return { order, error: null };
   } catch (error: any) {
     console.error('Failed to update order status:', error);
     return { order: null, error: { message: error.message || 'Failed to update order status' } };
@@ -178,26 +163,11 @@ export async function getOrderStats(filters?: {
   endDate?: string;
 }): Promise<{ stats: OrderStats | null; error: string | null }> {
   try {
-    const params = new URLSearchParams();
-    if (filters?.startDate) params.append('startDate', filters.startDate);
-    if (filters?.endDate) params.append('endDate', filters.endDate);
-
-    const response = await fetch(`/api/admin/orders/stats?${params.toString()}`);
-    const data = await response.json();
-    if (!response.ok) {
-      return { stats: null, error: data.error || 'Failed to fetch order stats' };
-    }
-    return {
-      stats: data.data || data.stats || {
-        total: 0,
-        pending: 0,
-        confirmed: 0,
-        completed: 0,
-        cancelled: 0,
-        revenue: 0,
-      },
-      error: null,
-    };
+    const stats = await getAdminOrderStatsAction({
+      startDate: filters?.startDate,
+      endDate: filters?.endDate,
+    });
+    return { stats: stats as OrderStats, error: null };
   } catch (error: any) {
     return { stats: null, error: error.message || 'Failed to fetch order stats' };
   }
@@ -214,21 +184,13 @@ export async function searchOrders(query: string, filters?: {
   limit?: number;
 }): Promise<{ orders: AdminOrder[]; total?: number; error: { message: string } | null }> {
   try {
-    const params = new URLSearchParams();
-    params.append('q', query);
-    if (filters?.page) params.append('page', filters.page.toString());
-    if (filters?.limit) params.append('limit', filters.limit.toString());
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.startDate) params.append('startDate', filters.startDate);
-    if (filters?.endDate) params.append('endDate', filters.endDate);
-
-    const response = await fetch(`/api/admin/orders?${params.toString()}`);
-    const data = await response.json();
-    if (!response.ok) {
-      return { orders: [], total: 0, error: { message: data.error || 'Failed to search orders' } };
-    }
-    const payload = data.data || data;
-    return { orders: payload.orders || [], total: payload.total || payload.pagination?.total || 0, error: null };
+    const payload = await getAdminOrdersAction({
+      q: query,
+      status: filters?.status,
+      page: filters?.page,
+      limit: filters?.limit,
+    });
+    return { orders: payload.orders || [], total: payload.pagination?.total || 0, error: null };
   } catch (error: any) {
     return { orders: [], total: 0, error: { message: error.message || 'Failed to search orders' } };
   }

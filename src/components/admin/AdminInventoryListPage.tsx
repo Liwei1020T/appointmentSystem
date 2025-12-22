@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   getAllStrings,
@@ -19,6 +19,8 @@ import {
   type StockStatus,
   type LowStockAlert,
 } from '@/services/inventoryService';
+import { Badge, Button, Card, Input, StatsCard, Tabs } from '@/components';
+import { AlertTriangle, Boxes, Search, XCircle } from 'lucide-react';
 
 export default function AdminInventoryListPage() {
   const router = useRouter();
@@ -127,39 +129,64 @@ export default function AdminInventoryListPage() {
   // Get stock status badge color
   const getStockBadge = (string: StringInventory) => {
     if (string.stock === 0) {
-      return <span className="px-2 py-1 text-xs font-medium bg-danger/15 text-danger rounded-full">Out of Stock</span>;
-    } else if (string.stock < string.minimumStock) {
-      return <span className="px-2 py-1 text-xs font-medium bg-warning/15 text-warning rounded-full">Low Stock</span>;
-    } else {
-      return <span className="px-2 py-1 text-xs font-medium bg-success/15 text-success rounded-full">In Stock</span>;
+      return <Badge variant="error" size="sm">缺货</Badge>;
     }
+    if (string.stock < string.minimumStock) {
+      return <Badge variant="warning" size="sm">库存不足</Badge>;
+    }
+    return <Badge variant="success" size="sm">库存充足</Badge>;
   };
 
   // Count strings by status
   const allCount = totalStrings;
   const lowStockCount = lowStockAlerts.length;
   const outOfStockCount = strings.filter(s => s.stock === 0).length;
+  const stockTabs = useMemo(
+    () => [
+      { id: 'all', label: `全部 (${allCount})` },
+      { id: 'low_stock', label: `库存不足 (${lowStockCount})` },
+      { id: 'out_of_stock', label: `缺货 (${outOfStockCount})` },
+    ],
+    [allCount, lowStockCount, outOfStockCount]
+  );
 
   return (
     <div className="min-h-screen bg-ink-elevated p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => router.push('/admin/dashboard')}
-              className="text-text-secondary hover:text-text-primary mb-2 flex items-center text-sm"
             >
               ← 返回仪表板
-            </button>
-            <h1 className="text-2xl font-bold text-text-primary">库存管理</h1>
+            </Button>
+            <h1 className="text-2xl font-bold text-text-primary mt-2">库存管理</h1>
           </div>
-          <button
-            onClick={handleAddNew}
-            className="px-4 py-2 bg-accent text-text-onAccent rounded-lg hover:shadow-glow transition-colors"
-          >
-            + 添加新球线
-          </button>
+          <Button onClick={handleAddNew}>+ 添加新球线</Button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatsCard
+            title="库存总数"
+            value={totalStrings}
+            icon={<Boxes className="h-5 w-5" />}
+          />
+          <StatsCard
+            title="库存不足"
+            value={lowStockCount}
+            icon={<AlertTriangle className="h-5 w-5 text-warning" />}
+            className="border-warning/30"
+          />
+          <StatsCard
+            title="缺货"
+            value={outOfStockCount}
+            icon={<XCircle className="h-5 w-5 text-danger" />}
+            className="border-danger/30"
+          />
         </div>
 
         {/* Low Stock Alerts Banner */}
@@ -193,64 +220,39 @@ export default function AdminInventoryListPage() {
         )}
 
         {/* Search and Filters */}
-        <div className="bg-ink-surface rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="搜索球线名称或品牌..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={handleSearchKeyPress}
-                className="w-full px-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent"
-              />
+        <Card padding="md">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_220px] gap-4">
+            <Input
+              placeholder="搜索球线名称或品牌..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleSearchKeyPress}
+              leftIcon={<Search className="h-4 w-4" />}
+            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-text-secondary">品牌</label>
+              <select
+                value={selectedBrand}
+                onChange={(e) => handleBrandChange(e.target.value)}
+                className="w-full h-11 px-3 rounded-lg border bg-ink-surface text-text-primary border-border-subtle focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink"
+              >
+                <option value="">所有品牌</option>
+                {brands.map((brand) => (
+                  <option key={brand} value={brand}>{brand}</option>
+                ))}
+              </select>
             </div>
-
-            {/* Brand Filter */}
-            <select
-              value={selectedBrand}
-              onChange={(e) => handleBrandChange(e.target.value)}
-              className="px-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent"
-            >
-              <option value="">所有品牌</option>
-              {brands.map(brand => (
-                <option key={brand} value={brand}>{brand}</option>
-              ))}
-            </select>
           </div>
 
-          {/* Stock Status Tabs */}
-          <div className="flex gap-2 mt-4 border-b border-border-subtle">
-            <button
-              onClick={() => handleFilterChange('all')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${stockStatus === 'all'
-                ? 'border-accent text-accent'
-                : 'border-transparent text-text-secondary hover:text-text-primary'
-                }`}
-            >
-              全部 ({allCount})
-            </button>
-            <button
-              onClick={() => handleFilterChange('low_stock')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${stockStatus === 'low_stock'
-                ? 'border-warning text-warning'
-                : 'border-transparent text-text-secondary hover:text-text-primary'
-                }`}
-            >
-              库存不足 ({lowStockCount})
-            </button>
-            <button
-              onClick={() => handleFilterChange('out_of_stock')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${stockStatus === 'out_of_stock'
-                ? 'border-danger text-danger'
-                : 'border-transparent text-text-secondary hover:text-text-primary'
-                }`}
-            >
-              缺货 ({outOfStockCount})
-            </button>
+          <div className="mt-4 overflow-x-auto">
+            <Tabs
+              tabs={stockTabs}
+              activeTab={stockStatus}
+              onChange={(tabId) => handleFilterChange(tabId as StockStatus)}
+              className="min-w-max"
+            />
           </div>
-        </div>
+        </Card>
 
         {/* Error Message */}
         {error && (
@@ -278,19 +280,19 @@ export default function AdminInventoryListPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         球线名称
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         成本价
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         售价
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         利润率
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         当前库存
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         最低库存
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
@@ -328,19 +330,19 @@ export default function AdminInventoryListPage() {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                               {string.model}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary text-right font-mono">
                               RM {Number(string.costPrice).toFixed(2)}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary font-medium">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary font-medium text-right font-mono">
                               RM {Number(string.sellingPrice).toFixed(2)}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-success font-medium">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-success font-medium text-right font-mono">
                               {profitMargin}%
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary font-semibold">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary font-semibold text-right font-mono">
                               {string.stock}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-tertiary">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-tertiary text-right font-mono">
                               {string.minimumStock}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -373,35 +375,36 @@ export default function AdminInventoryListPage() {
                   显示 {startIndex} 到 {endIndex} 条，共 {totalStrings} 条
                 </div>
                 <div className="flex gap-2">
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 border border-border-subtle rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ink-elevated"
                   >
                     上一页
-                  </button>
+                  </Button>
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     const pageNum = i + 1;
                     return (
-                      <button
+                      <Button
                         key={pageNum}
+                        size="sm"
+                        variant={currentPage === pageNum ? 'primary' : 'ghost'}
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-1 border rounded-md text-sm ${currentPage === pageNum
-                          ? 'bg-accent text-text-onAccent border-accent'
-                          : 'border-border-subtle hover:bg-ink-elevated'
-                          }`}
+                        className={currentPage === pageNum ? '' : 'text-text-secondary'}
                       >
                         {pageNum}
-                      </button>
+                      </Button>
                     );
                   })}
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 border border-border-subtle rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ink-elevated"
                   >
                     下一页
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

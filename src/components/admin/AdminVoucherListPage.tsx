@@ -15,7 +15,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   getAllVouchers,
   getVoucherStats,
@@ -28,8 +29,11 @@ import {
   type VoucherType,
   type VoucherStats,
 } from '@/services/adminVoucherService';
+import { Badge, Button, Card, Input, StatsCard, Tabs } from '@/components';
+import { Search } from 'lucide-react';
 
 export default function AdminVoucherListPage() {
+  const router = useRouter();
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [stats, setStats] = useState<VoucherStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -209,7 +213,7 @@ export default function AdminVoucherListPage() {
   }
 
   function formatCurrency(amount: number | undefined): string {
-    return `¥${(amount ?? 0).toFixed(2)}`;
+    return `RM ${(amount ?? 0).toFixed(2)}`;
   }
 
   function formatDate(dateString: string | Date | undefined): string {
@@ -217,180 +221,158 @@ export default function AdminVoucherListPage() {
     return new Date(dateString).toLocaleDateString('zh-CN');
   }
 
+  const totalCount = stats?.total_vouchers ?? vouchers.length;
+  const activeCount = stats?.active_vouchers ?? vouchers.filter((v) => v.active).length;
+  const inactiveCount = Math.max(totalCount - activeCount, vouchers.filter((v) => !v.active).length);
+  const statusTabs = useMemo(
+    () => [
+      { id: 'all', label: `全部 (${totalCount})` },
+      { id: 'active', label: `活跃 (${activeCount})` },
+      { id: 'inactive', label: `停用 (${inactiveCount})` },
+    ],
+    [totalCount, activeCount, inactiveCount]
+  );
+
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-text-primary">优惠券管理</h1>
-        <button
-          onClick={() => {
-            resetForm();
-            setEditingVoucher(null);
-            setShowCreateModal(true);
-          }}
-          className="px-4 py-2 bg-accent text-text-onAccent rounded-lg hover:shadow-glow"
-        >
-          创建优惠券
-        </button>
-      </div>
-
-      {/* Statistics Cards */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-ink-surface p-6 rounded-lg shadow">
-            <div className="text-sm text-text-tertiary mb-1">总优惠券</div>
-            <div className="text-2xl font-bold text-text-primary">{stats.total_vouchers}</div>
-            <div className="text-xs text-text-tertiary mt-1">
-              活跃: {stats.active_vouchers}
-            </div>
-          </div>
-
-          <div className="bg-ink-surface p-6 rounded-lg shadow">
-            <div className="text-sm text-text-tertiary mb-1">已分发</div>
-            <div className="text-2xl font-bold text-accent">{stats.total_distributed}</div>
-            <div className="text-xs text-text-tertiary mt-1">
-              已使用: {stats.total_used}
-            </div>
-          </div>
-
-          <div className="bg-ink-surface p-6 rounded-lg shadow">
-            <div className="text-sm text-text-tertiary mb-1">使用率</div>
-            <div className="text-2xl font-bold text-success">{stats.usage_rate}%</div>
-            <div className="text-xs text-text-tertiary mt-1">
-              {stats.total_used} / {stats.total_distributed}
-            </div>
-          </div>
-
-          <div className="bg-ink-surface p-6 rounded-lg shadow">
-            <div className="text-sm text-text-tertiary mb-1">总优惠金额</div>
-            <div className="text-2xl font-bold text-accent">
-              {formatCurrency(stats.total_discount_given)}
-            </div>
-            <div className="text-xs text-text-tertiary mt-1">
-              已使用优惠券产生
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="bg-ink-surface p-4 rounded-lg shadow mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Search */}
+    <div className="min-h-screen bg-ink-elevated p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-2">
-              搜索
-            </label>
-            <input
-              type="text"
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push('/admin/dashboard')}
+            >
+              ← 返回仪表板
+            </Button>
+            <h1 className="text-2xl font-bold text-text-primary mt-2">优惠券管理</h1>
+          </div>
+          <Button
+            onClick={() => {
+              resetForm();
+              setEditingVoucher(null);
+              setShowCreateModal(true);
+            }}
+          >
+            + 创建优惠券
+          </Button>
+        </div>
+
+        {/* Statistics Cards */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatsCard
+              title="总优惠券"
+              value={stats.total_vouchers}
+              trend={{ value: `活跃 ${stats.active_vouchers}`, isPositive: true }}
+            />
+            <StatsCard
+              title="已分发"
+              value={stats.total_distributed}
+              trend={{ value: `已使用 ${stats.total_used}`, isPositive: true }}
+            />
+            <StatsCard
+              title="使用率"
+              value={`${stats.usage_rate}%`}
+              trend={{ value: `${stats.total_used} / ${stats.total_distributed}`, isPositive: true }}
+            />
+            <StatsCard
+              title="总优惠金额"
+              value={formatCurrency(stats.total_discount_given)}
+              trend={{ value: '已使用优惠券产生', isPositive: true }}
+            />
+          </div>
+        )}
+
+        {/* Filters */}
+        <Card padding="md">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_220px] gap-4">
+            <Input
+              label="搜索"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="优惠券代码或描述"
-              className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
+              leftIcon={<Search className="h-4 w-4" />}
+            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-text-secondary">类型</label>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as VoucherType | 'all')}
+                className="w-full h-11 px-3 rounded-lg border bg-ink-surface text-text-primary border-border-subtle focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink"
+              >
+                <option value="all">全部类型</option>
+                <option value="fixed_amount">固定金额</option>
+                <option value="percentage">百分比</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-4 overflow-x-auto">
+            <Tabs
+              tabs={statusTabs}
+              activeTab={statusFilter}
+              onChange={(tabId) => setStatusFilter(tabId as VoucherStatus)}
+              className="min-w-max"
             />
           </div>
+        </Card>
 
-          {/* Status Filter */}
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-2">
-              状态
-            </label>
-            <div className="flex gap-2">
-              {(['all', 'active', 'inactive'] as VoucherStatus[]).map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={`px-4 py-2 rounded-lg border ${
-                    statusFilter === status
-                      ? 'bg-accent text-text-onAccent border-accent'
-                      : 'bg-ink-surface text-text-secondary border-border-subtle hover:bg-ink-elevated'
-                  }`}
-                >
-                  {status === 'all' ? '全部' : status === 'active' ? '活跃' : '停用'}
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* Loading/Error States */}
+        {loading && (
+          <Card padding="lg" className="text-center text-text-tertiary">
+            加载中...
+          </Card>
+        )}
 
-          {/* Type Filter */}
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-2">
-              类型
-            </label>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value as VoucherType | 'all')}
-              className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
-            >
-              <option value="all">全部类型</option>
-              <option value="fixed_amount">固定金额</option>
-              <option value="percentage">百分比</option>
-            </select>
-          </div>
-        </div>
-      </div>
+        {error && (
+          <Card padding="sm" className="border-danger/30 bg-danger/10">
+            <p className="text-sm text-danger">{error}</p>
+          </Card>
+        )}
 
-      {/* Loading/Error States */}
-      {loading && (
-        <div className="text-center py-12 text-text-tertiary">加载中...</div>
-      )}
+        {/* Vouchers Grid */}
+        {!loading && !error && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {vouchers.length === 0 ? (
+              <Card padding="lg" className="col-span-full text-center text-text-tertiary">
+                暂无优惠券
+              </Card>
+            ) : (
+              vouchers.map((voucher) => {
+                const isActive = voucher.active ?? voucher.isActive ?? false;
 
-      {error && (
-        <div className="bg-danger/10 border border-danger/40 text-danger px-4 py-3 rounded-lg mb-6">
-          {error}
-        </div>
-      )}
-
-      {/* Vouchers Grid */}
-      {!loading && !error && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {vouchers.length === 0 ? (
-            <div className="col-span-full text-center py-12 text-text-tertiary">
-              暂无优惠券
-            </div>
-          ) : (
-            vouchers.map((voucher) => (
-              <div
-                key={voucher.id}
-                className="bg-ink-surface rounded-lg shadow hover:shadow-lg transition-shadow"
-              >
-                {/* Card Header */}
-                <div className="p-6 border-b border-border-subtle">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="text-2xl font-bold text-accent">
-                      {voucher.code}
+                return (
+                  <Card key={voucher.id} padding="lg" className="flex flex-col gap-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs text-text-tertiary">优惠券代码</p>
+                        <p className="text-lg font-semibold text-text-primary tracking-tight">
+                          {voucher.code}
+                        </p>
+                        {voucher.description && (
+                          <p className="text-sm text-text-secondary mt-2">
+                            {voucher.description}
+                          </p>
+                        )}
+                      </div>
+                      <Badge variant={isActive ? 'success' : 'neutral'} size="sm">
+                        {isActive ? '活跃' : '停用'}
+                      </Badge>
                     </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        voucher.active
-                          ? 'bg-success/15 text-success'
-                          : 'bg-ink-elevated text-text-secondary'
-                      }`}
-                    >
-                      {voucher.active ? '活跃' : '停用'}
-                    </span>
-                  </div>
 
-                  {voucher.description && (
-                    <p className="text-sm text-text-secondary mt-2">
-                      {voucher.description}
-                    </p>
-                  )}
-                </div>
-
-                {/* Card Content */}
-                <div className="p-6">
-                  <div className="space-y-3">
+                  <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-sm text-text-tertiary">类型</span>
-                      <span className="text-sm font-medium">
+                      <span className="text-text-tertiary">类型</span>
+                      <span className="font-medium text-text-primary">
                         {voucher.type === 'fixed_amount' ? '固定金额' : '百分比'}
                       </span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-sm text-text-tertiary">优惠值</span>
-                      <span className="text-sm font-bold text-success">
+                      <span className="text-text-tertiary">优惠值</span>
+                      <span className="font-semibold text-success font-mono">
                         {voucher.type === 'fixed_amount'
                           ? formatCurrency(voucher.value)
                           : `${voucher.value}%`}
@@ -398,23 +380,23 @@ export default function AdminVoucherListPage() {
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-sm text-text-tertiary">积分成本</span>
-                      <span className="text-sm font-medium">
+                      <span className="text-text-tertiary">积分成本</span>
+                      <span className="font-medium text-text-primary font-mono">
                         {voucher.points_cost} 分
                       </span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-sm text-text-tertiary">最低消费</span>
-                      <span className="text-sm font-medium">
+                      <span className="text-text-tertiary">最低消费</span>
+                      <span className="font-medium text-text-primary font-mono">
                         {formatCurrency(voucher.min_purchase)}
                       </span>
                     </div>
 
                     {voucher.usage_limit && (
                       <div className="flex justify-between">
-                        <span className="text-sm text-text-tertiary">使用限制</span>
-                        <span className="text-sm font-medium">
+                        <span className="text-text-tertiary">使用限制</span>
+                        <span className="font-medium text-text-primary">
                           {voucher.usage_limit} 次
                         </span>
                       </div>
@@ -422,244 +404,195 @@ export default function AdminVoucherListPage() {
 
                     {voucher.valid_from && voucher.valid_until && (
                       <div className="pt-2 border-t border-border-subtle">
-                        <div className="text-xs text-text-tertiary">有效期</div>
-                        <div className="text-sm font-medium mt-1">
+                        <p className="text-xs text-text-tertiary">有效期</p>
+                        <p className="text-sm font-medium text-text-primary mt-1">
                           {formatDate(voucher.valid_from)} - {formatDate(voucher.valid_until)}
-                        </div>
+                        </p>
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* Card Actions */}
-                <div className="p-4 bg-ink-elevated border-t border-border-subtle flex gap-2">
-                  <a
-                    href={`/admin/vouchers/${voucher.id}`}
-                    className="flex-1 px-3 py-2 text-center text-sm bg-accent text-text-onAccent rounded hover:shadow-glow"
-                  >
-                    查看详情
-                  </a>
-                  <button
-                    onClick={() => openEditModal(voucher)}
-                    className="px-3 py-2 text-sm bg-ink-elevated text-text-secondary rounded hover:bg-ink-elevated"
-                  >
-                    编辑
-                  </button>
-                  <button
-                    onClick={() => handleToggleStatus(voucher.id, voucher.active ?? voucher.isActive ?? false)}
-                    className={`px-3 py-2 text-sm rounded ${
-                      (voucher.active ?? voucher.isActive)
-                        ? 'bg-warning/15 text-warning hover:bg-warning/25'
-                        : 'bg-success/15 text-success hover:bg-success/20'
-                    }`}
-                  >
-                    {(voucher.active ?? voucher.isActive) ? '停用' : '启用'}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(voucher.id)}
-                    className="px-3 py-2 text-sm bg-danger/15 text-danger rounded hover:bg-danger/20"
-                  >
-                    删除
-                  </button>
-                </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      size="sm"
+                      fullWidth
+                      onClick={() => router.push(`/admin/vouchers/${voucher.id}`)}
+                    >
+                      查看详情
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      fullWidth
+                      onClick={() => openEditModal(voucher)}
+                    >
+                      编辑
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      fullWidth
+                      className={
+                        isActive
+                          ? 'bg-warning/15 text-warning border-warning/30 hover:bg-warning/25'
+                          : 'bg-success/15 text-success border-success/30 hover:bg-success/25'
+                      }
+                      onClick={() => handleToggleStatus(voucher.id, isActive)}
+                    >
+                      {isActive ? '停用' : '启用'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      fullWidth
+                      onClick={() => handleDelete(voucher.id)}
+                    >
+                      删除
+                    </Button>
+                  </div>
+                </Card>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {/* Create/Edit Modal */}
+        {showCreateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+            <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-ink-surface border border-border-subtle">
+              <div className="p-6 border-b border-border-subtle">
+                <h2 className="text-xl font-bold text-text-primary">
+                  {editingVoucher ? '编辑优惠券' : '创建优惠券'}
+                </h2>
               </div>
-            ))
-          )}
-        </div>
-      )}
 
-      {/* Create/Edit Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-ink/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-ink-surface rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-border-subtle">
-              <h2 className="text-2xl font-bold">
-                {editingVoucher ? '编辑优惠券' : '创建优惠券'}
-              </h2>
-            </div>
-
-            <div className="p-6 space-y-4">
-              {/* Code */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  优惠券代码 *
-                </label>
-                <input
-                  type="text"
+              <div className="p-6 space-y-4">
+                <Input
+                  label="优惠券代码 *"
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                   placeholder="SUMMER2024"
-                  className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
+                  className="font-mono"
                 />
-              </div>
 
-              {/* Name */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  优惠券名称 *
-                </label>
-                <input
-                  type="text"
+                <Input
+                  label="优惠券名称 *"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="学生专享折扣"
-                  className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
                 />
-              </div>
 
-              {/* Type & Value */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    类型 *
-                  </label>
-                  <select
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as VoucherType })}
-                    className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
-                  >
-                    <option value="fixed_amount">固定金额</option>
-                    <option value="percentage">百分比</option>
-                  </select>
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-text-secondary">类型 *</label>
+                    <select
+                      value={formData.type}
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value as VoucherType })}
+                      className="w-full h-11 px-3 rounded-lg border bg-ink-surface text-text-primary border-border-subtle focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink"
+                    >
+                      <option value="fixed_amount">固定金额</option>
+                      <option value="percentage">百分比</option>
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    优惠值 *
-                  </label>
-                  <input
+                  <Input
+                    label="优惠值 *"
                     type="number"
                     value={formData.value}
                     onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })}
                     placeholder={formData.type === 'fixed_amount' ? '10.00' : '10'}
                     step="0.01"
-                    className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
+                    helperText={formData.type === 'fixed_amount' ? 'RM' : '百分比'}
+                    className="font-mono"
                   />
-                  <div className="text-xs text-text-tertiary mt-1">
-                    {formData.type === 'fixed_amount' ? '元' : '百分比'}
-                  </div>
                 </div>
-              </div>
 
-              {/* Min Purchase & Points Cost */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    最低消费 (¥)
-                  </label>
-                  <input
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="最低消费 (RM)"
                     type="number"
                     value={formData.min_purchase}
                     onChange={(e) => setFormData({ ...formData, min_purchase: parseFloat(e.target.value) || 0 })}
                     step="0.01"
-                    className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
+                    className="font-mono"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    积分成本
-                  </label>
-                  <input
+                  <Input
+                    label="积分成本"
                     type="number"
                     value={formData.points_cost}
                     onChange={(e) => setFormData({ ...formData, points_cost: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
                   />
                 </div>
-              </div>
 
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  描述
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
-                />
-              </div>
-
-              {/* Valid Period */}
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
-                    开始日期
+                    描述
                   </label>
-                  <input
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="开始日期"
                     type="date"
                     value={formData.valid_from}
                     onChange={(e) => setFormData({ ...formData, valid_from: e.target.value })}
-                    className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    结束日期
-                  </label>
-                  <input
+                  <Input
+                    label="结束日期"
                     type="date"
                     value={formData.valid_until}
                     onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
-                    className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
                   />
                 </div>
-              </div>
 
-              {/* Usage Limit */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  使用限制 (次)
-                </label>
-                <input
+                <Input
+                  label="使用限制 (次)"
                   type="number"
                   value={formData.usage_limit || ''}
                   onChange={(e) => setFormData({ ...formData, usage_limit: e.target.value ? parseInt(e.target.value) : null })}
                   placeholder="不限制留空"
-                  className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border"
                 />
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="active"
+                    checked={formData.active}
+                    onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                    className="w-4 h-4 text-accent rounded focus:ring-2 focus:ring-accent-border"
+                  />
+                  <label htmlFor="active" className="text-sm font-medium text-text-secondary">
+                    启用优惠券
+                  </label>
+                </div>
               </div>
 
-              {/* Active Status */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="active"
-                  checked={formData.active}
-                  onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-                  className="w-4 h-4 text-accent rounded focus:ring-2 focus:ring-accent-border"
-                />
-                <label htmlFor="active" className="text-sm font-medium text-text-secondary">
-                  启用优惠券
-                </label>
+              <div className="p-6 bg-ink-elevated border-t border-border-subtle flex justify-end gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setEditingVoucher(null);
+                    resetForm();
+                  }}
+                >
+                  取消
+                </Button>
+                <Button onClick={handleCreateOrUpdate} loading={loading}>
+                  {editingVoucher ? '更新' : '创建'}
+                </Button>
               </div>
-            </div>
-
-            <div className="p-6 bg-ink-elevated border-t border-border-subtle flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setShowCreateModal(false);
-                  setEditingVoucher(null);
-                  resetForm();
-                }}
-                className="px-4 py-2 border border-border-subtle rounded-lg text-text-secondary hover:bg-ink-elevated"
-              >
-                取消
-              </button>
-              <button
-                onClick={handleCreateOrUpdate}
-                disabled={loading}
-                className="px-4 py-2 bg-accent text-text-onAccent rounded-lg hover:shadow-glow disabled:bg-ink-elevated"
-              >
-                {loading ? '处理中...' : editingVoucher ? '更新' : '创建'}
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -4,6 +4,14 @@
  */
 
 import { Package, UserPackage } from '.prisma/client';
+import {
+  buyPackageAction,
+  getAvailablePackagesAction,
+  getFeaturedPackagesAction,
+  getPackageUsageAction,
+  getUserPackagesAction,
+  getUserPackagesForProfileAction,
+} from '@/actions/packages.actions';
 
 // Re-export types for convenience
 export type { Package, UserPackage } from '.prisma/client';
@@ -32,14 +40,8 @@ export interface UserPackageWithPackage extends Omit<UserPackage, 'userId' | 'pa
  */
 export async function getAvailablePackages(): Promise<{ data?: Package[]; error?: any }> {
   try {
-    const response = await fetch('/api/packages');
-    const result = await response.json();
-
-    if (!response.ok) {
-      return { error: new Error(result.error || '获取套餐失败') };
-    }
-
-    return { data: result.data };
+    const data = await getAvailablePackagesAction();
+    return { data };
   } catch (error: any) {
     return { error };
   }
@@ -52,19 +54,8 @@ export async function getUserPackages(
   status?: 'active' | 'expired' | 'used_up' | boolean
 ): Promise<{ data?: UserPackageWithPackage[]; error?: any }> {
   try {
-    const params = new URLSearchParams();
-    if (typeof status === 'string') {
-      params.append('status', status);
-    }
-
-    const response = await fetch(`/api/packages/user?${params.toString()}`);
-    const result = await response.json();
-
-    if (!response.ok) {
-      return { error: new Error(result.error || '获取用户套餐失败') };
-    }
-
-    return { data: result.data };
+    const data = await getUserPackagesAction(typeof status === 'string' ? status : undefined);
+    return { data: data as UserPackageWithPackage[] };
   } catch (error: any) {
     return { error };
   }
@@ -88,21 +79,38 @@ export async function getUserPackageSummary(): Promise<{ summary?: { totalRemain
  * 购买套餐
  */
 export async function buyPackage(packageId: string, paymentMethod: string): Promise<any> {
-  const response = await fetch('/api/packages/buy', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ packageId, paymentMethod }),
-  });
+  return buyPackageAction({ packageId, paymentMethod });
+}
 
-  const data = await response.json();
+/**
+ * 获取精选套餐
+ */
+export async function getFeaturedPackages(limit?: number): Promise<Package[]> {
+  return getFeaturedPackagesAction(limit || 3);
+}
 
-  if (!response.ok) {
-    throw new Error(data.error || '购买套餐失败');
+/**
+ * 获取用户套餐（Profile UI 结构）
+ */
+export async function getUserPackagesForProfile(): Promise<{ packages?: any[]; error?: string }> {
+  try {
+    const packages = await getUserPackagesForProfileAction();
+    return { packages };
+  } catch (error: any) {
+    return { packages: [], error: error.message || '获取套餐失败' };
   }
+}
 
-  return data.data;
+/**
+ * 获取套餐使用记录（Profile UI 结构）
+ */
+export async function getPackageUsage(packageId: string): Promise<{ usage?: any[]; error?: string }> {
+  try {
+    const usage = await getPackageUsageAction(packageId);
+    return { usage };
+  } catch (error: any) {
+    return { usage: [], error: error.message || '获取使用记录失败' };
+  }
 }
 
 /**

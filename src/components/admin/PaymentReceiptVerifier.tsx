@@ -83,7 +83,7 @@ export default function PaymentReceiptVerifier({
           <h4 className="font-semibold text-text-primary">支付收据</h4>
           <button
             onClick={() => setShowImageModal(true)}
-            className="flex items-center gap-1 text-sm text-info hover:text-info"
+            className="flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary"
           >
             <ExternalLink className="h-4 w-4" />
             查看大图
@@ -103,7 +103,7 @@ export default function PaymentReceiptVerifier({
 
       {/* 审核状态 */}
       {isVerified && (
-        <div className="flex gap-2 rounded-lg bg-success/10 p-4">
+        <div className="flex gap-2 rounded-lg border border-success/30 bg-success/10 p-4">
           <Check className="h-5 w-5 shrink-0 text-success" />
           <div className="flex-1">
             <p className="font-semibold text-success">收据已审核通过</p>
@@ -120,7 +120,7 @@ export default function PaymentReceiptVerifier({
       )}
 
       {['failed', 'rejected'].includes(paymentStatus) && (
-        <div className="flex gap-2 rounded-lg bg-danger/10 p-4">
+        <div className="flex gap-2 rounded-lg border border-danger/30 bg-danger/10 p-4">
           <X className="h-5 w-5 shrink-0 text-danger" />
           <div className="flex-1">
             <p className="font-semibold text-danger">收据已被拒绝</p>
@@ -133,7 +133,7 @@ export default function PaymentReceiptVerifier({
 
       {/* 待审核 - 显示审核表单 */}
       {isPending && (
-        <div className="rounded-lg border border-warning/40 bg-warning/10 p-4">
+        <div className="rounded-lg border border-warning/30 bg-warning/10 p-4">
           <div className="mb-3 flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-warning" />
             <h4 className="font-semibold text-warning">待审核</h4>
@@ -149,7 +149,7 @@ export default function PaymentReceiptVerifier({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="请输入审核备注，如拒绝请说明原因..."
               rows={3}
-              className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm focus:border-accent-border focus:outline-none focus:ring-2 focus:ring-accent-border"
+              className="w-full rounded-lg border border-border-subtle bg-ink-elevated px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent-border focus:outline-none focus:ring-2 focus:ring-accent-border"
             />
           </div>
 
@@ -196,7 +196,7 @@ export default function PaymentReceiptVerifier({
       {/* 图片查看模态框 */}
       {showImageModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
           onClick={() => setShowImageModal(false)}
         >
           <div className="relative max-h-[90vh] max-w-[90vw]">

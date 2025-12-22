@@ -4,6 +4,16 @@
  */
 
 import { isValidUUID } from '@/lib/utils';
+import { getOrderByIdAction } from '@/actions/orders.actions';
+import {
+  getAdminReviewStatsAction,
+  getAdminReviewsAction,
+  getFeaturedReviewsAction,
+  getReviewByOrderAction,
+  getUserReviewsAction,
+  replyReviewAction,
+  submitReviewAction,
+} from '@/actions/reviews.actions';
 
 export interface OrderReview {
   id: string;
@@ -118,10 +128,7 @@ function normalizeReview(r: any): OrderReview {
 export async function getUserReviews(userId: string): Promise<OrderReview[]> {
   if (!isValidUUID(userId)) return [];
   try {
-    const response = await fetch('/api/reviews/user');
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) return [];
-    const payload = data?.data?.reviews ?? data?.data ?? data?.reviews ?? [];
+    const payload = await getUserReviewsAction();
     if (!Array.isArray(payload)) return [];
     return payload.map(normalizeReview);
   } catch (_error) {
@@ -136,14 +143,8 @@ export async function getOrderReview(orderId: string): Promise<OrderReview | nul
   if (!isValidUUID(orderId)) return null;
 
   try {
-    const response = await fetch(`/api/reviews/order/${orderId}`);
-    if (!response.ok) return null;
-    const data = await response.json().catch(() => ({}));
-    // API returns { success, data: { review: Review | null } }
-    const payload = data?.data ?? data;
-    const review = payload?.review ?? null;
-    if (!review) return null;
-    return normalizeReview(review);
+    const review = await getReviewByOrderAction(orderId);
+    return review ? normalizeReview(review) : null;
   } catch (_err) {
     return null;
   }
@@ -159,10 +160,7 @@ export async function canReviewOrder(orderId: string, userId: string): Promise<b
   if (existingReview) return false;
 
   try {
-    const orderRes = await fetch(`/api/orders/${orderId}`);
-    const orderJson = await orderRes.json().catch(() => ({}));
-    if (!orderRes.ok) return false;
-    const order = orderJson?.data ?? orderJson;
+    const order = await getOrderByIdAction(orderId);
     return order?.status === 'completed';
   } catch (_error) {
     return false;
@@ -174,18 +172,7 @@ export async function canReviewOrder(orderId: string, userId: string): Promise<b
  */
 export async function submitReview(params: SubmitReviewParams, userId?: string): Promise<{ reviewId?: string; review?: OrderReview; error?: string }> {
   try {
-    const response = await fetch('/api/reviews', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params),
-    });
-
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      return { error: data.error || 'Failed to submit review' };
-    }
-
-    const reviewPayload = data?.data ?? data?.review ?? data;
+    const reviewPayload = await submitReviewAction(params);
     const normalized = normalizeReview({
       ...reviewPayload,
       order_id: params.order_id || params.orderId || reviewPayload?.order_id,
@@ -196,4 +183,44 @@ export async function submitReview(params: SubmitReviewParams, userId?: string):
     console.error('Failed to submit review:', error);
     return { error: 'Failed to submit review' };
   }
+}
+
+/**
+ * 获取精选评价
+ */
+export async function getFeaturedReviews(): Promise<OrderReview[]> {
+  try {
+    const payload = await getFeaturedReviewsAction();
+    if (!Array.isArray(payload)) return [];
+    return payload.map(normalizeReview);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Admin: 获取评价列表
+ */
+export async function getAdminReviews(): Promise<OrderReview[]> {
+  try {
+    const payload = await getAdminReviewsAction();
+    if (!Array.isArray(payload)) return [];
+    return payload.map(normalizeReview);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Admin: 获取评价统计
+ */
+export async function getAdminReviewStats(): Promise<any> {
+  return getAdminReviewStatsAction();
+}
+
+/**
+ * Admin: 回复评价
+ */
+export async function replyReview(reviewId: string, reply: string): Promise<any> {
+  return replyReviewAction(reviewId, reply);
 }

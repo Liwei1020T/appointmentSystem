@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Ticket, Clock, CheckCircle2, XCircle, Percent, DollarSign } from 'lucide-react';
+import { getUserVouchersForProfile } from '@/services/voucherService';
 
 type VoucherStatus = 'all' | 'available' | 'used' | 'expired';
 
@@ -48,14 +49,10 @@ export default function MyVouchersPage() {
 
   const loadVouchers = async () => {
     try {
-      // Use the implemented Prisma API (legacy `/api/vouchers/my` is not provided)
-      const response = await fetch('/api/user/vouchers');
-      const raw = await response.json().catch(() => ({}));
-      const data = raw?.data ?? raw;
-      
-      if (response.ok && Array.isArray(data?.vouchers)) {
-        setVouchers(data.vouchers);
-        setFilteredVouchers(data.vouchers);
+      const result = await getUserVouchersForProfile();
+      if (Array.isArray(result.vouchers)) {
+        setVouchers(result.vouchers);
+        setFilteredVouchers(result.vouchers);
       }
     } catch (error) {
       console.error('Failed to load vouchers:', error);

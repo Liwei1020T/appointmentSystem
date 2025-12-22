@@ -3,6 +3,10 @@
  * 首页数据获取服务
  */
 
+import { getSystemStatsAction } from '@/actions/stats.actions';
+import { getUserStatsAction } from '@/actions/profile.actions';
+import { getUserOrdersAction } from '@/actions/orders.actions';
+import { getFeaturedPackagesAction } from '@/actions/packages.actions';
 export interface HomeStats {
   totalOrders: number;
   activeUsers: number;
@@ -66,9 +70,7 @@ export interface RecentOrder {
 
 export async function getHomeStats(): Promise<HomeStats> {
   try {
-    const response = await fetch('/api/stats');
-    const result = await response.json();
-    return result.data || result;
+    return await getSystemStatsAction();
   } catch (error) {
     console.error('Failed to fetch home stats:', error);
     return { totalOrders: 0, activeUsers: 0, totalReviews: 0 };
@@ -77,10 +79,7 @@ export async function getHomeStats(): Promise<HomeStats> {
 
 export async function getFeaturedPackages(limit?: number): Promise<FeaturedPackage[]> {
   try {
-    const params = limit ? `?limit=${limit}` : '';
-    const response = await fetch(`/api/packages/featured${params}`);
-    const data = await response.json();
-    return data.packages || data.data || [];
+    return await getFeaturedPackagesAction(limit || 3);
   } catch (error) {
     console.error('Failed to fetch featured packages:', error);
     return [];
@@ -92,10 +91,7 @@ export async function getFeaturedPackages(limit?: number): Promise<FeaturedPacka
  */
 export async function getUserStats(userId?: string): Promise<UserStats | null> {
   try {
-    const response = await fetch('/api/user/stats');
-    if (!response.ok) return null;
-    const result = await response.json();
-    return result.data || result;
+    return await getUserStatsAction();
   } catch (error) {
     console.error('Failed to fetch user stats:', error);
     return null;
@@ -107,10 +103,8 @@ export async function getUserStats(userId?: string): Promise<UserStats | null> {
  */
 export async function getRecentOrders(userId?: string, limit?: number): Promise<RecentOrder[]> {
   try {
-    const response = await fetch('/api/orders?limit=5');
-    if (!response.ok) return [];
-    const result = await response.json();
-    return result.data || result.orders || [];
+    const orders = await getUserOrdersAction({ limit: limit || 5 });
+    return orders || [];
   } catch (error) {
     console.error('Failed to fetch recent orders:', error);
     return [];

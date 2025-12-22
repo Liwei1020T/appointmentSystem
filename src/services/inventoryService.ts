@@ -3,6 +3,14 @@
  */
 
 import { StringInventory, StockLog } from '.prisma/client';
+import {
+  adjustInventoryStockAction,
+  deleteInventoryItemAction,
+  getInventoryAction,
+  getInventoryItemAction,
+  getInventoryLogsAction,
+  updateInventoryItemAction,
+} from '@/actions/inventory.actions';
 
 export type { StringInventory, StockLog };
 export type StockChangeType = 'purchase' | 'restock' | 'adjustment' | 'return' | 'addition' | 'deduction';
@@ -17,17 +25,8 @@ export interface LowStockAlert {
 }
 
 export async function getInventory(activeOnly = false): Promise<StringInventory[]> {
-  const params = new URLSearchParams();
-  if (activeOnly) params.append('active', 'true');
-  
-  const response = await fetch(`/api/inventory?${params.toString()}`);
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.error || 'Failed to fetch inventory');
-  }
-  
-  return data.data || [];
+  const data = await getInventoryAction(activeOnly);
+  return data || [];
 }
 
 export async function getAvailableStrings(brand?: string): Promise<{ strings?: StringInventory[]; error?: string }> {
@@ -55,9 +54,11 @@ export async function getInventoryByBrand(brand: string): Promise<{ strings?: St
 }
 
 export async function getStringById(stringId: string): Promise<StringInventory | null> {
-  const response = await fetch(`/api/inventory/${stringId}`);
-  if (!response.ok) return null;
-  return await response.json();
+  try {
+    return await getInventoryItemAction(stringId);
+  } catch {
+    return null;
+  }
 }
 
 export async function checkStock(stringId: string, quantity: number): Promise<boolean> {
@@ -79,14 +80,7 @@ export async function getBrands(): Promise<{ brands?: string[]; error?: string }
 
 // Stubs for missing functions
 export async function updateString(id: string, data: Partial<StringInventory>): Promise<StringInventory> {
-  const response = await fetch(`/api/admin/inventory/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.error || 'Failed to update string');
-  return result;
+  return updateInventoryItemAction(id, data);
 }
 
 export interface AdjustStockParams {
@@ -106,43 +100,29 @@ export async function adjustStock(params: AdjustStockParams): Promise<AdjustStoc
     // Determine if this is adding or removing stock
     const isDeduction = params.type === 'purchase' || params.type === 'adjustment';
     const change = isDeduction ? -Math.abs(params.changeAmount) : Math.abs(params.changeAmount);
-    
-    const response = await fetch(`/api/admin/inventory/${params.stringId}/stock`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        change,
-        type: params.type,
-        reason: params.reason || '',
-      }),
+
+    const result = await adjustInventoryStockAction(params.stringId, {
+      change,
+      type: params.type,
+      reason: params.reason || '',
     });
-    if (!response.ok) {
-      const result = await response.json();
-      return { string: null, error: result.error || 'Failed to adjust stock' };
-    }
-    const result = await response.json();
-    return { string: result.data || result, error: null };
+    return { string: result, error: null };
   } catch (err: any) {
     return { string: null, error: err.message || 'Failed to adjust stock' };
   }
 }
 
 export async function getStockLogs(stringId: string): Promise<any[]> {
-  const response = await fetch(`/api/admin/inventory/${stringId}/logs`);
-  if (!response.ok) return [];
-  const result = await response.json();
-  return result.logs || [];
+  try {
+    return await getInventoryLogsAction(stringId);
+  } catch {
+    return [];
+  }
 }
 
 export async function deleteString(id: string): Promise<{ success: boolean; error: string | null }> {
   try {
-    const response = await fetch(`/api/admin/inventory/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      const result = await response.json();
-      return { success: false, error: result.error || 'Failed to delete string' };
-    }
+    await deleteInventoryItemAction(id);
     return { success: true, error: null };
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to delete string' };
@@ -312,19 +292,12 @@ export async function addStock(
       reason = notes || 'Stock added';
     }
     
-    const response = await fetch(`/api/admin/inventory/${stringId}/stock`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        change: stockQuantity, 
-        reason,
-        costPerUnit
-      }),
+    await adjustInventoryStockAction(stringId, {
+      change: stockQuantity,
+      reason,
+      type: 'restock',
+      costPerUnit,
     });
-    if (!response.ok) {
-      const result = await response.json();
-      return { success: false, error: result.error || 'Failed to add stock' };
-    }
     return { success: true };
   } catch (error) {
     console.error('Failed to add stock:', error);

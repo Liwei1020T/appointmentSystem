@@ -22,6 +22,8 @@ import {
   CheckCircle2,
   Sparkles,
 } from 'lucide-react';
+import { getPointsBalance, getPointsHistory } from '@/services/pointsService';
+import { getRedeemableVouchers, redeemVoucherWithPoints } from '@/services/voucherService';
 
 interface PointsLog {
   id: string;
@@ -72,23 +74,15 @@ export default function PointsCenterPage() {
 
     try {
       // 获取用户当前积分
-      const pointsRes = await fetch('/api/points');
-      const pointsPayload = await pointsRes.json();
-      const pointsData = pointsPayload?.data ?? pointsPayload;
-      
-      // API returns { balance, logs } (wrapped with { success, data })
-      if (pointsRes.ok && pointsData?.balance !== undefined) {
-        setCurrentPoints(Number(pointsData.balance) || 0);
+      const pointsResult = await getPointsBalance();
+      if (!pointsResult.error) {
+        setCurrentPoints(Number(pointsResult.balance) || 0);
       }
 
       // 获取积分明细
-      const logsRes = await fetch('/api/points/history');
-      const logsPayload = await logsRes.json();
-      const logsData = logsPayload?.data ?? logsPayload;
-      
-      // API returns { logs } (wrapped)
-      if (logsRes.ok && Array.isArray(logsData?.logs)) {
-        const mapped: PointsLog[] = logsData.logs.map((log: any) => {
+      const logsResult = await getPointsHistory();
+      if (!logsResult.error && Array.isArray(logsResult.logs)) {
+        const mapped: PointsLog[] = logsResult.logs.map((log: any) => {
           const amount = Number(log.amount ?? 0);
           return {
             id: String(log.id),
@@ -104,12 +98,9 @@ export default function PointsCenterPage() {
       }
 
       // 获取可兑换优惠券
-      const vouchersRes = await fetch('/api/vouchers/redeemable');
-      const vouchersPayload = await vouchersRes.json();
-      const vouchersData = vouchersPayload?.data ?? vouchersPayload;
-      
-      if (vouchersRes.ok && Array.isArray(vouchersData?.vouchers)) {
-        setAvailableVouchers(vouchersData.vouchers);
+      const vouchersResult = await getRedeemableVouchers();
+      if (!vouchersResult.error && Array.isArray(vouchersResult.vouchers)) {
+        setAvailableVouchers(vouchersResult.vouchers);
       }
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -135,14 +126,8 @@ export default function PointsCenterPage() {
        * 调用“积分兑换”接口（按 voucherId）
        * 注意：`/api/vouchers/redeem` 需要 `code`，这里是积分中心（按 voucherId 兑换），应使用 redeem-with-points。
        */
-      const response = await fetch('/api/vouchers/redeem-with-points', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ voucherId: voucher.id }),
-      });
-      
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Redeem failed');
+      const result = await redeemVoucherWithPoints(voucher.id);
+      if (!result.success) throw new Error(result.error || 'Redeem failed');
 
       setToast({
         show: true,

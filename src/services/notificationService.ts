@@ -3,6 +3,13 @@
  * Consolidated from notification.service.ts
  */
 
+import {
+  deleteNotificationAction,
+  getNotificationsAction,
+  markAllNotificationsAsReadAction,
+  markNotificationAsReadAction,
+} from '@/actions/notifications.actions';
+
 // Type exports for Notification components
 export interface Notification {
   id: string;
@@ -162,18 +169,7 @@ export async function getNotifications(
   unreadOnly = false,
   limit?: number
 ): Promise<NotificationData> {
-  const params = new URLSearchParams();
-  if (unreadOnly) params.append('unread', 'true');
-  if (limit) params.append('limit', limit.toString());
-
-  const response = await fetch(`/api/notifications?${params.toString()}`);
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || '获取通知失败');
-  }
-
-  const payload = data?.data ?? data;
+  const payload = await getNotificationsAction({ unreadOnly, limit });
   return {
     unreadCount: Number(payload?.unreadCount ?? 0) || 0,
     notifications: Array.isArray(payload?.notifications)
@@ -186,38 +182,14 @@ export async function getNotifications(
  * 标记单个通知为已读
  */
 export async function markAsRead(notificationId: string): Promise<void> {
-  const response = await fetch('/api/notifications', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ notificationId }),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || '标记失败');
-  }
+  await markNotificationAsReadAction(notificationId);
 }
 
 /**
  * 标记所有通知为已读
  */
 export async function markAllAsRead(): Promise<void> {
-  const response = await fetch('/api/notifications', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ markAll: true }),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || '标记失败');
-  }
+  await markAllNotificationsAsReadAction();
 }
 
 /**
@@ -232,15 +204,7 @@ export async function getUnreadCount(userId?: string): Promise<{ count: number }
  * 删除通知
  */
 export async function deleteNotification(notificationId: string): Promise<void> {
-  const response = await fetch(`/api/notifications/${notificationId}`, {
-    method: 'DELETE',
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || '删除失败');
-  }
+  await deleteNotificationAction(notificationId);
 }
 
 /**

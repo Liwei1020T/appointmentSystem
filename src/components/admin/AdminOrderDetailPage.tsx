@@ -17,11 +17,12 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getOrderById, updateOrderStatus, updateOrderPhotos } from '@/services/adminOrderService';
 import type { AdminOrder, OrderStatus } from '@/services/adminOrderService';
+import { Badge, Button, Card } from '@/components';
 import OrderPhotosUploader from '@/components/admin/OrderPhotosUploader';
 import OrderPhotosUpload from '@/components/OrderPhotosUpload';
 import PaymentReceiptVerifier from '@/components/admin/PaymentReceiptVerifier';
 import AdminOrderProgress from '@/components/admin/AdminOrderProgress';
-import { verifyPaymentReceipt } from '@/services/paymentService';
+import { confirmCashPayment, confirmPayment, verifyPaymentReceipt } from '@/services/paymentService';
 import { completeOrder } from '@/services/completeOrderService';
 import { toast } from 'sonner';
 
@@ -80,7 +81,7 @@ export default function AdminOrderDetailPage() {
   })();
 
   // 调试日志移除
-  useEffect(() => {}, [order, payment]);
+  useEffect(() => { }, [order, payment]);
 
   useEffect(() => {
     if (orderId) {
@@ -131,7 +132,7 @@ export default function AdminOrderDetailPage() {
     if (!order) return;
 
     setCompleting(true);
-    
+
     try {
       const { data, error: completeError } = await completeOrder(orderId, adminNotes);
 
@@ -154,17 +155,17 @@ export default function AdminOrderDetailPage() {
     }
   };
 
-  const getStatusBadge = (status: OrderStatus) => {
-    const styles: Record<OrderStatus, string> = {
-      pending: 'bg-warning/15 text-warning border-warning/40',
-      confirmed: 'bg-info-soft text-info border-info/40',
-      processing: 'bg-info-soft text-info border-info/40',
-      in_progress: 'bg-accent/15 text-accent border-accent/40',
-      ready: 'bg-success/15 text-success border-success/40',
-      completed: 'bg-success/15 text-success border-success/40',
-      cancelled: 'bg-danger/15 text-danger border-danger/40',
+  const getStatusVariant = (status: OrderStatus) => {
+    const variants: Record<OrderStatus, 'success' | 'warning' | 'error' | 'info' | 'neutral'> = {
+      pending: 'warning',
+      confirmed: 'info',
+      processing: 'info',
+      in_progress: 'info',
+      ready: 'success',
+      completed: 'success',
+      cancelled: 'error',
     };
-    return styles[status];
+    return variants[status] || 'neutral';
   };
 
   const getStatusLabel = (status: OrderStatus) => {
@@ -227,69 +228,62 @@ export default function AdminOrderDetailPage() {
   return (
     <div className="min-h-screen bg-ink-elevated">
       {/* Header */}
-      <div className="bg-ink-surface border-b shadow-sm">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
+      <div className="glass-strong border-b border-border-subtle sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6 py-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => router.push('/admin/orders')}
-                className="text-sm text-text-secondary hover:text-text-primary mb-2 flex items-center gap-1"
               >
                 ← 返回订单列表
-              </button>
-              <h1 className="text-2xl font-bold text-text-primary">订单详情</h1>
-              <p className="text-sm text-text-secondary mt-1 font-mono">#{order.id}</p>
+              </Button>
+              <div className="mt-2 flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-text-primary">订单详情</h1>
+                <Badge variant={getStatusVariant(order.status)} size="sm" className="px-3 py-1.5">
+                  {getStatusLabel(order.status)}
+                </Badge>
+              </div>
+              <p className="text-xs text-text-tertiary mt-1 font-mono">#{order.id}</p>
             </div>
-            <div className="flex items-center gap-3">
-              <span
-                className={`px-4 py-2 rounded-full text-sm font-medium border ${getStatusBadge(
-                  order.status
-                )}`}
-              >
-                {getStatusLabel(order.status)}
-              </span>
-
+            <div className="flex flex-wrap items-center gap-2">
               {/* 确认收款按钮 - 支持现金/TNG/其他待确认支付 */}
               {payment &&
                 ['pending', 'pending_verification'].includes(payment.status) &&
                 // TNG 有收据时需要走“收据审核”流程，避免重复展示两个确认按钮
                 !(payment.provider === 'tng' && !!payment.receipt_url) && (
-                <button
-                  onClick={async () => {
-                    setUpdating(true);
-                    try {
-                      const isCash = payment.provider === 'cash';
-                      const url = isCash
-                        ? `/api/admin/payments/${payment.id}/confirm-cash`
-                        : `/api/admin/payments/${payment.id}/confirm`;
-                      const res = await fetch(url, {
-                        method: 'POST',
-                        headers: isCash ? undefined : { 'Content-Type': 'application/json' },
-                        body: isCash ? undefined : JSON.stringify({}),
-                      });
-                      const data = await res.json().catch(() => ({}));
-                      if (!res.ok || data?.success === false) {
-                        throw new Error(data?.error || '确认收款失败');
+                  <Button
+                    size="sm"
+                    className="bg-success text-text-primary hover:bg-success/90"
+                    onClick={async () => {
+                      setUpdating(true);
+                      try {
+                        const isCash = payment.provider === 'cash';
+                        if (isCash) {
+                          await confirmCashPayment(payment.id);
+                        } else {
+                          await confirmPayment(payment.id);
+                        }
+                        toast.success(isCash ? '现金收款已确认' : '支付已确认');
+                        await loadOrder();
+                      } catch (error: any) {
+                        toast.error(error?.message || '确认收款失败');
+                      } finally {
+                        setUpdating(false);
                       }
-                      toast.success(isCash ? '现金收款已确认' : '支付已确认');
-                      await loadOrder();
-                    } catch (error: any) {
-                      toast.error(error?.message || '确认收款失败');
-                    } finally {
-                      setUpdating(false);
-                    }
-                  }}
-                  disabled={updating}
-                  className="px-4 py-2 bg-success text-text-primary rounded-lg hover:bg-success/90 transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span>✅</span>
-                  {updating ? '处理中...' : '确认收款'}
-                </button>
-              )}
+                    }}
+                    disabled={updating}
+                  >
+                    {updating ? '处理中...' : '确认收款'}
+                  </Button>
+                )}
 
               {/* 确认TNG付款按钮 - 仅TNG支付需要单独确认 */}
               {payment && payment.status === 'pending' && payment.provider === 'tng' && payment.receipt_url && (
-                <button
+                <Button
+                  size="sm"
+                  className="bg-info text-text-primary hover:bg-info/90"
                   onClick={async () => {
                     if (confirm('确认TNG支付收据有效？')) {
                       try {
@@ -305,29 +299,26 @@ export default function AdminOrderDetailPage() {
                       }
                     }
                   }}
-                  className="px-4 py-2 bg-info text-text-primary rounded-lg hover:bg-info/90 transition-colors font-medium flex items-center gap-2"
                 >
-                  <span>💳</span>
                   确认TNG收款
-                </button>
+                </Button>
               )}
-              
+
               {/* 现金支付提示标签 */}
               {payment && payment.status === 'pending' && payment.provider === 'cash' && (
-                <span className="px-3 py-2 bg-warning/15 text-warning rounded-lg text-sm font-medium">
+                <Badge variant="warning" size="sm" className="px-3 py-1.5">
                   💵 现金待收款
-                </span>
+                </Badge>
               )}
-              
+
               {/* “更多状态”改为“已完成”快捷按钮：直接走完成订单流程（库存/利润/积分） */}
               {order.status !== 'completed' && order.status !== 'cancelled' && (
-                <button
+                <Button
+                  size="sm"
                   onClick={() => setShowCompleteModal(true)}
-                  className="px-4 py-2 bg-success text-text-primary rounded-lg hover:bg-success/90 transition-colors font-medium flex items-center gap-2"
                 >
-                  <span>✓</span>
                   已完成
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -340,9 +331,9 @@ export default function AdminOrderDetailPage() {
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Order Info */}
-            <div className="bg-ink-surface rounded-xl p-6 shadow-sm border border-border-subtle">
+            <Card padding="lg">
               <h2 className="text-lg font-semibold text-text-primary mb-4">订单信息</h2>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm text-text-secondary mb-1">球线型号</div>
                   <div className="font-medium text-text-primary">
@@ -354,14 +345,14 @@ export default function AdminOrderDetailPage() {
                 </div>
                 <div>
                   <div className="text-sm text-text-secondary mb-1">价格</div>
-                  <div className="font-medium text-text-primary">
+                  <div className="font-medium text-text-primary font-mono">
                     {(() => {
                       const price = Number(
                         order.total_price ??
-                          order.totalAmount ??
-                          (order as any).price ??
-                          order.string?.price ??
-                          0
+                        order.totalAmount ??
+                        (order as any).price ??
+                        order.string?.price ??
+                        0
                       );
                       return `RM ${price.toFixed(2)}`;
                     })()}
@@ -400,10 +391,10 @@ export default function AdminOrderDetailPage() {
                   <div className="text-text-primary bg-ink-elevated p-3 rounded-lg">{order.notes}</div>
                 </div>
               )}
-            </div>
+            </Card>
 
             {/* Payment Info */}
-            <div className="bg-ink-surface rounded-xl p-6 shadow-sm border border-border-subtle">
+            <Card padding="lg">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-text-primary">支付信息</h2>
                 {/* 退款功能已移除 */}
@@ -413,42 +404,36 @@ export default function AdminOrderDetailPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-text-secondary">支付方式</span>
                     <span className="font-medium text-text-primary">
-                      {payment.provider === 'cash' ? '💵 现金支付' : 
-                       payment.provider === 'tng' ? '💳 TNG' : 
-                       payment.payment_method || payment.method || payment.provider || '-'}
+                      {payment.provider === 'cash'
+                        ? '💵 现金支付'
+                        : payment.provider === 'tng'
+                          ? '💳 TNG'
+                          : payment.payment_method || payment.method || payment.provider || '-'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-text-secondary">支付状态</span>
                     <div className="flex items-center gap-2">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          isPaymentConfirmed
-                            ? 'bg-success/15 text-success'
-                            : 'bg-warning/15 text-warning'
-                        }`}
-                      >
+                      <Badge variant={isPaymentConfirmed ? 'success' : 'warning'} size="sm">
                         {isPaymentConfirmed ? '已支付' : '待确认'}
-                      </span>
+                      </Badge>
                       {/* 现金支付待确认时显示提示 */}
                       {payment.provider === 'cash' && !isPaymentConfirmed && payment.status === 'pending' && (
-                        <span className="text-xs text-warning">
-                          点击"确认收款并开始穿线"确认
-                        </span>
+                        <span className="text-xs text-warning">现金待收款</span>
                       )}
                     </div>
                   </div>
                   {payment.amount && (
                     <div className="flex justify-between">
                       <span className="text-text-secondary">支付金额</span>
-                      <span className="font-medium text-text-primary">
+                      <span className="font-medium text-text-primary font-mono">
                         RM {Number(payment.amount).toFixed(2)}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between pt-3 border-t border-border-subtle">
                     <span className="text-text-secondary">球线价格</span>
-                    <span className="font-medium text-text-primary">
+                    <span className="font-medium text-text-primary font-mono">
                       RM {(() => {
                         const price = order.string?.price ?? (order as any).price ?? (order as any).final_price ?? 0;
                         return Number(price).toFixed(2);
@@ -458,19 +443,19 @@ export default function AdminOrderDetailPage() {
                   {(order.voucher_discount ?? 0) > 0 && (
                     <div className="flex justify-between text-success">
                       <span>优惠券折扣</span>
-                      <span>-RM {Number(order.voucher_discount).toFixed(2)}</span>
+                      <span className="font-mono">-RM {Number(order.voucher_discount).toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between pt-3 border-t border-border-subtle">
                     <span className="text-lg font-semibold text-text-primary">订单总额</span>
-                    <span className="text-lg font-bold text-accent">
+                    <span className="text-lg font-bold text-accent font-mono">
                       RM {(() => {
                         const totalAmount = Number(
                           order.total_price ??
-                            order.totalAmount ??
-                            (order as any).final_price ??
-                            payment?.amount ??
-                            0
+                          order.totalAmount ??
+                          (order as any).final_price ??
+                          payment?.amount ??
+                          0
                         );
                         return totalAmount.toFixed(2);
                       })()}
@@ -480,11 +465,11 @@ export default function AdminOrderDetailPage() {
               ) : (
                 <p className="text-text-tertiary">暂无支付信息</p>
               )}
-            </div>
+            </Card>
 
             {/* Payment Receipt Verification */}
             {payment && (
-              <div className="bg-ink-surface rounded-xl p-6 shadow-sm border border-border-subtle">
+              <Card padding="lg">
                 <h2 className="text-lg font-semibold text-text-primary mb-4">支付收据审核</h2>
                 <PaymentReceiptVerifier
                   receiptUrl={payment.receipt_url || ''}
@@ -504,14 +489,14 @@ export default function AdminOrderDetailPage() {
                     await loadOrder();
                   }}
                 />
-              </div>
+              </Card>
             )}
           </div>
 
           {/* Right Column */}
           <div className="space-y-6">
             {/* Customer Info */}
-            <div className="bg-ink-surface rounded-xl p-6 shadow-sm border border-border-subtle">
+            <Card padding="lg">
               <h2 className="text-lg font-semibold text-text-primary mb-4">客户信息</h2>
               <div className="space-y-3">
                 <div>
@@ -527,7 +512,7 @@ export default function AdminOrderDetailPage() {
                   <div className="font-medium text-text-primary">{order.user?.phone || '-'}</div>
                 </div>
               </div>
-            </div>
+            </Card>
 
             {/* Progress Management */}
             <AdminOrderProgress
@@ -554,7 +539,7 @@ export default function AdminOrderDetailPage() {
 
       {/* Status Update Modal */}
       {showStatusModal && (
-        <div className="fixed inset-0 bg-ink/70 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-ink-surface rounded-2xl p-6 max-w-md w-full shadow-xl">
             <h3 className="text-lg font-semibold text-text-primary mb-4">更新订单状态</h3>
 
@@ -608,7 +593,7 @@ export default function AdminOrderDetailPage() {
 
       {/* Complete Order Modal */}
       {showCompleteModal && (
-        <div className="fixed inset-0 bg-ink/70 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-ink-surface rounded-2xl p-6 max-w-md w-full shadow-xl">
             <div className="text-center mb-4">
               <div className="w-16 h-16 bg-success/15 rounded-full flex items-center justify-center mx-auto mb-4">

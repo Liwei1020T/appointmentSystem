@@ -14,7 +14,7 @@ import { useState, useEffect } from 'react';
 import { CreditCard, X } from 'lucide-react';
 import TngQRCodeDisplay from '@/components/TngQRCodeDisplay';
 import PaymentReceiptUploader from '@/components/PaymentReceiptUploader';
-import { createPayment, uploadPaymentReceipt } from '@/services/paymentService';
+import { createCashPayment, createPayment, uploadPaymentReceipt } from '@/services/paymentService';
 import { toast } from 'sonner';
 
 interface OrderPaymentSectionProps {
@@ -88,19 +88,9 @@ export default function OrderPaymentSection({
     setProcessingCash(true);
     
     try {
-      const response = await fetch('/api/payments/cash', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId,
-          amount,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || '现金支付处理失败');
+      const result = await createCashPayment(orderId, amount);
+      if (result.error) {
+        throw new Error(result.error || '现金支付处理失败');
       }
 
       toast.success('现金支付已提交！请到店支付并等待管理员确认');

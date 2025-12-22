@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   getAllPackages,
@@ -24,6 +24,8 @@ import {
   type PackageStats,
   type PackageSalesData,
 } from '@/services/adminPackageService';
+import { Badge, Button, Card, Input, StatsCard, Tabs } from '@/components';
+import { Search } from 'lucide-react';
 
 export default function AdminPackageListPage() {
   const router = useRouter();
@@ -206,125 +208,93 @@ export default function AdminPackageListPage() {
     return `RM ${numeric.toFixed(2)}`;
   };
 
+  const totalCount = stats?.total_packages ?? packages.length;
+  const activeCount = stats?.active_packages ?? packages.filter((pkg) => pkg.active).length;
+  const inactiveCount = Math.max(totalCount - activeCount, packages.filter((pkg) => !pkg.active).length);
+  const statusTabs = useMemo(
+    () => [
+      { id: 'all', label: `全部 (${totalCount})` },
+      { id: 'active', label: `上架中 (${activeCount})` },
+      { id: 'inactive', label: `已下架 (${inactiveCount})` },
+    ],
+    [totalCount, activeCount, inactiveCount]
+  );
+
   return (
     <div className="min-h-screen bg-ink-elevated p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
           <div>
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => router.push('/admin/dashboard')}
-              className="text-text-secondary hover:text-text-primary mb-2 flex items-center text-sm"
             >
               ← 返回仪表板
-            </button>
-            <h1 className="text-2xl font-bold text-text-primary">套餐管理</h1>
+            </Button>
+            <h1 className="text-2xl font-bold text-text-primary mt-2">套餐管理</h1>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-accent text-text-onAccent rounded-lg hover:shadow-glow transition-colors"
-          >
-            + 创建新套餐
-          </button>
+          <Button onClick={() => setShowCreateModal(true)}>+ 创建新套餐</Button>
         </div>
 
         {/* Stats Cards */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-ink-surface rounded-lg shadow-sm p-4">
-              <p className="text-sm text-text-tertiary">总套餐数</p>
-              <p className="text-2xl font-bold text-text-primary">{stats.total_packages}</p>
-              <p className="text-xs text-text-tertiary mt-1">
-                {stats.active_packages} 个上架中
-              </p>
-            </div>
-            <div className="bg-ink-surface rounded-lg shadow-sm p-4">
-              <p className="text-sm text-text-tertiary">总销售量</p>
-              <p className="text-2xl font-bold text-text-primary">{stats.total_purchases}</p>
-              <p className="text-xs text-success mt-1">
-                本月 {stats.this_month_purchases} 笔
-              </p>
-            </div>
-            <div className="bg-ink-surface rounded-lg shadow-sm p-4">
-              <p className="text-sm text-text-tertiary">总收入</p>
-              <p className="text-2xl font-bold text-accent">{formatCurrency(stats.total_revenue)}</p>
-              <p className="text-xs text-success mt-1">
-                本月 {formatCurrency(stats.this_month_revenue)}
-              </p>
-            </div>
-            <div className="bg-ink-surface rounded-lg shadow-sm p-4">
+            <StatsCard
+              title="总套餐数"
+              value={stats.total_packages}
+              trend={{ value: `${stats.active_packages} 个上架中`, isPositive: true }}
+            />
+            <StatsCard
+              title="总销售量"
+              value={stats.total_purchases}
+              trend={{ value: `本月 ${stats.this_month_purchases} 笔`, isPositive: true }}
+            />
+            <StatsCard
+              title="总收入"
+              value={formatCurrency(stats.total_revenue)}
+              trend={{ value: `本月 ${formatCurrency(stats.this_month_revenue)}`, isPositive: true }}
+            />
+            <Card padding="md">
               <p className="text-sm text-text-tertiary">最受欢迎</p>
-              <p className="text-lg font-bold text-text-primary">
+              <p className="text-lg font-bold text-text-primary mt-1">
                 {stats.most_popular_package?.name || '暂无数据'}
               </p>
               <p className="text-xs text-text-tertiary mt-1">
-                {stats.most_popular_package ? `${stats.most_popular_package.purchase_count} 次购买` : ''}
+                {stats.most_popular_package ? `${stats.most_popular_package.purchase_count} 次购买` : '暂无购买记录'}
               </p>
-            </div>
+            </Card>
           </div>
         )}
 
         {/* Filters */}
-        <div className="bg-ink-surface rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="搜索套餐名称..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent"
-              />
-            </div>
-          </div>
+        <Card padding="md" className="mb-6">
+          <Input
+            placeholder="搜索套餐名称..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            leftIcon={<Search className="h-4 w-4" />}
+          />
 
-          {/* Status Filter Tabs */}
-          <div className="flex gap-2 mt-4 border-b border-border-subtle">
-            <button
-              onClick={() => setStatusFilter('all')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                statusFilter === 'all'
-                  ? 'border-accent text-accent'
-                  : 'border-transparent text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              全部 ({packages.length})
-            </button>
-            <button
-              onClick={() => setStatusFilter('active')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                statusFilter === 'active'
-                  ? 'border-success text-success'
-                  : 'border-transparent text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              上架中 ({packages.filter(p => p.active).length})
-            </button>
-            <button
-              onClick={() => setStatusFilter('inactive')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                statusFilter === 'inactive'
-                  ? 'border-warning text-warning'
-                  : 'border-transparent text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              已下架 ({packages.filter(p => !p.active).length})
-            </button>
+          <div className="mt-4 overflow-x-auto">
+            <Tabs
+              tabs={statusTabs}
+              activeTab={statusFilter}
+              onChange={(tabId) => setStatusFilter(tabId as PackageStatus)}
+              className="min-w-max"
+            />
           </div>
-        </div>
+        </Card>
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 bg-danger/15 border border-danger/40 rounded-lg p-4">
+          <Card padding="sm" className="border-danger/30 bg-danger/10">
             <p className="text-sm text-danger">{error}</p>
-            <button
-              onClick={() => setError(null)}
-              className="text-sm text-danger hover:text-danger/80 mt-2"
-            >
+            <Button variant="ghost" size="sm" onClick={() => setError(null)}>
               关闭
-            </button>
-          </div>
+            </Button>
+          </Card>
         )}
 
         {/* Loading State */}
@@ -346,11 +316,11 @@ export default function AdminPackageListPage() {
                   const salesInfo = salesData.find(s => s.package_id === pkg.id);
                   
                   return (
-                    <div
+                    <Card
                       key={pkg.id}
-                      className="bg-ink-surface rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+                      padding="lg"
+                      className="hover:shadow-md transition-shadow"
                     >
-                      {/* Package Header */}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold text-text-primary">{pkg.name}</h3>
@@ -358,89 +328,83 @@ export default function AdminPackageListPage() {
                             <p className="text-sm text-text-tertiary mt-1">{pkg.description}</p>
                           )}
                         </div>
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            pkg.active
-                              ? 'bg-success/15 text-success'
-                              : 'bg-ink-elevated text-text-secondary'
-                          }`}
-                        >
+                        <Badge variant={pkg.active ? 'success' : 'neutral'} size="sm">
                           {pkg.active ? '上架中' : '已下架'}
-                        </span>
+                        </Badge>
                       </div>
 
-                      {/* Package Details */}
                       <div className="space-y-2 mb-4">
                         <div className="flex justify-between text-sm">
                           <span className="text-text-secondary">包含次数</span>
                           <span className="font-semibold text-text-primary">{pkg.times} 次</span>
                         </div>
-	                      <div className="flex justify-between text-sm">
-	                        <span className="text-text-secondary">有效期</span>
-	                        <span className="font-semibold text-text-primary">
-	                          {(pkg as any).validity_days ?? (pkg as any).validityDays ?? 0} 天
-	                        </span>
-	                      </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-text-secondary">有效期</span>
+                          <span className="font-semibold text-text-primary">
+                            {(pkg as any).validity_days ?? (pkg as any).validityDays ?? 0} 天
+                          </span>
+                        </div>
                         <div className="flex justify-between text-sm border-t border-border-subtle pt-2">
                           <span className="text-text-secondary">价格</span>
-                          <span className="font-bold text-accent text-lg">
+                          <span className="font-bold text-accent text-lg font-mono">
                             {formatCurrency(pkg.price)}
                           </span>
                         </div>
                       </div>
 
-                      {/* Sales Info */}
                       <div className="bg-ink-elevated rounded-lg p-3 mb-4">
                         <div className="flex justify-between text-xs">
                           <span className="text-text-secondary">总销售</span>
-                          <span className="font-semibold text-text-primary">{purchases} 笔</span>
+                          <span className="font-semibold text-text-primary font-mono">{purchases} 笔</span>
                         </div>
                         <div className="flex justify-between text-xs mt-1">
                           <span className="text-text-secondary">销售额</span>
-                          <span className="font-semibold text-success">
+                          <span className="font-semibold text-success font-mono">
                             {formatCurrency(salesInfo?.total_revenue || 0)}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs mt-1">
                           <span className="text-text-secondary">活跃用户</span>
-                          <span className="font-semibold text-info">
+                          <span className="font-semibold text-info font-mono">
                             {salesInfo?.active_users || 0} 人
                           </span>
                         </div>
                       </div>
 
-                      {/* Actions */}
                       <div className="flex gap-2">
-                        <button
+                        <Button
+                          size="sm"
+                          className="flex-1"
                           onClick={() => router.push(`/admin/packages/${pkg.id}`)}
-                          className="flex-1 px-3 py-2 text-sm bg-ink-elevated text-text-secondary rounded-lg hover:bg-ink-surface transition-colors"
                         >
                           查看详情
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="flex-1"
                           onClick={() => openEditModal(pkg)}
-                          className="flex-1 px-3 py-2 text-sm bg-accent/15 text-accent rounded-lg hover:bg-accent/25 transition-colors"
                         >
                           编辑
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className={`flex-1 ${pkg.active ? 'text-warning bg-warning/15 hover:bg-warning/25' : 'text-success bg-success/15 hover:bg-success/25'}`}
                           onClick={() => handleToggleStatus(pkg)}
-                          className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors ${
-                            pkg.active
-                              ? 'bg-warning/15 text-warning hover:bg-warning/25'
-                              : 'bg-success/15 text-success hover:bg-success/25'
-                          }`}
                         >
                           {pkg.active ? '下架' : '上架'}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-danger bg-danger/10 hover:bg-danger/20"
                           onClick={() => openDeleteConfirm(pkg)}
-                          className="px-3 py-2 text-sm bg-danger/15 text-danger rounded-lg hover:bg-danger/25 transition-colors"
                         >
                           删除
-                        </button>
+                        </Button>
                       </div>
-                    </div>
+                    </Card>
                   );
                 })
               )}
@@ -450,8 +414,8 @@ export default function AdminPackageListPage() {
 
         {/* Create/Edit Package Modal */}
         {(showCreateModal || showEditModal) && (
-          <div className="fixed inset-0 bg-ink/70 flex items-center justify-center z-50">
-            <div className="bg-ink-surface rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div className="bg-ink-surface rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
               <h3 className="text-lg font-semibold text-text-primary mb-4">
                 {showCreateModal ? '创建新套餐' : '编辑套餐'}
               </h3>
@@ -542,22 +506,19 @@ export default function AdminPackageListPage() {
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => {
                     showCreateModal ? setShowCreateModal(false) : setShowEditModal(false);
                     resetForm();
                     setSelectedPackage(null);
                   }}
-                  className="px-4 py-2 border border-border-subtle rounded-lg hover:bg-ink-elevated"
                 >
                   取消
-                </button>
-                <button
-                  onClick={showCreateModal ? handleCreate : handleEdit}
-                  className="px-4 py-2 bg-accent text-text-onAccent rounded-lg hover:shadow-glow"
-                >
+                </Button>
+                <Button onClick={showCreateModal ? handleCreate : handleEdit}>
                   {showCreateModal ? '创建' : '保存'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -565,8 +526,8 @@ export default function AdminPackageListPage() {
 
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && selectedPackage && (
-          <div className="fixed inset-0 bg-ink/70 flex items-center justify-center z-50">
-            <div className="bg-ink-surface rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div className="bg-ink-surface rounded-lg p-6 max-w-md w-full">
               <h3 className="text-lg font-semibold text-text-primary mb-4">确认删除</h3>
               <p className="text-text-secondary mb-6">
                 确定要删除套餐 <span className="font-semibold">{selectedPackage.name}</span> 吗？
@@ -574,21 +535,18 @@ export default function AdminPackageListPage() {
               </p>
 
               <div className="flex justify-end gap-3">
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => {
                     setShowDeleteConfirm(false);
                     setSelectedPackage(null);
                   }}
-                  className="px-4 py-2 border border-border-subtle rounded-lg hover:bg-ink-elevated"
                 >
                   取消
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="px-4 py-2 bg-danger text-text-primary rounded-lg hover:bg-danger/90"
-                >
+                </Button>
+                <Button variant="danger" onClick={handleDelete}>
                   确认删除
-                </button>
+                </Button>
               </div>
             </div>
           </div>

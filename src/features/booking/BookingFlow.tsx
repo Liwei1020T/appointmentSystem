@@ -18,6 +18,7 @@ import { StringInventory, UserVoucher } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { hasAvailablePackage } from '@/services/packageService';
 import { calculateDiscount } from '@/services/voucherService';
+import { createOrderAction } from '@/actions/orders.actions';
 import { getUserStats, type MembershipTierInfo } from '@/services/profileService';
 
 export default function BookingFlow() {
@@ -180,19 +181,7 @@ export default function BookingFlow() {
         notes,
       };
 
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '创建订单失败');
-      }
-
-      const data = await response.json();
-      const order = data.data || data;
+      const order = await createOrderAction(orderData);
 
       // 成功提示
       setToast({
@@ -263,21 +252,23 @@ export default function BookingFlow() {
           {[1, 2, 3, 4].map((num) => (
             <div key={num} className="flex items-center flex-1">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  num < step
-                    ? 'bg-accent text-text-onAccent'
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${num < step
+                    ? 'bg-accent text-text-onAccent shadow-md'
                     : num === step
-                    ? 'bg-accent text-text-onAccent'
-                    : 'bg-ink-elevated text-text-tertiary'
-                }`}
+                      ? 'bg-accent text-text-onAccent shadow-glow ring-4 ring-accent/20'
+                      : 'bg-white text-text-secondary border-2 border-gray-300'
+                  }`}
               >
-                {num < step ? '✓' : num}
+                {num < step ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : num}
               </div>
               {num < 4 && (
                 <div
-                  className={`flex-1 h-1 mx-2 ${
-                    num < step ? 'bg-accent' : 'bg-ink-elevated'
-                  }`}
+                  className={`flex-1 h-1 mx-2 rounded-full transition-all duration-300 ${num < step ? 'bg-accent' : 'bg-gray-300'
+                    }`}
                 />
               )}
             </div>

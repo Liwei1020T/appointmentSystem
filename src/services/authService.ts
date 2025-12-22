@@ -8,6 +8,7 @@
  */
 
 import { signIn as nextAuthSignIn, signOut } from 'next-auth/react';
+import { changePasswordAction } from '@/actions/profile.actions';
 
 export interface SignupData {
   phone: string;
@@ -156,20 +157,11 @@ export async function updatePassword(data: {
         ? { newPassword: data }
         : data;
 
-    const response = await fetch('/api/user/password', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(passwordData),
-    });
-
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      return { success: false, error: result.error || 'Failed to update password' };
-    }
+    await changePasswordAction(passwordData);
 
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating password:', error);
-    return { success: false, error: 'Failed to update password' };
+    return { success: false, error: error.message || 'Failed to update password' };
   }
 }

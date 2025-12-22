@@ -4,13 +4,20 @@
  */
 
 import { Order } from '.prisma/client';
+import {
+  cancelOrderAction,
+  completeOrderAction,
+  createOrderWithPackageAction,
+  getOrderByIdAction,
+  getUserOrdersAction,
+} from '@/actions/orders.actions';
 
 export interface CreateOrderData {
   stringId: string;
-  userPackageId?: string;
-  voucherCode?: string;
-  scheduledDate: string;
-  scheduledTime: string;
+  tension: number;
+  usePackage?: boolean;
+  packageId?: string;
+  voucherId?: string;
   notes?: string;
 }
 
@@ -41,18 +48,8 @@ export async function getUserOrders(
   limit?: number
 ): Promise<{ data?: OrderWithDetails[]; error?: any }> {
   try {
-    const params = new URLSearchParams();
-    if (status) params.append('status', status);
-    if (limit) params.append('limit', limit.toString());
-
-    const response = await fetch(`/api/orders?${params.toString()}`);
-    const result = await response.json();
-
-    if (!response.ok) {
-      return { error: new Error(result.error || '获取订单失败') };
-    }
-
-    return { data: result.data };
+    const data = await getUserOrdersAction({ status, limit });
+    return { data };
   } catch (error: any) {
     return { error };
   }
@@ -62,81 +59,33 @@ export async function getUserOrders(
  * 获取单个订单详情
  */
 export async function getOrderById(orderId: string): Promise<OrderWithDetails> {
-  const response = await fetch(`/api/orders/${orderId}`);
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || '获取订单失败');
-  }
-
-  return data.data;
+  return getOrderByIdAction(orderId);
 }
 
 /**
  * 创建订单
  */
 export async function createOrder(orderData: CreateOrderData): Promise<any> {
-  const response = await fetch('/api/orders/create', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(orderData),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || '创建订单失败');
-  }
-
-  return data.data;
+  return createOrderWithPackageAction(orderData);
 }
 
 /**
  * 取消订单
  */
 export async function cancelOrder(orderId: string): Promise<void> {
-  const response = await fetch(`/api/orders/${orderId}/cancel`, {
-    method: 'POST',
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || '取消订单失败');
-  }
+  await cancelOrderAction(orderId);
 }
 
 /**
  * 完成订单（管理员）
  */
 export async function completeOrder(orderId: string, photos?: string[]): Promise<void> {
-  const response = await fetch(`/api/orders/${orderId}/complete`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ photos }),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || '完成订单失败');
-  }
+  await completeOrderAction(orderId);
 }
 
 /**
  * 获取订单历史（带分页）
  */
 export async function getOrderHistory(page = 1, pageSize = 10) {
-  const response = await fetch(`/api/orders?page=${page}&limit=${pageSize}`);
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || '获取订单历史失败');
-  }
-
-  return data.data;
+  return getUserOrdersAction({ page, limit: pageSize });
 }

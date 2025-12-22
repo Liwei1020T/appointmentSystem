@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Users, Copy, Gift, CheckCircle2, Share2, Sparkles } from 'lucide-react';
 import { Toast } from '@/components';
+import { getReferrals } from '@/services/profileService';
 
 interface ReferralStats {
   referral_code: string;
@@ -47,31 +48,27 @@ export default function ReferralsPage() {
   const loadData = async () => {
     try {
       // 获取邀请统计
-      const response = await fetch('/api/referrals');
-      const payload = await response.json();
-      const data = payload?.data ?? payload;
+      const data = await getReferrals();
       
-      if (response.ok) {
-        const referrals = Array.isArray(data?.referrals) ? data.referrals : [];
-        const totalRewards = data?.stats?.totalRewards ?? 0;
-        const totalPointsEarned = data?.stats?.totalPointsEarned ?? 0;
-        const rewardPointsPerReferral = totalRewards
-          ? Math.round(totalPointsEarned / totalRewards)
-          : 0;
-        const mappedReferrals = referrals.map((referral) => ({
-          id: referral.id,
-          full_name: referral.referred?.fullName || '用户',
-          created_at: referral.referred?.createdAt || referral.createdAt,
-          reward_points: referral.rewardGiven ? rewardPointsPerReferral : 0,
-        }));
+      const referrals = Array.isArray(data?.referrals) ? data.referrals : [];
+      const totalRewards = data?.stats?.totalRewards ?? 0;
+      const totalPointsEarned = data?.stats?.totalPointsEarned ?? 0;
+      const rewardPointsPerReferral = totalRewards
+        ? Math.round(totalPointsEarned / totalRewards)
+        : 0;
+      const mappedReferrals = referrals.map((referral) => ({
+        id: referral.id,
+        full_name: referral.referred?.fullName || '用户',
+        created_at: referral.referred?.createdAt || referral.createdAt,
+        reward_points: referral.rewardGiven ? rewardPointsPerReferral : 0,
+      }));
 
-        setStats({
-          referral_code: data.referralCode || '',
-          total_referrals: data?.stats?.totalReferrals ?? referrals.length,
-          total_rewards: totalPointsEarned,
-          referrals: mappedReferrals,
-        });
-      }
+      setStats({
+        referral_code: data?.referralCode || '',
+        total_referrals: data?.stats?.totalReferrals ?? referrals.length,
+        total_rewards: totalPointsEarned,
+        referrals: mappedReferrals,
+      });
     } catch (error) {
       console.error('Failed to load referral data:', error);
     }
