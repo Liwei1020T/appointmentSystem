@@ -28,8 +28,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, className = '' }) => {
             href={item.href}
             className={`
               flex items-center gap-3 px-3 py-2 rounded-lg transition-colors
-              ${item.active 
-                ? 'bg-accent-soft text-text-primary font-semibold border-l-4 border-accent -ml-px pl-[11px]' 
+              ${item.active
+                ? 'bg-accent-soft text-text-primary font-semibold border-l-4 border-accent -ml-px pl-[11px]'
                 : 'text-text-secondary hover:bg-ink-surface/80'}
             `}
             aria-current={item.active ? 'page' : undefined}

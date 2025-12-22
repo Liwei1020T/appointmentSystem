@@ -187,7 +187,7 @@ export default function ProfilePage() {
                 (profile.full_name || profile.fullName || 'U').charAt(0).toUpperCase()
               )}
             </div>
-            
+
             {/* 用户信息 */}
             <div className="flex-1">
               <h1 className="text-2xl font-bold mb-1 text-text-primary">{profile.full_name || profile.fullName || '用户'}</h1>
@@ -313,17 +313,17 @@ export default function ProfilePage() {
                 <p className="text-sm text-text-tertiary">累计消费</p>
                 <p className="text-xl font-semibold font-mono">{formatCurrency(stats.totalSpent)}</p>
               </div>
-              <div className="h-2 bg-ink-surface rounded-full overflow-hidden">
+              <div className="h-3 bg-border-subtle/50 rounded-full overflow-hidden border border-border-subtle">
                 <div
-                  className="h-full bg-accent transition-all duration-200"
+                  className="h-full bg-accent rounded-full transition-all duration-300"
                   style={{ width: `${Math.min(100, Math.max(0, stats.membership.progress * 100))}%` }}
                 />
               </div>
               <p className="text-xs text-text-tertiary">
                 {stats.membership.nextTier
                   ? `再消费 ${formatCurrency(
-                      Math.max(0, stats.membership.nextTier.minSpend - stats.totalSpent)
-                    )} 可升级为 ${stats.membership.nextTier.label}`
+                    Math.max(0, stats.membership.nextTier.minSpend - stats.totalSpent)
+                  )} 可升级为 ${stats.membership.nextTier.label}`
                   : '已达到最高会员等级，继续保持高光！'}
               </p>
             </div>

@@ -225,8 +225,8 @@ export default function AdminInventoryListPage() {
             <button
               onClick={() => handleFilterChange('all')}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${stockStatus === 'all'
-                  ? 'border-accent text-accent'
-                  : 'border-transparent text-text-secondary hover:text-text-primary'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
                 }`}
             >
               全部 ({allCount})
@@ -234,8 +234,8 @@ export default function AdminInventoryListPage() {
             <button
               onClick={() => handleFilterChange('low_stock')}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${stockStatus === 'low_stock'
-                  ? 'border-warning text-warning'
-                  : 'border-transparent text-text-secondary hover:text-text-primary'
+                ? 'border-warning text-warning'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
                 }`}
             >
               库存不足 ({lowStockCount})
@@ -243,8 +243,8 @@ export default function AdminInventoryListPage() {
             <button
               onClick={() => handleFilterChange('out_of_stock')}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${stockStatus === 'out_of_stock'
-                  ? 'border-danger text-danger'
-                  : 'border-transparent text-text-secondary hover:text-text-primary'
+                ? 'border-danger text-danger'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
                 }`}
             >
               缺货 ({outOfStockCount})
@@ -387,8 +387,8 @@ export default function AdminInventoryListPage() {
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-3 py-1 border rounded-md text-sm ${currentPage === pageNum
-                            ? 'bg-accent text-text-onAccent border-accent'
-                            : 'border-border-subtle hover:bg-ink-elevated'
+                          ? 'bg-accent text-text-onAccent border-accent'
+                          : 'border-border-subtle hover:bg-ink-elevated'
                           }`}
                       >
                         {pageNum}

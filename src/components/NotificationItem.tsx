@@ -36,11 +36,11 @@ export default function NotificationItem({
   const colorClass = getNotificationColor(notification.priority || notification.type);
   const timeText = formatNotificationTime(notification.created_at);
 
+  const isUnread = notification.is_read === false || notification.read === false;
+
   return (
     <div
-      className={`relative p-4 hover:bg-ink-elevated transition-colors ${
-        !notification.is_read ? 'bg-accent/10' : ''
-      }`}
+      className={`relative p-4 bg-ink-elevated hover:bg-ink-surface transition-colors border-b border-border-subtle ${isUnread ? 'border-l-4 border-l-accent' : ''}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
@@ -53,12 +53,12 @@ export default function NotificationItem({
         {/* 内容 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h4 className={`text-sm font-medium ${!notification.is_read ? 'text-text-primary' : 'text-text-secondary'}`}>
+            <h4 className={`text-sm font-medium ${isUnread ? 'text-text-primary' : 'text-text-secondary'}`}>
               {notification.title}
             </h4>
 
             {/* 未读标记 */}
-            {!notification.is_read && (
+            {isUnread && (
               <Circle className="flex-shrink-0 w-2 h-2 fill-accent text-accent mt-1" />
             )}
           </div>
@@ -74,7 +74,7 @@ export default function NotificationItem({
       {/* 操作按钮（鼠标悬停显示） */}
       {showActions && (
         <div className="absolute top-2 right-2 flex gap-1 bg-ink-surface shadow-md rounded-lg p-1 border border-border-subtle">
-          {!notification.is_read && (
+          {isUnread && (
             <button
               onClick={() => onMarkAsRead(notification.id)}
               className="p-1.5 hover:bg-ink-elevated rounded transition-colors"

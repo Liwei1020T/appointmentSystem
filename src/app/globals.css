@@ -7,7 +7,7 @@
   html {
     @apply antialiased;
   }
-  
+
   body {
     @apply text-text-primary bg-ink;
   }
@@ -18,23 +18,23 @@
   .safe-area-pb {
     padding-bottom: env(safe-area-inset-bottom);
   }
-  
+
   .active\:scale-97:active {
     transform: scale(0.97);
   }
 
   .glass-surface {
-    background: rgba(30, 41, 59, 0.55);
+    background: rgba(255, 255, 255, 0.75);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(226, 232, 240, 0.1);
-    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.35);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
   }
 
   .glass-strong {
-    background: rgba(30, 41, 59, 0.75);
+    background: rgba(255, 255, 255, 0.90);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(226, 232, 240, 0.14);
-    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.35);
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.10);
   }
 }
 
@@ -45,4 +45,30 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Custom Scrollbar Styles - Light Theme */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.8);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.6);
+}
+
+/* Firefox scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) rgba(241, 245, 249, 0.8);
 }

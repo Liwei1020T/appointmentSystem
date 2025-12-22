@@ -9,36 +9,36 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Kinetic Precision 2.0 tokens
+        // Light Theme - Warm Orange
         ink: {
-          DEFAULT: '#0F172A',
-          elevated: '#111C33',
-          surface: '#1E293B',
+          DEFAULT: '#F8FAFC',      // 主背景 - 浅灰白
+          elevated: '#FFFFFF',     // 卡片背景 - 纯白
+          surface: '#F1F5F9',      // 表面 - 浅灰
         },
         border: {
-          subtle: 'rgba(148,163,184,0.18)',
+          subtle: 'rgba(15,23,42,0.10)',
         },
         text: {
-          primary: '#E2E8F0',
-          secondary: '#94A3B8',
-          tertiary: 'rgba(148,163,184,0.70)',
-          onAccent: '#0B1220',
+          primary: '#0F172A',      // 主文字 - 深蓝灰
+          secondary: '#475569',    // 次要文字 - 中灰
+          tertiary: 'rgba(71,85,105,0.70)',
+          onAccent: '#FFFFFF',
         },
         accent: {
-          DEFAULT: '#D4FF00',
-          soft: 'rgba(212,255,0,0.14)',
-          border: 'rgba(212,255,0,0.38)',
+          DEFAULT: '#F97316',
+          soft: 'rgba(249,115,22,0.12)',
+          border: 'rgba(249,115,22,0.30)',
         },
         info: {
           DEFAULT: '#3B82F6',
-          soft: 'rgba(59,130,246,0.14)',
+          soft: 'rgba(59,130,246,0.12)',
         },
-        success: '#14B8A6',
+        success: '#10B981',
         warning: '#F59E0B',
         danger: '#EF4444',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Poppins', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       borderRadius: {
@@ -49,7 +49,7 @@ module.exports = {
       boxShadow: {
         sm: '0 1px 2px rgba(15,23,42,0.24)',
         md: '0 8px 20px rgba(15,23,42,0.28)',
-        glow: '0 0 0 1px rgba(212,255,0,0.2), 0 8px 24px rgba(212,255,0,0.16)',
+        glow: '0 0 0 1px rgba(249,115,22,0.2), 0 8px 24px rgba(249,115,22,0.16)',
       },
       scale: {
         97: '0.97',

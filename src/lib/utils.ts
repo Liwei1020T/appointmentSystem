@@ -7,7 +7,7 @@ import { format, formatDistance, parseISO } from 'date-fns';
  */
 export function formatDate(date: string | Date | null | undefined, formatStr: string = 'MMM dd, yyyy'): string {
   if (!date) return '-';
-  
+
   try {
     const dateObj = typeof date === 'string' ? parseISO(date) : date;
     if (isNaN(dateObj.getTime())) return '-';
@@ -24,7 +24,7 @@ export function formatDate(date: string | Date | null | undefined, formatStr: st
  */
 export function formatRelativeTime(date: string | Date | null | undefined): string {
   if (!date) return '-';
-  
+
   try {
     const dateObj = typeof date === 'string' ? parseISO(date) : date;
     if (isNaN(dateObj.getTime())) return '-';
@@ -53,17 +53,17 @@ export function formatCurrency(amount: number | null | undefined): string {
 export function formatPhone(phone: string): string {
   // Remove all non-digit characters
   const cleaned = phone.replace(/\D/g, '');
-  
+
   // Format as +60 12-345 6789
   if (cleaned.startsWith('60')) {
     return `+${cleaned.slice(0, 2)} ${cleaned.slice(2, 4)}-${cleaned.slice(4, 7)} ${cleaned.slice(7)}`;
   }
-  
+
   // Format as 012-345 6789
   if (cleaned.length === 10 || cleaned.length === 11) {
     return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)} ${cleaned.slice(6)}`;
   }
-  
+
   return phone;
 }
 
@@ -199,17 +199,17 @@ export function sleep(ms: number): Promise<void> {
  */
 export function calculateDaysRemaining(date: string | Date | null): number | null {
   if (!date) return null;
-  
+
   const targetDate = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
-  
+
   // Set both dates to midnight for accurate day calculation
   targetDate.setHours(0, 0, 0, 0);
   now.setHours(0, 0, 0, 0);
-  
+
   const diffTime = targetDate.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
   return Math.max(0, diffDays);
 }
 

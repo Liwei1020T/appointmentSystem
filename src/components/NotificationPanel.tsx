@@ -113,8 +113,8 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
             <button
               onClick={() => setFilter('all')}
               className={`px-3 py-1 text-sm rounded-lg transition-colors ${filter === 'all'
-                  ? 'bg-accent text-text-onAccent'
-                  : 'bg-ink-surface text-text-secondary hover:bg-ink-elevated'
+                ? 'bg-accent text-text-onAccent'
+                : 'bg-ink-surface text-text-secondary hover:bg-ink-elevated'
                 }`}
             >
               全部
@@ -122,8 +122,8 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
             <button
               onClick={() => setFilter('unread')}
               className={`px-3 py-1 text-sm rounded-lg transition-colors ${filter === 'unread'
-                  ? 'bg-accent text-text-onAccent'
-                  : 'bg-ink-surface text-text-secondary hover:bg-ink-elevated'
+                ? 'bg-accent text-text-onAccent'
+                : 'bg-ink-surface text-text-secondary hover:bg-ink-elevated'
                 }`}
             >
               未读
@@ -154,7 +154,7 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
         </div>
 
         {/* 通知列表 */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-[400px] overflow-y-auto custom-scrollbar">
           {loading ? (
             <div className="flex items-center justify-center h-48">
               <RefreshCw className="w-6 h-6 animate-spin text-accent" />
@@ -167,7 +167,7 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
               </p>
             </div>
           ) : (
-            <div className="divide-y">
+            <div className="divide-y divide-border-subtle">
               {notifications.map((notification) => (
                 <NotificationItem
                   key={notification.id}

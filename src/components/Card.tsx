@@ -17,8 +17,8 @@ interface CardProps {
  * @param shadow - Whether to show shadow
  * @param onClick - Click handler (makes card clickable)
  */
-export const Card: React.FC<CardProps> = ({ 
-  children, 
+export const Card: React.FC<CardProps> = ({
+  children,
   className = '',
   padding = 'md',
   shadow = true,
@@ -29,11 +29,11 @@ export const Card: React.FC<CardProps> = ({
     md: 'p-5',
     lg: 'p-6'
   };
-  
+
   const isClickable = !!onClick;
-  
+
   return (
-    <div 
+    <div
       className={`
         bg-ink-surface rounded-xl border border-border-subtle 
         ${shadow ? 'shadow-sm' : ''}

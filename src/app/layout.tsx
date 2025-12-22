@@ -1,12 +1,16 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Poppins } from 'next/font/google'
 import './globals.css'
 import SessionProvider from '@/components/providers/SessionProvider'
 import Navbar from '@/components/layout/Navbar'
 import RealtimeOrderProvider from '@/components/RealtimeOrderProvider'
 import ClientLayout from './ClientLayout'
 
-const inter = Inter({ subsets: ['latin'] })
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'String Service Platform - 羽毛球穿线服务',
@@ -20,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
-      <body className={inter.className}>
+      <body className={poppins.className}>
         <SessionProvider>
           <RealtimeOrderProvider>
             <ClientLayout>
