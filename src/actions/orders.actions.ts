@@ -31,6 +31,27 @@ export interface CreateOrderWithPackagePayload {
   notes?: string;
 }
 
+// New: Multi-racket order item
+export interface OrderItemPayload {
+  stringId: string;
+  tensionVertical: number;
+  tensionHorizontal: number;
+  racketBrand?: string;
+  racketModel?: string;
+  racketPhoto: string;  // Required
+  notes?: string;
+}
+
+// New: Multi-racket order payload
+export interface CreateMultiRacketOrderPayload {
+  items: OrderItemPayload[];
+  usePackage?: boolean;
+  packageId?: string;
+  voucherId?: string;
+  notes?: string;
+}
+
+
 /**
  * 获取当前用户订单列表（Server Action）
  */
@@ -96,7 +117,20 @@ export async function getOrderByIdAction(orderId: string) {
       payments: true,
       packageUsed: { include: { package: true } },
       voucherUsed: { include: { voucher: true } },
-    },
+      // Multi-racket support: include order items with string info
+      items: {
+        include: {
+          string: {
+            select: {
+              id: true,
+              brand: true,
+              model: true,
+              sellingPrice: true,
+            },
+          },
+        },
+      },
+    } as any, // Dynamic include for items until Prisma client is regenerated
   });
 
   if (!order) {
@@ -577,5 +611,269 @@ export async function completeOrderAction(orderId: string, adminNotes?: string) 
     profit,
     pointsGranted: pointsPerOrder,
     stockDeducted: stockToDeduct,
+  };
+}
+
+/**
+ * 创建多球拍订单（Multi-Racket Order）
+ * 
+ * 支持在单个订单中包含多支球拍，每支球拍可选择不同的球线和磅数。
+ * - 套餐抵扣：N 支球拍 = 扣除 N 次套餐
+ * - 球拍照片：必填
+ * - 无多球拍折扣
+ */
+export async function createMultiRacketOrderAction(payload: CreateMultiRacketOrderPayload) {
+  const user = await requireAuth();
+  const { items, usePackage, packageId, voucherId, notes } = payload;
+
+  // 验证必填字段
+  if (!items || items.length === 0) {
+    throw new Error('请至少添加一支球拍');
+  }
+
+  // 验证每个项目
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (!item.stringId) {
+      throw new Error(`第 ${i + 1} 支球拍未选择球线`);
+    }
+    if (!item.racketPhoto) {
+      throw new Error(`第 ${i + 1} 支球拍未上传照片（必填）`);
+    }
+    if (item.tensionVertical < 18 || item.tensionVertical > 35) {
+      throw new Error(`第 ${i + 1} 支球拍竖线磅数需在 18-35 之间`);
+    }
+    if (item.tensionHorizontal < 18 || item.tensionHorizontal > 35) {
+      throw new Error(`第 ${i + 1} 支球拍横线磅数需在 18-35 之间`);
+    }
+  }
+
+  // 获取所有球线信息
+  const stringIds = [...new Set(items.map(item => item.stringId))];
+  const strings = await prisma.stringInventory.findMany({
+    where: { id: { in: stringIds } },
+  });
+
+  const stringMap = new Map(strings.map(s => [s.id, s]));
+
+  // 验证所有球线存在且有库存
+  for (const item of items) {
+    const string = stringMap.get(item.stringId);
+    if (!string) {
+      throw new Error(`球线不存在: ${item.stringId}`);
+    }
+    if (string.stock <= 0) {
+      throw new Error(`球线 ${string.brand} ${string.model} 库存不足`);
+    }
+  }
+
+  // 计算总价
+  let totalPrice = 0;
+  const itemPrices: number[] = [];
+  for (const item of items) {
+    const string = stringMap.get(item.stringId)!;
+    const price = Number(string.sellingPrice);
+    itemPrices.push(price);
+    totalPrice += price;
+  }
+
+  // 套餐处理
+  let packageUsed: any = null;
+  const racketCount = items.length;
+
+  if (usePackage && packageId) {
+    packageUsed = await prisma.userPackage.findFirst({
+      where: {
+        id: packageId,
+        userId: user.id,
+        remaining: { gte: racketCount },  // 需要足够的次数
+        status: 'active',
+        expiry: { gte: new Date() },
+      },
+      include: { package: true },
+    });
+
+    if (!packageUsed) {
+      throw new Error(`套餐次数不足，需要 ${racketCount} 次`);
+    }
+
+    // 使用套餐时价格为 0
+    totalPrice = 0;
+    itemPrices.fill(0);
+  }
+
+  // 优惠券处理
+  let discount = 0;
+  let voucherUsed: any = null;
+
+  if (voucherId && !usePackage) {
+    voucherUsed = await prisma.userVoucher.findFirst({
+      where: {
+        id: voucherId,
+        userId: user.id,
+        status: 'active',
+        expiry: { gte: new Date() },
+      },
+      include: { voucher: true },
+    });
+
+    if (!voucherUsed) {
+      throw new Error('优惠券不可用');
+    }
+
+    const voucher = voucherUsed.voucher;
+    const now = new Date();
+    if (now < new Date(voucher.validFrom) || now > new Date(voucher.validUntil)) {
+      throw new Error('优惠券不在有效期内');
+    }
+
+    const voucherValue = Number(voucher.value);
+    const minPurchase = Number(voucher.minPurchase);
+
+    if (totalPrice < minPurchase) {
+      throw new Error(`最低消费 RM ${minPurchase.toFixed(2)}`);
+    }
+
+    if (voucher.type === 'percentage') {
+      discount = (totalPrice * voucherValue) / 100;
+    } else {
+      discount = voucherValue;
+    }
+
+    discount = Math.min(discount, totalPrice);
+  }
+
+  const finalPrice = Math.max(0, totalPrice - discount);
+
+  // 创建订单（事务）
+  const order = await prisma.$transaction(async (tx) => {
+    // 创建主订单
+    const newOrder = await tx.order.create({
+      data: {
+        userId: user.id,
+        // Legacy fields left null for multi-racket orders
+        stringId: null,
+        tension: null,
+        price: finalPrice,
+        discount,
+        discountAmount: discount,
+        status: usePackage ? 'in_progress' : 'pending',
+        usePackage: !!usePackage,
+        packageUsedId: packageUsed?.id || null,
+        voucherUsedId: voucherUsed?.id || null,
+        notes: notes || `多球拍订单：${racketCount} 支球拍`,
+      },
+    });
+
+    // 创建订单项
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const string = stringMap.get(item.stringId)!;
+      const itemPrice = usePackage ? 0 : itemPrices[i];
+
+      // 创建订单项 (使用动态访问，直到 Prisma 客户端重新生成)
+      await (tx as any).orderItem.create({
+        data: {
+          orderId: newOrder.id,
+          stringId: item.stringId,
+          tensionVertical: item.tensionVertical,
+          tensionHorizontal: item.tensionHorizontal,
+          racketBrand: item.racketBrand || null,
+          racketModel: item.racketModel || null,
+          racketPhoto: item.racketPhoto,
+          notes: item.notes || null,
+          price: itemPrice,
+        },
+      });
+
+      // 扣减库存
+      const stockResult = await tx.stringInventory.updateMany({
+        where: { id: item.stringId, stock: { gte: 1 } },
+        data: { stock: { decrement: 1 } },
+      });
+
+      if (stockResult.count === 0) {
+        throw new Error(`球线 ${string.brand} ${string.model} 库存不足`);
+      }
+
+      // 记录库存日志
+      await tx.stockLog.create({
+        data: {
+          stringId: item.stringId,
+          change: -1,
+          type: 'sale',
+          costPrice: string.costPrice,
+          referenceId: newOrder.id,
+          notes: `多球拍订单 ${newOrder.id} - 第 ${i + 1} 支球拍`,
+          createdBy: user.id,
+        },
+      });
+    }
+
+    // 扣除套餐次数（N 支球拍 = N 次）
+    if (packageUsed) {
+      const updatedPackage = await tx.userPackage.update({
+        where: { id: packageUsed.id },
+        data: { remaining: { decrement: racketCount } },
+      });
+
+      if (updatedPackage.remaining <= 0) {
+        await tx.userPackage.update({
+          where: { id: packageUsed.id },
+          data: { status: 'depleted' },
+        });
+      }
+    }
+
+    // 使用优惠券
+    if (voucherUsed) {
+      await tx.userVoucher.update({
+        where: { id: voucherUsed.id },
+        data: { status: 'used', usedAt: new Date(), orderId: newOrder.id },
+      });
+    }
+
+    // 创建支付记录（非套餐订单）
+    if (!usePackage && finalPrice > 0) {
+      await tx.payment.create({
+        data: {
+          orderId: newOrder.id,
+          userId: user.id,
+          amount: finalPrice,
+          provider: 'pending',
+          status: 'pending',
+        },
+      });
+    }
+
+    return newOrder;
+  });
+
+  // 返回完整订单
+  const fullOrder = await prisma.order.findUnique({
+    where: { id: order.id },
+    include: {
+      items: {
+        include: {
+          string: {
+            select: {
+              id: true,
+              brand: true,
+              model: true,
+              sellingPrice: true,
+            },
+          },
+        },
+      },
+      payments: true,
+    } as any, // Dynamic include until Prisma client is regenerated
+  });
+
+  return {
+    orderId: order.id,
+    racketCount,
+    finalPrice,
+    paymentRequired: !usePackage && finalPrice > 0,
+    order: fullOrder,
   };
 }

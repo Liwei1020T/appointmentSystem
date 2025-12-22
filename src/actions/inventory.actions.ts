@@ -102,6 +102,10 @@ export async function updateInventoryItemAction(id: string, body: any) {
   const gauge = body.gauge || null;
   const imageUrl = body.image_url || body.imageUrl || null;
   const active = body.active ?? true;
+  const isRecommended = body.is_recommended ?? body.isRecommended ?? undefined;
+  const elasticity = body.elasticity ?? undefined;
+  const durability = body.durability ?? undefined;
+  const control = body.control ?? undefined;
 
   return prisma.stringInventory.update({
     where: { id },
@@ -117,6 +121,10 @@ export async function updateInventoryItemAction(id: string, body: any) {
       gauge,
       imageUrl,
       active,
+      isRecommended: isRecommended !== undefined ? Boolean(isRecommended) : undefined,
+      elasticity: elasticity !== undefined ? (elasticity || null) : undefined,
+      durability: durability !== undefined ? (durability || null) : undefined,
+      control: control !== undefined ? (control || null) : undefined,
     },
   });
 }

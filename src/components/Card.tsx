@@ -3,8 +3,11 @@ import React from 'react';
 interface CardProps {
   children: React.ReactNode;
   className?: string;
-  padding?: 'sm' | 'md' | 'lg';
+  padding?: 'none' | 'sm' | 'md' | 'lg';
   shadow?: boolean;
+  hover?: boolean;
+  animate?: boolean;
+  variant?: 'default' | 'elevated' | 'gradient-border';
   onClick?: () => void;
 }
 
@@ -15,6 +18,9 @@ interface CardProps {
  * @param className - Additional CSS classes
  * @param padding - Card padding size
  * @param shadow - Whether to show shadow
+ * @param hover - Enable hover lift effect
+ * @param animate - Enable fade-in animation on mount
+ * @param variant - Visual style variant
  * @param onClick - Click handler (makes card clickable)
  */
 export const Card: React.FC<CardProps> = ({
@@ -22,12 +28,22 @@ export const Card: React.FC<CardProps> = ({
   className = '',
   padding = 'md',
   shadow = true,
+  hover = false,
+  animate = false,
+  variant = 'default',
   onClick
 }) => {
   const paddings = {
+    none: '',
     sm: 'p-3',
     md: 'p-5',
     lg: 'p-6'
+  };
+
+  const variants = {
+    default: 'bg-ink-surface',
+    elevated: 'bg-ink-elevated',
+    'gradient-border': 'bg-ink-elevated border-gradient',
   };
 
   const isClickable = !!onClick;
@@ -35,10 +51,14 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div
       className={`
-        bg-ink-surface rounded-xl border border-border-subtle 
-        ${shadow ? 'shadow-sm' : ''}
+        ${variants[variant]} 
+        rounded-xl 
+        border border-border-subtle 
+        ${shadow ? 'shadow-card' : ''}
         ${paddings[padding]}
-        ${isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}
+        ${hover ? 'card-hover' : ''}
+        ${animate ? 'animate-slide-up' : ''}
+        ${isClickable ? 'cursor-pointer hover:shadow-card-hover transition-shadow' : ''}
         ${className}
       `.trim().replace(/\s+/g, ' ')}
       onClick={onClick}
@@ -52,3 +72,4 @@ export const Card: React.FC<CardProps> = ({
 
 // Provide default export for legacy imports
 export default Card;
+

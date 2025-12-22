@@ -14,11 +14,12 @@ import { useSession } from 'next-auth/react';
 import StringSelector from '@/features/booking/StringSelector';
 import TensionInput from '@/features/booking/TensionInput';
 import VoucherSelector from '@/features/booking/VoucherSelector';
+import { StickySelectionBar } from '@/features/booking/components';
 import { StringInventory, UserVoucher } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { hasAvailablePackage } from '@/services/packageService';
 import { calculateDiscount } from '@/services/voucherService';
-import { createOrderAction } from '@/actions/orders.actions';
+import { createOrderAction, getUserOrdersAction } from '@/actions/orders.actions';
 import { getUserStats, type MembershipTierInfo } from '@/services/profileService';
 
 export default function BookingFlow() {
@@ -31,9 +32,11 @@ export default function BookingFlow() {
   // 订单状态
   const [selectedString, setSelectedString] = useState<StringInventory | null>(null);
   const [tension, setTension] = useState<number | null>(null);
+  const [crossTension, setCrossTension] = useState<number | null>(null);
   const [usePackage, setUsePackage] = useState(false);
   const [selectedVoucher, setSelectedVoucher] = useState<UserVoucher | null>(null);
   const [notes, setNotes] = useState('');
+  const [recommendedTension, setRecommendedTension] = useState<number | null>(null);
 
   // UI 状态
   const [step, setStep] = useState(1); // 1: 选球线, 2: 拉力, 3: 优惠, 4: 确认
@@ -167,6 +170,10 @@ export default function BookingFlow() {
     try {
       // 创建订单
       const membershipDiscountTotal = membershipDiscount;
+      const finalNotes = tension === crossTension
+        ? notes
+        : `[竖/横分拉: ${tension}/${crossTension} LBS] ${notes}`;
+
       const orderData = {
         user_id: user.id,
         string_id: selectedString.id,
@@ -178,7 +185,7 @@ export default function BookingFlow() {
         use_package: usePackage,
         voucher_id: selectedVoucher?.voucher?.id || null,
         status: 'pending',
-        notes,
+        notes: finalNotes,
       };
 
       const order = await createOrderAction(orderData);
@@ -224,10 +231,10 @@ export default function BookingFlow() {
   }
 
   return (
-    <div className="min-h-screen bg-ink">
-      {/* 顶部导航栏 */}
-      <div className="glass-surface border-b border-border-subtle sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
+    <div className="min-h-screen bg-white">
+      {/* 顶部导航栏 - 更简洁的纯白设计 */}
+      <div className="bg-white border-b border-border-subtle sticky top-0 z-10 transition-colors">
+        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
             onClick={() => step === 1 ? router.push('/') : handleBack()}
             className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
@@ -247,27 +254,27 @@ export default function BookingFlow() {
 
       {/* 主内容区 */}
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6 pb-32">
-        {/* 进度指示器 */}
-        <div className="flex items-center justify-between">
+        {/* 进度指示器 - 优化视觉重量 */}
+        <div className="flex items-center justify-between px-2">
           {[1, 2, 3, 4].map((num) => (
-            <div key={num} className="flex items-center flex-1">
+            <div key={num} className="flex items-center flex-1 last:flex-none">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${num < step
-                    ? 'bg-accent text-text-onAccent shadow-md'
-                    : num === step
-                      ? 'bg-accent text-text-onAccent shadow-glow ring-4 ring-accent/20'
-                      : 'bg-white text-text-secondary border-2 border-gray-300'
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black transition-all duration-500 ${num < step
+                  ? 'bg-accent text-white shadow-md'
+                  : num === step
+                    ? 'bg-accent text-white shadow-glow ring-4 ring-accent/15 scale-110'
+                    : 'bg-ink-surface text-text-tertiary border border-border-subtle'
                   }`}
               >
                 {num < step ? (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 ) : num}
               </div>
               {num < 4 && (
                 <div
-                  className={`flex-1 h-1 mx-2 rounded-full transition-all duration-300 ${num < step ? 'bg-accent' : 'bg-gray-300'
+                  className={`flex-1 h-1 mx-3 rounded-full transition-all duration-500 ${num < step ? 'bg-accent' : 'bg-ink-surface'
                     }`}
                 />
               )}
@@ -282,10 +289,8 @@ export default function BookingFlow() {
             <StringSelector
               selectedString={selectedString}
               onSelect={setSelectedString}
+              onNext={handleNext}
             />
-            {errors.string && (
-              <p className="text-sm text-danger mt-2">{errors.string}</p>
-            )}
           </div>
         )}
 
@@ -295,7 +300,12 @@ export default function BookingFlow() {
             <h2 className="text-xl font-bold text-text-primary mb-4">设置拉力</h2>
             <TensionInput
               tension={tension}
-              onTensionChange={setTension}
+              crossTension={crossTension}
+              onTensionChange={(v, h) => {
+                setTension(v);
+                setCrossTension(h);
+              }}
+              recommendedTension={recommendedTension}
               error={errors.tension}
             />
           </div>
@@ -343,131 +353,149 @@ export default function BookingFlow() {
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-text-primary mb-4">确认订单</h2>
 
-            {/* 订单摘要 */}
-            <Card>
-              <div className="p-4 space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-text-tertiary mb-2">球线信息</h3>
-                  <p className="font-semibold text-text-primary">
-                    {selectedString?.brand} {selectedString?.model}
-                  </p>
-                  <p className="text-sm text-text-secondary">
-                    {selectedString?.specification}
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium text-text-tertiary mb-2">拉力</h3>
-                  <p className="font-semibold text-text-primary">{tension} 磅</p>
-                </div>
-
-                {usePackage && (
+            {/* 订单摘要 - 极致纯白卡片 */}
+            <Card variant="elevated" className="border-border-subtle hover:shadow-md transition-shadow">
+              <div className="p-5 space-y-5">
+                <div className="flex justify-between items-start">
                   <div>
-                    <Badge variant="success">使用套餐抵扣</Badge>
-                  </div>
-                )}
-
-                {selectedVoucher && !usePackage && (
-                  <div>
-                    <h3 className="text-sm font-medium text-text-tertiary mb-2">优惠券</h3>
-                    <p className="text-sm text-text-primary">
-                      {selectedVoucher.voucher?.description}
+                    <h3 className="text-[10px] uppercase tracking-widest font-black text-text-tertiary mb-1.5 opacity-80">球线信息</h3>
+                    <p className="font-bold text-text-primary text-base leading-tight">
+                      {selectedString?.brand} {selectedString?.model}
+                    </p>
+                    <p className="text-xs text-text-tertiary mt-1 font-medium italic">
+                      {selectedString?.specification}
                     </p>
                   </div>
-                )}
+                  <div className="text-right">
+                    <h3 className="text-[10px] uppercase tracking-widest font-black text-text-tertiary mb-1.5 opacity-80">设置拉力</h3>
+                    <p className="font-black text-accent text-lg">
+                      {tension === crossTension ? `${tension} LBS` : `${tension}/${crossTension} LBS`}
+                    </p>
+                    {tension !== crossTension && (
+                      <p className="text-[10px] text-text-tertiary font-bold mt-0.5">竖 / 横 分拉</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 优惠与标签 */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {usePackage ? (
+                    <Badge variant="success" className="bg-success/10 text-success border-none font-bold px-3 py-1">使用套餐抵扣</Badge>
+                  ) : selectedVoucher ? (
+                    <Badge variant="warning" className="bg-accent/10 text-accent border-none font-bold px-3 py-1">已用：{selectedVoucher.voucher?.name || '优惠券'}</Badge>
+                  ) : null}
+                  {membershipInfo && membershipInfo.discountRate > 0 && !usePackage && (
+                    <Badge variant="info" className="bg-info/10 text-info border-none font-bold px-3 py-1">{membershipInfo.label}额外优惠</Badge>
+                  )}
+                </div>
               </div>
             </Card>
 
-            {/* 备注 */}
-            <Card>
-              <div className="p-4">
-                <label className="block text-sm font-medium text-text-tertiary mb-2">
-                  备注（可选）
+            {/* 备注 - 统一白净样式 */}
+            <Card variant="elevated" className="border-border-subtle">
+              <div className="p-5">
+                <label className="block text-[10px] uppercase tracking-widest font-black text-text-tertiary mb-3 opacity-80">
+                  特殊备注 (可选)
                 </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="特殊要求或备注..."
-                  className="w-full px-3 py-2 border border-border-subtle rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink bg-ink-surface text-text-primary placeholder:text-text-tertiary"
+                  placeholder="有什么需要特别叮嘱穿线师的吗？"
+                  className="w-full px-4 py-3 border border-border-subtle rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 bg-ink-surface/30 text-text-primary placeholder:text-text-tertiary text-sm transition-all focus:bg-white"
                   rows={3}
                 />
               </div>
             </Card>
 
-            {/* 价格明细 */}
-            <Card>
-              <div className="p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-text-tertiary">原价</span>
-                  <span className="text-text-primary font-mono">{formatCurrency(original)}</span>
+            {/* 价格明细 - 极致纯白卡片 */}
+            <Card variant="elevated" className="border-border-subtle shadow-md">
+              <div className="p-5 space-y-3.5">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-text-tertiary font-medium">项目原价</span>
+                  <span className="text-text-primary font-bold">{formatCurrency(original)}</span>
                 </div>
                 {!usePackage && membershipDiscount > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-text-tertiary">
-                      {membershipInfo?.label || '会员折扣'}
-                    </span>
-                    <span className="text-success">
+                  <div className="flex justify-between items-center text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-text-tertiary font-medium">{membershipInfo?.label || '会员折扣'}</span>
+                      <span className="text-[10px] bg-info/10 text-info px-1.5 py-0.5 rounded font-bold">-{membershipInfo?.discountRate}%</span>
+                    </div>
+                    <span className="text-info font-bold">
                       -{formatCurrency(membershipDiscount)}
                     </span>
                   </div>
                 )}
                 {discount > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-text-tertiary">优惠</span>
-                    <span className="text-success">-{formatCurrency(discount)}</span>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-text-tertiary font-medium">代金券/优惠券</span>
+                    <span className="text-accent font-bold">-{formatCurrency(discount)}</span>
                   </div>
                 )}
                 {usePackage && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-text-tertiary">套餐抵扣</span>
-                    <span className="text-success">-{formatCurrency(original)}</span>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-text-tertiary font-medium">套餐权益抵扣</span>
+                    <span className="text-success font-bold">-{formatCurrency(original)}</span>
                   </div>
                 )}
-                <div className="border-t border-border-subtle pt-2 flex justify-between items-center">
-                  <span className="font-semibold text-text-primary">应付金额</span>
-                  <span className="text-2xl font-bold text-accent font-mono">
-                    {formatCurrency(final)}
-                  </span>
+
+                <div className="border-t border-border-subtle/50 pt-4 mt-1 flex justify-between items-center">
+                  <div>
+                    <span className="font-black text-text-primary text-base">应付总额</span>
+                    {final > 0 && !usePackage && (
+                      <p className="text-[10px] text-text-tertiary font-bold mt-0.5 opacity-60">已包含所有优惠</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-black text-accent tracking-tighter">
+                      {formatCurrency(final)}
+                    </span>
+                  </div>
                 </div>
-                {!usePackage && membershipInfo && membershipInfo.discountRate > 0 && (
-                  <p className="text-xs text-text-tertiary mt-1">
-                    {membershipInfo.label} 额外享 {membershipInfo.discountRate}% 会员折扣
-                  </p>
-                )}
               </div>
             </Card>
           </div>
         )}
       </div>
 
-      {/* 底部操作栏 */}
-      <div className="fixed bottom-0 left-0 right-0 glass-surface border-t border-border-subtle safe-area-pb">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          {step < 4 ? (
-            <Button
-              variant="primary"
-              fullWidth
-              onClick={handleNext}
-              disabled={
-                (step === 1 && !selectedString) ||
-                (step === 2 && (!tension || tension < 18 || tension > 30))
-              }
-            >
-              下一步
-            </Button>
-          ) : (
-            <Button
-              variant="primary"
-              fullWidth
-              onClick={handleSubmit}
-              loading={loading}
-              disabled={loading}
-            >
-              {loading ? '提交中...' : `确认预约 ${formatCurrency(final)}`}
-            </Button>
-          )}
+      {/* 底部操作栏 - 统一使用 StickySelectionBar 样式以保持连贯性 */}
+      {step === 2 && (
+        <StickySelectionBar
+          selectedString={selectedString}
+          onClearSelection={() => {
+            setSelectedString(null);
+            setStep(1);
+          }}
+          onNext={handleNext}
+        />
+      )}
+
+      {step > 2 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-border-subtle safe-area-pb z-20">
+          <div className="max-w-2xl mx-auto px-6 py-5">
+            {step < 4 ? (
+              <Button
+                variant="primary"
+                fullWidth
+                onClick={handleNext}
+                className="h-12 text-base font-black rounded-xl shadow-glow"
+              >
+                下一步
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                fullWidth
+                onClick={handleSubmit}
+                loading={loading}
+                disabled={loading}
+                className="h-12 text-base font-black rounded-xl shadow-glow"
+              >
+                {loading ? '正在提交...' : `确认预约 · ${formatCurrency(final)}`}
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Toast 提示 */}
       {toast.show && (

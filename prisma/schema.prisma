@@ -16,36 +16,36 @@ datasource db {
 // ============================================
 
 model User {
-  id            String   @id @default(uuid()) @db.Uuid
+  id           String   @id @default(uuid()) @db.Uuid
   // Email is optional because the platform now supports phone-only auth (OTP).
   // We keep the column for backward compatibility with existing data and NextAuth adapter expectations.
-  email         String?  @unique
-  phone         String?  @unique
-  fullName      String?  @map("full_name")
-  address       String?
-  avatarUrl     String?  @map("avatar_url")
+  email        String?  @unique
+  phone        String?  @unique
+  fullName     String?  @map("full_name")
+  address      String?
+  avatarUrl    String?  @map("avatar_url")
   // Password is optional when using OTP-based auth; legacy accounts may still have a password hash.
-  password      String?  // bcrypt hashed password (legacy)
-  referralCode  String   @unique @default(cuid()) @map("referral_code")
-  referredBy    String?  @map("referred_by")
-  points        Int      @default(0)
-  role          String   @default("customer") // 'customer' or 'admin'
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  password     String? // bcrypt hashed password (legacy)
+  referralCode String   @unique @default(cuid()) @map("referral_code")
+  referredBy   String?  @map("referred_by")
+  points       Int      @default(0)
+  role         String   @default("customer") // 'customer' or 'admin'
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  orders           Order[]
-  userPackages     UserPackage[]
-  userVouchers     UserVoucher[]
-  pointsLogs       PointsLog[]
-  referralsMade    ReferralLog[]    @relation("Referrer")
-  referralsReceived ReferralLog[]   @relation("Referred")
-  payments         Payment[]
-  notifications    Notification[]
-  stockLogsCreated StockLog[]
-  accounts         Account[]
-  sessions         Session[]
-  reviews          Review[]
+  orders            Order[]
+  userPackages      UserPackage[]
+  userVouchers      UserVoucher[]
+  pointsLogs        PointsLog[]
+  referralsMade     ReferralLog[]  @relation("Referrer")
+  referralsReceived ReferralLog[]  @relation("Referred")
+  payments          Payment[]
+  notifications     Notification[]
+  stockLogsCreated  StockLog[]
+  accounts          Account[]
+  sessions          Session[]
+  reviews           Review[]
 
   @@index([referralCode])
   @@index([referredBy])
@@ -122,23 +122,29 @@ model VerificationToken {
 // ============================================
 
 model StringInventory {
-  id           String   @id @default(uuid()) @db.Uuid
-  model        String
-  brand        String
-  description  String?
-  costPrice    Decimal  @map("cost_price") @db.Decimal(10, 2)
-  sellingPrice Decimal  @map("selling_price") @db.Decimal(10, 2)
-  stock        Int      @default(0)
-  minimumStock Int      @default(5) @map("minimum_stock")
-  color        String?
-  gauge        String?
-  imageUrl     String?  @map("image_url")
-  active       Boolean  @default(true)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id            String   @id @default(uuid()) @db.Uuid
+  model         String
+  brand         String
+  description   String?
+  costPrice     Decimal  @map("cost_price") @db.Decimal(10, 2)
+  sellingPrice  Decimal  @map("selling_price") @db.Decimal(10, 2)
+  stock         Int      @default(0)
+  minimumStock  Int      @default(5) @map("minimum_stock")
+  color         String?
+  gauge         String?
+  imageUrl      String?  @map("image_url")
+  isRecommended Boolean  @default(false) @map("is_recommended")
+  // String characteristics (low/medium/high ratings)
+  elasticity    String? // 弹性: low, medium, high
+  durability    String? // 耐久: low, medium, high  
+  control       String? // 控球: low, medium, high
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  orders    Order[]
-  stockLogs StockLog[]
+  orders     Order[]
+  orderItems OrderItem[] // New: Multi-racket support
+  stockLogs  StockLog[]
 
   @@index([active])
   @@index([brand, model])
@@ -146,18 +152,18 @@ model StringInventory {
 }
 
 model StockLog {
-  id          String    @id @default(uuid()) @db.Uuid
-  stringId    String    @map("string_id") @db.Uuid
+  id          String   @id @default(uuid()) @db.Uuid
+  stringId    String   @map("string_id") @db.Uuid
   change      Int
-  type        String    // 'restock', 'sale', 'adjustment'
-  costPrice   Decimal?  @map("cost_price") @db.Decimal(10, 2)
-  referenceId String?   @map("reference_id") @db.Uuid
+  type        String // 'restock', 'sale', 'adjustment'
+  costPrice   Decimal? @map("cost_price") @db.Decimal(10, 2)
+  referenceId String?  @map("reference_id") @db.Uuid
   notes       String?
-  createdBy   String?   @map("created_by") @db.Uuid
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdBy   String?  @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  string       StringInventory @relation(fields: [stringId], references: [id])
-  createdByUser User?          @relation(fields: [createdBy], references: [id])
+  string        StringInventory @relation(fields: [stringId], references: [id])
+  createdByUser User?           @relation(fields: [createdBy], references: [id])
 
   @@index([stringId])
   @@index([createdAt])
@@ -171,6 +177,7 @@ model StockLog {
 model Order {
   id             String    @id @default(uuid()) @db.Uuid
   userId         String    @map("user_id") @db.Uuid
+  // Legacy fields - kept for backward compatibility with existing orders
   stringId       String?   @map("string_id") @db.Uuid
   tension        Int?
   price          Decimal   @db.Decimal(10, 2)
@@ -178,7 +185,7 @@ model Order {
   profit         Decimal?  @db.Decimal(10, 2)
   discount       Decimal   @default(0) @db.Decimal(10, 2)
   discountAmount Decimal?  @map("discount_amount") @db.Decimal(10, 2)
-  status         String    // 'pending', 'in_progress', 'completed', 'cancelled'
+  status         String // 'pending', 'in_progress', 'completed', 'cancelled'
   usePackage     Boolean   @default(false) @map("use_package")
   packageUsedId  String?   @map("package_used_id") @db.Uuid
   voucherUsedId  String?   @map("voucher_used_id") @db.Uuid
@@ -187,12 +194,13 @@ model Order {
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  user         User          @relation(fields: [userId], references: [id])
-  string       StringInventory? @relation(fields: [stringId], references: [id])
-  packageUsed  UserPackage?  @relation(fields: [packageUsedId], references: [id])
-  voucherUsed  UserVoucher?  @relation(fields: [voucherUsedId], references: [id])
-  payments     Payment[]
-  reviews      Review[]
+  user        User             @relation(fields: [userId], references: [id])
+  string      StringInventory? @relation(fields: [stringId], references: [id])
+  packageUsed UserPackage?     @relation(fields: [packageUsedId], references: [id])
+  voucherUsed UserVoucher?     @relation(fields: [voucherUsedId], references: [id])
+  payments    Payment[]
+  reviews     Review[]
+  items       OrderItem[] // New: Multi-racket support
 
   @@index([userId])
   @@index([status])
@@ -201,15 +209,40 @@ model Order {
 }
 
 // ============================================
+// ORDER ITEMS (多球拍支持)
+// ============================================
+
+model OrderItem {
+  id                String   @id @default(uuid()) @db.Uuid
+  orderId           String   @map("order_id") @db.Uuid
+  stringId          String   @map("string_id") @db.Uuid
+  tensionVertical   Int      @map("tension_vertical")
+  tensionHorizontal Int      @map("tension_horizontal")
+  racketBrand       String?  @map("racket_brand")
+  racketModel       String?  @map("racket_model")
+  racketPhoto       String   @map("racket_photo") // Required
+  notes             String?
+  price             Decimal  @db.Decimal(10, 2)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  order  Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  string StringInventory @relation(fields: [stringId], references: [id])
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+// ============================================
 // REVIEWS & RATINGS
 // ============================================
 
 model Review {
-  id        String   @id @default(uuid()) @db.Uuid
-  orderId   String   @map("order_id") @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
+  id      String @id @default(uuid()) @db.Uuid
+  orderId String @map("order_id") @db.Uuid
+  userId  String @map("user_id") @db.Uuid
 
-  rating        Int      // 1-5 stars
+  rating        Int // 1-5 stars
   comment       String?  @db.Text
   photos        String[] // Array of photo URLs
   tags          String[]
@@ -240,17 +273,17 @@ model Review {
 // ============================================
 
 model Payment {
-  id            String    @id @default(uuid()) @db.Uuid
-  orderId       String?   @map("order_id") @db.Uuid
-  packageId     String?   @map("package_id") @db.Uuid
-  userId        String    @map("user_id") @db.Uuid
-  amount        Decimal   @db.Decimal(10, 2)
-  provider      String    // 'fpx', 'tng', 'stripe', 'card', 'manual'
-  status        String    // 'pending', 'success', 'failed', 'refunded'
-  transactionId String?   @unique @map("transaction_id")
+  id            String   @id @default(uuid()) @db.Uuid
+  orderId       String?  @map("order_id") @db.Uuid
+  packageId     String?  @map("package_id") @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  amount        Decimal  @db.Decimal(10, 2)
+  provider      String // 'fpx', 'tng', 'stripe', 'card', 'manual'
+  status        String // 'pending', 'success', 'failed', 'refunded'
+  transactionId String?  @unique @map("transaction_id")
   metadata      Json?
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   user    User     @relation(fields: [userId], references: [id])
   order   Order?   @relation(fields: [orderId], references: [id])
@@ -312,19 +345,19 @@ model UserPackage {
 // ============================================
 
 model Voucher {
-  id          String    @id @default(uuid()) @db.Uuid
-  code        String    @unique
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
   name        String
-  type        String    // 'fixed_amount', 'percentage'
-  value       Decimal   @db.Decimal(10, 2)
-  minPurchase Decimal   @default(0) @map("min_purchase") @db.Decimal(10, 2)
-  maxUses     Int?      @map("max_uses")
-  usedCount   Int       @default(0) @map("used_count")
-  pointsCost  Int       @default(0) @map("points_cost")
-  validFrom   DateTime  @map("valid_from") @db.Timestamptz(6)
-  validUntil  DateTime  @map("valid_until") @db.Timestamptz(6)
-  active      Boolean   @default(true)
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  type        String // 'fixed_amount', 'percentage'
+  value       Decimal  @db.Decimal(10, 2)
+  minPurchase Decimal  @default(0) @map("min_purchase") @db.Decimal(10, 2)
+  maxUses     Int?     @map("max_uses")
+  usedCount   Int      @default(0) @map("used_count")
+  pointsCost  Int      @default(0) @map("points_cost")
+  validFrom   DateTime @map("valid_from") @db.Timestamptz(6)
+  validUntil  DateTime @map("valid_until") @db.Timestamptz(6)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   userVouchers UserVoucher[]
 
@@ -343,8 +376,8 @@ model UserVoucher {
   expiry    DateTime  @db.Timestamptz(6)
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  user    User     @relation(fields: [userId], references: [id])
-  voucher Voucher  @relation(fields: [voucherId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  voucher Voucher @relation(fields: [voucherId], references: [id])
   orders  Order[]
 
   @@index([userId])
@@ -360,7 +393,7 @@ model PointsLog {
   id           String   @id @default(uuid()) @db.Uuid
   userId       String   @map("user_id") @db.Uuid
   amount       Int
-  type         String   // 'order', 'referral', 'redeem', 'admin_grant'
+  type         String // 'order', 'referral', 'redeem', 'admin_grant'
   referenceId  String?  @map("reference_id") @db.Uuid
   description  String?
   balanceAfter Int      @map("balance_after")
@@ -402,7 +435,7 @@ model Notification {
   userId    String?  @map("user_id") @db.Uuid
   title     String
   message   String
-  type      String   // 'order', 'package', 'promo', 'system'
+  type      String // 'order', 'package', 'promo', 'system'
   read      Boolean  @default(false)
   actionUrl String?  @map("action_url")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)

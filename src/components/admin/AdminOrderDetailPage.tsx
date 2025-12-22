@@ -359,30 +359,29 @@ export default function AdminOrderDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-text-secondary mb-1">横线拉力</div>
-                  <div className="font-medium text-text-primary">
-                    {(() => {
-                      const h = (order as any).tension_horizontal ?? (order as any).tension ?? order.tension;
-                      return h ? `${h} lbs` : '-';
-                    })()}
-                  </div>
-                </div>
-                <div>
                   <div className="text-sm text-text-secondary mb-1">竖线拉力</div>
                   <div className="font-medium text-text-primary">
                     {(() => {
+                      // 尝试从备注解析分拉信息 [竖/横分拉: 24/26 LBS]
+                      const match = order.notes?.match(/\[竖\/横分拉:\s*(\d+)\/(\d+)\s*LBS\]/);
+                      if (match) return `${match[1]} lbs`;
+
                       const v = (order as any).tension_vertical ?? (order as any).tension ?? order.tension;
                       return v ? `${v} lbs` : '-';
                     })()}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-text-secondary mb-1">球拍品牌</div>
-                  <div className="font-medium text-text-primary">{order.racket_brand}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-text-secondary mb-1">球拍型号</div>
-                  <div className="font-medium text-text-primary">{order.racket_model}</div>
+                  <div className="text-sm text-text-secondary mb-1">横线拉力</div>
+                  <div className="font-medium text-text-primary">
+                    {(() => {
+                      const match = order.notes?.match(/\[竖\/横分拉:\s*(\d+)\/(\d+)\s*LBS\]/);
+                      if (match) return `${match[2]} lbs`;
+
+                      const h = (order as any).tension_horizontal ?? (order as any).tension ?? order.tension;
+                      return h ? `${h} lbs` : '-';
+                    })()}
+                  </div>
                 </div>
               </div>
               {order.notes && (

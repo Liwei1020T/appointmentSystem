@@ -43,8 +43,24 @@ export default function Navbar() {
         <div className="flex justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-text-primary tracking-tight">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              {/* Brand Logo Icon */}
+              <div className="w-9 h-9 rounded-xl gradient-accent flex items-center justify-center shadow-sm group-hover:shadow-glow transition-shadow">
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+              <span className="text-xl font-bold text-text-primary tracking-tight">
                 String Service
               </span>
             </Link>

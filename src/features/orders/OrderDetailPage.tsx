@@ -77,6 +77,16 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
     }
   };
 
+  // 静默刷新订单数据（不显示加载状态，避免页面闪烁）
+  const refreshOrderSilently = async () => {
+    try {
+      const data = await getOrderById(orderId);
+      setOrder(data as any);
+    } catch (err: any) {
+      console.error('静默刷新订单失败:', err);
+    }
+  };
+
   // 处理订单实时更新
   const handleOrderUpdate = useCallback((payload: any) => {
     const { eventType, old, new: newData } = payload;
@@ -246,9 +256,13 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   const hasPendingCashPayment =
     order.payments?.some((p: any) => p.status === 'pending' && p.provider === 'cash') || false;
 
-  // 只有现金支付待确认时才隐藏支付按钮，TNG待支付应该继续显示支付界面
+  // TNG 支付已上传收据，等待审核
+  const hasPendingTngVerification =
+    order.payments?.some((p: any) => p.status === 'pending_verification' && p.provider === 'tng') || false;
+
+  // 只有在没有完成支付、没有现金待确认、没有TNG待审核时才显示支付界面
   const needsPayment =
-    order.status === 'pending' && !hasCompletedPayment && !hasPendingCashPayment && finalAmount > 0 && !order.use_package;
+    order.status === 'pending' && !hasCompletedPayment && !hasPendingCashPayment && !hasPendingTngVerification && finalAmount > 0 && !order.use_package;
 
   return (
     <div className="min-h-screen bg-ink">
@@ -296,35 +310,119 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
           />
         </Card>
 
-        {/* 球线信息 */}
+        {/* 球线信息 - 支持多球拍订单 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">球线信息</h2>
-          <div className="bg-ink-elevated rounded-lg p-4 mb-4 border border-border-subtle">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">🎾</span>
-              <div>
-                <div className="font-semibold text-text-primary">{order.string?.brand} {order.string?.model}</div>
-                <div className="text-xs text-text-tertiary">{order.string?.specification || '标准规格'}</div>
+          <h2 className="text-lg font-semibold text-text-primary mb-4">
+            {(order as any).items?.length > 0
+              ? `球拍信息 (${(order as any).items.length} 支)`
+              : '球线信息'
+            }
+          </h2>
+
+          {/* 多球拍订单 */}
+          {(order as any).items?.length > 0 ? (
+            <div className="space-y-4">
+              {(order as any).items.map((item: any, index: number) => (
+                <div
+                  key={item.id || index}
+                  className="bg-ink-elevated rounded-lg p-4 border border-border-subtle"
+                >
+                  <div className="flex gap-4">
+                    {/* 球拍照片 */}
+                    {(item.racketPhoto || item.racket_photo) && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={item.racketPhoto || item.racket_photo}
+                          alt={`球拍 ${index + 1}`}
+                          className="w-20 h-20 rounded-lg object-cover border border-border-subtle"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      {/* 球拍序号和球线信息 */}
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 bg-accent text-white rounded-full text-xs font-bold flex items-center justify-center">
+                            {index + 1}
+                          </span>
+                          <div>
+                            <div className="font-semibold text-text-primary">
+                              {item.string?.brand} {item.string?.model}
+                            </div>
+                            {(item.racketBrand || item.racket_brand || item.racketModel || item.racket_model) && (
+                              <div className="text-xs text-text-tertiary">
+                                {item.racketBrand || item.racket_brand} {item.racketModel || item.racket_model}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-bold text-accent font-mono">
+                            RM {Number(item.price || 0).toFixed(2)}
+                          </div>
+                        </div>
+                      </div>
+                      {/* 磅数 */}
+                      <div className="flex gap-4 mt-2">
+                        <div className="bg-ink-surface rounded px-3 py-1.5 border border-border-subtle">
+                          <span className="text-xs text-text-tertiary">竖线 </span>
+                          <span className="font-bold text-text-primary">
+                            {item.tensionVertical || item.tension_vertical} 磅
+                          </span>
+                        </div>
+                        <div className="bg-ink-surface rounded px-3 py-1.5 border border-border-subtle">
+                          <span className="text-xs text-text-tertiary">横线 </span>
+                          <span className="font-bold text-text-primary">
+                            {item.tensionHorizontal || item.tension_horizontal} 磅
+                          </span>
+                        </div>
+                      </div>
+                      {/* 备注 */}
+                      {item.notes && (
+                        <div className="mt-2 text-xs text-text-tertiary">
+                          📝 {item.notes}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* 单球拍订单（旧格式兼容） */
+            <>
+              <div className="bg-ink-elevated rounded-lg p-4 mb-4 border border-border-subtle">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">🎾</span>
+                  <div>
+                    <div className="font-semibold text-text-primary">{order.string?.brand} {order.string?.model}</div>
+                    <div className="text-xs text-text-tertiary">{order.string?.specification || '标准规格'}</div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-ink-elevated rounded-lg p-3 border border-border-subtle">
-              <div className="text-xs text-text-tertiary mb-1">横线拉力</div>
-              <div className="text-lg font-bold text-text-primary font-mono">{(order as any).tension_horizontal || order.tension} 磅</div>
-            </div>
-            <div className="bg-ink-elevated rounded-lg p-3 border border-border-subtle">
-              <div className="text-xs text-text-tertiary mb-1">竖线拉力</div>
-              <div className="text-lg font-bold text-text-primary font-mono">{(order as any).tension_vertical || order.tension} 磅</div>
-            </div>
-          </div>
-          {((order as any).racket_brand || (order as any).racket_model) && (
-            <div className="mt-3 pt-3 border-t border-border-subtle">
-              <div className="text-xs text-text-tertiary mb-1">球拍信息</div>
-              <div className="text-sm text-text-primary">
-                {(order as any).racket_brand} {(order as any).racket_model}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-ink-elevated rounded-lg p-3 border border-border-subtle">
+                  <div className="text-xs text-text-tertiary mb-1">竖线拉力</div>
+                  <div className="text-lg font-bold text-text-primary font-mono">
+                    {(() => {
+                      const match = order.notes?.match(/\[竖\/横分拉:\s*(\d+)\/(\d+)\s*LBS\]/);
+                      if (match) return `${match[1]} 磅`;
+                      return `${(order as any).tension_vertical || order.tension} 磅`;
+                    })()}
+                  </div>
+                </div>
+                <div className="bg-ink-elevated rounded-lg p-3 border border-border-subtle">
+                  <div className="text-xs text-text-tertiary mb-1">横线拉力</div>
+                  <div className="text-lg font-bold text-text-primary font-mono">
+                    {(() => {
+                      const match = order.notes?.match(/\[竖\/横分拉:\s*(\d+)\/(\d+)\s*LBS\]/);
+                      if (match) return `${match[2]} 磅`;
+                      return `${(order as any).tension_horizontal || order.tension} 磅`;
+                    })()}
+                  </div>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </Card>
 
@@ -372,6 +470,37 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
           </Card>
         )}
 
+        {/* TNG 收据待审核提示 */}
+        {hasPendingTngVerification && order.status === 'pending' && (
+          <Card className="p-6 border-2 border-info/40 bg-ink-elevated">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-info/15 rounded-full flex items-center justify-center text-2xl border border-info/30">
+                  📱
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-text-primary">收据待审核</h2>
+                  <p className="text-sm text-text-secondary">
+                    TnG 支付收据已上传
+                  </p>
+                </div>
+              </div>
+              <div className="bg-info text-white text-xs font-bold px-4 py-2 rounded-full shadow-sm">
+                待审核
+              </div>
+            </div>
+            <div className="bg-ink-surface rounded-lg p-4 border border-border-subtle">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-text-tertiary">支付金额</span>
+                <span className="text-xl font-bold text-text-primary font-mono">RM {Number(finalAmount).toFixed(2)}</span>
+              </div>
+            </div>
+            <p className="text-sm text-text-secondary leading-relaxed mt-4">
+              ✅ 您的支付收据已成功提交！管理员将在 1-2 个工作日内审核，审核通过后订单将开始处理。
+            </p>
+          </Card>
+        )}
+
         {/* 支付区域 */}
         {needsPayment && (
           <>
@@ -383,10 +512,11 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                   setShowPayment(false);
                   setToast({
                     show: true,
-                    message: '支付成功！订单已更新',
+                    message: '收据已提交，等待管理员审核',
                     type: 'success',
                   });
-                  loadOrder();
+                  // 使用静默刷新，避免页面闪烁
+                  refreshOrderSilently();
                 }}
                 onCancel={() => setShowPayment(false)}
               />
@@ -495,123 +625,128 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
         </Card>
 
 
-        {/* 支付信息 */}
-        {(order.payment || order.payments?.length) && finalAmount > 0 && (
-          <Card className="p-6">
-            {(() => {
-              const payment = order.payment || order.payments?.[0];
-              if (!payment) return null;
+        {/* 支付信息 - 在支付完成或待审核时显示 */}
+        {(() => {
+          const payment = order.payment || order.payments?.[0];
+          const rawStatus = payment?.status || (payment as any)?.payment_status || (payment as any)?.paymentStatus || '';
+          const shouldShowPaymentInfo = rawStatus === 'completed' || rawStatus === 'success' || rawStatus === 'pending_verification' || order.status === 'completed';
+          return payment && finalAmount > 0 && shouldShowPaymentInfo;
+        })() && (
+            <Card className="p-6">
+              {(() => {
+                const payment = order.payment || order.payments?.[0];
+                if (!payment) return null;
 
-              const statusColors: Record<string, string> = {
-                completed: 'bg-success/10 text-success border-success/30',
-                pending: 'bg-warning/10 text-warning border-warning/30',
-                pending_verification: 'bg-info/10 text-info border-info/30',
-                failed: 'bg-danger/10 text-danger border-danger/30',
-              };
+                const statusColors: Record<string, string> = {
+                  completed: 'bg-success/10 text-success border-success/30',
+                  pending: 'bg-warning/10 text-warning border-warning/30',
+                  pending_verification: 'bg-info/10 text-info border-info/30',
+                  failed: 'bg-danger/10 text-danger border-danger/30',
+                };
 
-              const statusLabels: Record<string, string> = {
-                completed: '已支付',
-                pending: '待支付',
-                pending_verification: '待审核',
-                failed: '支付失败',
-              };
+                const statusLabels: Record<string, string> = {
+                  completed: '已支付',
+                  pending: '待支付',
+                  pending_verification: '待审核',
+                  failed: '支付失败',
+                };
 
-              const providerMap: Record<string, { label: string; icon: string }> = {
-                cash: { label: '现金支付', icon: '💵' },
-                tng: { label: "Touch 'n Go", icon: '💳' },
-              };
+                const providerMap: Record<string, { label: string; icon: string }> = {
+                  cash: { label: '现金支付', icon: '💵' },
+                  tng: { label: "Touch 'n Go", icon: '💳' },
+                };
 
-              const rawProvider =
-                (payment as any).provider ||
-                (payment as any).payment_method ||
-                (payment as any).method ||
-                '';
-              const providerKey = String(rawProvider).toLowerCase();
-              const provider =
-                providerKey.includes('cash')
-                  ? providerMap.cash
-                  : providerKey.includes('tng')
-                    ? providerMap.tng
-                    : providerMap.tng;
+                const rawProvider =
+                  (payment as any).provider ||
+                  (payment as any).payment_method ||
+                  (payment as any).method ||
+                  '';
+                const providerKey = String(rawProvider).toLowerCase();
+                const provider =
+                  providerKey.includes('cash')
+                    ? providerMap.cash
+                    : providerKey.includes('tng')
+                      ? providerMap.tng
+                      : providerMap.tng;
 
-              const rawStatus =
-                (payment as any).status ||
-                (payment as any).payment_status ||
-                (payment as any).paymentStatus ||
-                'pending';
-              const statusKey =
-                order.status === 'completed' || rawStatus === 'success' || rawStatus === 'completed'
-                  ? 'completed'
-                  : rawStatus;
-              const displayStatus = statusLabels[statusKey] || '待支付';
-              const badge = statusColors[statusKey] || statusColors.pending;
+                const rawStatus =
+                  (payment as any).status ||
+                  (payment as any).payment_status ||
+                  (payment as any).paymentStatus ||
+                  'pending';
+                const statusKey =
+                  order.status === 'completed' || rawStatus === 'success' || rawStatus === 'completed'
+                    ? 'completed'
+                    : rawStatus;
+                const displayStatus = statusLabels[statusKey] || '待支付';
+                const badge = statusColors[statusKey] || statusColors.pending;
 
-              return (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-                        {provider.icon} 支付信息
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${badge}`}>
-                          {displayStatus}
-                        </span>
-                      </h2>
-                      <p className="text-xs text-text-tertiary mt-1">支付渠道：{provider.label}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs text-text-tertiary">支付金额</div>
-                      <div className="text-xl font-bold text-text-primary font-mono">
-                        RM {Number(payment.amount ?? finalAmount).toFixed(2)}
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+                          {provider.icon} 支付信息
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${badge}`}>
+                            {displayStatus}
+                          </span>
+                        </h2>
+                        <p className="text-xs text-text-tertiary mt-1">支付渠道：{provider.label}</p>
                       </div>
+                      <div className="text-right">
+                        <div className="text-xs text-text-tertiary">支付金额</div>
+                        <div className="text-xl font-bold text-text-primary font-mono">
+                          RM {Number(payment.amount ?? finalAmount).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
+                        <div className="text-xs text-text-tertiary">支付方式</div>
+                        <div className="text-sm font-medium text-text-primary flex items-center gap-2 mt-1">
+                          <span>{provider.icon}</span>
+                          <span>{provider.label}</span>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
+                        <div className="text-xs text-text-tertiary">支付状态</div>
+                        <div className="text-sm font-medium text-text-primary mt-1">{displayStatus}</div>
+                      </div>
+
+                      {(payment as any).transaction_id && (
+                        <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle col-span-2">
+                          <div className="text-xs text-text-tertiary">交易单号</div>
+                          <div className="text-sm font-mono text-text-primary mt-1 break-all">
+                            {(payment as any).transaction_id}
+                          </div>
+                        </div>
+                      )}
+
+                      {(payment as any).created_at && (
+                        <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
+                          <div className="text-xs text-text-tertiary">发起时间</div>
+                          <div className="text-sm font-medium text-text-primary mt-1">
+                            {formatDate((payment as any).created_at, 'yyyy-MM-dd HH:mm')}
+                          </div>
+                        </div>
+                      )}
+
+                      {(payment as any).updated_at && (
+                        <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
+                          <div className="text-xs text-text-tertiary">最近更新</div>
+                          <div className="text-sm font-medium text-text-primary mt-1">
+                            {formatDate((payment as any).updated_at, 'yyyy-MM-dd HH:mm')}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
-                      <div className="text-xs text-text-tertiary">支付方式</div>
-                      <div className="text-sm font-medium text-text-primary flex items-center gap-2 mt-1">
-                        <span>{provider.icon}</span>
-                        <span>{provider.label}</span>
-                      </div>
-                    </div>
-
-                    <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
-                      <div className="text-xs text-text-tertiary">支付状态</div>
-                      <div className="text-sm font-medium text-text-primary mt-1">{displayStatus}</div>
-                    </div>
-
-                    {(payment as any).transaction_id && (
-                      <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle col-span-2">
-                        <div className="text-xs text-text-tertiary">交易单号</div>
-                        <div className="text-sm font-mono text-text-primary mt-1 break-all">
-                          {(payment as any).transaction_id}
-                        </div>
-                      </div>
-                    )}
-
-                    {(payment as any).created_at && (
-                      <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
-                        <div className="text-xs text-text-tertiary">发起时间</div>
-                        <div className="text-sm font-medium text-text-primary mt-1">
-                          {formatDate((payment as any).created_at, 'yyyy-MM-dd HH:mm')}
-                        </div>
-                      </div>
-                    )}
-
-                    {(payment as any).updated_at && (
-                      <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
-                        <div className="text-xs text-text-tertiary">最近更新</div>
-                        <div className="text-sm font-medium text-text-primary mt-1">
-                          {formatDate((payment as any).updated_at, 'yyyy-MM-dd HH:mm')}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-          </Card>
-        )}
+                );
+              })()}
+            </Card>
+          )}
 
         {/* 客户备注 */}
         {order.notes && !order.notes.includes('快捷操作') && !order.notes.includes('管理员') && (

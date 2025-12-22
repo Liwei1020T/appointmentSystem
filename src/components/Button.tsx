@@ -6,6 +6,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
   loading?: boolean;
   icon?: React.ReactNode;
+  glow?: boolean;
 }
 
 /**
@@ -16,6 +17,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
  * @param fullWidth - Whether button should take full width
  * @param loading - Show loading spinner
  * @param icon - Optional icon element
+ * @param glow - Enable glow effect (primarily for primary buttons)
  */
 export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
@@ -23,18 +25,40 @@ export const Button: React.FC<ButtonProps> = ({
   fullWidth = false,
   loading = false,
   icon,
+  glow = false,
   children,
   className = '',
   disabled,
   ...props
 }) => {
-  const baseStyles = 'font-semibold rounded-lg transition-all duration-150 active:scale-97 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-border focus-visible:ring-offset-2 focus-visible:ring-offset-ink';
+  const baseStyles = `
+    font-semibold rounded-lg transition-all duration-200 
+    active:scale-98 btn-press
+    flex items-center justify-center gap-2 
+    focus-visible:outline-none focus-visible:ring-2 
+    focus-visible:ring-accent-border focus-visible:ring-offset-2 
+    focus-visible:ring-offset-ink
+  `.trim();
 
   const variants = {
-    primary: 'bg-accent text-text-onAccent hover:shadow-glow',
-    secondary: 'bg-ink-surface text-accent border border-accent-border hover:bg-accent-soft',
-    ghost: 'bg-transparent text-text-primary hover:bg-ink-surface/80',
-    danger: 'bg-danger text-text-primary hover:bg-danger/90'
+    primary: `
+      bg-accent text-text-onAccent 
+      hover:shadow-glow hover:brightness-105
+      ${glow ? 'shadow-glow' : 'shadow-sm'}
+    `.trim(),
+    secondary: `
+      bg-ink-surface text-accent 
+      border border-accent-border 
+      hover:bg-accent-soft hover:shadow-sm
+    `.trim(),
+    ghost: `
+      bg-transparent text-text-primary 
+      hover:bg-ink-surface/80
+    `.trim(),
+    danger: `
+      bg-danger text-white 
+      hover:bg-danger/90 hover:shadow-sm
+    `.trim()
   };
 
   const sizes = {
@@ -88,3 +112,4 @@ export const Button: React.FC<ButtonProps> = ({
 
 // Provide default export for legacy imports
 export default Button;
+

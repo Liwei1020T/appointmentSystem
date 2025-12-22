@@ -1,84 +1,245 @@
 /**
  * 拉力输入组件 (Tension Input)
  * 
- * 输入球线拉力值，支持验证范围（通常 18-30 磅）
+ * 输入球线拉力值，支持滑块同步、竖横线独立设置、推荐值一键使用、视觉磅数分级提示等。
+ * 包含专业限制：竖线不能高于横线，且差磅不能超过 3 磅。
  */
 
 'use client';
 
-import React from 'react';
-import { Input } from '@/components';
+import React, { useState, useEffect } from 'react';
+import { Card } from '@/components';
 
 interface TensionInputProps {
   tension: number | null;
-  onTensionChange: (tension: number) => void;
+  crossTension: number | null;
+  onTensionChange: (vertical: number, horizontal: number) => void;
+  recommendedTension?: number | null;
   error?: string;
 }
 
-export default function TensionInput({ tension, onTensionChange, error }: TensionInputProps) {
+export default function TensionInput({
+  tension,
+  crossTension: initialCrossTension,
+  onTensionChange,
+  recommendedTension,
+  error
+}: TensionInputProps) {
   const commonTensions = [20, 22, 24, 26, 28];
+  const [isAdvanced, setIsAdvanced] = useState(initialCrossTension !== null && initialCrossTension !== tension);
+  const [mainTension, setMainTension] = useState<number>(tension || 24);
+  const [crossTension, setCrossTension] = useState<number>(initialCrossTension || tension || 24);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value)) {
-      onTensionChange(value);
-    } else if (e.target.value === '') {
-      onTensionChange(0);
+  // 同步外部状态
+  useEffect(() => {
+    if (tension && !isAdvanced) {
+      setMainTension(tension);
+      setCrossTension(tension);
+    }
+  }, [tension, isAdvanced]);
+
+  // 当竖线下发生变化时，如果非高级模式，自动同步横线并通知外部
+  const handleMainChange = (val: number) => {
+    const clampedMain = Math.max(18, Math.min(30, val));
+
+    if (!isAdvanced) {
+      setMainTension(clampedMain);
+      setCrossTension(clampedMain);
+      onTensionChange(clampedMain, clampedMain);
+    } else {
+      // 限制：竖线不能超过横线
+      const finalMain = Math.min(clampedMain, crossTension);
+      setMainTension(finalMain);
+      onTensionChange(finalMain, crossTension);
     }
   };
 
-  const handlePresetClick = (value: number) => {
-    onTensionChange(value);
+  const handleCrossChange = (val: number) => {
+    const clampedCross = Math.max(18, Math.min(30, val));
+
+    // 限制：横线不能低于竖线，且不能多于竖线 3 磅
+    const minCross = mainTension;
+    const maxCross = Math.min(30, mainTension + 3);
+    const finalCross = Math.max(minCross, Math.min(maxCross, clampedCross));
+
+    setCrossTension(finalCross);
+    onTensionChange(mainTension, finalCross);
+  };
+
+  // 根据磅数返回颜色分级 (18 - 30)
+  const getGaugeColor = (val: number) => {
+    if (val <= 22) return 'bg-emerald-500';
+    if (val <= 25) return 'bg-blue-500';
+    if (val <= 28) return 'bg-orange-500';
+    return 'bg-red-500';
+  };
+
+  const getTensionDescription = (val: number) => {
+    if (val <= 22) return '初学者：弹性极佳，保护手臂';
+    if (val <= 25) return '进阶选：控制平稳，发力均衡';
+    if (val <= 28) return '专业级：落点精准，需要发力';
+    return '极速控：极致控制，容易断线';
   };
 
   return (
-    <div className="space-y-4">
-      {/* 拉力输入框 */}
-      <Input
-        label="拉力 (磅) Tension (lbs)"
-        type="number"
-        value={tension || ''}
-        onChange={handleChange}
-        placeholder="输入拉力值 (18-30)"
-        error={error}
-        helperText="建议范围：18-30 磅"
-        min={18}
-        max={30}
-        required
-      />
-
-      {/* 常用拉力快捷选择 */}
-      <div>
-        <label className="block text-sm font-medium text-text-tertiary mb-2">
-          常用拉力
-        </label>
-        <div className="grid grid-cols-5 gap-2">
-          {commonTensions.map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => handlePresetClick(value)}
-              className={`py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
-                tension === value
-                  ? 'bg-accent text-text-onAccent'
-                  : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
-              }`}
-            >
-              {value}
-            </button>
-          ))}
+    <div className="space-y-6">
+      {/* 推荐值 (如果有) */}
+      {recommendedTension && (
+        <div className="flex items-center gap-2 px-1">
+          <span className="text-xs text-text-tertiary">基于历史订单推荐：</span>
+          <button
+            type="button"
+            onClick={() => handleMainChange(recommendedTension)}
+            className="px-2 py-0.5 rounded bg-accent/10 border border-accent/20 text-accent text-xs font-semibold hover:bg-accent/20 transition-colors"
+          >
+            {recommendedTension} lbs (一键使用)
+          </button>
         </div>
+      )}
+
+      {/* 主面板 (竖线) */}
+      <Card variant="elevated" className="p-6 border-border-subtle shadow-md bg-white">
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h3 className="text-xl font-extrabold text-text-primary">
+                {isAdvanced ? '竖线拉力 (Vertical)' : '设定拉力 (Tension)'}
+              </h3>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold text-white shadow-sm ${getGaugeColor(mainTension)}`}>
+                {mainTension} LBS
+              </span>
+            </div>
+            <p className="text-sm font-medium text-text-secondary">
+              {getTensionDescription(mainTension)}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">分拉模式</span>
+            <button
+              onClick={() => setIsAdvanced(!isAdvanced)}
+              className={`w-12 h-6 rounded-full transition-all relative ${isAdvanced ? 'bg-accent shadow-glow' : 'bg-ink-surface border border-border-subtle'}`}
+            >
+              <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${isAdvanced ? 'left-7' : 'left-1'}`} />
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="relative h-3 w-full bg-ink-surface/50 rounded-full overflow-hidden border border-border-subtle">
+            <div
+              className={`absolute top-0 left-0 h-full transition-all duration-300 opacity-40 shadow-inner ${getGaugeColor(mainTension)}`}
+              style={{ width: `${((mainTension - 18) / (30 - 18)) * 100}%` }}
+            />
+          </div>
+          <input
+            type="range"
+            min="18"
+            max="30"
+            step="1"
+            value={mainTension}
+            onChange={(e) => handleMainChange(parseInt(e.target.value))}
+            className="w-full h-3 bg-transparent appearance-none cursor-pointer accent-accent relative z-10 -mt-[42px]"
+          />
+          <div className="flex justify-between px-1 text-[10px] text-text-tertiary font-bold font-mono">
+            <span>18</span><span>21</span><span>24</span><span>27</span><span>30</span>
+          </div>
+        </div>
+      </Card>
+
+      {/* 高级模式：横线拉力 */}
+      {isAdvanced && (
+        <Card variant="elevated" className="p-6 border-border-subtle shadow-md bg-white animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex justify-between items-start mb-8">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className="text-xl font-extrabold text-text-primary">
+                  横线拉力 (Cross)
+                </h3>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold text-white shadow-sm ${getGaugeColor(crossTension)}`}>
+                  {crossTension} LBS
+                </span>
+              </div>
+              <p className="text-sm font-medium text-text-secondary">
+                建议：横线通常比竖线高 1-2 磅（上限 3 磅）
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="relative h-3 w-full bg-ink-surface/50 rounded-full overflow-hidden border border-border-subtle">
+              <div
+                className={`absolute top-0 left-0 h-full transition-all duration-300 opacity-40 shadow-inner ${getGaugeColor(crossTension)}`}
+                style={{ width: `${((crossTension - 18) / (30 - 18)) * 100}%` }}
+              />
+            </div>
+            <input
+              type="range"
+              min="18"
+              max="30"
+              step="1"
+              value={crossTension}
+              onChange={(e) => handleCrossChange(parseInt(e.target.value))}
+              className="w-full h-3 bg-transparent appearance-none cursor-pointer accent-accent relative z-10 -mt-[42px]"
+            />
+            <div className="flex justify-between px-1 text-[10px] text-text-tertiary font-bold font-mono">
+              <span>{mainTension} (min)</span>
+              <span className="text-accent">当前可调范围</span>
+              <span>{Math.min(30, mainTension + 3)} (max)</span>
+            </div>
+
+            <div className="bg-accent/5 border border-accent/10 rounded-lg p-3 mt-2">
+              <p className="text-[11px] text-accent/80 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                专业限制：横线需 ≥ 竖线，且差值不得超过 3 磅。
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* 常用拉力快捷选择 (仅在非高级模式下显示) */}
+      {!isAdvanced && (
+        <div className="px-1">
+          <label className="block text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-3">
+            快速预设
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {commonTensions.map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => handleMainChange(value)}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${mainTension === value
+                  ? 'bg-accent text-white shadow-glow ring-2 ring-accent/20 scale-105'
+                  : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
+                  }`}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 错误提示 */}
+      {error && (
+        <p className="text-red-500 text-xs px-1 animate-pulse">
+          ⚠️ {error}
+        </p>
+      )}
+
+      {/* 默认勾选项 */}
+      <div className="flex items-center gap-2 px-1 py-1">
+        <input type="checkbox" id="saveDefault" className="w-4 h-4 accent-accent rounded" defaultChecked />
+        <label htmlFor="saveDefault" className="text-sm text-text-secondary cursor-pointer">
+          设为我的常用拉力
+        </label>
       </div>
 
-      {/* 拉力参考提示 */}
-      <div className="bg-ink-elevated border border-border-subtle rounded-lg p-4">
-        <h4 className="text-sm font-semibold text-text-primary mb-2">拉力参考</h4>
-        <ul className="text-sm text-text-secondary space-y-1">
-          <li>• <strong>18-22 磅</strong>: 初学者，弹性好，手感柔</li>
-          <li>• <strong>23-25 磅</strong>: 进阶选手，控制与弹性平衡</li>
-          <li>• <strong>26-28 磅</strong>: 高手，精准控制，爆发力强</li>
-          <li>• <strong>29-30 磅</strong>: 专业选手，极致控制</li>
-        </ul>
+      {/* 拉力参考科普 */}
+      <div className="text-[11px] text-text-tertiary leading-relaxed px-1 space-y-1 mt-4">
+        <p>💡 <strong>小知识：</strong> 高磅位（26+）能提供更精准的控制，但弹性会降低，且对体力要求更高。</p>
+        <p>⚠️ <strong>注意：</strong> 磅数越高，球线在剧烈击球时断裂的风险越大。</p>
       </div>
     </div>
   );

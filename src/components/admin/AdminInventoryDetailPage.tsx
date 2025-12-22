@@ -47,6 +47,11 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
     stock_quantity: 0,
     minimum_stock: 0,
     description: '',
+    imageUrl: '',
+    isRecommended: false,
+    elasticity: '',
+    durability: '',
+    control: '',
   });
 
   // Stock adjustment state
@@ -88,7 +93,12 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
         selling_price: Number(fetchedString.sellingPrice),
         stock_quantity: fetchedString.stock,
         minimum_stock: fetchedString.minimumStock,
-        description: '',
+        description: (fetchedString as any).description || '',
+        imageUrl: fetchedString.imageUrl || '',
+        isRecommended: (fetchedString as any).isRecommended || false,
+        elasticity: (fetchedString as any).elasticity || '',
+        durability: (fetchedString as any).durability || '',
+        control: (fetchedString as any).control || '',
       });
 
       setLoading(false);
@@ -125,6 +135,12 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
         costPrice: formData.cost_price,
         sellingPrice: formData.selling_price,
         minimumStock: formData.minimum_stock,
+        description: formData.description || null,
+        imageUrl: formData.imageUrl || null,
+        isRecommended: formData.isRecommended,
+        elasticity: formData.elasticity || null,
+        durability: formData.durability || null,
+        control: formData.control || null,
       } as any);
 
       setString(updatedString);
@@ -377,6 +393,116 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
                     className="w-full px-3 py-2 border border-border-subtle rounded-lg bg-ink-surface text-text-primary focus:ring-2 focus:ring-accent-border focus:border-transparent"
                     placeholder="球线特性、适用人群等..."
                   />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Input
+                    label="图片 URL"
+                    value={formData.imageUrl}
+                    onChange={(e) => handleFieldChange('imageUrl', e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                  {formData.imageUrl && (
+                    <div className="mt-2 flex items-center gap-3">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-ink-surface border border-border-subtle">
+                        <img
+                          src={formData.imageUrl}
+                          alt="预览"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                      <span className="text-xs text-text-tertiary">图片预览</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={formData.isRecommended}
+                        onChange={(e) => handleFieldChange('isRecommended', e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-ink-surface border border-border-subtle rounded-full peer peer-checked:bg-accent peer-checked:border-accent transition-colors"></div>
+                      <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow peer-checked:translate-x-5 transition-transform"></div>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-text-primary">推荐球线</span>
+                      <p className="text-xs text-text-tertiary">开启后将在用户端显示"推荐"标签</p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* String Characteristics */}
+                <div className="md:col-span-2 space-y-4">
+                  <h3 className="text-sm font-medium text-text-secondary">球线特性</h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Elasticity */}
+                    <div>
+                      <label className="block text-xs text-text-tertiary mb-2">弹性</label>
+                      <div className="flex gap-2">
+                        {['low', 'medium', 'high'].map((level) => (
+                          <button
+                            key={level}
+                            type="button"
+                            onClick={() => handleFieldChange('elasticity', formData.elasticity === level ? '' : level)}
+                            className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${formData.elasticity === level
+                                ? 'bg-accent text-white'
+                                : 'bg-ink-surface border border-border-subtle text-text-secondary hover:border-accent/50'
+                              }`}
+                          >
+                            {level === 'low' ? '低' : level === 'medium' ? '中' : '高'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Durability */}
+                    <div>
+                      <label className="block text-xs text-text-tertiary mb-2">耐久</label>
+                      <div className="flex gap-2">
+                        {['low', 'medium', 'high'].map((level) => (
+                          <button
+                            key={level}
+                            type="button"
+                            onClick={() => handleFieldChange('durability', formData.durability === level ? '' : level)}
+                            className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${formData.durability === level
+                                ? 'bg-accent text-white'
+                                : 'bg-ink-surface border border-border-subtle text-text-secondary hover:border-accent/50'
+                              }`}
+                          >
+                            {level === 'low' ? '低' : level === 'medium' ? '中' : '高'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Control */}
+                    <div>
+                      <label className="block text-xs text-text-tertiary mb-2">控球</label>
+                      <div className="flex gap-2">
+                        {['low', 'medium', 'high'].map((level) => (
+                          <button
+                            key={level}
+                            type="button"
+                            onClick={() => handleFieldChange('control', formData.control === level ? '' : level)}
+                            className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${formData.control === level
+                                ? 'bg-accent text-white'
+                                : 'bg-ink-surface border border-border-subtle text-text-secondary hover:border-accent/50'
+                              }`}
+                          >
+                            {level === 'low' ? '低' : level === 'medium' ? '中' : '高'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

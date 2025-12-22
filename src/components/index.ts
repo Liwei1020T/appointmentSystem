@@ -23,3 +23,4 @@ export { Sidebar } from './Sidebar';
 export type { SidebarItem } from './Sidebar';
 export { Tabs } from './Tabs';
 export type { Tab } from './Tabs';
+export { Skeleton, SkeletonText, SkeletonCard, SkeletonAvatar } from './Skeleton';

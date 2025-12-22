@@ -33,6 +33,12 @@ export interface StringInventory {
   image_url?: string | null;
   imageUrl?: string | null;
   specification?: string | null;
+  isRecommended?: boolean;
+  is_recommended?: boolean;
+  // String characteristics
+  elasticity?: string | null;  // 弹性: low, medium, high
+  durability?: string | null;  // 耐久: low, medium, high
+  control?: string | null;     // 控球: low, medium, high
   active: boolean;
   created_at?: string;
   createdAt?: Date | string;
@@ -94,7 +100,40 @@ export interface Order {
       value?: number | null;
     };
   };
+  items?: OrderItem[];  // New: Multi-racket support
 }
+
+// New: Order item for multi-racket support
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  orderId?: string;
+  string_id: string;
+  stringId?: string;
+  tension_vertical: number;
+  tensionVertical?: number;
+  tension_horizontal: number;
+  tensionHorizontal?: number;
+  racket_brand?: string;
+  racketBrand?: string;
+  racket_model?: string;
+  racketModel?: string;
+  racket_photo: string;  // Required
+  racketPhoto?: string;
+  notes?: string;
+  price: number;
+  created_at: string;
+  createdAt?: Date | string;
+  updated_at: string;
+  updatedAt?: Date | string;
+  string?: {
+    id?: string;
+    brand?: string;
+    model?: string;
+    sellingPrice?: number | { toNumber(): number };
+  };
+}
+
 
 export interface Payment {
   id: string;

@@ -27,7 +27,7 @@ export default function Page() {
   // 避免 SSR 不匹配
   if (!mounted || loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-ink flex items-center justify-center">
         <Spinner size="large" />
       </div>
     );

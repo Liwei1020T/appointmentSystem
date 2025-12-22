@@ -14,7 +14,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Card, Spinner, Button, Badge } from '@/components';
+import { Card, Spinner, Button, Badge, SkeletonCard } from '@/components';
 import FeaturedReviews from '@/components/FeaturedReviews';
 import QuickActions from './QuickActions';
 import RecentOrders from './RecentOrders';
@@ -110,18 +110,21 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-ink pb-24">
       {/* 顶部欢迎横幅 */}
-      <div className="bg-ink-elevated border-b border-border-subtle">
-        <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="bg-ink-elevated border-b border-border-subtle relative overflow-hidden">
+        {/* Decorative gradient orbs */}
+        <div className="absolute top-0 right-0 w-48 h-48 bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+
+        <div className="max-w-2xl mx-auto px-4 py-8 relative">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="animate-fade-in">
               <h1 className="text-2xl font-bold mb-2 text-text-primary tracking-tight">
                 欢迎回来，{user.full_name || '用户'}！👋
               </h1>
               <p className="text-text-tertiary">准备好为您的球拍穿线了吗？</p>
             </div>
             <Link href="/profile">
-              <div className="w-12 h-12 bg-ink-surface border border-border-subtle rounded-full flex items-center justify-center hover:bg-ink-elevated transition">
-                <span className="text-text-primary font-bold text-xl">
+              <div className="w-12 h-12 gradient-accent rounded-full flex items-center justify-center hover:shadow-glow transition-shadow">
+                <span className="text-white font-bold text-xl">
                   {user.full_name?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
@@ -142,21 +145,27 @@ export default function HomePage() {
         <RecentOrders />
 
         {/* 用户统计数据 */}
-        {stats && (
+        {dataLoading ? (
           <div className="grid grid-cols-2 gap-4">
-            <Card className="p-4">
+            {[1, 2, 3, 4].map((i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        ) : stats && (
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="p-4" hover animate>
               <div className="text-sm text-text-tertiary mb-1">活跃套餐</div>
               <div className="text-2xl font-bold text-accent font-mono">{stats.activePackages}</div>
             </Card>
-            <Card className="p-4">
+            <Card className="p-4" hover animate>
               <div className="text-sm text-text-tertiary mb-1">待处理订单</div>
               <div className="text-2xl font-bold text-warning font-mono">{stats.pendingOrders}</div>
             </Card>
-            <Card className="p-4">
+            <Card className="p-4" hover animate>
               <div className="text-sm text-text-tertiary mb-1">总订单数</div>
               <div className="text-2xl font-bold text-text-primary font-mono">{stats.totalOrders}</div>
             </Card>
-            <Card className="p-4">
+            <Card className="p-4" hover animate>
               <div className="text-sm text-text-tertiary mb-1">当前积分</div>
               <div className="text-2xl font-bold text-success font-mono">{stats.points}</div>
             </Card>
