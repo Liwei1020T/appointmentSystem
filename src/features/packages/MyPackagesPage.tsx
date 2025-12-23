@@ -107,18 +107,21 @@ export default function MyPackagesPage() {
 
   return (
     <div className="min-h-screen bg-ink">
-      {/* 顶部导航 */}
-      <div className="glass-surface border-b border-border-subtle sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
+      {/* 页面头部 */}
+      <div className="bg-ink-surface border-b border-border-subtle">
+        <div className="max-w-2xl mx-auto px-4 py-6 flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="text-text-secondary hover:text-text-primary"
+            className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-lg font-semibold text-text-primary">我的套餐</h1>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-text-primary">我的套餐</h1>
+            <p className="text-sm text-text-tertiary mt-1">查看和管理您购买的套餐</p>
+          </div>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import MyVouchersPage from '@/features/profile/MyVouchersPage';
+import MyVouchersPage from '@/features/vouchers/MyVouchersPage';
 
 export const metadata = {
   title: '我的优惠券 - String Service',

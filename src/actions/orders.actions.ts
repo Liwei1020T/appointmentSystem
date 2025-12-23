@@ -552,8 +552,8 @@ export async function completeOrderAction(orderId: string, adminNotes?: string) 
   // Only check/deduct stock for single-racket orders
   // Multi-racket orders already had stock deducted during creation
   if (!isMultiRacketOrder) {
-    if (order.string!.stock < stockToDeduct) {
-      throw new Error(`库存不足，当前: ${order.string!.stock}m，需要: ${stockToDeduct}m`);
+    if ((order.string as any)!.stock < stockToDeduct) {
+      throw new Error(`库存不足，当前: ${(order.string as any)!.stock}m，需要: ${stockToDeduct}m`);
     }
   }
 
@@ -584,7 +584,7 @@ export async function completeOrderAction(orderId: string, adminNotes?: string) 
           stringId: order.stringId!,
           change: -stockToDeduct,
           type: 'sale',
-          costPrice: order.string!.costPrice,
+          costPrice: (order.string as any)!.costPrice,
           referenceId: orderId,
           notes: `订单完成自动扣减: ${adminNotes || ''}`,
           createdBy: admin.id,
@@ -592,7 +592,7 @@ export async function completeOrderAction(orderId: string, adminNotes?: string) 
       });
     }
 
-    const newBalance = order.user.points + pointsPerOrder;
+    const newBalance = (order.user as any).points + pointsPerOrder;
     await tx.user.update({
       where: { id: order.userId },
       data: { points: newBalance },

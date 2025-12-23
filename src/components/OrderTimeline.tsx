@@ -129,7 +129,7 @@ export default function OrderTimeline({
         paymentStatus === 'completed' ||
         currentStatus === 'in_progress' ||
         currentStatus === 'completed';
-      
+
       events.push({
         status: isPaymentDone ? 'payment_confirmed' : 'payment_pending',
         timestamp:
@@ -211,15 +211,16 @@ export default function OrderTimeline({
       </div>
 
       {/* 图标行，保证在同一水平线 */}
-      <div className="flex items-center justify-between gap-2 md:gap-4 mt-3">
+      <div className="flex items-center mt-3">
         {events.map((event, index) => {
           const config = statusConfig[event.status];
           const isLast = index === events.length - 1;
           const IconComponent = config.icon;
 
           return (
-            <div key={index} className="flex-1 flex items-center">
-              <div className="flex-shrink-0 relative z-10 mx-auto">
+            <React.Fragment key={index}>
+              {/* 图标 */}
+              <div className="flex-shrink-0 relative z-10">
                 <div
                   className={`
                     w-10 h-10 rounded-full flex items-center justify-center
@@ -229,7 +230,7 @@ export default function OrderTimeline({
                     transition-all duration-300
                   `}
                 >
-                  <IconComponent 
+                  <IconComponent
                     className={`w-5 h-5 ${config.color}`}
                     strokeWidth={event.active ? 2.5 : 2}
                   />
@@ -240,18 +241,18 @@ export default function OrderTimeline({
                   )}
                 </div>
               </div>
-              
-              {/* 横向连接线 */}
+
+              {/* 横向连接线 - 放在图标之间，使用 flex-1 自动填充 */}
               {!isLast && (
-                <div 
+                <div
                   className={`
-                    flex-1 h-0.5 
+                    flex-1 h-0.5 mx-1
                     ${event.completed ? 'bg-success/40' : 'bg-border-subtle'}
                     transition-colors duration-300
-                  `} 
+                  `}
                 />
               )}
-            </div>
+            </React.Fragment>
           );
         })}
       </div>

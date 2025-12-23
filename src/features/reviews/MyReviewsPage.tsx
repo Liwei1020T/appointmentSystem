@@ -9,12 +9,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowLeft, MessageSquare, Clock, Star, ChevronRight } from 'lucide-react';
 import { getUserReviews, getPendingReviewOrders, OrderReview, PendingReviewOrder } from '@/services/reviewService';
 import ReviewCard from '@/components/ReviewCard';
 import Spinner from '@/components/Spinner';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
-import { Star, MessageSquare, Clock, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
 
@@ -61,10 +61,19 @@ export default function MyReviewsPage() {
 
   return (
     <div className="min-h-screen bg-ink">
-      {/* 顶部导航 - 与订单页面一致 */}
-      <div className="bg-ink-surface border-b border-border-subtle sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <h1 className="text-lg font-semibold text-text-primary">我的评价</h1>
+      {/* 页面头部 */}
+      <div className="bg-ink-surface border-b border-border-subtle">
+        <div className="max-w-2xl mx-auto px-4 py-6 flex items-center gap-4">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-text-secondary" />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-text-primary">我的评价</h1>
+            <p className="text-sm text-text-tertiary mt-1">查看您的服务评价记录</p>
+          </div>
         </div>
       </div>
 
@@ -77,8 +86,8 @@ export default function MyReviewsPage() {
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
               className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeTab === tab.value
-                  ? 'bg-accent text-text-onAccent'
-                  : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
+                ? 'bg-accent text-text-onAccent'
+                : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
                 }`}
             >
               {tab.icon}

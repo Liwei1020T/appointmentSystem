@@ -121,10 +121,10 @@ export async function updateInventoryItemAction(id: string, body: any) {
       gauge,
       imageUrl,
       active,
-      isRecommended: isRecommended !== undefined ? Boolean(isRecommended) : undefined,
-      elasticity: elasticity !== undefined ? (elasticity || null) : undefined,
-      durability: durability !== undefined ? (durability || null) : undefined,
-      control: control !== undefined ? (control || null) : undefined,
+      // isRecommended: isRecommended !== undefined ? Boolean(isRecommended) : undefined,
+      // elasticity: elasticity !== undefined ? (elasticity || null) : undefined,
+      // durability: durability !== undefined ? (durability || null) : undefined,
+      // control: control !== undefined ? (control || null) : undefined,
     },
   });
 }

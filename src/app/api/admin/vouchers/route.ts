@@ -11,7 +11,7 @@ import { errorResponse, successResponse } from '@/lib/api-response';
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
-    
+
     const body = await request.json();
     const code = body.code?.toString().trim().toUpperCase();
     const name = body.name?.toString().trim() || '';
@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     const minOrderAmount = body.minOrderAmount ?? body.min_purchase ?? 0;
     const maxUses = body.maxUses ?? body.usage_limit ?? null;
     const pointsCost = body.pointsCost ?? body.points_cost ?? 0;
+    const maxRedemptionsPerUser = body.maxRedemptionsPerUser ?? body.max_redemptions_per_user ?? 1;
     const active = body.active ?? true;
 
     if (
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
         maxUses: maxUses ?? null,
         usedCount: 0,
         pointsCost: pointsCost || 0,
+        maxRedemptionsPerUser: maxRedemptionsPerUser || 1,
         active,
       },
     });
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
-    
+
     const searchParams = request.nextUrl.searchParams;
     const active = searchParams.get('active');
     const id = searchParams.get('id');
@@ -121,7 +123,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     await requireAdmin();
-    
+
     const body = await request.json();
     const id = body.id as string | undefined;
     const code = body.code?.toString().toUpperCase();
@@ -134,6 +136,7 @@ export async function PATCH(request: NextRequest) {
     const validUntil = body.validUntil || body.valid_until;
     const active = body.active;
     const maxUses = body.maxUses ?? body.usage_limit;
+    const maxRedemptionsPerUser = body.maxRedemptionsPerUser ?? body.max_redemptions_per_user;
 
     if (!id) {
       return errorResponse('请提供优惠券ID');
@@ -168,6 +171,7 @@ export async function PATCH(request: NextRequest) {
     }
     if (active !== undefined) updateData.active = active;
     if (maxUses !== undefined) updateData.maxUses = maxUses === null ? null : Number(maxUses);
+    if (maxRedemptionsPerUser !== undefined) updateData.maxRedemptionsPerUser = Number(maxRedemptionsPerUser) || 1;
 
     if (Object.keys(updateData).length === 0) {
       return errorResponse('没有可更新的字段');

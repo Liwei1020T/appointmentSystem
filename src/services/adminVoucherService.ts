@@ -46,6 +46,9 @@ export interface Voucher {
   createdAt?: Date;
   updated_at?: Date;
   updatedAt?: Date;
+  // 每用户兑换上限
+  maxRedemptionsPerUser?: number;
+  max_redemptions_per_user?: number;
 }
 
 function normalizeVoucher(raw: any): Voucher {
@@ -75,6 +78,13 @@ function normalizeVoucher(raw: any): Voucher {
     validUntil,
     valid_until: validUntil,
     active: raw.active ?? raw.isActive ?? raw.is_active,
+    maxRedemptionsPerUser: raw.maxRedemptionsPerUser ?? raw.max_redemptions_per_user ?? 1,
+    max_redemptions_per_user: raw.maxRedemptionsPerUser ?? raw.max_redemptions_per_user ?? 1,
+    // 时间字段双向映射
+    createdAt: raw.createdAt || raw.created_at,
+    created_at: raw.createdAt || raw.created_at,
+    updatedAt: raw.updatedAt || raw.updated_at,
+    updated_at: raw.updatedAt || raw.updated_at,
   };
 }
 
@@ -90,10 +100,10 @@ export async function getAllVouchers(filters?: GetVouchersFilter): Promise<{ vou
     if (filters?.status && filters.status !== 'all') params.append('status', filters.status);
     if (filters?.type) params.append('type', filters.type);
     if (filters?.searchTerm) params.append('search', filters.searchTerm);
-    
+
     const queryString = params.toString();
     const url = queryString ? `/api/admin/vouchers?${queryString}` : '/api/admin/vouchers';
-    
+
     const response = await fetch(url);
     const result = await response.json();
     if (!response.ok || result?.success === false) {
@@ -176,20 +186,20 @@ export async function distributeVoucher(
 ): Promise<{ success: boolean; count?: number; error: string | null }> {
   try {
     // Handle both old array format and new target format
-    const body = Array.isArray(target) 
+    const body = Array.isArray(target)
       ? { userIds: target }
       : target;
-    
+
     const response = await fetch(`/api/admin/vouchers/${voucherId}/distribute`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    
+
     if (!response.ok) {
       return { success: false, error: 'Failed to distribute voucher' };
     }
-    
+
     const raw = await response.json().catch(() => ({}));
     const payload = raw?.data ?? raw;
     return { success: true, count: payload.count || payload.distributed || 0, error: null };

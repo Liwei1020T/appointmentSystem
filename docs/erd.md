@@ -292,6 +292,7 @@ Voucher/coupon definitions.
 | `max_uses`      | `integer`    |                          | Maximum total uses (null = unlimited) |
 | `used_count`    | `integer`    | DEFAULT 0                | Current usage count            |
 | `points_cost`   | `integer`    | DEFAULT 0                | Points required to redeem      |
+| `max_redemptions_per_user` | `integer` | DEFAULT 1         | 每用户最大兑换次数 (2025-12-23 新增) |
 | `valid_from`    | `timestamptz`| NOT NULL                 | Start date                     |
 | `valid_until`   | `timestamptz`| NOT NULL                 | End date                       |
 | `active`        | `boolean`    | DEFAULT true             | Whether active                 |

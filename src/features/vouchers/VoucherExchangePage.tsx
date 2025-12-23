@@ -226,84 +226,101 @@ export default function VoucherExchangePage() {
               </div>
             </Card>
           ) : (
-            (Array.isArray(vouchers) ? vouchers : []).map((voucher) => {
+            (Array.isArray(vouchers) ? vouchers : []).map((voucher: any) => {
               const affordable = canRedeem(voucher);
+              const remainingRedemptions = voucher.remaining_redemptions ?? 1;
+              const maxPerUser = voucher.max_redemptions_per_user ?? 1;
+
               return (
-                <Card key={voucher.id}>
-                  <div className="p-4">
-                    <div className="flex items-start gap-4">
-                      {/* 优惠券图标 */}
-                      <div className="w-16 h-16 bg-ink-elevated rounded-lg flex items-center justify-center flex-shrink-0 border border-border-subtle">
-                        <svg
-                          className="w-8 h-8 text-accent"
-                          fill="none"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                        </svg>
+                <div
+                  key={voucher.id}
+                  className={`
+                    relative overflow-hidden rounded-xl border transition-all
+                    ${affordable
+                      ? 'bg-ink-surface border-accent/30 hover:border-accent/50 hover:shadow-lg'
+                      : 'bg-ink-elevated border-border-subtle opacity-70'
+                    }
+                  `}
+                >
+                  {/* 左侧装饰条 */}
+                  <div className={`absolute left-0 top-0 bottom-0 w-2 ${affordable ? 'bg-gradient-to-b from-accent to-warning' : 'bg-text-tertiary'}`} />
+
+                  {/* 票券锯齿效果 */}
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-ink" />
+
+                  <div className="flex items-stretch">
+                    {/* 左侧 - 金额区域 */}
+                    <div className={`
+                      flex flex-col items-center justify-center px-6 py-5 min-w-[120px] border-r border-dashed
+                      ${affordable ? 'border-accent/20' : 'border-border-subtle'}
+                    `}>
+                      <div className={`text-3xl font-bold font-mono ${affordable ? 'text-accent' : 'text-text-tertiary'}`}>
+                        {voucher.discount_type === 'fixed'
+                          ? <>RM <span className="text-4xl">{voucher.discount_value}</span></>
+                          : <><span className="text-4xl">{voucher.discount_value}</span>%</>
+                        }
+                      </div>
+                      <div className={`text-xs mt-1 ${affordable ? 'text-accent/80' : 'text-text-tertiary'}`}>
+                        {voucher.discount_type === 'fixed' ? '立减' : '折扣'}
+                      </div>
+                    </div>
+
+                    {/* 右侧 - 信息区域 */}
+                    <div className="flex-1 p-4 pl-5">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className={`text-base font-semibold ${affordable ? 'text-text-primary' : 'text-text-secondary'}`}>
+                          {voucher.name}
+                        </h3>
+                        {maxPerUser > 1 && (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-info/15 text-info">
+                            可兑{remainingRedemptions}次
+                          </span>
+                        )}
                       </div>
 
-                      {/* 优惠券信息 */}
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <h3 className="text-lg font-bold text-text-primary mb-1">
-                              {voucher.name}
-                            </h3>
-                            <Badge variant="info">
-                              {getDiscountText(voucher)}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        <p className="text-sm text-text-secondary mb-3">
-                          {voucher.description}
+                      <div className="space-y-1.5 text-xs text-text-tertiary mb-3">
+                        {(voucher.min_purchase ?? 0) > 0 && (
+                          <p className="flex items-center gap-1">
+                            <span className="text-text-secondary">满</span>
+                            <span className="font-mono font-medium text-text-secondary">RM {voucher.min_purchase}</span>
+                            <span className="text-text-secondary">可用</span>
+                          </p>
+                        )}
+                        <p className="flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          有效期至 {new Date(voucher.valid_until).toLocaleDateString('zh-CN')}
                         </p>
+                      </div>
 
-                        <div className="space-y-1 text-xs text-text-tertiary mb-3">
-                          {voucher.min_purchase && (
-                            <p>• 最低消费: RM {Number(voucher.min_purchase)}</p>
-                          )}
-                          {voucher.max_discount && (
-                            <p>• 最高优惠: RM {Number(voucher.max_discount)}</p>
-                          )}
-                          {voucher.validity_days && (
-                            <p>• 有效期: {voucher.validity_days} 天</p>
-                          )}
-                        </div>
-
-                        {/* 积分和兑换按钮 */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <svg
-                              className="w-5 h-5 text-accent"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                            <span className="text-sm font-semibold text-text-primary">
-                              {(voucher.points_required ?? 0)} 积分
-                            </span>
-                          </div>
-
-                          <Button
-                            variant={affordable ? 'primary' : 'secondary'}
-                            size="sm"
-                            onClick={() => handleExchangeClick(voucher)}
-                            disabled={!affordable}
+                      {/* 积分和兑换按钮 */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5 text-accent"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
                           >
-                            {affordable ? '立即兑换' : '积分不足'}
-                          </Button>
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                          <span className="text-sm font-semibold text-text-primary font-mono">
+                            {voucher.points_required ?? 0} 积分
+                          </span>
                         </div>
+
+                        <Button
+                          variant={affordable ? 'primary' : 'secondary'}
+                          size="sm"
+                          onClick={() => handleExchangeClick(voucher)}
+                          disabled={!affordable}
+                        >
+                          {affordable ? '立即兑换' : '积分不足'}
+                        </Button>
                       </div>
                     </div>
                   </div>
-                </Card>
+                </div>
               );
             })
           )}

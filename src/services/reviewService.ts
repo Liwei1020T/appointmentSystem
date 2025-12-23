@@ -191,7 +191,7 @@ export async function submitReview(params: SubmitReviewParams, userId?: string):
     const normalized = normalizeReview({
       ...reviewPayload,
       order_id: params.order_id || params.orderId || reviewPayload?.order_id,
-      user_id: reviewPayload?.user_id || reviewPayload?.userId || userId,
+      user_id: (reviewPayload as any)?.user_id || (reviewPayload as any)?.userId || userId,
     });
     return { reviewId: normalized.id, review: normalized };
   } catch (error) {

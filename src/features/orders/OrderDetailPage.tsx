@@ -317,7 +317,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             setShowReviewForm(true);
             // 滚动到评价区域
             setTimeout(() => {
-              document.getElementById('review-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              document.getElementById('review-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
           }}
           onCancelClick={() => setShowCancelModal(true)}

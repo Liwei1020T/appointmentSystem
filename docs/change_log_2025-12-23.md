@@ -1,7 +1,7 @@
 # Change Log — 2025-12-23
 
 ## Summary
-视觉呼吸感设计优化 + 待评价功能 + 通知铃铛自动刷新 + 订单详情页 UX 重构
+视觉呼吸感设计优化 + 待评价功能 + 通知铃铛自动刷新 + 订单详情页 UX 重构 + 优惠券每用户兑换次数限制
 
 ---
 
@@ -12,6 +12,7 @@
 - **导航栏入口**: 添加"评价"链接 `/reviews`
 - **通知自动刷新**: 标记已读后铃铛数字立即更新
 - **订单摘要卡**: 新增 `OrderSummaryCard` 组件，显示状态+球拍数+金额+行动按钮
+- **优惠券每用户兑换上限**: 管理员可配置同一优惠券每用户最多兑换次数 (`maxRedemptionsPerUser`)
 
 ### 修改功能
 - **首页布局**: 收窄宽度 `max-w-xl`，增大间距 `space-y-8`，灰底白卡片
@@ -56,6 +57,30 @@
 
 ---
 
+## 优惠券每用户兑换上限功能
+
+### 功能描述
+管理员可配置同一优惠券允许每个用户兑换的最大次数，默认为 1 张。
+
+### 数据库变更
+- `vouchers` 表新增 `max_redemptions_per_user` 字段 (INTEGER, DEFAULT 1)
+
+### 业务逻辑
+- 兑换时检查用户已持有该优惠券的数量
+- 若已达上限，返回错误提示："此优惠券每人最多兑换 X 张，您已达到上限"
+- 用户可在"我的优惠券"页面查看所有已兑换的券（多张同类型独立显示）
+
+### 代码改动
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | 新增 `maxRedemptionsPerUser` 字段 |
+| `src/actions/vouchers.actions.ts` | 更新兑换逻辑 |
+| `src/services/adminVoucherService.ts` | 更新类型定义 |
+| `src/components/admin/AdminVoucherDetailPage.tsx` | 新增编辑字段 |
+| `src/app/api/admin/vouchers/route.ts` | API 支持新字段 |
+
+---
+
 ## Affected Files
 
 | File | Type |
@@ -73,6 +98,11 @@
 | `src/services/reviewService.ts` | Modified |
 | `src/components/OrderSummaryCard.tsx` | **New** |
 | `src/features/orders/OrderDetailPage.tsx` | Modified |
+| `prisma/schema.prisma` | Modified |
+| `src/actions/vouchers.actions.ts` | Modified |
+| `src/services/adminVoucherService.ts` | Modified |
+| `src/components/admin/AdminVoucherDetailPage.tsx` | Modified |
+| `src/app/api/admin/vouchers/route.ts` | Modified |
 
 ---
 
@@ -85,8 +115,12 @@
 - 验证"全部标记已读"后铃铛数字立即消失
 - 测试订单详情页摘要卡按钮（待付款/已完成）
 - 验证复制订单号 Toast 提示
-- 验证复制订单号 Toast 提示
 - 测试拟物化收据显示（明细、锯齿边、合计）
 - 验证球拍列表折叠/展开功能
 - 测试评价按钮自动滚动行为
 - 验证多球拍订单紧凑布局
+- 创建优惠券并设置每用户兑换上限为 3
+- 同一用户兑换 3 次验证成功
+- 第 4 次兑换验证被拒绝
+- 查看"我的优惠券"页面验证多张券独立显示
+

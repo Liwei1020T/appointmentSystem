@@ -18,7 +18,7 @@ import { formatDate } from '@/lib/utils';
 const statusConfig: Record<string, { label: string; variant: 'warning' | 'info' | 'success' | 'neutral'; icon: string }> = {
 
   pending: { label: '待付款', variant: 'warning', icon: '💳' },
-  pending_payment: { label: '待付款', variant: 'warning', icon: '💳' },
+
   in_progress: { label: '穿线中', variant: 'info', icon: '🔧' },
   stringing: { label: '穿线中', variant: 'info', icon: '🔧' },
   completed: { label: '已完成', variant: 'success', icon: '✅' },
@@ -30,7 +30,6 @@ const statusConfig: Record<string, { label: string; variant: 'warning' | 'info' 
 const getActionConfig = (status: string) => {
   switch (status) {
     case 'pending':
-    case 'pending_payment':
       return { label: '去付款', color: 'bg-warning text-white' };
     case 'in_progress':
     case 'stringing':
@@ -74,7 +73,7 @@ export default function RecentOrders() {
     e.stopPropagation();
     const status = order.status;
 
-    if (status === 'pending' || status === 'pending_payment') {
+    if (status === 'pending') {
       // 跳转到支付页面
       router.push(`/orders/${order.id}?action=pay`);
     } else {

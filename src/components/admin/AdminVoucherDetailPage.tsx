@@ -51,6 +51,7 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
     valid_from: '',
     valid_until: '',
     usage_limit: null as number | null,
+    max_redemptions_per_user: 1, // 每用户兑换上限
     active: true,
   });
 
@@ -63,7 +64,7 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
     setError(null);
 
     const { voucher: voucherData, error: voucherError } = await getVoucherById(voucherId);
-    
+
     if (voucherError) {
       setError(voucherError);
       setLoading(false);
@@ -71,7 +72,7 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
     }
 
     setVoucher(voucherData);
-    
+
     if (voucherData) {
       const validFrom = voucherData.valid_from || voucherData.validFrom;
       const validUntil = voucherData.valid_until || voucherData.validUntil;
@@ -85,6 +86,7 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
         valid_from: validFrom ? (typeof validFrom === 'string' ? validFrom : validFrom.toISOString().split('T')[0]) : '',
         valid_until: validUntil ? (typeof validUntil === 'string' ? validUntil : validUntil.toISOString().split('T')[0]) : '',
         usage_limit: voucherData.usage_limit || voucherData.usageLimit || null,
+        max_redemptions_per_user: voucherData.maxRedemptionsPerUser || voucherData.max_redemptions_per_user || 1,
         active: voucherData.active ?? voucherData.isActive ?? true,
       });
     }
@@ -103,14 +105,14 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
       ...formData,
       usage_limit: formData.usage_limit ?? undefined,
     });
-    
+
     if (error) {
       alert(`Failed to update: ${error}`);
     } else {
       setIsEditing(false);
       await loadData();
     }
-    
+
     setLoading(false);
   }
 
@@ -120,7 +122,7 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
 
     setLoading(true);
     const { success, error } = await deleteVoucher(voucher.id);
-    
+
     if (error) {
       alert(`Failed to delete: ${error}`);
       setLoading(false);
@@ -135,13 +137,13 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
     setLoading(true);
     const isActive = voucher.active ?? voucher.isActive ?? false;
     const { error } = await toggleVoucherStatus(voucher.id, !isActive);
-    
+
     if (error) {
       alert(`Failed to toggle status: ${error}`);
     } else {
       await loadData();
     }
-    
+
     setLoading(false);
   }
 
@@ -369,6 +371,17 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
                     onChange={(e) => setFormData({ ...formData, usage_limit: e.target.value ? parseInt(e.target.value) : null })}
                     placeholder="不限制留空"
                   />
+
+                  <div className="space-y-1">
+                    <Input
+                      label="每用户兑换上限"
+                      type="number"
+                      min={1}
+                      value={formData.max_redemptions_per_user}
+                      onChange={(e) => setFormData({ ...formData, max_redemptions_per_user: parseInt(e.target.value) || 1 })}
+                    />
+                    <p className="text-xs text-text-tertiary">同一用户可兑换此优惠券的最大次数</p>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-3 text-sm">
@@ -427,21 +440,26 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
                     </div>
                   )}
 
-                  <div className="flex justify-between py-2">
-                    <span className="text-text-secondary">创建时间</span>
-                    <span className="text-sm text-text-primary font-mono">
-                      {formatDateTime(voucher.created_at)}
+                  <div className="flex justify-between py-2 border-b border-border-subtle">
+                    <span className="text-text-secondary">每用户兑换上限</span>
+                    <span className="font-medium text-text-primary">
+                      {voucher.maxRedemptionsPerUser || voucher.max_redemptions_per_user || 1} 张
                     </span>
                   </div>
 
-                  {voucher.updated_at && (
-                    <div className="flex justify-between py-2">
-                      <span className="text-text-secondary">更新时间</span>
-                      <span className="text-sm text-text-primary font-mono">
-                        {formatDateTime(voucher.updated_at)}
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex justify-between py-2 border-b border-border-subtle">
+                    <span className="text-text-secondary">创建时间</span>
+                    <span className="text-sm text-text-primary font-mono">
+                      {formatDateTime(voucher.created_at || voucher.createdAt)}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between py-2">
+                    <span className="text-text-secondary">更新时间</span>
+                    <span className="text-sm text-text-primary font-mono">
+                      {formatDateTime(voucher.updated_at || voucher.updatedAt || voucher.created_at || voucher.createdAt)}
+                    </span>
+                  </div>
                 </div>
               )}
             </Card>

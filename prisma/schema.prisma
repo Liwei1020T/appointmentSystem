@@ -354,6 +354,7 @@ model Voucher {
   maxUses     Int?     @map("max_uses")
   usedCount   Int      @default(0) @map("used_count")
   pointsCost  Int      @default(0) @map("points_cost")
+  maxRedemptionsPerUser Int @default(1) @map("max_redemptions_per_user") // 每用户最大兑换次数
   validFrom   DateTime @map("valid_from") @db.Timestamptz(6)
   validUntil  DateTime @map("valid_until") @db.Timestamptz(6)
   active      Boolean  @default(true)
