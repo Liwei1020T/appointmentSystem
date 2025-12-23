@@ -122,6 +122,62 @@ export async function submitReviewAction(body: any) {
   return mapReviewToApiPayload(created, { includeOrder: true, includeUser: true });
 }
 
+/**
+ * 获取待评价订单（已完成但未评价的订单）
+ */
+export async function getPendingReviewOrdersAction() {
+  const user = await requireAuth();
+
+  // 获取已完成的订单
+  const completedOrders = await prisma.order.findMany({
+    where: {
+      userId: user.id,
+      status: 'completed',
+    },
+    select: {
+      id: true,
+      createdAt: true,
+      price: true,
+      discountAmount: true,
+      tension: true,
+      string: {
+        select: {
+          brand: true,
+          model: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  // 获取用户已评价的订单ID列表
+  const reviewedOrderIds = await prisma.review.findMany({
+    where: { userId: user.id },
+    select: { orderId: true },
+  });
+  const reviewedSet = new Set(reviewedOrderIds.map((r) => r.orderId));
+
+  // 筛选出没有评价的订单
+  const pendingOrders = completedOrders
+    .filter((order) => !reviewedSet.has(order.id))
+    .map((order) => ({
+      id: order.id,
+      created_at: order.createdAt.toISOString(),
+      price: Number(order.price),
+      discount_amount: order.discountAmount ? Number(order.discountAmount) : null,
+      tension: order.tension,
+      string: order.string
+        ? {
+          brand: order.string.brand,
+          model: order.string.model,
+        }
+        : null,
+    }));
+
+  return pendingOrders;
+}
+
+
 export async function getUserReviewsAction() {
   const user = await requireAuth();
   const reviews = await prisma.review.findMany({

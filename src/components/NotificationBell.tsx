@@ -16,9 +16,11 @@ import { getUnreadCount } from '@/services/notificationService';
 interface NotificationBellProps {
   onClick: () => void;
   userId: string;
+  /** 刷新触发器 - 值变化时重新加载未读数量 */
+  refreshTrigger?: number;
 }
 
-export default function NotificationBell({ onClick, userId }: NotificationBellProps) {
+export default function NotificationBell({ onClick, userId, refreshTrigger = 0 }: NotificationBellProps) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +42,7 @@ export default function NotificationBell({ onClick, userId }: NotificationBellPr
     return () => {
       clearInterval(interval);
     };
-  }, [userId, loadUnreadCount]);
+  }, [userId, loadUnreadCount, refreshTrigger]);
 
   return (
     <button
@@ -59,3 +61,4 @@ export default function NotificationBell({ onClick, userId }: NotificationBellPr
     </button>
   );
 }
+

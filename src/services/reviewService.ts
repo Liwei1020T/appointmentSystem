@@ -9,11 +9,26 @@ import {
   getAdminReviewStatsAction,
   getAdminReviewsAction,
   getFeaturedReviewsAction,
+  getPendingReviewOrdersAction,
   getReviewByOrderAction,
   getUserReviewsAction,
   replyReviewAction,
   submitReviewAction,
 } from '@/actions/reviews.actions';
+
+// 待评价订单接口
+export interface PendingReviewOrder {
+  id: string;
+  created_at: string;
+  price: number;
+  discount_amount: number | null;
+  tension: number;
+  string: {
+    brand: string;
+    model: string;
+  } | null;
+}
+
 
 export interface OrderReview {
   id: string;
@@ -223,4 +238,16 @@ export async function getAdminReviewStats(): Promise<any> {
  */
 export async function replyReview(reviewId: string, reply: string): Promise<any> {
   return replyReviewAction(reviewId, reply);
+}
+
+/**
+ * 获取待评价订单（已完成但未评价）
+ */
+export async function getPendingReviewOrders(): Promise<PendingReviewOrder[]> {
+  try {
+    const orders = await getPendingReviewOrdersAction();
+    return Array.isArray(orders) ? orders : [];
+  } catch {
+    return [];
+  }
 }

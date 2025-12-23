@@ -141,6 +141,12 @@
 
 - 斑马纹极弱，选中态用 `accent/soft` + 左侧指示条
 
+### 6.4 票据类 (Transactional)
+- **收据风格**：拟物化设计，模拟真实打印机输出
+- **边缘处理**：锯齿边 (Zigzag) `linear-gradient` 实现
+- **引导线**：点状 (Dotted) `border-dotted` 连接项目与金额
+- **字体**：关键金额使用 Font Mono (等宽)
+
 ---
 
 ## 📱 7. 用户端页面（App UI）

@@ -3,7 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import NotificationBell from '@/components/NotificationBell';
 import NotificationPanel from '@/components/NotificationPanel';
 
@@ -11,6 +11,12 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  const [bellRefreshTrigger, setBellRefreshTrigger] = useState(0);
+
+  // 当通知面板中的未读数量变化时刷新铃铛
+  const handleUnreadCountChange = useCallback(() => {
+    setBellRefreshTrigger((prev) => prev + 1);
+  }, []);
 
   const isActive = (path: string) => {
     return pathname === path;
@@ -110,6 +116,17 @@ export default function Navbar() {
                   优惠券
                 </Link>
 
+                <Link
+                  href="/reviews"
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${pathname === '/reviews' || pathname?.startsWith('/reviews')
+                    ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
+                    : 'text-text-secondary hover:bg-ink-surface/80'
+                    }`}
+                >
+                  评价
+                </Link>
+
+
                 {session.user.role === 'admin' && (
                   <Link
                     href="/admin/dashboard"
@@ -126,6 +143,7 @@ export default function Navbar() {
                 <NotificationBell
                   userId={session.user.id}
                   onClick={() => setNotificationPanelOpen((open) => !open)}
+                  refreshTrigger={bellRefreshTrigger}
                 />
 
                 {/* User Menu */}
@@ -212,6 +230,7 @@ export default function Navbar() {
           userId={session.user.id}
           isOpen={notificationPanelOpen}
           onClose={() => setNotificationPanelOpen(false)}
+          onUnreadCountChange={handleUnreadCountChange}
         />
       )}
     </nav>

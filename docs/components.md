@@ -192,6 +192,17 @@ const variants = {
 
 - 数值使用等宽字体：`font-mono`
 
+### 10. Order Summary Card
+
+- 订单详情页顶部摘要组件
+- 包含状态图标、球拍数量、实付金额、状态驱动的主行动按钮
+
+### 11. Receipt Card (Transactional)
+
+- 拟物化收据风格
+- 包含：锯齿边缘、点状引导线、双线合计、详细清单
+- 字体：金额使用 `font-mono`
+
 ---
 
 ## Feedback Components

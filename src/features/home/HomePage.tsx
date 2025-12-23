@@ -108,19 +108,16 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-ink pb-24">
+    <div className="min-h-screen bg-gray-50 pb-24">
       {/* 顶部欢迎横幅 */}
-      <div className="bg-ink-elevated border-b border-border-subtle relative overflow-hidden">
-        {/* Decorative gradient orbs */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-
-        <div className="max-w-2xl mx-auto px-4 py-8 relative">
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-xl mx-auto px-5 py-8">
           <div className="flex items-center justify-between">
             <div className="animate-fade-in">
-              <h1 className="text-2xl font-bold mb-2 text-text-primary tracking-tight">
+              <h1 className="text-2xl font-bold mb-1 text-gray-900 tracking-tight">
                 欢迎回来，{user.full_name || '用户'}！👋
               </h1>
-              <p className="text-text-tertiary">准备好为您的球拍穿线了吗？</p>
+              <p className="text-gray-500 text-sm">准备好为您的球拍穿线了吗？</p>
             </div>
             <Link href="/profile">
               <div className="w-12 h-12 gradient-accent rounded-full flex items-center justify-center hover:shadow-glow transition-shadow">
@@ -133,17 +130,16 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* 主内容区 */}
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* 快捷操作按钮 - 使用 QuickActions 组件 */}
+      {/* 主内容区 - 更大的垂直间距 */}
+      <div className="max-w-xl mx-auto px-5 py-8 space-y-8">
+        {/* 快捷操作按钮 */}
         <QuickActions />
 
-        {/* 我的套餐摘要 - 使用 PackageSummary 组件 */}
+        {/* 我的权益摘要 */}
         <PackageSummary />
 
-        {/* 最近订单 - 使用 RecentOrders 组件 */}
+        {/* 最近订单 */}
         <RecentOrders />
-
 
         {/* 精选评价 */}
         <FeaturedReviews />
@@ -151,3 +147,4 @@ export default function HomePage() {
     </div>
   );
 }
+

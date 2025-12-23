@@ -24,6 +24,7 @@ import Spinner from '@/components/Spinner';
 import Button from '@/components/Button';
 import OrderStatusBadge, { OrderStatus } from '@/components/OrderStatusBadge';
 import OrderTimeline from '@/components/OrderTimeline';
+import OrderSummaryCard from '@/components/OrderSummaryCard';
 import Modal from '@/components/Modal';
 import Toast from '@/components/Toast';
 import ReviewForm from '@/components/ReviewForm';
@@ -282,14 +283,11 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
       </div>
 
       <div className="max-w-2xl mx-auto p-4 space-y-4 pb-24">
-        {/* 订单基本信息卡片 */}
-        <Card className="p-6">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-bold text-text-primary">{order.string?.brand} {order.string?.model}</h2>
-              <div className="text-xs text-text-tertiary mt-1">
-                下单时间: {formatDate(createdAt, 'yyyy/MM/dd HH:mm')}
-              </div>
+        {/* 状态时间线卡片 */}
+        <Card className="p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-xs text-text-tertiary">
+              下单时间: {formatDate(createdAt, 'yyyy/MM/dd HH:mm')}
             </div>
             <OrderStatusBadge status={order.status as OrderStatus} />
           </div>
@@ -310,120 +308,106 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
           />
         </Card>
 
-        {/* 球线信息 - 支持多球拍订单 */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">
-            {(order as any).items?.length > 0
-              ? `球拍信息 (${(order as any).items.length} 支)`
-              : '球线信息'
-            }
-          </h2>
+        {/* 订单摘要卡 - 关键信息与行动按钮 */}
+        <OrderSummaryCard
+          order={order as any}
+          hasReview={!!review}
+          onPayClick={() => setShowPayment(true)}
+          onReviewClick={() => {
+            setShowReviewForm(true);
+            // 滚动到评价区域
+            setTimeout(() => {
+              document.getElementById('review-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+          }}
+          onCancelClick={() => setShowCancelModal(true)}
+        />
 
-          {/* 多球拍订单 */}
-          {(order as any).items?.length > 0 ? (
-            <div className="space-y-4">
-              {(order as any).items.map((item: any, index: number) => (
-                <div
-                  key={item.id || index}
-                  className="bg-ink-elevated rounded-lg p-4 border border-border-subtle"
-                >
-                  <div className="flex gap-4">
+        {/* 球拍清单 - 可折叠带图片 */}
+        <Card className="p-0 overflow-hidden">
+          <details>
+            <summary className="px-5 py-4 cursor-pointer hover:bg-ink-surface/30 transition-colors flex items-center justify-between">
+              <h2 className="text-base font-semibold text-text-primary flex items-center gap-2">
+                🎾 {(order as any).items?.length > 0
+                  ? `球拍清单 (${(order as any).items.length} 支)`
+                  : '球线信息'
+                }
+              </h2>
+              <span className="text-sm text-accent font-mono font-semibold">
+                RM {Number(order.price).toFixed(2)}
+              </span>
+            </summary>
+
+            <div className="px-5 pb-5 space-y-2">
+              {/* 多球拍订单 */}
+              {(order as any).items?.length > 0 ? (
+                (order as any).items.map((item: any, index: number) => (
+                  <div
+                    key={item.id || index}
+                    className="bg-ink-elevated rounded-lg p-3 border border-border-subtle flex items-center gap-3"
+                  >
                     {/* 球拍照片 */}
-                    {(item.racketPhoto || item.racket_photo) && (
-                      <div className="flex-shrink-0">
-                        <img
-                          src={item.racketPhoto || item.racket_photo}
-                          alt={`球拍 ${index + 1}`}
-                          className="w-20 h-20 rounded-lg object-cover border border-border-subtle"
-                        />
+                    {(item.racketPhoto || item.racket_photo) ? (
+                      <img
+                        src={item.racketPhoto || item.racket_photo}
+                        alt={`球拍 ${index + 1}`}
+                        className="w-12 h-12 rounded-lg object-cover border border-border-subtle flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center flex-shrink-0">
+                        <span className="text-lg">🎾</span>
                       </div>
                     )}
+
+                    {/* 球线信息 */}
                     <div className="flex-1 min-w-0">
-                      {/* 球拍序号和球线信息 */}
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 bg-accent text-white rounded-full text-xs font-bold flex items-center justify-center">
-                            {index + 1}
-                          </span>
-                          <div>
-                            <div className="font-semibold text-text-primary">
-                              {item.string?.brand} {item.string?.model}
-                            </div>
-                            {(item.racketBrand || item.racket_brand || item.racketModel || item.racket_model) && (
-                              <div className="text-xs text-text-tertiary">
-                                {item.racketBrand || item.racket_brand} {item.racketModel || item.racket_model}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-bold text-accent font-mono">
-                            RM {Number(item.price || 0).toFixed(2)}
-                          </div>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 bg-accent text-white rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0">
+                          {index + 1}
+                        </span>
+                        <span className="font-medium text-text-primary text-sm truncate">
+                          {item.string?.brand} {item.string?.model}
+                        </span>
                       </div>
-                      {/* 磅数 */}
-                      <div className="flex gap-4 mt-2">
-                        <div className="bg-ink-surface rounded px-3 py-1.5 border border-border-subtle">
-                          <span className="text-xs text-text-tertiary">竖线 </span>
-                          <span className="font-bold text-text-primary">
-                            {item.tensionVertical || item.tension_vertical} 磅
-                          </span>
-                        </div>
-                        <div className="bg-ink-surface rounded px-3 py-1.5 border border-border-subtle">
-                          <span className="text-xs text-text-tertiary">横线 </span>
-                          <span className="font-bold text-text-primary">
-                            {item.tensionHorizontal || item.tension_horizontal} 磅
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-text-tertiary">
+                        <span>主{item.tensionVertical || item.tension_vertical}/横{item.tensionHorizontal || item.tension_horizontal} 磅</span>
+                        {item.notes && <span className="truncate">· {item.notes}</span>}
                       </div>
-                      {/* 备注 */}
-                      {item.notes && (
-                        <div className="mt-2 text-xs text-text-tertiary">
-                          📝 {item.notes}
-                        </div>
-                      )}
+                    </div>
+
+                    {/* 价格 */}
+                    <div className="text-sm font-bold text-accent font-mono flex-shrink-0">
+                      RM {Number(item.price || 0).toFixed(2)}
                     </div>
                   </div>
+                ))
+              ) : (
+                /* 单球拍订单（旧格式兼容） */
+                <div className="bg-ink-elevated rounded-lg p-3 border border-border-subtle flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center flex-shrink-0">
+                    <span className="text-lg">🎾</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-text-primary text-sm">
+                      {order.string?.brand} {order.string?.model}
+                    </div>
+                    <div className="text-xs text-text-tertiary mt-0.5">
+                      {(() => {
+                        const match = order.notes?.match(/\[竖\/横分拉:\s*(\d+)\/(\d+)\s*LBS\]/);
+                        if (match) return `主${match[1]}/横${match[2]} 磅`;
+                        const v = (order as any).tension_vertical || order.tension;
+                        const h = (order as any).tension_horizontal || order.tension;
+                        return `主${v}/横${h} 磅`;
+                      })()}
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold text-accent font-mono flex-shrink-0">
+                    RM {Number(order.price).toFixed(2)}
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
-          ) : (
-            /* 单球拍订单（旧格式兼容） */
-            <>
-              <div className="bg-ink-elevated rounded-lg p-4 mb-4 border border-border-subtle">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">🎾</span>
-                  <div>
-                    <div className="font-semibold text-text-primary">{order.string?.brand} {order.string?.model}</div>
-                    <div className="text-xs text-text-tertiary">{order.string?.specification || '标准规格'}</div>
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-ink-elevated rounded-lg p-3 border border-border-subtle">
-                  <div className="text-xs text-text-tertiary mb-1">竖线拉力</div>
-                  <div className="text-lg font-bold text-text-primary font-mono">
-                    {(() => {
-                      const match = order.notes?.match(/\[竖\/横分拉:\s*(\d+)\/(\d+)\s*LBS\]/);
-                      if (match) return `${match[1]} 磅`;
-                      return `${(order as any).tension_vertical || order.tension} 磅`;
-                    })()}
-                  </div>
-                </div>
-                <div className="bg-ink-elevated rounded-lg p-3 border border-border-subtle">
-                  <div className="text-xs text-text-tertiary mb-1">横线拉力</div>
-                  <div className="text-lg font-bold text-text-primary font-mono">
-                    {(() => {
-                      const match = order.notes?.match(/\[竖\/横分拉:\s*(\d+)\/(\d+)\s*LBS\]/);
-                      if (match) return `${match[2]} 磅`;
-                      return `${(order as any).tension_horizontal || order.tension} 磅`;
-                    })()}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
+          </details>
         </Card>
 
         {/* 现金支付待确认提示 - 仅在订单pending状态时显示 */}
@@ -554,282 +538,213 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             )}
           </>
         )}
+        {/* 收据卡 - 真实收据风格 */}
+        <div className="relative">
+          {/* 锯齿边缘效果 */}
+          <div
+            className="absolute top-0 left-0 right-0 h-3 bg-ink"
+            style={{
+              background: 'linear-gradient(135deg, var(--color-ink-surface) 25%, transparent 25%) -12px 0, linear-gradient(225deg, var(--color-ink-surface) 25%, transparent 25%) -12px 0, linear-gradient(315deg, var(--color-ink-surface) 25%, transparent 25%), linear-gradient(45deg, var(--color-ink-surface) 25%, transparent 25%)',
+              backgroundSize: '24px 12px',
+              backgroundPosition: '0 0',
+            }}
+          />
 
-        {/* 价格明细 */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">💰 价格明细</h2>
-          <div className="space-y-3">
-            <div className="flex justify-between py-2">
-              <span className="text-text-tertiary">球线价格</span>
-              <span className="font-semibold text-text-primary font-mono">RM {Number(order.price).toFixed(2)}</span>
+          <Card className="p-0 overflow-hidden mt-3 rounded-t-none border-t-0">
+            {/* 收据头部 - 店铺信息 */}
+            <div className="text-center py-4 border-b border-dashed border-border-subtle">
+              <div className="text-2xl mb-1">🏸</div>
+              <div className="font-bold text-text-primary">String Service</div>
+              <div className="text-xs text-text-tertiary">羽毛球穿线服务</div>
             </div>
 
-            {discountAmount > 0 && (
-              <div className="flex justify-between py-2 bg-warning/10 -mx-2 px-2 rounded border border-warning/30">
-                <span className="text-warning flex items-center gap-1">
-                  <span>🎁</span> 优惠金额
-                </span>
-                <span className="font-bold text-warning font-mono">- RM {Number(discountAmount).toFixed(2)}</span>
+            {/* 订单号 */}
+            <div className="flex items-center justify-between px-4 py-2 bg-ink-surface/50 border-b border-dashed border-border-subtle">
+              <span className="text-xs text-text-tertiary">订单号</span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-sm font-semibold text-text-primary">#{generateShortCode(order.id)}</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(order.id);
+                    setToast({ show: true, message: '订单号已复制', type: 'success' });
+                  }}
+                  className="text-xs text-accent hover:text-accent/80 px-1.5 py-0.5 rounded hover:bg-accent/10 transition-colors"
+                >
+                  复制
+                </button>
               </div>
-            )}
-
-            {order.use_package && (
-              <div className="space-y-2 py-3 px-3 bg-success/10 border border-success/30 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-success flex items-center gap-1 font-semibold">
-                    <span>🎁</span> 套餐支付
-                  </span>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-success/20 text-success">
-                    套餐抵扣
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm text-text-secondary">
-                  <span className="font-medium text-text-primary">{packageName}</span>
-                  {packageRemainingCount !== undefined ? (
-                    <span className="text-xs text-text-tertiary">{packageRemainingCount} 次剩余</span>
-                  ) : (
-                    <span className="text-xs text-text-tertiary">剩余次数未知</span>
-                  )}
-                </div>
-                {packageExpiry && (
-                  <div className="text-xs text-text-tertiary">
-                    有效期至 {formatDate(packageExpiry, 'yyyy-MM-dd')}
+            </div>
+            {/* 价格明细 - 显示每种球线 */}
+            <div className="px-4 py-3 space-y-2 font-mono text-sm border-b border-dashed border-border-subtle">
+              {/* 多球拍订单：显示每种球线 */}
+              {(order as any).items?.length > 0 ? (
+                (order as any).items.map((item: any, index: number) => (
+                  <div key={item.id || index} className="flex items-end">
+                    <span className="text-text-secondary truncate max-w-[60%]">
+                      {item.string?.brand} {item.string?.model}
+                    </span>
+                    <span className="flex-1 border-b border-dotted border-border-subtle mx-2 mb-1" />
+                    <span className="text-text-primary">RM {Number(item.price || 0).toFixed(2)}</span>
                   </div>
-                )}
-              </div>
-            )}
-
-            {order.voucher_id && (
-              <div className="flex justify-between items-center py-2 bg-info/10 -mx-2 px-2 rounded border border-info/30">
-                <span className="text-info flex items-center gap-1">
-                  <span>🎫</span> 使用优惠券
-                </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-info/20 text-info">
-                  {order.voucher?.voucher?.name || '优惠券'}
-                </span>
-              </div>
-            )}
-
-            <div className="pt-4 mt-2 border-t-2 border-border-subtle flex justify-between items-center bg-ink-elevated -mx-2 px-2 py-3 rounded-lg">
-              <span className="text-lg font-bold text-text-primary">实付金额</span>
-              <span className="text-2xl font-black text-accent font-mono">
-                RM {finalAmount.toFixed(2)}
-              </span>
-            </div>
-            {order.use_package && (
-              <p className="text-xs text-text-tertiary mt-1">
-                套餐支付已覆盖本次服务，无需额外支付。
-              </p>
-            )}
-          </div>
-        </Card>
-
-
-        {/* 支付信息 - 在支付完成或待审核时显示 */}
-        {(() => {
-          const payment = order.payment || order.payments?.[0];
-          const rawStatus = payment?.status || (payment as any)?.payment_status || (payment as any)?.paymentStatus || '';
-          const shouldShowPaymentInfo = rawStatus === 'completed' || rawStatus === 'success' || rawStatus === 'pending_verification' || order.status === 'completed';
-          return payment && finalAmount > 0 && shouldShowPaymentInfo;
-        })() && (
-            <Card className="p-6">
-              {(() => {
-                const payment = order.payment || order.payments?.[0];
-                if (!payment) return null;
-
-                const statusColors: Record<string, string> = {
-                  completed: 'bg-success/10 text-success border-success/30',
-                  pending: 'bg-warning/10 text-warning border-warning/30',
-                  pending_verification: 'bg-info/10 text-info border-info/30',
-                  failed: 'bg-danger/10 text-danger border-danger/30',
-                };
-
-                const statusLabels: Record<string, string> = {
-                  completed: '已支付',
-                  pending: '待支付',
-                  pending_verification: '待审核',
-                  failed: '支付失败',
-                };
-
-                const providerMap: Record<string, { label: string; icon: string }> = {
-                  cash: { label: '现金支付', icon: '💵' },
-                  tng: { label: "Touch 'n Go", icon: '💳' },
-                };
-
-                const rawProvider =
-                  (payment as any).provider ||
-                  (payment as any).payment_method ||
-                  (payment as any).method ||
-                  '';
-                const providerKey = String(rawProvider).toLowerCase();
-                const provider =
-                  providerKey.includes('cash')
-                    ? providerMap.cash
-                    : providerKey.includes('tng')
-                      ? providerMap.tng
-                      : providerMap.tng;
-
-                const rawStatus =
-                  (payment as any).status ||
-                  (payment as any).payment_status ||
-                  (payment as any).paymentStatus ||
-                  'pending';
-                const statusKey =
-                  order.status === 'completed' || rawStatus === 'success' || rawStatus === 'completed'
-                    ? 'completed'
-                    : rawStatus;
-                const displayStatus = statusLabels[statusKey] || '待支付';
-                const badge = statusColors[statusKey] || statusColors.pending;
-
-                return (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-                          {provider.icon} 支付信息
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${badge}`}>
-                            {displayStatus}
-                          </span>
-                        </h2>
-                        <p className="text-xs text-text-tertiary mt-1">支付渠道：{provider.label}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs text-text-tertiary">支付金额</div>
-                        <div className="text-xl font-bold text-text-primary font-mono">
-                          RM {Number(payment.amount ?? finalAmount).toFixed(2)}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
-                        <div className="text-xs text-text-tertiary">支付方式</div>
-                        <div className="text-sm font-medium text-text-primary flex items-center gap-2 mt-1">
-                          <span>{provider.icon}</span>
-                          <span>{provider.label}</span>
-                        </div>
-                      </div>
-
-                      <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
-                        <div className="text-xs text-text-tertiary">支付状态</div>
-                        <div className="text-sm font-medium text-text-primary mt-1">{displayStatus}</div>
-                      </div>
-
-                      {(payment as any).transaction_id && (
-                        <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle col-span-2">
-                          <div className="text-xs text-text-tertiary">交易单号</div>
-                          <div className="text-sm font-mono text-text-primary mt-1 break-all">
-                            {(payment as any).transaction_id}
-                          </div>
-                        </div>
-                      )}
-
-                      {(payment as any).created_at && (
-                        <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
-                          <div className="text-xs text-text-tertiary">发起时间</div>
-                          <div className="text-sm font-medium text-text-primary mt-1">
-                            {formatDate((payment as any).created_at, 'yyyy-MM-dd HH:mm')}
-                          </div>
-                        </div>
-                      )}
-
-                      {(payment as any).updated_at && (
-                        <div className="p-3 rounded-lg bg-ink-elevated border border-border-subtle">
-                          <div className="text-xs text-text-tertiary">最近更新</div>
-                          <div className="text-sm font-medium text-text-primary mt-1">
-                            {formatDate((payment as any).updated_at, 'yyyy-MM-dd HH:mm')}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-            </Card>
-          )}
-
-        {/* 客户备注 */}
-        {order.notes && !order.notes.includes('快捷操作') && !order.notes.includes('管理员') && (
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold text-text-primary mb-3">订单备注</h2>
-            <p className="text-text-secondary">{order.notes}</p>
-          </Card>
-        )}
-
-        {/* 订单信息 */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">订单信息</h2>
-          <div className="space-y-4">
-            <div className="bg-ink-elevated rounded-lg p-4 border border-border-subtle">
-              <div className="text-xs text-text-tertiary mb-1">订单编号</div>
-              <div className="font-mono font-semibold text-text-primary">#{generateShortCode(order.id)}</div>
-              <div className="text-xs text-text-tertiary mt-1 break-all">{order.id}</div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <div className="text-xs text-text-tertiary mb-1">📅 下单时间</div>
-                <div className="text-text-primary font-medium">{formatDate(createdAt, 'yyyy-MM-dd HH:mm')}</div>
-              </div>
-              {updatedAt && createdAt && updatedAt !== createdAt && (
-                <div>
-                  <div className="text-xs text-text-tertiary mb-1">🔄 更新时间</div>
-                  <div className="text-text-primary font-medium">{formatDate(updatedAt, 'yyyy-MM-dd HH:mm')}</div>
+                ))
+              ) : (
+                /* 单球拍订单 */
+                <div className="flex items-end">
+                  <span className="text-text-secondary">
+                    {order.string?.brand} {order.string?.model}
+                  </span>
+                  <span className="flex-1 border-b border-dotted border-border-subtle mx-2 mb-1" />
+                  <span className="text-text-primary">RM {Number(order.price).toFixed(2)}</span>
                 </div>
               )}
+
+              {discountAmount > 0 && (
+                <div className="flex items-end text-warning">
+                  <span>🎁 优惠</span>
+                  <span className="flex-1 border-b border-dotted border-warning/30 mx-2 mb-1" />
+                  <span>- RM {Number(discountAmount).toFixed(2)}</span>
+                </div>
+              )}
+
+              {order.use_package && (
+                <div className="flex items-end text-success">
+                  <span>🎁 套餐抵扣</span>
+                  <span className="flex-1 border-b border-dotted border-success/30 mx-2 mb-1" />
+                  <span className="text-xs">{packageName}</span>
+                </div>
+              )}
+
+              {order.voucher_id && (
+                <div className="flex items-end text-info">
+                  <span>🎫 优惠券</span>
+                  <span className="flex-1 border-b border-dotted border-info/30 mx-2 mb-1" />
+                  <span className="text-xs">{order.voucher?.voucher?.name || '已用'}</span>
+                </div>
+              )}
+            </div>
+
+            {/* 合计 */}
+            <div className="mx-4 border-t-2 border-double border-border-subtle pt-3 pb-2">
+              <div className="flex justify-between items-center font-mono">
+                <span className="font-bold text-text-primary">合计</span>
+                <span className="text-2xl font-black text-accent">RM {finalAmount.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* 支付信息 */}
+            {(() => {
+              const payment = order.payment || order.payments?.[0];
+              if (!payment) return null;
+
+              const rawProvider = (payment as any).provider || (payment as any).payment_method || '';
+              const providerKey = String(rawProvider).toLowerCase();
+              const providerLabel = providerKey.includes('cash') ? '现金' : 'TnG';
+              const providerIcon = providerKey.includes('cash') ? '💵' : '💳';
+
+              const rawStatus = (payment as any).status || 'pending';
+              const statusLabel =
+                order.status === 'completed' || rawStatus === 'success' || rawStatus === 'completed' ? '已支付' :
+                  rawStatus === 'pending_verification' ? '待审核' :
+                    rawStatus === 'pending' ? '待确认' : '待支付';
+
+              return (
+                <div className="px-4 pb-3">
+                  <div className="flex items-center justify-between text-sm bg-ink-surface/50 rounded px-3 py-2">
+                    <span className="text-text-tertiary">支付方式</span>
+                    <span className="text-text-primary font-medium">{providerIcon} {providerLabel} · {statusLabel}</span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* 备注（如有） */}
+            {order.notes && !order.notes.includes('快捷操作') && !order.notes.includes('管理员') && (
+              <div className="mx-4 mb-3 px-3 py-2 bg-ink-surface/30 rounded text-sm">
+                <span className="text-text-tertiary">📝 </span>
+                <span className="text-text-secondary">{order.notes}</span>
+              </div>
+            )}
+
+            {order.use_package && (
+              <div className="px-4 pb-3">
+                <p className="text-xs text-text-tertiary text-center">
+                  套餐支付已覆盖本次服务
+                </p>
+              </div>
+            )}
+
+            {/* 底部 - 时间戳 */}
+            <div className="border-t border-dashed border-border-subtle px-4 py-3 text-center">
+              <div className="text-xs text-text-tertiary font-mono">
+                {formatDate(createdAt, 'yyyy-MM-dd HH:mm:ss')}
+              </div>
               {order.completed_at && (
-                <div>
-                  <div className="text-xs text-text-tertiary mb-1">✅ 完成时间</div>
-                  <div className="text-text-primary font-medium">{formatDate(order.completed_at, 'yyyy-MM-dd HH:mm')}</div>
+                <div className="text-xs text-success mt-1">
+                  ✓ 完成于 {formatDate(order.completed_at, 'yyyy-MM-dd HH:mm')}
                 </div>
               )}
             </div>
-          </div>
-        </Card>
+
+            {/* 感谢语 */}
+            <div className="text-center py-3 bg-ink-surface/30 border-t border-dashed border-border-subtle">
+              <div className="text-sm text-text-secondary">感谢您的惠顾 🙏</div>
+            </div>
+          </Card>
+
+          {/* 底部锯齿边缘 */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-3"
+            style={{
+              background: 'linear-gradient(135deg, transparent 75%, var(--color-ink-surface) 75%), linear-gradient(225deg, transparent 75%, var(--color-ink-surface) 75%), linear-gradient(315deg, transparent 75%, var(--color-ink-surface) 75%), linear-gradient(45deg, transparent 75%, var(--color-ink-surface) 75%)',
+              backgroundSize: '24px 12px',
+              backgroundPosition: '0 6px',
+            }}
+          />
+        </div>
 
         {/* 订单照片（新系统） */}
         <OrderPhotosDisplay orderId={order.id} />
 
-        {/* 订单评价区域 */}
+        {/* 订单评价区域 - 简化版（主入口在摘要卡） */}
         {order.status === 'completed' && (
           <>
             {review ? (
-              /* 已有评价 */
-              <Card className="p-6">
-                <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
-                  <span>⭐</span> 我的评价
+              /* 已有评价 - 显示评价内容 */
+              <Card className="p-5">
+                <h2 className="text-base font-semibold text-text-primary mb-3 flex items-center gap-2">
+                  ⭐ 我的评价
                 </h2>
                 <ReviewCard review={review} />
               </Card>
             ) : showReviewForm ? (
               /* 评价表单 */
-              <ReviewForm
-                orderId={orderId}
-                onSuccess={handleReviewSuccess}
-                onCancel={() => setShowReviewForm(false)}
-              />
+              <div id="review-section">
+                <ReviewForm
+                  orderId={orderId}
+                  onSuccess={handleReviewSuccess}
+                  onCancel={() => setShowReviewForm(false)}
+                />
+              </div>
             ) : (
-              /* 评价入口（完成即显示，避免 canReview 异常阻塞） */
-              <Card className="p-6 text-center bg-ink-elevated border-2 border-accent-border">
-                <div className="w-16 h-16 bg-ink-surface rounded-full flex items-center justify-center mx-auto mb-4 border border-border-subtle">
-                  <span className="text-4xl">⭐</span>
+              /* 简化的评价提示（主入口在顶部摘要卡） */
+              <Card className="p-4 bg-ink-elevated border border-accent-border/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">⭐</span>
+                    <div>
+                      <p className="text-sm font-medium text-text-primary">分享您的体验</p>
+                      <p className="text-xs text-text-tertiary">评价可获得 +10 积分</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setShowReviewForm(true)}
+                    className="text-accent border-accent/30"
+                  >
+                    评价
+                  </Button>
                 </div>
-                <h3 className="text-xl font-bold text-text-primary mb-2">
-                  订单已完成，快来评价吧！
-                </h3>
-                <p className="text-text-secondary mb-4">
-                  分享您的体验，帮助我们做得更好
-                </p>
-                <div className="bg-ink-surface border border-border-subtle rounded-lg p-3 mb-4 inline-block">
-                  <p className="text-sm font-medium text-text-primary">
-                    🎁 评价奖励：<span className="text-lg font-bold">+10 积分</span>
-                  </p>
-                </div>
-                <Button
-                  onClick={() => setShowReviewForm(true)}
-                  className="bg-accent text-text-onAccent hover:shadow-glow"
-                >
-                  ✍️ 立即评价
-                </Button>
               </Card>
             )}
           </>

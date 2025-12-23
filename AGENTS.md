@@ -1,7 +1,7 @@
 🧠 AGENTS.md — AI Coding Agent Development Protocol
 
 String Service Platform — Development Governance Document  
-版本：1.1  
+版本：1.2  
 最后更新：2025-12-23  
 
 ---
@@ -251,3 +251,85 @@ Agent 在本项目中扮演：
 - 避免重复造轮子，复用既有组件与模块。  
 - 严格参照文档执行，保持结构与风格一致性。  
 - 每次开发都为“未来的 Agent”留下清晰的上下文。  
+
+---
+
+## 📌 9. 视觉设计系统（Visual Design System）
+
+项目采用 **呼吸感设计（Breathing Design）**，Agent 在开发 UI 时必须遵循：
+
+### 9.1 配色层级
+
+| 元素 | 颜色 | 说明 |
+|------|------|------|
+| 页面背景 | `bg-gray-50` | 非常浅的灰色 |
+| 卡片/模块 | `bg-white` | 白色，形成浮起效果 |
+| 边框 | `border-gray-100` | 轻描边 |
+| 阴影 | `shadow-sm` | 轻阴影 |
+| 主强调色 | `accent` (橙色) | 仅用于主行动按钮 |
+
+### 9.2 间距体系
+
+- 内容区宽度：`max-w-xl` (~576px) 或 `max-w-2xl` (~672px)
+- 区块垂直间距：`space-y-8` (32px) 或 `space-y-6` (24px)
+- 卡片内边距：`p-4` / `p-5` / `p-6`
+- 横向间隔：`px-5`
+
+### 9.3 排版节奏
+
+| 元素 | 字号 | 颜色 |
+|------|------|------|
+| 标题 | 15-18px (`text-[15px]` / `text-lg`) | `text-gray-900` |
+| 描述 | 12-14px (`text-xs` / `text-sm`) | `text-gray-500` |
+| 辅助文字 | 12px (`text-xs`) | `text-gray-400` |
+
+### 9.4 卡片统一风格
+
+```tsx
+// 标准卡片样式
+className="bg-white rounded-xl border border-gray-100 shadow-sm"
+
+// 主行动卡片（橙色强调）
+className="bg-accent/10 border border-accent/30 rounded-xl"
+
+// 次要卡片（灰度）  
+className="bg-white border border-gray-100 hover:shadow-md"
+```
+
+### 9.5 图标规范
+
+- 固定容器尺寸：`w-10 h-10` 或 `w-8 h-8`
+- 图标本身：`w-5 h-5` 或 `w-4 h-4`
+- 背景色：`bg-gray-50` (次要) / `bg-accent` (主要)
+- 使用 `lucide-react` 图标库
+
+### 9.6 交互反馈
+
+- Hover 效果：`hover:shadow-md` / `hover:border-gray-200`
+- 过渡动画：`transition-all` / `transition-colors`
+- 按钮 Hover：`hover:opacity-90`
+
+### 9.7 票据/交易类组件设计 (Transactional Design)
+
+对于订单收据、结算单等交易类组件，采用 **拟物化收据风格**：
+
+- **锯齿边缘 (Zigzag Border)**：使用 CSS `linear-gradient` 实现真实纸质锯齿效果。
+- **点状引导线 (Dot Leaders)**：使用 `border-dotted` 连接项目与金额，增强易读性。
+- **等宽字体 (Monospace)**：金额与数量使用 `font-mono`，模拟打印机效果。
+- **双线分隔 (Double Border)**：使用 `border-double` 强调合计金额。
+- **信息层级**：
+  - `OrderSummaryCard`：顶部摘要，包含状态、核心金额、主行动按钮。
+  - `ReceiptCard`：底部详情，模拟物理收据，包含明细、支付方式、时间戳。
+
+---
+
+## 📌 10. Change Log 文档规范
+
+每次开发完成后，必须在 `docs/` 创建 `change_log_YYYY-MM-DD.md`，格式参考：
+
+- `docs/change_log_2025-12-23.md` — 视觉呼吸感优化 + UX 改进
+
+---
+
+> **本文档最后更新：2025-12-23**
+```

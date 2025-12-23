@@ -11,7 +11,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, CheckCheck, Trash2, RefreshCw } from 'lucide-react';
 import {
   getNotifications,
@@ -26,34 +26,41 @@ interface NotificationPanelProps {
   userId: string;
   isOpen: boolean;
   onClose: () => void;
+  onUnreadCountChange?: (count: number) => void;
 }
 
-export default function NotificationPanel({ userId, isOpen, onClose }: NotificationPanelProps) {
+export default function NotificationPanel({ userId, isOpen, onClose, onUnreadCountChange }: NotificationPanelProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
   // 加载通知列表
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     setLoading(true);
 
     try {
       const unreadOnly = filter === 'unread';
       const data = await getNotifications(unreadOnly, 50);
-      setNotifications((data?.notifications || []) as unknown as Notification[]);
+      const notificationsList = (data?.notifications || []) as unknown as Notification[];
+      setNotifications(notificationsList);
+
+      // 通知父组件更新未读计数
+      const unreadCount = notificationsList.filter((n) => !n.is_read).length;
+      onUnreadCountChange?.(unreadCount);
     } catch (err) {
       console.error('Failed to load notifications:', err);
       setNotifications([]);
+      onUnreadCountChange?.(0);
     }
 
     setLoading(false);
-  };
+  }, [filter, onUnreadCountChange]);
 
   useEffect(() => {
     if (isOpen) {
       loadNotifications();
     }
-  }, [isOpen, userId, filter]);
+  }, [isOpen, userId, loadNotifications]);
 
   // 监听 Esc 键，方便快速关闭通知面板
   useEffect(() => {
@@ -78,6 +85,8 @@ export default function NotificationPanel({ userId, isOpen, onClose }: Notificat
   // 标记所有通知为已读
   const handleMarkAllAsRead = async () => {
     await markAllAsRead();
+    // 立即更新UI状态，不等待加载完成
+    onUnreadCountChange?.(0);
     loadNotifications();
   };
 
