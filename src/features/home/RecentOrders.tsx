@@ -1,7 +1,8 @@
 /**
  * 最近订单组件 (Recent Orders)
  * 
- * 显示用户最近的订单列表（最新 5 条）
+ * 行动导向设计：每行一个订单，状态徽标 + 动作按钮
+ * 最多显示 3 条
  */
 
 'use client';
@@ -11,14 +12,35 @@ import { useRouter } from 'next/navigation';
 import { Card, Badge, Spinner } from '@/components';
 import { getRecentOrders } from '@/services/homeService';
 import { Order } from '@/types';
-import { formatDate, formatCurrency } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 
-// 订单状态映射
-const statusConfig = {
-  pending: { label: '待处理', variant: 'warning' as const },
-  in_progress: { label: '处理中', variant: 'info' as const },
-  completed: { label: '已完成', variant: 'success' as const },
-  cancelled: { label: '已取消', variant: 'neutral' as const },
+// 订单状态配置
+const statusConfig: Record<string, { label: string; variant: 'warning' | 'info' | 'success' | 'neutral'; icon: string }> = {
+
+  pending: { label: '待付款', variant: 'warning', icon: '💳' },
+  pending_payment: { label: '待付款', variant: 'warning', icon: '💳' },
+  in_progress: { label: '穿线中', variant: 'info', icon: '🔧' },
+  stringing: { label: '穿线中', variant: 'info', icon: '🔧' },
+  completed: { label: '已完成', variant: 'success', icon: '✅' },
+  ready: { label: '待取拍', variant: 'success', icon: '📦' },
+  cancelled: { label: '已取消', variant: 'neutral', icon: '✕' },
+};
+
+// 根据状态获取动作按钮配置
+const getActionConfig = (status: string) => {
+  switch (status) {
+    case 'pending':
+    case 'pending_payment':
+      return { label: '去付款', color: 'bg-warning text-white' };
+    case 'in_progress':
+    case 'stringing':
+      return { label: '查看进度', color: 'bg-info text-white' };
+    case 'completed':
+    case 'ready':
+      return { label: '查看详情', color: 'bg-success text-white' };
+    default:
+      return { label: '查看', color: 'bg-ink-elevated text-text-primary' };
+  }
 };
 
 export default function RecentOrders() {
@@ -33,7 +55,7 @@ export default function RecentOrders() {
   const loadRecentOrders = async () => {
     setLoading(true);
     try {
-      const data = await getRecentOrders(undefined, 5);
+      const data = await getRecentOrders(undefined, 3); // 只获取3条
       if (data) {
         setOrders(data as any);
       }
@@ -46,6 +68,31 @@ export default function RecentOrders() {
 
   const handleOrderClick = (orderId: string) => {
     router.push(`/orders/${orderId}`);
+  };
+
+  const handleAction = (e: React.MouseEvent, order: Order) => {
+    e.stopPropagation();
+    const status = order.status;
+
+    if (status === 'pending' || status === 'pending_payment') {
+      // 跳转到支付页面
+      router.push(`/orders/${order.id}?action=pay`);
+    } else {
+      // 查看订单详情
+      router.push(`/orders/${order.id}`);
+    }
+  };
+
+  // 获取订单显示名称
+  const getOrderName = (order: Order) => {
+    const items = (order as any).items;
+    if (items && items.length > 1) {
+      return `多球拍订单 (${items.length}支)`;
+    }
+    if (order.string?.brand && order.string?.model) {
+      return `${order.string.brand} ${order.string.model}`;
+    }
+    return `订单 #${order.id.slice(0, 6)}`;
   };
 
   if (loading) {
@@ -65,18 +112,13 @@ export default function RecentOrders() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-text-primary">最近订单</h2>
           </div>
-          <div className="text-center py-6">
-            <div className="w-16 h-16 bg-ink-elevated rounded-full flex items-center justify-center mx-auto mb-3 border border-border-subtle">
-              <svg className="w-8 h-8 text-text-tertiary" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-              </svg>
-            </div>
-            <p className="text-sm text-text-secondary mb-4">您还没有任何订单</p>
+          <div className="text-center py-4">
+            <p className="text-sm text-text-secondary mb-3">暂无订单记录</p>
             <button
               onClick={() => router.push('/booking')}
-              className="text-sm text-accent hover:text-text-primary font-medium"
+              className="text-sm text-accent hover:text-accent/80 font-medium"
             >
-              立即预约 →
+              立即预约穿线 →
             </button>
           </div>
         </div>
@@ -88,62 +130,76 @@ export default function RecentOrders() {
     <Card>
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-text-primary">最近订单</h2>
+          <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
+            <span className="w-8 h-8 rounded-lg bg-info/15 flex items-center justify-center">
+              <svg className="w-4 h-4 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </span>
+            最近订单
+          </h2>
           <button
             onClick={() => router.push('/orders')}
-            className="text-sm text-accent hover:text-text-primary font-medium"
+            className="text-sm text-accent hover:text-accent/80 font-medium"
           >
-            查看全部
+            全部订单 →
           </button>
         </div>
 
-        <div className="space-y-3">
+        {/* 紧凑的订单列表 */}
+        <div className="space-y-2">
           {orders.map((order) => {
-            const status = statusConfig[order.status as keyof typeof statusConfig];
-            const badgeVariant = status?.variant ?? 'neutral';
+            const status = statusConfig[order.status] || statusConfig.pending;
+            const action = getActionConfig(order.status);
 
             return (
               <div
                 key={order.id}
                 onClick={() => handleOrderClick(order.id)}
-                className="border border-border-subtle rounded-lg p-4 hover:bg-ink-elevated/70 transition-colors cursor-pointer"
+                className="flex items-center gap-3 p-3 rounded-xl bg-ink-elevated/50 hover:bg-ink-elevated border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm text-text-primary truncate">
-                      {order.string?.brand} {order.string?.model}
-                    </h3>
-                    <p className="text-xs text-text-secondary mt-1">
-                      {order.string?.specification} · {order.tension}磅
-                    </p>
-                  </div>
-                  <Badge variant={badgeVariant}>
-                    {status?.label || order.status}
-                  </Badge>
+                {/* 状态图标 */}
+                <span className="text-lg flex-shrink-0">{status.icon}</span>
+
+                {/* 订单信息 */}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm text-text-primary truncate">
+                    {getOrderName(order)}
+                  </p>
+                  <p className="text-xs text-text-tertiary mt-0.5">
+                    #{order.id.slice(0, 6).toUpperCase()} · {formatDate(order.created_at || (order as any).createdAt)}
+                  </p>
                 </div>
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-text-tertiary">
-                    {formatDate(order.created_at || (order as any).createdAt)}
-                  </span>
-                  <span className="font-semibold text-text-primary font-mono">
-                    {formatCurrency(order.final_price ?? order.price ?? 0)}
-                  </span>
-                </div>
+                {/* 状态徽标 */}
+                <Badge variant={status.variant} className="flex-shrink-0">
+                  {status.label}
+                </Badge>
 
-                {order.use_package && (
-                  <div className="mt-2 text-xs text-success flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                      <path d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    使用套餐抵扣
-                  </div>
-                )}
+                {/* 动作按钮 */}
+                <button
+                  onClick={(e) => handleAction(e, order)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0 ${action.color} hover:opacity-90 shadow-sm`}
+                >
+                  {action.label}
+                </button>
               </div>
             );
           })}
         </div>
+
+        {/* 快捷预约按钮 */}
+        <button
+          onClick={() => router.push('/booking')}
+          className="w-full mt-4 py-2.5 rounded-xl border border-dashed border-border-subtle text-text-secondary hover:border-accent hover:text-accent transition-colors text-sm font-medium flex items-center justify-center gap-1"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          预约新的穿线
+        </button>
       </div>
     </Card>
   );
 }
+
