@@ -107,10 +107,10 @@ export default function Navbar() {
                 </Link>
 
                 <Link
-                  href="/profile/vouchers"
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${pathname?.startsWith('/profile/vouchers')
-                    ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
-                    : 'text-text-secondary hover:bg-ink-surface/80'
+                  href="/profile/points"
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${pathname?.startsWith('/profile/vouchers') || pathname?.startsWith('/profile/points')
+                      ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
+                      : 'text-text-secondary hover:bg-ink-surface/80'
                     }`}
                 >
                   优惠券
