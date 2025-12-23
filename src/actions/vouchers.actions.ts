@@ -104,14 +104,12 @@ export async function redeemVoucherAction(params: { code: string; usePoints?: bo
     throw new Error('优惠券已被领完');
   }
 
-  // 检查每用户兑换次数上限
-  const existingCount = await prisma.userVoucher.count({
+  const existingUserVoucher = await prisma.userVoucher.findFirst({
     where: { userId: user.id, voucherId: voucher.id },
   });
 
-  const maxPerUser = (voucher as any).maxRedemptionsPerUser ?? 1;
-  if (existingCount >= maxPerUser) {
-    throw new Error(`此优惠券每人最多兑换 ${maxPerUser} 张，您已达到上限`);
+  if (existingUserVoucher) {
+    throw new Error('您已领取过此优惠券');
   }
 
   if (usePoints && voucher.pointsCost > 0) {
@@ -181,21 +179,22 @@ export async function redeemVoucherAction(params: { code: string; usePoints?: bo
 
 /**
  * 获取可兑换优惠券（Server Action）
+ * 返回用户可兑换的优惠券列表，包含用户已拥有的数量和最大可兑换次数
  */
 export async function getRedeemableVouchersAction() {
   const user = await requireAuth();
   const now = new Date();
 
-  // 获取用户已拥有的优惠券及数量
-  const ownedCounts = await prisma.userVoucher.groupBy({
+  // 获取用户已拥有的每个 voucher 的数量
+  const ownedVouchers = await prisma.userVoucher.groupBy({
     by: ['voucherId'],
     where: { userId: user.id },
     _count: { voucherId: true },
   });
-  const ownedCountMap = new Map(ownedCounts.map(o => [o.voucherId, o._count.voucherId]));
+  const ownedCountMap = new Map(ownedVouchers.map((r) => [r.voucherId, r._count.voucherId]));
 
-  // 获取所有有效优惠券
-  const allVouchers = await prisma.voucher.findMany({
+  // 获取所有有效的优惠券
+  const vouchers = await prisma.voucher.findMany({
     where: {
       active: true,
       validFrom: { lte: now },
@@ -204,22 +203,15 @@ export async function getRedeemableVouchersAction() {
     orderBy: { createdAt: 'desc' },
   });
 
-  // 过滤：只保留未达到每用户兑换上限的优惠券
-  const vouchers = allVouchers.filter(voucher => {
-    const ownedCount = ownedCountMap.get(voucher.id) || 0;
-    const maxPerUser = (voucher as any).maxRedemptionsPerUser ?? 1;
-    return ownedCount < maxPerUser;
-  });
-
   return vouchers.map((voucher) => {
     const type = (voucher.type || '').toLowerCase();
     const discountType = type.includes('percentage') ? 'percentage' : 'fixed';
     const discountValue = typeof voucher.value === 'object'
       ? voucher.value.toNumber()
       : Number(voucher.value);
-
     const ownedCount = ownedCountMap.get(voucher.id) || 0;
-    const maxPerUser = (voucher as any).maxRedemptionsPerUser ?? 1;
+    const maxPerUser = voucher.maxRedemptionsPerUser || 1;
+    const canRedeem = ownedCount < maxPerUser;
 
     return {
       id: voucher.id,
@@ -236,8 +228,10 @@ export async function getRedeemableVouchersAction() {
       valid_from: voucher.validFrom.toISOString(),
       valid_until: voucher.validUntil.toISOString(),
       active: voucher.active,
-      // 新增：显示剩余可兑换次数
-      max_redemptions_per_user: maxPerUser,
+      // 新增字段
+      owned_count: ownedCount,
+      max_per_user: maxPerUser,
+      can_redeem: canRedeem,
       remaining_redemptions: maxPerUser - ownedCount,
     };
   });
@@ -275,14 +269,14 @@ export async function redeemVoucherWithPointsAction(params: { voucherId: string;
     throw new Error('优惠券已被领完');
   }
 
-  // 检查每用户兑换次数上限
-  const existingCount = await prisma.userVoucher.count({
+  // 检查用户已兑换次数是否达到上限
+  const userVoucherCount = await prisma.userVoucher.count({
     where: { userId: user.id, voucherId: voucher.id },
   });
+  const maxPerUser = voucher.maxRedemptionsPerUser || 1;
 
-  const maxPerUser = (voucher as any).maxRedemptionsPerUser ?? 1;
-  if (existingCount >= maxPerUser) {
-    throw new Error(`此优惠券每人最多兑换 ${maxPerUser} 张，您已达到上限`);
+  if (userVoucherCount >= maxPerUser) {
+    throw new Error(`您已达到此优惠券的最大兑换次数 (${maxPerUser}张)`);
   }
 
   const requiredPoints = voucher.pointsCost || 0;

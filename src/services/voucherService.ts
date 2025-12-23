@@ -85,16 +85,16 @@ export async function validateVoucher(code: string): Promise<boolean> {
  */
 export function validateVoucherForOrder(voucher: any, orderAmount: number): { valid: boolean; error?: string } {
   if (!voucher) return { valid: false, error: '无效的优惠券' };
-
+  
   // 获取实际的 voucher 对象（可能嵌套在 UserVoucher 中）
   const actualVoucher = voucher.voucher || voucher;
-
+  
   // 检查最低消费
   const minPurchase = actualVoucher.min_purchase || actualVoucher.minPurchase || 0;
   if (orderAmount < minPurchase) {
     return { valid: false, error: `最低消费 RM${minPurchase}` };
   }
-
+  
   // 检查是否过期
   const expiry = voucher.expiry || voucher.expires_at || actualVoucher.validUntil || actualVoucher.valid_until;
   if (expiry) {
@@ -103,19 +103,19 @@ export function validateVoucherForOrder(voucher: any, orderAmount: number): { va
       return { valid: false, error: '已过期' };
     }
   }
-
+  
   // 检查是否已使用
   if (voucher.status === 'used' || voucher.used_at || voucher.usedAt) {
     return { valid: false, error: '已使用' };
   }
-
+  
   return { valid: true };
 }
 
 /**
  * 获取可兑换的优惠券（使用积分兑换）
  */
-export async function getRedeemableVouchers(): Promise<{ vouchers: any[]; error: string | null }> {
+export async function getRedeemableVouchers(): Promise<{ vouchers: Voucher[]; error: string | null }> {
   try {
     const vouchers = await getRedeemableVouchersAction();
     return { vouchers: Array.isArray(vouchers) ? vouchers : [], error: null };
@@ -145,19 +145,19 @@ export async function redeemVoucherWithPoints(
  */
 export function calculateDiscount(voucher: Voucher | UserVoucher | any, orderAmount: number): number {
   if (!voucher) return 0;
-
+  
   // 如果是 UserVoucher，获取嵌套的 voucher 对象
   const actualVoucher = (voucher as any).voucher || voucher;
-
+  
   // 获取折扣类型和值（支持多种命名格式）
   const discountType = actualVoucher.discount_type || actualVoucher.discountType || actualVoucher.type;
   const discountValue = actualVoucher.discount_value || actualVoucher.discountValue || actualVoucher.value;
   const maxDiscount = actualVoucher.max_discount || actualVoucher.maxDiscount;
   const minPurchase = actualVoucher.min_purchase || actualVoucher.minPurchase || 0;
-
+  
   // 检查最低消费
   if (orderAmount < minPurchase) return 0;
-
+  
   // 计算折扣
   if (discountType === 'PERCENTAGE' || discountType === 'percentage' || discountType === 'percentage_off') {
     let discount = (orderAmount * (typeof discountValue === 'object' ? discountValue.toNumber() : discountValue)) / 100;
@@ -170,7 +170,21 @@ export function calculateDiscount(voucher: Voucher | UserVoucher | any, orderAmo
   return 0;
 }
 
-
+/**
+ * 获取所有可用优惠券
+ */
+export async function getAvailableVouchers(): Promise<{ vouchers: Voucher[]; error: string | null }> {
+  try {
+    const response = await fetch('/api/vouchers/available');
+    const data = await response.json();
+    if (!response.ok) {
+      return { vouchers: [], error: data.error || '获取可用优惠券失败' };
+    }
+    return { vouchers: data.data || [], error: null };
+  } catch (error: any) {
+    return { vouchers: [], error: error.message || '获取可用优惠券失败' };
+  }
+}
 
 /**
  * 优惠券统计信息
@@ -194,7 +208,7 @@ export async function getVoucherStats(): Promise<VoucherStats> {
       usedVouchers: payload.usedVouchers || payload.used || 0,
       expiredVouchers: payload.expiredVouchers || payload.expired || 0,
       activeVouchers: payload.activeVouchers || payload.active || 0,
-      totalSavings: (payload as any).totalSavings || 0,
+      totalSavings: payload.totalSavings || 0,
     };
   } catch (error) {
     console.error('Error fetching voucher stats:', error);

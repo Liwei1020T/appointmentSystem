@@ -1,9 +1,10 @@
 /**
  * 优惠券兑换页面路由
+ * 重定向到统一的积分中心
  */
 
+import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
-import VoucherExchangePage from '@/features/vouchers/VoucherExchangePage';
 
 export const metadata: Metadata = {
   title: '兑换优惠券 | String Service Platform',
@@ -11,5 +12,5 @@ export const metadata: Metadata = {
 };
 
 export default function VoucherExchangeRoutePage() {
-  return <VoucherExchangePage />;
+  redirect('/profile/points?tab=exchange');
 }

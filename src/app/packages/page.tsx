@@ -1,15 +1,20 @@
 /**
- * 套餐列表路由页面
+ * 套餐中心路由页面
  */
 
 import { Metadata } from 'next';
-import PackagesPage from '@/features/packages/PackagesPage';
+import { Suspense } from 'react';
+import PackagesCenter from '@/features/packages/PackagesCenter';
 
 export const metadata: Metadata = {
-  title: '购买套餐 | String Service Platform',
-  description: '查看并购买优惠套餐',
+  title: '套餐中心 | String Service Platform',
+  description: '查看已购套餐或购买新优惠套餐',
 };
 
 export default function PackagesRoute() {
-  return <PackagesPage />;
+  return (
+    <Suspense fallback={null}>
+      <PackagesCenter />
+    </Suspense>
+  );
 }
