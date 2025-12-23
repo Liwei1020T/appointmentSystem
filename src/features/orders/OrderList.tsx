@@ -180,8 +180,8 @@ export default function OrderList({ initialStatus }: OrderListProps) {
             key={filter.value}
             onClick={() => handleStatusChange(filter.value)}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${activeStatus === filter.value
-                ? 'bg-accent text-text-onAccent'
-                : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
+              ? 'bg-accent text-text-onAccent'
+              : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
               }`}
           >
             {filter.label}
@@ -208,61 +208,168 @@ export default function OrderList({ initialStatus }: OrderListProps) {
 
       {/* 订单列表 */}
       {!loading && !error && orders.length > 0 && (
-        <div className="space-y-3">
-          {orders.map((order) => (
-            <Card
-              key={order.id}
-              className="p-4 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => handleOrderClick(order.id)}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-text-primary">
-                    {order.string?.brand} {order.string?.model}
-                  </h3>
-                  <p className="text-sm text-text-secondary mt-1">
-                    {order.string?.specification}
-                  </p>
+        <div className="space-y-4">
+          {orders.map((order) => {
+            // Status-based styling
+            const statusConfig: Record<string, {
+              icon: string;
+              bgColor: string;
+              borderColor: string;
+              iconBg: string;
+              textColor: string;
+            }> = {
+              pending: {
+                icon: '⏳',
+                bgColor: 'bg-warning/5',
+                borderColor: 'border-l-warning',
+                iconBg: 'bg-warning/15',
+                textColor: 'text-warning'
+              },
+              confirmed: {
+                icon: '✅',
+                bgColor: 'bg-info/5',
+                borderColor: 'border-l-info',
+                iconBg: 'bg-info/15',
+                textColor: 'text-info'
+              },
+              in_progress: {
+                icon: '🔧',
+                bgColor: 'bg-info/5',
+                borderColor: 'border-l-info',
+                iconBg: 'bg-info/15',
+                textColor: 'text-info'
+              },
+              completed: {
+                icon: '✓',
+                bgColor: 'bg-success/5',
+                borderColor: 'border-l-success',
+                iconBg: 'bg-success/15',
+                textColor: 'text-success'
+              },
+              cancelled: {
+                icon: '✕',
+                bgColor: 'bg-danger/5',
+                borderColor: 'border-l-danger',
+                iconBg: 'bg-danger/15',
+                textColor: 'text-danger'
+              },
+            };
+
+            const config = statusConfig[order.status] || statusConfig.pending;
+            const isMultiRacket = (order as any).items?.length > 0;
+
+            return (
+              <div
+                key={order.id}
+                onClick={() => handleOrderClick(order.id)}
+                className={`
+                  relative overflow-hidden rounded-xl border-l-4 ${config.borderColor}
+                  bg-ink-surface ${config.bgColor} 
+                  p-5 cursor-pointer
+                  transition-all duration-300 ease-out
+                  hover:shadow-lg hover:shadow-ink-elevated/20
+                  hover:-translate-y-0.5 hover:scale-[1.01]
+                  active:scale-[0.99]
+                  group
+                `}
+              >
+                {/* Top Row: Title + Status */}
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {/* Status Icon */}
+                    <div className={`
+                      w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+                      ${config.iconBg} ${config.textColor}
+                      transition-transform duration-300 group-hover:scale-110
+                    `}>
+                      <span className="text-lg">{config.icon}</span>
+                    </div>
+
+                    {/* Order Info */}
+                    <div className="flex-1 min-w-0">
+                      {isMultiRacket ? (
+                        <>
+                          <h3 className="font-semibold text-text-primary truncate">
+                            🎾 多球拍订单
+                          </h3>
+                          <p className="text-sm text-text-secondary mt-0.5">
+                            {(order as any).items.length} 支球拍
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <h3 className="font-semibold text-text-primary truncate">
+                            {order.string?.brand} {order.string?.model}
+                          </h3>
+                          <p className="text-sm text-text-secondary mt-0.5 truncate">
+                            {order.string?.specification || '标准穿线服务'}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status Badge */}
+                  <OrderStatusBadge status={order.status as OrderStatus} />
                 </div>
-                <OrderStatusBadge status={order.status as OrderStatus} />
+
+                {/* Info Grid */}
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="bg-ink-elevated rounded-lg p-3 text-center border border-border-subtle">
+                    <p className="text-xs text-text-tertiary mb-1">
+                      {isMultiRacket ? '球拍' : '拉力'}
+                    </p>
+                    <p className="font-semibold text-text-primary">
+                      {isMultiRacket
+                        ? `${(order as any).items.length} 支`
+                        : `${order.tension || '-'} 磅`
+                      }
+                    </p>
+                  </div>
+                  <div className="bg-ink-elevated rounded-lg p-3 text-center border border-border-subtle">
+                    <p className="text-xs text-text-tertiary mb-1">价格</p>
+                    <p className="font-semibold text-accent font-mono">
+                      RM {Number(order.final_price ?? order.price ?? 0).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="bg-ink-elevated rounded-lg p-3 text-center border border-border-subtle">
+                    <p className="text-xs text-text-tertiary mb-1">日期</p>
+                    <p className="font-medium text-text-primary text-xs">
+                      {formatDate(order.created_at || order.createdAt!, 'MM/dd')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Tags Row */}
+                <div className="flex flex-wrap items-center gap-2">
+                  {order.use_package && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-success/15 text-success">
+                      📦 套餐
+                    </span>
+                  )}
+
+                  {(order.discount_amount ?? 0) > 0 && !order.use_package && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-warning/15 text-warning">
+                      🏷️ 优惠 RM {Number(order.discount_amount ?? 0).toFixed(0)}
+                    </span>
+                  )}
+
+                  {/* Arrow indicator */}
+                  <div className="ml-auto flex items-center gap-1 text-text-tertiary text-xs group-hover:text-accent transition-colors">
+                    <span>查看详情</span>
+                    <svg
+                      className="w-4 h-4 transform transition-transform group-hover:translate-x-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-text-tertiary">拉力</p>
-                  <p className="font-medium text-text-primary">{order.tension} 磅</p>
-                </div>
-                <div>
-                  <p className="text-text-tertiary">价格</p>
-                  <p className="font-medium text-text-primary font-mono">
-                    RM {Number(order.final_price ?? order.price ?? 0).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-
-              {order.use_package && (
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-success/15 text-success">
-                    使用套餐
-                  </span>
-                </div>
-              )}
-
-              {(order.discount_amount ?? 0) > 0 && !order.use_package && (
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-warning/15 text-warning">
-                    优惠 RM {Number(order.discount_amount ?? 0).toFixed(2)}
-                  </span>
-                </div>
-              )}
-
-              <div className="mt-3 pt-3 border-t border-border-subtle">
-                <p className="text-xs text-text-tertiary">
-                  下单时间：{order.created_at || order.createdAt ? formatDate(order.created_at || order.createdAt!) : '未知'}
-                </p>
-              </div>
-            </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 

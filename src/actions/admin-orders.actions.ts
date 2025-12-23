@@ -42,7 +42,11 @@ export async function getAdminOrdersAction(options?: {
         payments: true,
         packageUsed: { include: { package: true } },
         voucherUsed: { include: { voucher: true } },
-      },
+        // Include items for multi-racket order list display
+        items: {
+          select: { id: true },
+        },
+      } as any, // Dynamic include until Prisma client is regenerated
       orderBy: { createdAt: 'desc' },
       skip,
       take: limit,
@@ -79,7 +83,20 @@ export async function getAdminOrderByIdAction(orderId: string) {
       payments: true,
       packageUsed: { include: { package: true } },
       voucherUsed: { include: { voucher: true } },
-    },
+      // Multi-racket support: include order items with string info
+      items: {
+        include: {
+          string: {
+            select: {
+              id: true,
+              brand: true,
+              model: true,
+              sellingPrice: true,
+            },
+          },
+        },
+      },
+    } as any, // Dynamic include until Prisma client is regenerated
   });
 
   if (!order) {

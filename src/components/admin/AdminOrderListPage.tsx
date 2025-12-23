@@ -313,26 +313,40 @@ export default function AdminOrderListPage() {
                           <div className="text-xs text-text-tertiary">{order.user?.phone || '-'}</div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-text-primary">
-                            {order.string?.model ||
-                              order.string?.name ||
-                              order.stringInventory?.model ||
-                              '-'}
-                          </div>
-                          <div className="text-xs text-text-tertiary">
-                            {order.string?.brand || order.stringInventory?.brand || '-'}
-                          </div>
+                          {/* 多球拍订单显示 */}
+                          {(order as any).items?.length > 0 ? (
+                            <>
+                              <div className="text-sm text-accent font-medium">
+                                🎾 多球拍订单
+                              </div>
+                              <div className="text-xs text-text-tertiary">
+                                {(order as any).items.length} 支球拍
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="text-sm text-text-primary">
+                                {order.string?.model ||
+                                  order.string?.name ||
+                                  order.stringInventory?.model ||
+                                  '-'}
+                              </div>
+                              <div className="text-xs text-text-tertiary">
+                                {order.string?.brand || order.stringInventory?.brand || '-'}
+                              </div>
+                            </>
+                          )}
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="text-sm font-semibold text-text-primary">
                             {(() => {
                               const totalAmount = Number(
                                 order.total_price ??
-                                  order.totalAmount ??
-                                  // prisma 订单价格字段
-                                  (order as any).price ??
-                                  (order as any).final_price ??
-                                  0
+                                order.totalAmount ??
+                                // prisma 订单价格字段
+                                (order as any).price ??
+                                (order as any).final_price ??
+                                0
                               );
                               return `RM ${totalAmount.toFixed(2)}`;
                             })()}
@@ -450,11 +464,10 @@ export default function AdminOrderListPage() {
                         <button
                           key={pageNum}
                           onClick={() => setCurrentPage(pageNum)}
-                          className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
-                            currentPage === pageNum
+                          className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${currentPage === pageNum
                               ? 'bg-accent text-text-onAccent'
                               : 'text-text-secondary hover:bg-ink-elevated'
-                          }`}
+                            }`}
                         >
                           {pageNum}
                         </button>

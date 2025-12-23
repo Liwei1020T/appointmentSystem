@@ -1,151 +1,193 @@
 /**
- * 套餐摘要组件 (Package Summary)
+ * 我的权益卡片组件 (My Benefits Card)
  * 
- * 显示用户已购套餐及剩余次数
+ * 显示用户权益概览：套餐剩余、优惠券、积分
  */
 
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Badge, Spinner } from '@/components';
+import { useSession } from 'next-auth/react';
+import { Card, Spinner } from '@/components';
 import { getUserPackageSummary } from '@/services/packageService';
+import { getVoucherStats } from '@/services/voucherService';
 import { UserPackage } from '@/types';
-import { formatDate } from '@/lib/utils';
 
 export default function PackageSummary() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
   const [totalRemaining, setTotalRemaining] = useState(0);
   const [packages, setPackages] = useState<UserPackage[]>([]);
+  const [couponsCount, setCouponsCount] = useState(0);
+  const [points, setPoints] = useState(0);
 
   useEffect(() => {
-    loadPackageSummary();
+    loadBenefitsData();
   }, []);
 
-  const loadPackageSummary = async () => {
+  const loadBenefitsData = async () => {
     setLoading(true);
-    const { summary, error } = await getUserPackageSummary();
 
-    if (error) {
-      console.error('Error loading package summary:', error);
-      setLoading(false);
-      return;
-    }
+    try {
+      // 并行获取所有数据
+      const [packageResult, voucherStats] = await Promise.all([
+        getUserPackageSummary(),
+        getVoucherStats(),
+      ]);
 
-    if (summary) {
-      setTotalRemaining(summary.totalRemaining);
-      setPackages(summary.packages);
+      // 套餐数据
+      if (packageResult.summary) {
+        setTotalRemaining(packageResult.summary.totalRemaining);
+        setPackages(packageResult.summary.packages);
+      }
+
+      // 优惠券数量
+      setCouponsCount(voucherStats.activeVouchers || 0);
+
+      // 积分（从 session 获取）
+      if (session?.user) {
+        setPoints((session.user as any).points || 0);
+      }
+    } catch (error) {
+      console.error('Error loading benefits data:', error);
     }
 
     setLoading(false);
   };
 
+
+  // 计算最近过期的套餐
+  const nearestExpiry = packages.length > 0
+    ? packages
+      .filter(pkg => pkg.expires_at)
+      .sort((a, b) => new Date(a.expires_at!).getTime() - new Date(b.expires_at!).getTime())[0]
+    : null;
+
   if (loading) {
     return (
       <Card>
-        <div className="p-6 flex items-center justify-center">
+        <div className="p-6 flex items-center justify-center min-h-[180px]">
           <Spinner size="medium" />
         </div>
       </Card>
     );
   }
 
-  if (packages.length === 0) {
-    return (
-      <Card>
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-text-primary">我的套餐</h2>
-          </div>
-          <div className="text-center py-6">
-            <div className="w-16 h-16 bg-ink-elevated rounded-full flex items-center justify-center mx-auto mb-3 border border-border-subtle">
-              <svg className="w-8 h-8 text-text-tertiary" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-              </svg>
-            </div>
-            <p className="text-sm text-text-secondary mb-4">您还没有购买套餐</p>
-            <button
-              onClick={() => router.push('/packages')}
-              className="text-sm text-accent hover:text-text-primary font-medium"
-            >
-              立即购买套餐 →
-            </button>
-          </div>
-        </div>
-      </Card>
-    );
-  }
+  const hasPackages = packages.length > 0;
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-text-primary">我的套餐</h2>
-          <button
-            onClick={() => router.push('/profile/packages')}
-            className="text-sm text-accent hover:text-text-primary font-medium"
-          >
-            查看全部
-          </button>
+        {/* 标题 */}
+        <div className="mb-5">
+          <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
+            <span className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+              <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </span>
+            我的权益
+          </h2>
         </div>
 
-        {/* 总剩余次数 */}
-        <div className="bg-ink-elevated rounded-lg p-4 mb-4 border border-border-subtle">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-text-tertiary mb-1">剩余次数</p>
-              <p className="text-3xl font-bold text-accent font-mono">{totalRemaining}</p>
-            </div>
-            <div className="w-12 h-12 bg-ink-surface rounded-full flex items-center justify-center border border-border-subtle">
-              <svg className="w-6 h-6 text-accent" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M5 13l4 4L19 7"></path>
+
+        {/* 三个 Mini Stats */}
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          {/* 套餐剩余 */}
+          <div className="bg-ink-elevated rounded-xl p-4 border border-border-subtle text-center hover:border-accent/30 transition-colors cursor-pointer" onClick={() => router.push('/profile/packages')}>
+            <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-2">
+              <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
             </div>
+            <p className="text-2xl font-bold text-accent font-mono">{totalRemaining}</p>
+            <p className="text-xs text-text-tertiary mt-0.5">套餐剩余</p>
+            {nearestExpiry && (
+              <p className="text-[10px] text-warning mt-1">
+                {Math.ceil((new Date(nearestExpiry.expires_at!).getTime() - Date.now()) / (1000 * 60 * 60 * 24))}天后到期
+              </p>
+            )}
+          </div>
+
+          {/* 可用优惠券 */}
+          <div className="bg-ink-elevated rounded-xl p-4 border border-border-subtle text-center hover:border-success/30 transition-colors cursor-pointer" onClick={() => router.push('/vouchers')}>
+            <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-2">
+              <svg className="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+              </svg>
+            </div>
+            <p className="text-2xl font-bold text-success font-mono">{couponsCount}</p>
+            <p className="text-xs text-text-tertiary mt-0.5">可用优惠券</p>
+          </div>
+
+          {/* 积分 */}
+          <div className="bg-ink-elevated rounded-xl p-4 border border-border-subtle text-center hover:border-info/30 transition-colors cursor-pointer" onClick={() => router.push('/points')}>
+            <div className="w-10 h-10 rounded-full bg-info/10 flex items-center justify-center mx-auto mb-2">
+              <svg className="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+            </div>
+            <p className="text-2xl font-bold text-info font-mono">{points}</p>
+            <p className="text-xs text-text-tertiary mt-0.5">积分余额</p>
           </div>
         </div>
 
-        {/* 套餐列表 */}
-        <div className="space-y-3">
-          {packages.map((pkg) => (
-            <div
-              key={pkg.id}
-              className="border border-border-subtle rounded-lg p-3"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-sm text-text-primary">
-                    {pkg.package?.name || '套餐'}
-                  </h3>
-                  <p className="text-xs text-text-secondary mt-1">
-                    已使用 {(pkg.package?.times || 0) - pkg.remaining}/{pkg.package?.times || 0} 次
-                  </p>
-                </div>
-                <Badge variant="info">
-                  剩余 {pkg.remaining}
-                </Badge>
-              </div>
+        {/* CTA 按钮 */}
+        <button
+          onClick={() => router.push(hasPackages ? '/booking' : '/packages')}
+          className={`
+            w-full py-3 px-4 rounded-xl font-medium text-sm 
+            flex items-center justify-center gap-2
+            transition-all duration-200
+            ${hasPackages
+              ? 'bg-accent text-text-onAccent hover:bg-accent/90 shadow-lg shadow-accent/20'
+              : 'bg-ink-elevated border border-border-subtle text-text-primary hover:border-accent hover:bg-accent/5'
+            }
+          `}
+        >
+          {hasPackages ? (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              使用套餐预约
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              购买套餐享优惠
+            </>
+          )}
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
 
-              {/* 进度条 */}
-              <div className="w-full bg-ink-elevated rounded-full h-2 mb-2">
-                <div
-                  className="bg-accent h-2 rounded-full transition-all"
-                  style={{
-                    width: `${((pkg.package?.times || 0) - pkg.remaining) / (pkg.package?.times || 1) * 100}%`,
-                  }}
-                />
-              </div>
-
-              {/* 过期时间 */}
-              {pkg.expires_at && (
-                <p className="text-xs text-text-tertiary">
-                  有效期至: {formatDate(pkg.expires_at)}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
+        {/* 有套餐时显示快捷标签 */}
+        {hasPackages && packages.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {packages.slice(0, 2).map((pkg) => (
+              <span
+                key={pkg.id}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-ink-elevated border border-border-subtle text-text-secondary"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-accent"></span>
+                {pkg.package?.name || '套餐'}: 剩余 {pkg.remaining} 次
+              </span>
+            ))}
+            {packages.length > 2 && (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-ink-elevated border border-border-subtle text-text-tertiary">
+                +{packages.length - 2} 更多
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </Card>
   );
 }
+

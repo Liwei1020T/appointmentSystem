@@ -54,14 +54,39 @@ export default function AdminOrderProgress({
   const [updating, setUpdating] = useState(false);
   const [activeAction, setActiveAction] = useState<string | null>(null);
 
+  // Confirmation modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    confirmLabel: string;
+    confirmStyle: 'success' | 'danger' | 'accent';
+    onConfirm: () => void;
+  } | null>(null);
+
+  const showConfirmModal = (
+    title: string,
+    message: string,
+    confirmLabel: string,
+    confirmStyle: 'success' | 'danger' | 'accent',
+    onConfirm: () => void
+  ) => {
+    setConfirmModal({ show: true, title, message, confirmLabel, confirmStyle, onConfirm });
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmModal(null);
+  };
+
   // 生成进度步骤
   const generateSteps = (): ProgressStep[] => {
+    const dateTimeFormat = 'yyyy/MM/dd HH:mm';
     const steps: ProgressStep[] = [
       {
         id: 'pending',
         label: '订单已创建',
         status: 'completed',
-        description: formatDate(createdAt),
+        description: formatDate(createdAt, dateTimeFormat),
         icon: CheckCircle,
         color: 'text-success',
         bgColor: 'bg-success/15',
@@ -73,7 +98,7 @@ export default function AdminOrderProgress({
         id: 'cancelled',
         label: '订单已取消',
         status: 'cancelled',
-        description: formatDate(cancelledAt || updatedAt || createdAt),
+        description: formatDate(cancelledAt || updatedAt || createdAt, dateTimeFormat),
         icon: XCircle,
         color: 'text-danger',
         bgColor: 'bg-danger/15',
@@ -102,7 +127,7 @@ export default function AdminOrderProgress({
         id: 'in_progress',
         label: '穿线处理',
         status: currentStatus === 'in_progress' ? 'in_progress' : 'completed',
-        description: formatDate(updatedAt || createdAt),
+        description: formatDate(updatedAt || createdAt, dateTimeFormat),
         icon: currentStatus === 'in_progress' ? PlayCircle : CheckCircle,
         color: currentStatus === 'in_progress' ? 'text-info' : 'text-success',
         bgColor: currentStatus === 'in_progress' ? 'bg-info-soft' : 'bg-success/15',
@@ -115,7 +140,7 @@ export default function AdminOrderProgress({
         id: 'completed',
         label: '服务完成',
         status: 'completed',
-        description: formatDate(completedAt || updatedAt || createdAt),
+        description: formatDate(completedAt || updatedAt || createdAt, dateTimeFormat),
         icon: CheckCircle,
         color: 'text-success',
         bgColor: 'bg-success/15',
@@ -220,13 +245,13 @@ export default function AdminOrderProgress({
                       transition-all duration-300
                     `}
                   >
-                    <IconComponent 
+                    <IconComponent
                       className={`w-6 h-6 ${step.color}`}
                       strokeWidth={isActive ? 2.5 : 2}
                     />
                   </div>
                   {!isLast && (
-                    <div 
+                    <div
                       className={`
                         w-0.5 h-12 my-1
                         ${isCompleted ? 'bg-success/40' : 'bg-border-subtle'}
@@ -253,9 +278,13 @@ export default function AdminOrderProgress({
                       <button
                         onClick={() => {
                           if (step.action!.confirmMessage) {
-                            if (confirm(step.action!.confirmMessage)) {
-                              handleUpdateStatus(step.action!.nextStatus, step.action!.label);
-                            }
+                            showConfirmModal(
+                              step.action!.label,
+                              step.action!.confirmMessage,
+                              '确认',
+                              step.action!.nextStatus === 'completed' ? 'success' : 'accent',
+                              () => handleUpdateStatus(step.action!.nextStatus, step.action!.label)
+                            );
                           } else {
                             handleUpdateStatus(step.action!.nextStatus, step.action!.label);
                           }
@@ -263,8 +292,8 @@ export default function AdminOrderProgress({
                         disabled={updating}
                         className={`
                           px-4 py-2 rounded-lg font-medium text-sm
-                          ${step.action.nextStatus === 'completed' 
-                            ? 'bg-success hover:bg-success/90 text-text-primary' 
+                          ${step.action.nextStatus === 'completed'
+                            ? 'bg-success hover:bg-success/90 text-text-primary'
                             : 'bg-accent hover:shadow-glow text-text-onAccent'
                           }
                           disabled:opacity-50 disabled:cursor-not-allowed
@@ -296,15 +325,79 @@ export default function AdminOrderProgress({
         <div className="mt-6 pt-6 border-t border-border-subtle">
           <button
             onClick={() => {
-              if (confirm('确认取消订单？此操作不可恢复。')) {
-                handleUpdateStatus('cancelled', '取消订单');
-              }
+              showConfirmModal(
+                '取消订单',
+                '确认取消订单？此操作不可恢复。',
+                '确认取消',
+                'danger',
+                () => handleUpdateStatus('cancelled', '取消订单')
+              );
             }}
             disabled={updating}
             className="w-full px-4 py-2 text-sm text-danger border border-danger/40 rounded-lg hover:bg-danger/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             取消订单
           </button>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={closeConfirmModal}
+          />
+
+          {/* Modal */}
+          <div className="relative bg-ink-surface rounded-2xl shadow-2xl border border-border-subtle max-w-sm w-full animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-6 pb-4">
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${confirmModal.confirmStyle === 'danger' ? 'bg-danger/15' :
+                  confirmModal.confirmStyle === 'success' ? 'bg-success/15' :
+                    'bg-accent/15'
+                }`}>
+                {confirmModal.confirmStyle === 'danger' ? (
+                  <AlertCircle className="w-7 h-7 text-danger" />
+                ) : confirmModal.confirmStyle === 'success' ? (
+                  <CheckCircle className="w-7 h-7 text-success" />
+                ) : (
+                  <PlayCircle className="w-7 h-7 text-accent" />
+                )}
+              </div>
+              <h3 className="text-lg font-semibold text-text-primary text-center">
+                {confirmModal.title}
+              </h3>
+              <p className="text-sm text-text-secondary text-center mt-2">
+                {confirmModal.message}
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="p-4 pt-0 flex gap-3">
+              <button
+                onClick={closeConfirmModal}
+                className="flex-1 px-4 py-3 text-sm font-medium text-text-secondary bg-ink-elevated rounded-xl hover:bg-ink-surface-hover transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => {
+                  confirmModal.onConfirm();
+                  closeConfirmModal();
+                }}
+                className={`flex-1 px-4 py-3 text-sm font-medium rounded-xl transition-colors ${confirmModal.confirmStyle === 'danger'
+                    ? 'bg-danger text-white hover:bg-danger/90'
+                    : confirmModal.confirmStyle === 'success'
+                      ? 'bg-success text-text-primary hover:bg-success/90'
+                      : 'bg-accent text-text-onAccent hover:shadow-glow'
+                  }`}
+              >
+                {confirmModal.confirmLabel}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

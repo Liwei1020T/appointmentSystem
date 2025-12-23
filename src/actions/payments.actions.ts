@@ -231,9 +231,8 @@ export async function confirmPaymentAction(paymentId: string, transactionId?: st
       },
     });
 
-    if (payment.orderId) {
-      await tx.order.update({ where: { id: payment.orderId }, data: { status: 'in_progress' } });
-    }
+    // Removed: automatic order status change to in_progress
+    // Admin will manually start stringing from order detail page
 
     const paymentMeta = (payment.metadata as any) || {};
     const packageId = payment.packageId;
@@ -386,9 +385,8 @@ export async function confirmCashPaymentAction(paymentId: string) {
       },
     });
 
-    if (payment.orderId) {
-      await tx.order.update({ where: { id: payment.orderId }, data: { status: 'in_progress' } });
-    }
+    // Removed: automatic order status change to in_progress
+    // Admin will manually start stringing from order detail page
 
     if (payment.packageId) {
       const existingUserPackage = await tx.userPackage.findFirst({

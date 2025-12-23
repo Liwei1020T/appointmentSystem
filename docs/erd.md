@@ -1,8 +1,8 @@
 # 🗄️ Entity Relationship Diagram (ERD)
 
 **String Service Platform — Database Schema**  
-**Version:** 1.0  
-**Last Updated:** 2025-12-11  
+**Version:** 1.1  
+**Last Updated:** 2025-12-23  
 **Database:** PostgreSQL (Supabase)
 
 ---
@@ -25,6 +25,7 @@ This database schema supports the complete String Service Platform, including:
 
 - User authentication and profiles
 - Booking and order management
+- **Multi-racket order support** (2025-12-23 新增)
 - Payment processing
 - Package (套餐) system
 - Inventory management
@@ -32,7 +33,7 @@ This database schema supports the complete String Service Platform, including:
 - Referral program
 - Notifications and analytics
 
-**Total Tables:** 14 core tables + system tables
+**Total Tables:** 15 core tables + system tables
 
 ---
 
@@ -172,6 +173,36 @@ Customer booking and order records.
 - `idx_orders_user_id` on `user_id`
 - `idx_orders_status` on `status`
 - `idx_orders_created_at` on `created_at DESC`
+
+---
+
+### 3.1 `order_items` (多球拍订单项) — 2025-12-23 新增
+
+Multi-racket order items. Each item represents one racket within a multi-racket order.
+
+| Column             | Type         | Constraints              | Description                           |
+|--------------------|--------------|--------------------------|---------------------------------------|
+| `id`               | `uuid`       | PRIMARY KEY              | Item ID                               |
+| `order_id`         | `uuid`       | FK → orders.id, NOT NULL | Parent order                          |
+| `string_id`        | `uuid`       | FK → string_inventory.id | String used for this racket           |
+| `tension_vertical` | `integer`    | NOT NULL                 | Vertical string tension (lbs)         |
+| `tension_horizontal`| `integer`   | NOT NULL                 | Horizontal string tension (lbs)       |
+| `racket_brand`     | `text`       |                          | Racket brand (optional)               |
+| `racket_model`     | `text`       |                          | Racket model (optional)               |
+| `racket_photo`     | `text`       | NOT NULL                 | Racket photo URL (required)           |
+| `notes`            | `text`       |                          | Special notes for this racket         |
+| `price`            | `numeric`    | NOT NULL                 | Price for this racket string service  |
+| `created_at`       | `timestamptz`| DEFAULT now()            | Creation time                         |
+| `updated_at`       | `timestamptz`| DEFAULT now()            |                                       |
+
+**Indexes:**
+- `idx_order_items_order_id` on `order_id`
+
+**Notes:**
+- Multi-racket orders have `string_id = NULL` in the parent `orders` table
+- Each item references its own string in `string_inventory`
+- `racket_photo` is required - enforced at application level
+- Cascade delete: deleting parent order deletes all items
 
 ---
 

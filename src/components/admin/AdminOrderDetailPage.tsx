@@ -40,6 +40,7 @@ export default function AdminOrderDetailPage() {
   const [adminNotes, setAdminNotes] = useState('');
   const [completing, setCompleting] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null); // Photo preview modal
   /**
    * 支付信息来源兼容：
    * - 新：`order.payment`（单条）
@@ -248,69 +249,6 @@ export default function AdminOrderDetailPage() {
               <p className="text-xs text-text-tertiary mt-1 font-mono">#{order.id}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {/* 确认收款按钮 - 支持现金/TNG/其他待确认支付 */}
-              {payment &&
-                ['pending', 'pending_verification'].includes(payment.status) &&
-                // TNG 有收据时需要走“收据审核”流程，避免重复展示两个确认按钮
-                !(payment.provider === 'tng' && !!payment.receipt_url) && (
-                  <Button
-                    size="sm"
-                    className="bg-success text-text-primary hover:bg-success/90"
-                    onClick={async () => {
-                      setUpdating(true);
-                      try {
-                        const isCash = payment.provider === 'cash';
-                        if (isCash) {
-                          await confirmCashPayment(payment.id);
-                        } else {
-                          await confirmPayment(payment.id);
-                        }
-                        toast.success(isCash ? '现金收款已确认' : '支付已确认');
-                        await loadOrder();
-                      } catch (error: any) {
-                        toast.error(error?.message || '确认收款失败');
-                      } finally {
-                        setUpdating(false);
-                      }
-                    }}
-                    disabled={updating}
-                  >
-                    {updating ? '处理中...' : '确认收款'}
-                  </Button>
-                )}
-
-              {/* 确认TNG付款按钮 - 仅TNG支付需要单独确认 */}
-              {payment && payment.status === 'pending' && payment.provider === 'tng' && payment.receipt_url && (
-                <Button
-                  size="sm"
-                  className="bg-info text-text-primary hover:bg-info/90"
-                  onClick={async () => {
-                    if (confirm('确认TNG支付收据有效？')) {
-                      try {
-                        const { error } = await verifyPaymentReceipt(payment.id, true, '管理员快速审核通过');
-                        if (error) {
-                          toast.error(String(error));
-                        } else {
-                          toast.success('💳 TNG支付已确认');
-                          loadOrder();
-                        }
-                      } catch (error) {
-                        toast.error('确认失败');
-                      }
-                    }
-                  }}
-                >
-                  确认TNG收款
-                </Button>
-              )}
-
-              {/* 现金支付提示标签 */}
-              {payment && payment.status === 'pending' && payment.provider === 'cash' && (
-                <Badge variant="warning" size="sm" className="px-3 py-1.5">
-                  💵 现金待收款
-                </Badge>
-              )}
-
               {/* “更多状态”改为“已完成”快捷按钮：直接走完成订单流程（库存/利润/积分） */}
               {order.status !== 'completed' && order.status !== 'cancelled' && (
                 <Button
@@ -330,60 +268,153 @@ export default function AdminOrderDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Order Info */}
+            {/* Order Info - 支持多球拍订单 */}
             <Card padding="lg">
-              <h2 className="text-lg font-semibold text-text-primary mb-4">订单信息</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <div className="text-sm text-text-secondary mb-1">球线型号</div>
-                  <div className="font-medium text-text-primary">
-                    {order.string?.model || order.string?.name || order.stringInventory?.model || '-'}
-                  </div>
-                  <div className="text-xs text-text-tertiary">
-                    {order.string?.brand || order.stringInventory?.brand || '-'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm text-text-secondary mb-1">价格</div>
-                  <div className="font-medium text-text-primary font-mono">
-                    {(() => {
-                      const price = Number(
-                        order.total_price ??
-                        order.totalAmount ??
-                        (order as any).price ??
-                        order.string?.price ??
-                        0
-                      );
-                      return `RM ${price.toFixed(2)}`;
-                    })()}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm text-text-secondary mb-1">竖线拉力</div>
-                  <div className="font-medium text-text-primary">
-                    {(() => {
-                      // 尝试从备注解析分拉信息 [竖/横分拉: 24/26 LBS]
-                      const match = order.notes?.match(/\[竖\/横分拉:\s*(\d+)\/(\d+)\s*LBS\]/);
-                      if (match) return `${match[1]} lbs`;
+              <h2 className="text-lg font-semibold text-text-primary mb-4">
+                {(order as any).items?.length > 0
+                  ? `订单信息 (${(order as any).items.length} 支球拍)`
+                  : '订单信息'
+                }
+              </h2>
 
-                      const v = (order as any).tension_vertical ?? (order as any).tension ?? order.tension;
-                      return v ? `${v} lbs` : '-';
-                    })()}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm text-text-secondary mb-1">横线拉力</div>
-                  <div className="font-medium text-text-primary">
-                    {(() => {
-                      const match = order.notes?.match(/\[竖\/横分拉:\s*(\d+)\/(\d+)\s*LBS\]/);
-                      if (match) return `${match[2]} lbs`;
+              {/* 多球拍订单 */}
+              {(order as any).items?.length > 0 ? (
+                <div className="space-y-4">
+                  {(order as any).items.map((item: any, index: number) => (
+                    <div
+                      key={item.id || index}
+                      className="bg-ink-elevated rounded-lg p-4 border border-border-subtle"
+                    >
+                      <div className="flex gap-4">
+                        {/* 球拍照片 */}
+                        {(item.racketPhoto || item.racket_photo) && (
+                          <div className="flex-shrink-0">
+                            <img
+                              src={item.racketPhoto || item.racket_photo}
+                              alt={`球拍 ${index + 1}`}
+                              className="w-24 h-24 rounded-lg object-cover border border-border-subtle cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => setPreviewPhoto(item.racketPhoto || item.racket_photo)}
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          {/* 球拍序号和球线信息 */}
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="w-7 h-7 bg-accent text-white rounded-full text-sm font-bold flex items-center justify-center">
+                                {index + 1}
+                              </span>
+                              <div>
+                                <div className="font-semibold text-text-primary">
+                                  {item.string?.brand} {item.string?.model}
+                                </div>
+                                {(item.racketBrand || item.racket_brand || item.racketModel || item.racket_model) && (
+                                  <div className="text-xs text-text-tertiary">
+                                    球拍: {item.racketBrand || item.racket_brand} {item.racketModel || item.racket_model}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-bold text-accent font-mono">
+                                RM {Number(item.price || 0).toFixed(2)}
+                              </div>
+                            </div>
+                          </div>
+                          {/* 磅数 */}
+                          <div className="flex gap-4 mt-2">
+                            <div className="bg-ink-surface rounded px-3 py-1.5 border border-border-subtle">
+                              <span className="text-xs text-text-tertiary">竖线 </span>
+                              <span className="font-bold text-text-primary">
+                                {item.tensionVertical || item.tension_vertical} lbs
+                              </span>
+                            </div>
+                            <div className="bg-ink-surface rounded px-3 py-1.5 border border-border-subtle">
+                              <span className="text-xs text-text-tertiary">横线 </span>
+                              <span className="font-bold text-text-primary">
+                                {item.tensionHorizontal || item.tension_horizontal} lbs
+                              </span>
+                            </div>
+                          </div>
+                          {/* 备注 */}
+                          {item.notes && (
+                            <div className="mt-2 text-xs text-text-tertiary">
+                              📝 {item.notes}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
 
-                      const h = (order as any).tension_horizontal ?? (order as any).tension ?? order.tension;
-                      return h ? `${h} lbs` : '-';
-                    })()}
+                  {/* 总价 */}
+                  <div className="flex justify-between items-center pt-4 border-t border-border-subtle">
+                    <span className="text-text-secondary">总计</span>
+                    <span className="text-lg font-bold text-accent font-mono">
+                      {(() => {
+                        const total = (order as any).items.reduce((sum: number, item: any) =>
+                          sum + Number(item.price || 0), 0
+                        );
+                        return `RM ${total.toFixed(2)}`;
+                      })()}
+                    </span>
                   </div>
                 </div>
-              </div>
+              ) : (
+                /* 单球拍订单（旧格式兼容） */
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-text-secondary mb-1">球线型号</div>
+                    <div className="font-medium text-text-primary">
+                      {order.string?.model || order.string?.name || order.stringInventory?.model || '-'}
+                    </div>
+                    <div className="text-xs text-text-tertiary">
+                      {order.string?.brand || order.stringInventory?.brand || '-'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-text-secondary mb-1">价格</div>
+                    <div className="font-medium text-text-primary font-mono">
+                      {(() => {
+                        const price = Number(
+                          order.total_price ??
+                          order.totalAmount ??
+                          (order as any).price ??
+                          order.string?.price ??
+                          0
+                        );
+                        return `RM ${price.toFixed(2)}`;
+                      })()}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-text-secondary mb-1">竖线拉力</div>
+                    <div className="font-medium text-text-primary">
+                      {(() => {
+                        // 尝试从备注解析分拉信息 [竖/横分拉: 24/26 LBS]
+                        const match = order.notes?.match(/\[竖\/横分拉:\s*(\d+)\/(\d+)\s*LBS\]/);
+                        if (match) return `${match[1]} lbs`;
+
+                        const v = (order as any).tension_vertical ?? (order as any).tension ?? order.tension;
+                        return v ? `${v} lbs` : '-';
+                      })()}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-text-secondary mb-1">横线拉力</div>
+                    <div className="font-medium text-text-primary">
+                      {(() => {
+                        const match = order.notes?.match(/\[竖\/横分拉:\s*(\d+)\/(\d+)\s*LBS\]/);
+                        if (match) return `${match[2]} lbs`;
+
+                        const h = (order as any).tension_horizontal ?? (order as any).tension ?? order.tension;
+                        return h ? `${h} lbs` : '-';
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {order.notes && (
                 <div className="mt-4 pt-4 border-t border-border-subtle">
                   <div className="text-sm text-text-secondary mb-1">客户备注</div>
@@ -517,10 +548,10 @@ export default function AdminOrderDetailPage() {
             <AdminOrderProgress
               orderId={order.id}
               currentStatus={order.status as any}
-              createdAt={String(order.created_at || order.createdAt || '')}
-              updatedAt={order.updated_at ? String(order.updated_at) : undefined}
-              completedAt={order.completed_at ? String(order.completed_at) : undefined}
-              cancelledAt={(order as any).cancelled_at ? String((order as any).cancelled_at) : undefined}
+              createdAt={String((order as any).createdAt || order.created_at || '')}
+              updatedAt={(order as any).updatedAt || (order as any).updated_at ? String((order as any).updatedAt || (order as any).updated_at) : undefined}
+              completedAt={(order as any).completedAt || (order as any).completed_at ? String((order as any).completedAt || (order as any).completed_at) : undefined}
+              cancelledAt={(order as any).cancelledAt || (order as any).cancelled_at ? String((order as any).cancelledAt || (order as any).cancelled_at) : undefined}
               onStatusUpdate={loadOrder}
             />
 
@@ -607,10 +638,6 @@ export default function AdminOrderDetailPage() {
             <div className="bg-info-soft rounded-lg p-4 mb-6 space-y-2 text-sm">
               <div className="flex items-start gap-2">
                 <span className="text-info mt-0.5">✓</span>
-                <span className="text-text-primary">扣减球线库存 (11米)</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-info mt-0.5">✓</span>
                 <span className="text-text-primary">计算并记录利润</span>
               </div>
               <div className="flex items-start gap-2">
@@ -665,6 +692,29 @@ export default function AdminOrderDetailPage() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Photo Preview Modal */}
+      {previewPhoto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setPreviewPhoto(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full">
+            <button
+              onClick={() => setPreviewPhoto(null)}
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors text-xl font-bold"
+            >
+              ✕ 关闭
+            </button>
+            <img
+              src={previewPhoto}
+              alt="球拍照片预览"
+              className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
         </div>
       )}

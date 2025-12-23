@@ -26,18 +26,31 @@ export async function getFeaturedPackagesAction(limit = 3) {
 
 /**
  * 获取用户套餐（Server Action）
+ * @param status - 'active' 表示只返回有效套餐（剩余次数 > 0 且未过期）
  */
 export async function getUserPackagesAction(status?: string) {
   const user = await requireAuth();
+
+  const where: any = {
+    userId: user.id,
+  };
+
+  // 如果请求 active 状态，则过滤有效套餐
+  if (status === 'active') {
+    where.remaining = { gt: 0 };
+    where.expiry = { gt: new Date() };
+    where.status = 'active';
+  } else if (status) {
+    where.status = status;
+  }
+
   return prisma.userPackage.findMany({
-    where: {
-      userId: user.id,
-      ...(status ? { status } : {}),
-    },
+    where,
     include: { package: true },
     orderBy: { createdAt: 'desc' },
   });
 }
+
 
 /**
  * 购买套餐（Server Action）
@@ -162,3 +175,37 @@ export async function getPackageUsageAction(userPackageId: string) {
     },
   }));
 }
+
+/**
+ * 获取用户待审核的套餐支付（Server Action）
+ * 用于在"我的套餐"页面显示已购买但尚未审核通过的套餐
+ */
+export async function getPendingPackagePaymentsAction() {
+  const user = await requireAuth();
+
+  const pendingPayments = await prisma.payment.findMany({
+    where: {
+      userId: user.id,
+      packageId: { not: null },
+      status: { in: ['pending', 'pending_verification'] },
+    },
+    include: {
+      package: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return pendingPayments.map((payment) => ({
+    id: payment.id,
+    packageId: payment.packageId,
+    packageName: payment.package?.name || '套餐',
+    packageTimes: payment.package?.times || 0,
+    packageValidityDays: payment.package?.validityDays || 0,
+    amount: Number(payment.amount),
+    status: payment.status,
+    provider: payment.provider,
+    receiptUrl: payment.receiptUrl,
+    createdAt: payment.createdAt.toISOString(),
+  }));
+}
+

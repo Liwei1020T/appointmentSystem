@@ -91,7 +91,11 @@ export async function getUserOrdersAction(options?: {
           createdAt: true,
         },
       },
-    },
+      // Include items for multi-racket order display
+      items: {
+        select: { id: true },
+      },
+    } as any, // Dynamic include until Prisma client is regenerated
     orderBy: { createdAt: 'desc' },
     ...(take ? { take } : {}),
     ...(skip !== undefined ? { skip } : {}),
@@ -516,7 +520,11 @@ export async function completeOrderAction(orderId: string, adminNotes?: string) 
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { user: true, string: true },
+    include: {
+      user: true,
+      string: true,
+      items: true, // Include items for multi-racket orders
+    } as any,
   });
 
   if (!order) {
@@ -531,16 +539,25 @@ export async function completeOrderAction(orderId: string, adminNotes?: string) 
     throw new Error('只能完成进行中的订单');
   }
 
-  if (!order.stringId || !order.string) {
+  // Check if this is a multi-racket order (has items, no direct stringId)
+  const isMultiRacketOrder = (order as any).items && (order as any).items.length > 0;
+
+  // For single-racket orders, validate stringId
+  if (!isMultiRacketOrder && (!order.stringId || !order.string)) {
     throw new Error('订单没有关联球线');
   }
 
   const stockToDeduct = 11;
-  if (order.string.stock < stockToDeduct) {
-    throw new Error(`库存不足，当前: ${order.string.stock}m，需要: ${stockToDeduct}m`);
+
+  // Only check/deduct stock for single-racket orders
+  // Multi-racket orders already had stock deducted during creation
+  if (!isMultiRacketOrder) {
+    if (order.string!.stock < stockToDeduct) {
+      throw new Error(`库存不足，当前: ${order.string!.stock}m，需要: ${stockToDeduct}m`);
+    }
   }
 
-  const profit = Number(order.price) - Number(order.cost || 0);
+  const profit = Number(order.price) - Number((order as any).cost || 0);
   const latestPayment = await prisma.payment.findFirst({
     where: { orderId },
     orderBy: { createdAt: 'desc' },
@@ -550,27 +567,30 @@ export async function completeOrderAction(orderId: string, adminNotes?: string) 
   const pointsPerOrder = Math.max(0, Math.floor(orderTotalAmount * 0.5));
 
   await prisma.$transaction(async (tx) => {
-    // Atomically decrement stock to prevent negative inventory in concurrent completes.
-    const stockResult = await tx.stringInventory.updateMany({
-      where: { id: order.stringId!, stock: { gte: stockToDeduct } },
-      data: { stock: { decrement: stockToDeduct } },
-    });
+    // Only deduct stock for single-racket orders
+    if (!isMultiRacketOrder && order.stringId) {
+      // Atomically decrement stock to prevent negative inventory in concurrent completes.
+      const stockResult = await tx.stringInventory.updateMany({
+        where: { id: order.stringId!, stock: { gte: stockToDeduct } },
+        data: { stock: { decrement: stockToDeduct } },
+      });
 
-    if (stockResult.count === 0) {
-      throw new Error(`库存不足，无法扣减 ${stockToDeduct}m`);
+      if (stockResult.count === 0) {
+        throw new Error(`库存不足，无法扣减 ${stockToDeduct}m`);
+      }
+
+      await tx.stockLog.create({
+        data: {
+          stringId: order.stringId!,
+          change: -stockToDeduct,
+          type: 'sale',
+          costPrice: order.string!.costPrice,
+          referenceId: orderId,
+          notes: `订单完成自动扣减: ${adminNotes || ''}`,
+          createdBy: admin.id,
+        },
+      });
     }
-
-    await tx.stockLog.create({
-      data: {
-        stringId: order.stringId!,
-        change: -stockToDeduct,
-        type: 'sale',
-        costPrice: order.string!.costPrice,
-        referenceId: orderId,
-        notes: `订单完成自动扣减: ${adminNotes || ''}`,
-        createdBy: admin.id,
-      },
-    });
 
     const newBalance = order.user.points + pointsPerOrder;
     await tx.user.update({

@@ -2,6 +2,7 @@
  * 我的套餐页组件 (My Packages Page)
  * 
  * 展示用户已购买的套餐，包括剩余次数、有效期、使用记录
+ * 同时显示待审核的套餐购买
  */
 
 'use client';
@@ -9,17 +10,33 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUserPackages, UserPackageWithPackage } from '@/services/packageService';
+import { getPendingPackagePaymentsAction } from '@/actions/packages.actions';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 import Spinner from '@/components/Spinner';
 import { formatDate, calculateDaysRemaining } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
 
+// 待审核套餐类型
+interface PendingPackagePayment {
+  id: string;
+  packageId: string;
+  packageName: string;
+  packageTimes: number;
+  packageValidityDays: number;
+  amount: number;
+  status: string;
+  provider: string;
+  receiptUrl: string | null;
+  createdAt: string;
+}
+
 export default function MyPackagesPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const user = session?.user;
   const [packages, setPackages] = useState<UserPackageWithPackage[]>([]);
+  const [pendingPackages, setPendingPackages] = useState<PendingPackagePayment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [showExpired, setShowExpired] = useState<boolean>(false);
@@ -29,13 +46,21 @@ export default function MyPackagesPage() {
     setLoading(true);
     setError('');
 
-    const { data, error: err } = await getUserPackages(false); // 获取所有套餐
+    try {
+      // 获取已激活套餐
+      const { data, error: err } = await getUserPackages(false);
+      if (err) {
+        setError(err.message || '加载套餐失败');
+        setPackages([]);
+      } else {
+        setPackages(data || []);
+      }
 
-    if (err) {
+      // 获取待审核套餐
+      const pending = await getPendingPackagePaymentsAction();
+      setPendingPackages(pending);
+    } catch (err: any) {
       setError(err.message || '加载套餐失败');
-      setPackages([]);
-    } else {
-      setPackages(data || []);
     }
 
     setLoading(false);
@@ -49,6 +74,7 @@ export default function MyPackagesPage() {
 
     loadPackages();
   }, [user]);
+
 
   /**
    * 获取套餐过期时间（兼容历史字段命名）。
@@ -121,8 +147,8 @@ export default function MyPackagesPage() {
             <button
               onClick={() => setShowExpired(false)}
               className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${!showExpired
-                  ? 'bg-accent text-text-onAccent'
-                  : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
+                ? 'bg-accent text-text-onAccent'
+                : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
                 }`}
             >
               有效套餐 ({validPackages.length})
@@ -130,8 +156,8 @@ export default function MyPackagesPage() {
             <button
               onClick={() => setShowExpired(true)}
               className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${showExpired
-                  ? 'bg-accent text-text-onAccent'
-                  : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
+                ? 'bg-accent text-text-onAccent'
+                : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
                 }`}
             >
               已过期 ({expiredPackages.length})
@@ -153,6 +179,62 @@ export default function MyPackagesPage() {
             <Button onClick={loadPackages}>重试</Button>
           </Card>
         )}
+
+        {/* 待审核套餐 */}
+        {!loading && pendingPackages.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-medium text-text-secondary flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-info animate-pulse"></span>
+              待审核套餐 ({pendingPackages.length})
+            </h2>
+            {pendingPackages.map((payment) => (
+              <Card key={payment.id} className="p-5 border-2 border-info/30 bg-info/5">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+                      {payment.packageName}
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-info/20 text-info border border-info/30">
+                        ⏳ 审核中
+                      </span>
+                    </h3>
+                    <p className="text-sm text-text-tertiary mt-1">
+                      购买于 {new Date(payment.createdAt).toLocaleDateString('zh-CN')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <p className="text-text-tertiary">穿线次数</p>
+                    <p className="font-semibold text-text-primary">{payment.packageTimes} 次</p>
+                  </div>
+                  <div>
+                    <p className="text-text-tertiary">有效期</p>
+                    <p className="font-semibold text-text-primary">{payment.packageValidityDays} 天</p>
+                  </div>
+                  <div>
+                    <p className="text-text-tertiary">支付金额</p>
+                    <p className="font-semibold text-accent font-mono">RM {payment.amount.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-3 bg-info/10 rounded-lg border border-info/20">
+                  <p className="text-sm text-info flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {payment.status === 'pending' && payment.provider === 'cash'
+                      ? '等待管理员确认收款'
+                      : payment.status === 'pending'
+                        ? '请上传支付收据'
+                        : '正在等待管理员审核收据'}
+                  </p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
 
         {/* 套餐列表 */}
         {!loading && !error && displayPackages.length > 0 && (
@@ -198,8 +280,8 @@ export default function MyPackagesPage() {
                     <div className="w-full bg-ink-elevated rounded-full h-2">
                       <div
                         className={`h-2 rounded-full ${usagePercentage === 100
-                            ? 'bg-ink-surface'
-                            : 'bg-accent'
+                          ? 'bg-ink-surface'
+                          : 'bg-accent'
                           }`}
                         style={{ width: `${usagePercentage}%` }}
                       />

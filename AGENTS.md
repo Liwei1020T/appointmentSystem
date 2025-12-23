@@ -1,8 +1,8 @@
 🧠 AGENTS.md — AI Coding Agent Development Protocol
 
 String Service Platform — Development Governance Document  
-版本：1.0  
-最后更新：2025-12-17  
+版本：1.1  
+最后更新：2025-12-23  
 
 ---
 

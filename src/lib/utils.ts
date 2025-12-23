@@ -9,7 +9,20 @@ export function formatDate(date: string | Date | null | undefined, formatStr: st
   if (!date) return '-';
 
   try {
-    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    let dateObj: Date;
+
+    if (typeof date === 'string') {
+      // Try parseISO first (for ISO 8601 strings)
+      dateObj = parseISO(date);
+
+      // If parseISO fails, try native Date constructor
+      if (isNaN(dateObj.getTime())) {
+        dateObj = new Date(date);
+      }
+    } else {
+      dateObj = date;
+    }
+
     if (isNaN(dateObj.getTime())) return '-';
     return format(dateObj, formatStr);
   } catch (error) {

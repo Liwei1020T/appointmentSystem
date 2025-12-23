@@ -141,39 +141,40 @@ export default function MultiRacketBookingFlow() {
             return sum + price;
         }, 0);
 
-        let discount = 0;
-
         // 如果使用套餐，总价为 0
         if (usePackage) {
-            return { baseTotal, discount: baseTotal, finalTotal: 0 };
+            return { baseTotal, voucherDiscount: 0, membershipDiscount: 0, totalDiscount: baseTotal, finalTotal: 0 };
         }
 
         // 优惠券折扣
+        let voucherDiscount = 0;
         if (selectedVoucher?.voucher) {
             const voucher = selectedVoucher.voucher;
             const discountType = (voucher as any).type || (voucher as any).discount_type;
             const discountValue = Number((voucher as any).value || (voucher as any).discount_value || 0);
             if (discountType === 'percentage') {
-                discount = (baseTotal * discountValue) / 100;
+                voucherDiscount = (baseTotal * discountValue) / 100;
             } else {
-                discount = discountValue;
+                voucherDiscount = discountValue;
             }
-            discount = Math.min(discount, baseTotal);
+            voucherDiscount = Math.min(voucherDiscount, baseTotal);
         }
 
-        // 会员折扣
-        const membershipDiscountRate = (membershipInfo as any)?.discount || (membershipInfo as any)?.discountPercentage || 0;
+        // 会员折扣（基于优惠券折扣后的金额）
+        const membershipDiscountRate = membershipInfo?.discountRate || 0;
+        const afterVoucherTotal = baseTotal - voucherDiscount;
         const membershipDiscount = membershipDiscountRate > 0
-            ? (baseTotal - discount) * (membershipDiscountRate / 100)
+            ? afterVoucherTotal * (membershipDiscountRate / 100)
             : 0;
 
-        const totalDiscount = discount + membershipDiscount;
+        const totalDiscount = voucherDiscount + membershipDiscount;
         const finalTotal = Math.max(0, baseTotal - totalDiscount);
 
-        return { baseTotal, discount: totalDiscount, finalTotal };
+        return { baseTotal, voucherDiscount, membershipDiscount, totalDiscount, finalTotal };
     }, [cartItems, usePackage, selectedVoucher, membershipInfo]);
 
-    const { baseTotal, discount, finalTotal } = calculatePrices();
+    const { baseTotal, voucherDiscount, membershipDiscount, totalDiscount, finalTotal } = calculatePrices();
+
 
     // 验证购物车
     const validateCart = useCallback(() => {
@@ -511,16 +512,14 @@ export default function MultiRacketBookingFlow() {
                         )}
 
                         {/* 会员折扣提示 */}
-                        {(() => {
-                            const discountRate = (membershipInfo as any)?.discount || (membershipInfo as any)?.discountPercentage || 0;
-                            return membershipInfo && discountRate > 0 && !usePackage && (
-                                <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
-                                    <p className="text-sm text-accent font-medium">
-                                        🎖️ {membershipInfo.tier} 会员专享 {discountRate}% 折扣
-                                    </p>
-                                </div>
-                            );
-                        })()}
+                        {membershipInfo && membershipInfo.discountRate > 0 && !usePackage && (
+                            <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
+                                <p className="text-sm text-accent font-medium">
+                                    🎖️ {membershipInfo.label} 会员专享 {membershipInfo.discountRate}% 折扣
+                                </p>
+                            </div>
+                        )}
+
                     </div>
                 )}
 
@@ -570,12 +569,19 @@ export default function MultiRacketBookingFlow() {
                                 <span className="text-text-secondary">球线费用</span>
                                 <span className="text-text-primary">{formatCurrency(baseTotal)}</span>
                             </div>
-                            {discount > 0 && (
+                            {voucherDiscount > 0 && (
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-success">优惠折扣</span>
-                                    <span className="text-success">-{formatCurrency(discount)}</span>
+                                    <span className="text-success">优惠券折扣</span>
+                                    <span className="text-success">-{formatCurrency(voucherDiscount)}</span>
                                 </div>
                             )}
+                            {membershipDiscount > 0 && (
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-accent">会员折扣 ({membershipInfo?.discountRate}%)</span>
+                                    <span className="text-accent">-{formatCurrency(membershipDiscount)}</span>
+                                </div>
+                            )}
+
                             {usePackage && (
                                 <div className="flex justify-between text-sm">
                                     <span className="text-success">套餐抵扣 ({cartItems.length} 次)</span>
