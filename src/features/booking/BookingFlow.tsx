@@ -21,6 +21,7 @@ import { hasAvailablePackage } from '@/services/packageService';
 import { calculateDiscount } from '@/services/voucherService';
 import { createOrderAction, getUserOrdersAction } from '@/actions/orders.actions';
 import { getUserStats, type MembershipTierInfo } from '@/services/profileService';
+import PageHeader from '@/components/layout/PageHeader';
 
 export default function BookingFlow() {
   const router = useRouter();
@@ -190,6 +191,10 @@ export default function BookingFlow() {
 
       const order = await createOrderAction(orderData);
 
+      if (!order) {
+        throw new Error('订单创建失败');
+      }
+
       // 成功提示
       setToast({
         show: true,
@@ -231,26 +236,12 @@ export default function BookingFlow() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* 顶部导航栏 - 更简洁的纯白设计 */}
-      <div className="bg-white border-b border-border-subtle sticky top-0 z-10 transition-colors">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button
-            onClick={() => step === 1 ? router.push('/') : handleBack()}
-            className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5 text-text-secondary" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-              <path d="M15 19l-7-7 7-7"></path>
-            </svg>
-          </button>
-          <div>
-            <h1 className="text-lg font-bold text-text-primary">立即预约</h1>
-            <p className="text-xs text-text-tertiary">
-              步骤 {step}/4
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <PageHeader
+        title="立即预约"
+        subtitle={`步骤 ${step}/4`}
+        onBack={() => step === 1 ? router.push('/') : handleBack()}
+      />
 
       {/* 主内容区 */}
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6 pb-32">

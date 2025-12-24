@@ -33,6 +33,7 @@ import OrderPhotosDisplay from '@/components/OrderPhotosDisplay';
 import OrderPaymentSection from '@/components/OrderPaymentSection';
 import { formatDate, generateShortCode } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
+import PageHeader from '@/components/layout/PageHeader';
 
 interface OrderDetailPageProps {
   orderId: string;
@@ -266,21 +267,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
     order.status === 'pending' && !hasCompletedPayment && !hasPendingCashPayment && !hasPendingTngVerification && finalAmount > 0 && !order.use_package;
 
   return (
-    <div className="min-h-screen bg-ink">
-      {/* 顶部导航 */}
-      <div className="glass-surface border-b border-border-subtle sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="text-text-secondary hover:text-text-primary"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-lg font-semibold text-text-primary">订单详情</h1>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <PageHeader title="订单详情" />
 
       <div className="max-w-2xl mx-auto p-4 space-y-4 pb-24">
         {/* 状态时间线卡片 */}

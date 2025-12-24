@@ -25,8 +25,8 @@ import {
   Clock,
   Tag,
   History,
-  ArrowLeft,
 } from 'lucide-react';
+import PageHeader from '@/components/layout/PageHeader';
 import { getPointsBalance, getPointsHistory } from '@/services/pointsService';
 import { getRedeemableVouchers, redeemVoucherWithPoints, getUserVouchersForProfile, getVoucherStats } from '@/services/voucherService';
 import { formatDate } from '@/lib/utils';
@@ -45,13 +45,18 @@ interface AvailableVoucher {
   id: string;
   code: string;
   name?: string;
-  discount_type: 'percentage' | 'fixed';
-  discount_value: number;
-  points_required: number;
-  min_purchase: number;
+  type?: string;
+  discount_type?: 'percentage' | 'fixed';
+  discount_value?: number;
+  value?: number;
+  points_required?: number;
+  pointsCost?: number;
+  min_purchase?: number;
+  minPurchase?: number;
   description?: string;
   owned_count: number;
   max_per_user: number;
+  maxRedemptionsPerUser?: number;
   can_redeem: boolean;
   remaining_redemptions: number;
 }
@@ -153,13 +158,13 @@ function PointsCenterContent() {
       // 获取可兑换优惠券
       const vouchersResult = await getRedeemableVouchers();
       if (!vouchersResult.error && Array.isArray(vouchersResult.vouchers)) {
-        setAvailableVouchers(vouchersResult.vouchers);
+        setAvailableVouchers(vouchersResult.vouchers as any);
       }
 
       // 获取用户已有优惠券
       const userVouchersResult = await getUserVouchersForProfile();
       if (!userVouchersResult.error && Array.isArray(userVouchersResult.vouchers)) {
-        setUserVouchers(userVouchersResult.vouchers);
+        setUserVouchers(userVouchersResult.vouchers as any);
       }
 
       // 获取优惠券统计
@@ -172,7 +177,8 @@ function PointsCenterContent() {
   };
 
   const handleRedeemVoucher = async (voucher: AvailableVoucher) => {
-    if (currentPoints < voucher.points_required || !voucher.can_redeem) {
+    const pointsRequired = voucher.points_required || voucher.pointsCost || 0;
+    if (currentPoints < pointsRequired || !voucher.can_redeem) {
       return;
     }
 
@@ -260,22 +266,11 @@ function PointsCenterContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-ink pb-24">
-      {/* Header */}
-      <div className="bg-ink-surface border-b border-border-subtle">
-        <div className="max-w-2xl mx-auto px-4 py-6 flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-text-secondary" />
-          </button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-text-primary">积分中心</h1>
-            <p className="text-sm text-text-tertiary mt-1">查看积分余额、明细和兑换优惠</p>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50 pb-24">
+      <PageHeader
+        title="积分中心"
+        subtitle="查看积分余额、明细和兑换优惠"
+      />
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Stats Cards */}
@@ -351,7 +346,8 @@ function PointsCenterContent() {
                 ) : (
                   <div className="grid md:grid-cols-2 gap-4">
                     {availableVouchers.map((voucher) => {
-                      const hasEnoughPoints = currentPoints >= voucher.points_required;
+                      const pointsRequired = voucher.points_required || voucher.pointsCost || 0;
+                      const hasEnoughPoints = currentPoints >= pointsRequired;
                       const canRedeem = voucher.can_redeem && hasEnoughPoints;
                       const isMaxedOut = !voucher.can_redeem;
 
@@ -374,15 +370,15 @@ function PointsCenterContent() {
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1">
                               <h3 className="font-bold text-lg text-gray-900 mb-1">
-                                {voucher.discount_type === 'percentage'
-                                  ? `${voucher.discount_value}% OFF`
-                                  : `RM ${voucher.discount_value} OFF`}
+                                {voucher.discount_type === 'percentage' || voucher.type === 'percentage'
+                                  ? `${voucher.discount_value || voucher.value}% OFF`
+                                  : `RM ${voucher.discount_value || voucher.value} OFF`}
                               </h3>
                               {voucher.name && (
                                 <p className="text-sm text-gray-600 font-medium">{voucher.name}</p>
                               )}
-                              {voucher.min_purchase > 0 && (
-                                <p className="text-xs text-gray-400 mt-1">满 RM {voucher.min_purchase} 可用</p>
+                              {(voucher.min_purchase || (voucher as any).minPurchase > 0) && (
+                                <p className="text-xs text-gray-400 mt-1">满 RM {voucher.min_purchase || (voucher as any).minPurchase} 可用</p>
                               )}
                             </div>
                             <div className="p-2 bg-accent/10 rounded-lg">
@@ -407,13 +403,13 @@ function PointsCenterContent() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5 text-accent font-bold">
                               <Coins className="w-4 h-4" />
-                              <span>{voucher.points_required} 积分</span>
+                              <span>{voucher.points_required || voucher.pointsCost} 积分</span>
                             </div>
 
                             <div className="text-right">
                               {!hasEnoughPoints && !isMaxedOut && (
                                 <p className="text-xs text-warning font-medium mb-1">
-                                  还差 {voucher.points_required - currentPoints} 积分
+                                  还差 {(voucher.points_required || (voucher as any).pointsCost) - currentPoints} 积分
                                 </p>
                               )}
                               <button
