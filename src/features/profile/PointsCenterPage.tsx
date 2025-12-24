@@ -410,22 +410,29 @@ function PointsCenterContent() {
                               <span>{voucher.points_required} 积分</span>
                             </div>
 
-                            <button
-                              onClick={() => handleRedeemVoucher(voucher)}
-                              disabled={!canRedeem || redeeming === voucher.id}
-                              className={`px-5 py-2.5 rounded-lg font-semibold transition-all ${canRedeem
-                                ? 'bg-accent text-white hover:shadow-glow hover:scale-105'
-                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                } ${redeeming === voucher.id ? 'opacity-50' : ''}`}
-                            >
-                              {redeeming === voucher.id
-                                ? '兑换中...'
-                                : isMaxedOut
-                                  ? '已达上限'
-                                  : !hasEnoughPoints
-                                    ? '积分不足'
-                                    : '立即兑换'}
-                            </button>
+                            <div className="text-right">
+                              {!hasEnoughPoints && !isMaxedOut && (
+                                <p className="text-xs text-warning font-medium mb-1">
+                                  还差 {voucher.points_required - currentPoints} 积分
+                                </p>
+                              )}
+                              <button
+                                onClick={() => handleRedeemVoucher(voucher)}
+                                disabled={!canRedeem || redeeming === voucher.id}
+                                className={`px-5 py-2.5 rounded-lg font-semibold transition-all ${canRedeem
+                                  ? 'bg-accent text-white hover:shadow-glow hover:scale-105'
+                                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                  } ${redeeming === voucher.id ? 'opacity-50' : ''}`}
+                              >
+                                {redeeming === voucher.id
+                                  ? '兑换中...'
+                                  : isMaxedOut
+                                    ? '已达上限'
+                                    : !hasEnoughPoints
+                                      ? '积分不足'
+                                      : '立即兑换'}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
