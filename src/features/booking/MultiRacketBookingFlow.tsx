@@ -274,10 +274,10 @@ export default function MultiRacketBookingFlow() {
     }
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-ink">
             {/* 顶部导航栏 */}
-            <div className="bg-white border-b border-border-subtle sticky top-0 z-10">
-                <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
+            <div className="bg-ink-surface border-b border-border-subtle sticky top-0 z-10">
+                <div className="max-w-2xl mx-auto px-4 py-6 flex items-center gap-4">
                     <button
                         onClick={() => step === 1 ? router.push('/') : handleBack()}
                         className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
@@ -285,8 +285,8 @@ export default function MultiRacketBookingFlow() {
                         <ArrowLeft className="w-5 h-5 text-text-secondary" />
                     </button>
                     <div className="flex-1">
-                        <h1 className="text-lg font-bold text-text-primary">预约穿线</h1>
-                        <p className="text-xs text-text-tertiary">
+                        <h1 className="text-2xl font-bold text-text-primary">预约穿线</h1>
+                        <p className="text-sm text-text-tertiary mt-1">
                             步骤 {step}/4 · {cartItems.length} 支球拍
                         </p>
                     </div>

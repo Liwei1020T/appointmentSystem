@@ -17,7 +17,8 @@ import {
   CalendarIcon,
   ShoppingBagIcon,
   UserIcon,
-  ClipboardListIcon
+  ClipboardListIcon,
+  StarIcon
 } from 'lucide-react';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -47,23 +48,19 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       icon: <ClipboardListIcon className="w-full h-full" />,
       label: '订单',
       href: '/orders',
-      active: pathname === '/orders',
+      active: pathname === '/orders' || pathname?.startsWith('/orders'),
     },
     {
-      icon: <ShoppingBagIcon className="w-full h-full" />,
-      label: '套餐',
-      // 用户已购买套餐（激活后可见）；购买入口在页面内跳转到 /packages
-      href: '/profile/packages',
-      active:
-        pathname === '/profile/packages' ||
-        pathname?.startsWith('/profile/packages') ||
-        pathname?.startsWith('/packages'),
+      icon: <StarIcon className="w-full h-full" />,
+      label: '评价',
+      href: '/reviews',
+      active: pathname === '/reviews' || pathname?.startsWith('/reviews'),
     },
     {
       icon: <UserIcon className="w-full h-full" />,
       label: '我的',
       href: '/profile',
-      active: pathname === '/profile',
+      active: pathname === '/profile' || pathname?.startsWith('/profile'),
     },
   ];
 

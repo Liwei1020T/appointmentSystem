@@ -528,7 +528,7 @@ export default function PackagesCenter() {
         <div className="min-h-screen bg-ink">
             {/* 页面头部 */}
             <div className="bg-ink-surface border-b border-border-subtle sticky top-0 z-30">
-                <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
+                <div className="max-w-2xl mx-auto px-4 py-6 flex items-center gap-4">
                     <button
                         onClick={() => router.back()}
                         className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
@@ -542,7 +542,7 @@ export default function PackagesCenter() {
                 </div>
 
                 {/* Tab 切换器 */}
-                <div className="max-w-4xl mx-auto px-4 flex border-t border-border-subtle">
+                <div className="max-w-2xl mx-auto px-4 flex border-t border-border-subtle">
                     <button
                         onClick={() => setTab('purchase')}
                         className={`flex-1 py-4 text-sm font-semibold transition-all relative ${activeTab === 'purchase' ? 'text-accent' : 'text-text-tertiary hover:text-text-secondary'}`}
@@ -567,7 +567,7 @@ export default function PackagesCenter() {
             </div>
 
             {/* 内容区域 */}
-            <div className="max-w-4xl mx-auto p-4 py-8">
+            <div className="max-w-2xl mx-auto p-4 py-8">
                 {activeTab === 'purchase' ? (
                     <PurchaseTab isVisible={isVisible} />
                 ) : (

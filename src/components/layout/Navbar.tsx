@@ -12,6 +12,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const [bellRefreshTrigger, setBellRefreshTrigger] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // 当通知面板中的未读数量变化时刷新铃铛
   const handleUnreadCountChange = useCallback(() => {
@@ -38,14 +39,15 @@ export default function Navbar() {
     await signOut({ callbackUrl: '/login' });
   };
 
-  // 路由变化时自动关闭通知面板，避免遮挡新页面内容
+  // 路由变化时自动关闭通知面板和手机菜单
   useEffect(() => {
     setNotificationPanelOpen(false);
+    setMobileMenuOpen(false);
   }, [pathname]);
 
   return (
     <nav className="glass-strong border-b border-border-subtle sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
@@ -109,8 +111,8 @@ export default function Navbar() {
                 <Link
                   href="/profile/points"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${pathname?.startsWith('/profile/vouchers') || pathname?.startsWith('/profile/points')
-                      ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
-                      : 'text-text-secondary hover:bg-ink-surface/80'
+                    ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
+                    : 'text-text-secondary hover:bg-ink-surface/80'
                     }`}
                 >
                   优惠券
@@ -205,23 +207,96 @@ export default function Navbar() {
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
-            <button className="text-text-secondary hover:text-text-primary">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="text-text-secondary hover:text-text-primary p-2"
+            >
+              {mobileMenuOpen ? (
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
             </button>
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden absolute left-0 right-0 top-full bg-white border-b border-border-subtle shadow-lg py-3 space-y-1 z-50">
+            {status === 'authenticated' ? (
+              <>
+                <Link
+                  href="/booking"
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive('/booking') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink-surface'
+                    }`}
+                >
+                  预约穿线
+                </Link>
+                <Link
+                  href="/orders"
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive('/orders') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink-surface'
+                    }`}
+                >
+                  我的订单
+                </Link>
+                <Link
+                  href="/packages"
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${isPackagesActive ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink-surface'
+                    }`}
+                >
+                  套餐
+                </Link>
+                <Link
+                  href="/profile/vouchers"
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${pathname?.startsWith('/profile/vouchers') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink-surface'
+                    }`}
+                >
+                  优惠券
+                </Link>
+                <Link
+                  href="/reviews"
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${pathname?.startsWith('/reviews') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink-surface'
+                    }`}
+                >
+                  评价
+                </Link>
+                <div className="border-t border-border-subtle my-2" />
+                <Link
+                  href="/profile"
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive('/profile') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink-surface'
+                    }`}
+                >
+                  个人中心
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50"
+                >
+                  退出登录
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="block px-4 py-3 rounded-lg text-sm font-medium text-text-secondary hover:bg-ink-surface"
+                >
+                  登录
+                </Link>
+                <Link
+                  href="/signup"
+                  className="block px-4 py-3 rounded-lg text-sm font-medium text-accent hover:bg-accent-soft"
+                >
+                  注册
+                </Link>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Notification Panel */}

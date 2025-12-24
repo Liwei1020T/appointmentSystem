@@ -18,7 +18,7 @@ import {
 import { UserVoucher } from '@/types';
 import { Card, Spinner, Badge } from '@/components';
 import { formatDate } from '@/lib/utils';
-import { Plus, Gift, Calendar, Clock, Tag } from 'lucide-react';
+import { Plus, Gift, Calendar, Clock, Tag, ArrowLeft } from 'lucide-react';
 
 type VoucherFilter = 'all' | 'available' | 'used' | 'expired';
 
@@ -153,27 +153,31 @@ export default function MyVouchersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-ink pb-24">
       {/* 顶部头部 */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-2xl mx-auto px-5 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">我的优惠券</h1>
-              <p className="text-sm text-gray-500 mt-1">管理您的优惠券</p>
-            </div>
-            <button
-              onClick={() => router.push('/profile/points')}
-              className="flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:shadow-glow transition-all"
-            >
-              <Plus className="w-4 h-4" />
-              兑换优惠券
-            </button>
+      <div className="bg-ink-surface border-b border-border-subtle">
+        <div className="max-w-2xl mx-auto px-4 py-6 flex items-center gap-4">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-text-secondary" />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-text-primary">我的优惠券</h1>
+            <p className="text-sm text-text-tertiary mt-1">管理您的优惠券</p>
           </div>
+          <button
+            onClick={() => router.push('/profile/points')}
+            className="flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:shadow-glow transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            兑换
+          </button>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-5 py-6 space-y-6">
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* 错误提示 */}
         {error && (
           <div className="bg-red-50 border border-red-100 rounded-xl p-4">
@@ -210,8 +214,8 @@ export default function MyVouchersPage() {
           <button
             onClick={() => setFilter('all')}
             className={`px-5 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all ${filter === 'all'
-                ? 'bg-accent text-white shadow-sm'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+              ? 'bg-accent text-white shadow-sm'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
               }`}
           >
             全部
@@ -219,8 +223,8 @@ export default function MyVouchersPage() {
           <button
             onClick={() => setFilter('available')}
             className={`px-5 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all ${filter === 'available'
-                ? 'bg-accent text-white shadow-sm'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+              ? 'bg-accent text-white shadow-sm'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
               }`}
           >
             可用
@@ -228,8 +232,8 @@ export default function MyVouchersPage() {
           <button
             onClick={() => setFilter('used')}
             className={`px-5 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all ${filter === 'used'
-                ? 'bg-accent text-white shadow-sm'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+              ? 'bg-accent text-white shadow-sm'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
               }`}
           >
             已使用
@@ -237,8 +241,8 @@ export default function MyVouchersPage() {
           <button
             onClick={() => setFilter('expired')}
             className={`px-5 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all ${filter === 'expired'
-                ? 'bg-accent text-white shadow-sm'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+              ? 'bg-accent text-white shadow-sm'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
               }`}
           >
             已过期
@@ -282,8 +286,8 @@ export default function MyVouchersPage() {
                 <div
                   key={voucher.id}
                   className={`bg-white rounded-xl overflow-hidden shadow-sm transition-all ${isActive
-                      ? 'border-2 border-accent/30 hover:shadow-md'
-                      : 'border border-gray-100 opacity-75'
+                    ? 'border-2 border-accent/30 hover:shadow-md'
+                    : 'border border-gray-100 opacity-75'
                     }`}
                 >
                   <div className="flex">
