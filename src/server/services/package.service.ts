@@ -1,0 +1,178 @@
+import { prisma } from '@/lib/prisma';
+import { ApiError } from '@/lib/api-errors';
+import { isValidUUID } from '@/lib/utils';
+
+type UserSnapshot = {
+  id: string;
+};
+
+/**
+ * Fetch all active packages for purchase.
+ */
+export async function listAvailablePackages() {
+  return prisma.package.findMany({
+    where: { active: true },
+    orderBy: { price: 'asc' },
+  });
+}
+
+/**
+ * Fetch featured packages with a limit.
+ */
+export async function listFeaturedPackages(limit = 3) {
+  return prisma.package.findMany({
+    where: { active: true },
+    orderBy: [{ price: 'asc' }],
+    take: limit,
+  });
+}
+
+/**
+ * Fetch user packages with optional status filtering.
+ */
+export async function listUserPackages(userId: string, status?: string) {
+  const where: Record<string, unknown> = { userId };
+
+  if (status === 'active') {
+    where.remaining = { gt: 0 };
+    where.expiry = { gt: new Date() };
+    where.status = 'active';
+  } else if (status) {
+    where.status = status;
+  }
+
+  return prisma.userPackage.findMany({
+    where,
+    include: { package: true },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
+/**
+ * Create a package payment record for the user.
+ */
+export async function buyPackage(
+  user: UserSnapshot,
+  payload: { packageId: string; paymentMethod?: string }
+) {
+  const { packageId, paymentMethod = 'tng' } = payload;
+
+  if (!packageId || !isValidUUID(packageId)) {
+    throw new ApiError('BAD_REQUEST', 400, 'Invalid package id');
+  }
+
+  const normalizedProvider = paymentMethod === 'cash' ? 'cash' : 'tng';
+
+  const packageData = await prisma.package.findUnique({
+    where: { id: packageId },
+  });
+
+  if (!packageData) {
+    throw new ApiError('NOT_FOUND', 404, 'Package not found');
+  }
+
+  if (!packageData.active) {
+    throw new ApiError('CONFLICT', 409, 'Package is inactive');
+  }
+
+  if (Number(packageData.price) <= 0) {
+    throw new ApiError('UNPROCESSABLE_ENTITY', 422, 'Invalid package price');
+  }
+
+  const payment = await prisma.payment.create({
+    data: {
+      userId: user.id,
+      packageId: packageData.id,
+      amount: packageData.price,
+      provider: normalizedProvider,
+      status: 'pending',
+      metadata: {
+        type: 'package',
+        paymentMethod: normalizedProvider,
+        createdAt: new Date().toISOString(),
+        note:
+          normalizedProvider === 'cash'
+            ? 'Cash package purchase pending admin confirmation'
+            : 'TNG package purchase pending receipt upload and admin verification',
+      },
+    },
+  });
+
+  return {
+    paymentId: payment.id,
+    packageId: packageData.id,
+    packageName: packageData.name,
+    amount: Number(packageData.price),
+    times: packageData.times,
+    validityDays: packageData.validityDays,
+    paymentRequired: true,
+    paymentMethod: normalizedProvider,
+  };
+}
+
+/**
+ * Fetch pending package payments for the current user.
+ */
+export async function listPendingPackagePayments(userId: string) {
+  const pendingPayments = await prisma.payment.findMany({
+    where: {
+      userId,
+      packageId: { not: null },
+      status: { in: ['pending', 'pending_verification'] },
+    },
+    include: { package: true },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return pendingPayments.map((payment) => ({
+    id: payment.id,
+    packageId: payment.packageId,
+    packageName: payment.package?.name || 'Package',
+    packageTimes: payment.package?.times || 0,
+    packageValidityDays: payment.package?.validityDays || 0,
+    amount: Number(payment.amount),
+    status: payment.status,
+    provider: payment.provider,
+    receiptUrl: payment.receiptUrl,
+    createdAt: payment.createdAt.toISOString(),
+  }));
+}
+
+/**
+ * Fetch usage records for a user package.
+ */
+export async function listPackageUsage(userId: string, userPackageId: string) {
+  if (!isValidUUID(userPackageId)) {
+    throw new ApiError('BAD_REQUEST', 400, 'Invalid user package id');
+  }
+
+  const pkg = await prisma.userPackage.findFirst({
+    where: { id: userPackageId, userId },
+  });
+
+  if (!pkg) {
+    throw new ApiError('NOT_FOUND', 404, 'Package not found');
+  }
+
+  const orders = await prisma.order.findMany({
+    where: { packageUsedId: userPackageId },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      string: {
+        select: { brand: true, model: true },
+      },
+    },
+  });
+
+  return orders.map((order) => ({
+    id: order.id,
+    used_at: order.createdAt.toISOString(),
+    order: {
+      order_number: order.id.slice(0, 8),
+      string: {
+        brand: order.string?.brand || '',
+        model: order.string?.model || '',
+      },
+    },
+  }));
+}

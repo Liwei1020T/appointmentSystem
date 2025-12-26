@@ -18,6 +18,7 @@ import {
   distributeVoucher,
   type DistributionTarget,
 } from '@/services/adminVoucherService';
+import { getAllUsers } from '@/services/adminUserService';
 import { Button, Input } from '@/components';
 import { Search } from 'lucide-react';
 
@@ -72,15 +73,16 @@ export default function DistributeVoucherModal({
   async function loadUsers() {
     setLoading(true);
     try {
-      const response = await fetch('/api/admin/users');
-      if (!response.ok) throw new Error('Failed to load users');
-      const payload = await response.json();
-      if (!payload.success) {
-        throw new Error('Failed to load users');
+      const result = await getAllUsers();
+      if (result.error) {
+        throw new Error(result.error);
       }
-      const userList: User[] = Array.isArray(payload.data?.users)
-        ? payload.data.users
-        : [];
+      const userList: User[] = (result.users || []).map((user) => ({
+        id: user.id,
+        full_name: user.full_name || user.fullName || '',
+        email: user.email,
+        phone: user.phone,
+      }));
       setUsers(userList);
       setFilteredUsers(userList);
     } catch (err) {

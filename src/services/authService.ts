@@ -8,7 +8,7 @@
  */
 
 import { signIn as nextAuthSignIn, signOut } from 'next-auth/react';
-import { changePasswordAction } from '@/actions/profile.actions';
+import { apiRequest, getApiErrorMessage } from '@/services/apiClient';
 
 export interface SignupData {
   phone: string;
@@ -41,7 +41,7 @@ export async function signup(data: SignupData): Promise<any> {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new Error(result.error || '注册失败');
+    throw new Error(getApiErrorMessage(result, '注册失败'));
   }
 
   return result.data;
@@ -113,7 +113,7 @@ export async function requestPasswordResetOtp(data: {
 
   const result = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || '发送验证码失败');
+    throw new Error(getApiErrorMessage(result, '发送验证码失败'));
   }
 
   return result.data;
@@ -135,7 +135,7 @@ export async function confirmPasswordReset(data: {
 
   const result = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || '重置密码失败');
+    throw new Error(getApiErrorMessage(result, '重置密码失败'));
   }
 }
 
@@ -157,7 +157,11 @@ export async function updatePassword(data: {
         ? { newPassword: data }
         : data;
 
-    await changePasswordAction(passwordData);
+    await apiRequest(`/api/profile/password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(passwordData),
+    });
 
     return { success: true };
   } catch (error: any) {

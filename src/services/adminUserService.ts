@@ -3,6 +3,8 @@
  * 管理用户CRUD操作
  */
 
+import { getApiErrorMessage } from '@/services/apiClient';
+
 export interface User {
   id: string;
   email: string;
@@ -45,7 +47,7 @@ export async function getAllUsers(filters?: {
     const response = await fetch(`/api/admin/users?${params.toString()}`);
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      return { users: [], totalCount: 0, error: data.error || 'Failed to fetch users' };
+      return { users: [], totalCount: 0, error: getApiErrorMessage(data, 'Failed to fetch users') };
     }
     const payload = data?.data ?? data;
     const rawUsers = Array.isArray(payload?.users) ? payload.users : [];
@@ -82,7 +84,7 @@ export async function getUserById(userId: string): Promise<{ user: User | null; 
     const response = await fetch(`/api/admin/users/${userId}`);
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      return { user: null, error: data.error || 'Failed to fetch user' };
+      return { user: null, error: getApiErrorMessage(data, 'Failed to fetch user') };
     }
     const payload = data?.data ?? data;
     const u = payload?.user ?? payload;
@@ -174,7 +176,7 @@ export async function getUserOrders(userId: string, filters?: {
     const response = await fetch(`/api/admin/users/${userId}/orders?${params.toString()}`);
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      return { data: [], total: 0, error: data.error || 'Failed to fetch user orders' };
+      return { data: [], total: 0, error: getApiErrorMessage(data, 'Failed to fetch user orders') };
     }
     const payload = data?.data ?? data;
     return { data: payload?.data || [], total: payload?.total || 0, error: null };
@@ -211,7 +213,7 @@ export async function getUserPackages(userId: string): Promise<{ data: UserPacka
     const response = await fetch(`/api/admin/users/${userId}/packages`);
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      return { data: [], error: data.error || 'Failed to fetch user packages' };
+      return { data: [], error: getApiErrorMessage(data, 'Failed to fetch user packages') };
     }
     const payload = data?.data ?? data;
     return { data: payload?.data || payload || [], error: null };
@@ -246,7 +248,7 @@ export async function getUserVouchers(userId: string): Promise<{ data: UserVouch
     const response = await fetch(`/api/admin/users/${userId}/vouchers`);
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      return { data: [], error: data.error || 'Failed to fetch user vouchers' };
+      return { data: [], error: getApiErrorMessage(data, 'Failed to fetch user vouchers') };
     }
     const payload = data?.data ?? data;
     return { data: payload?.data || payload || [], error: null };
@@ -292,7 +294,7 @@ export async function getUserPointsLog(userId: string, filters?: {
     const response = await fetch(`/api/admin/users/${userId}/points-log?${params.toString()}`);
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      return { data: [], total: 0, error: data.error || 'Failed to fetch points log' };
+      return { data: [], total: 0, error: getApiErrorMessage(data, 'Failed to fetch points log') };
     }
     const payload = data?.data ?? data;
     return { data: payload?.data || [], total: payload?.total || 0, error: null };
@@ -313,7 +315,7 @@ export async function updateUserPoints(userId: string, points: number, reason: s
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      return { success: false, error: data.error || 'Failed to update user points' };
+      return { success: false, error: getApiErrorMessage(data, 'Failed to update user points') };
     }
     const payload = data?.data ?? data;
     return { success: true, newBalance: payload?.newBalance, error: null };
@@ -334,7 +336,7 @@ export async function updateUserRole(userId: string, role: string): Promise<{ su
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      return { success: false, error: data.error || 'Failed to update user role' };
+      return { success: false, error: getApiErrorMessage(data, 'Failed to update user role') };
     }
     return { success: true, error: null };
   } catch (error: any) {
@@ -354,7 +356,7 @@ export async function blockUser(userId: string, blocked: boolean, reason?: strin
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      return { success: false, error: data.error || 'Failed to update user block status' };
+      return { success: false, error: getApiErrorMessage(data, 'Failed to update user block status') };
     }
     return { success: true, error: null };
   } catch (error: any) {
@@ -408,7 +410,7 @@ export async function getUserStats(): Promise<{ data: UserStats; error: string |
           blockedUsers: 0, 
           usersByRole: [] 
         }, 
-        error: data.error || 'Failed to fetch user stats' 
+        error: getApiErrorMessage(data, 'Failed to fetch user stats') 
       };
     }
     return { 

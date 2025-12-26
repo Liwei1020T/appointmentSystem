@@ -25,6 +25,7 @@ import Card from '@/components/Card';
 import Spinner from '@/components/Spinner';
 import Button from '@/components/Button';
 import Toast from '@/components/Toast';
+import { OrderListSkeleton } from '@/components/skeletons';
 import { formatDate } from '@/lib/utils';
 
 interface OrderListProps {
@@ -192,11 +193,7 @@ export default function OrderList({ initialStatus }: OrderListProps) {
       </div>
 
       {/* 加载状态 */}
-      {loading && (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
-        </div>
-      )}
+      {loading && <OrderListSkeleton />}
 
       {/* 错误提示 */}
       {error && !loading && (

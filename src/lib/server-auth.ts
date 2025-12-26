@@ -5,6 +5,9 @@
 
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { ApiError } from '@/lib/api-errors';
+import { failResponse } from '@/lib/api-response';
+import { isAdminRole } from '@/lib/roles';
 
 export async function getCurrentUser() {
   const session = await auth();
@@ -33,20 +36,25 @@ export async function requireAuth() {
   const user = await getCurrentUser();
   
   if (!user) {
-    const error: any = new Error('未登录');
-    error.json = () => Response.json({ error: '未登录' }, { status: 401 });
+    const error = new ApiError('UNAUTHORIZED', 401, 'Unauthorized');
+    (error as any).json = () => failResponse('UNAUTHORIZED', '未登录', 401);
     throw error;
   }
   
   return user;
 }
 
+// Alias for consistent naming across API route handlers.
+export async function requireUser() {
+  return requireAuth();
+}
+
 export async function requireAdmin() {
   const user = await requireAuth();
   
-  if (user.role !== 'admin') {
-    const error: any = new Error('需要管理员权限');
-    error.json = () => Response.json({ error: '需要管理员权限' }, { status: 403 });
+  if (!isAdminRole(user.role)) {
+    const error = new ApiError('FORBIDDEN', 403, 'Forbidden');
+    (error as any).json = () => failResponse('FORBIDDEN', '需要管理员权限', 403);
     throw error;
   }
   
@@ -60,5 +68,5 @@ export async function getUserId() {
 
 export async function isAdmin() {
   const user = await getCurrentUser();
-  return user?.role === 'admin';
+  return isAdminRole(user?.role);
 }

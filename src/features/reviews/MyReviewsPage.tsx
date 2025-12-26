@@ -36,7 +36,7 @@ export default function MyReviewsPage() {
 
     try {
       const [reviewsList, pendingList] = await Promise.all([
-        getUserReviews(''),
+        getUserReviews(),
         getPendingReviewOrders(),
       ]);
       setReviews(Array.isArray(reviewsList) ? reviewsList : []);

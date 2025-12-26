@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { isAdminRole } from '@/lib/roles';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -24,7 +25,7 @@ export default function ProtectedRoute({
       return;
     }
 
-    if (requireAdmin && session.user.role !== 'admin') {
+    if (requireAdmin && !isAdminRole(session.user.role)) {
       router.push('/');
       return;
     }
@@ -42,7 +43,7 @@ export default function ProtectedRoute({
     return null;
   }
 
-  if (requireAdmin && session.user.role !== 'admin') {
+  if (requireAdmin && !isAdminRole(session.user.role)) {
     return null;
   }
 

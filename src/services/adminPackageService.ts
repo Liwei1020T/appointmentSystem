@@ -3,6 +3,8 @@
  * Re-export from package.service.ts for backward compatibility
  */
 
+import { apiRequest } from '@/services/apiClient';
+
 export * from './packageService';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,12 +63,10 @@ export async function getPackagePurchaseHistory(filters?: {
     if (filters?.page) params.append('page', filters.page.toString());
     if (filters?.limit) params.append('limit', filters.limit.toString());
 
-    const response = await fetch(`/api/admin/packages/purchases?${params.toString()}`);
-    const data = await response.json();
-    if (!response.ok) {
-      return { data: [], total: 0, error: data.error || 'Failed to fetch purchase history' };
-    }
-    return { data: data.data || [], total: data.total || 0, error: null };
+    const payload = await apiRequest<{ purchases: PackagePurchase[]; pagination?: { total?: number } }>(
+      `/api/admin/packages/purchases?${params.toString()}`
+    );
+    return { data: payload.purchases || [], total: payload.pagination?.total || 0, error: null };
   } catch (error: any) {
     return { data: [], total: 0, error: error.message || 'Failed to fetch purchase history' };
   }
@@ -92,12 +92,7 @@ export async function getAllPackages(filters?: {
       params.append('includeInactive', 'true');
     }
 
-    const response = await fetch(`/api/admin/packages?${params.toString()}`);
-    const data = await response.json();
-    if (!response.ok) {
-      return { packages: [], data: [], error: data.error || 'Failed to fetch packages' };
-    }
-    const packages = data.data || data.packages || [];
+    const packages = await apiRequest<AdminPackage[]>(`/api/admin/packages?${params.toString()}`);
     return { packages, data: packages, error: null };
   } catch (error: any) {
     return { packages: [], data: [], error: error.message || 'Failed to fetch packages' };
@@ -152,12 +147,8 @@ export async function getPackageStats(): Promise<{ stats: PackageStats; data?: P
     this_month_revenue: 0,
   };
   try {
-    const response = await fetch('/api/admin/packages/stats');
-    const result = await response.json();
-    if (!response.ok) {
-      return { stats: defaultStats, data: defaultStats, error: result.error || 'Failed to fetch package stats' };
-    }
-    const stats = { ...defaultStats, ...result.data, ...result.stats };
+    const payload = await apiRequest<PackageStats>('/api/admin/packages/stats');
+    const stats = { ...defaultStats, ...payload };
     return { stats, data: stats, error: null };
   } catch (error: any) {
     return { stats: defaultStats, data: defaultStats, error: error.message || 'Failed to fetch package stats' };
@@ -195,13 +186,8 @@ export async function getPackageSalesData(filters?: {
     if (filters?.endDate) params.append('endDate', filters.endDate);
     if (filters?.packageId) params.append('packageId', filters.packageId);
 
-    const response = await fetch(`/api/admin/packages/sales?${params.toString()}`);
-    const result = await response.json();
-    if (!response.ok) {
-      return { salesData: [], data: [], error: result.error || 'Failed to fetch sales data' };
-    }
-    const salesData = result.data || result.salesData || [];
-    return { salesData, data: salesData, error: null };
+    const salesData = await apiRequest<PackageSalesData[]>(`/api/admin/packages/sales?${params.toString()}`);
+    return { salesData: salesData || [], data: salesData || [], error: null };
   } catch (error: any) {
     return { salesData: [], data: [], error: error.message || 'Failed to fetch sales data' };
   }
@@ -225,16 +211,11 @@ export interface CreatePackageInput {
 
 export async function createPackage(input: CreatePackageInput): Promise<{ success: boolean; package?: AdminPackage; data?: AdminPackage; error: string | null }> {
   try {
-    const response = await fetch('/api/admin/packages', {
+    const pkg = await apiRequest<AdminPackage>('/api/admin/packages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
-    const result = await response.json();
-    if (!response.ok) {
-      return { success: false, error: result.error || 'Failed to create package' };
-    }
-    const pkg = result.data || result.package;
     return { success: true, package: pkg, data: pkg, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to create package' };
@@ -246,16 +227,11 @@ export async function createPackage(input: CreatePackageInput): Promise<{ succes
  */
 export async function updatePackage(packageId: string, input: Partial<CreatePackageInput>): Promise<{ success: boolean; package?: AdminPackage; data?: AdminPackage; error: string | null }> {
   try {
-    const response = await fetch(`/api/admin/packages/${packageId}`, {
+    const pkg = await apiRequest<AdminPackage>(`/api/admin/packages/${packageId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
-    const result = await response.json();
-    if (!response.ok) {
-      return { success: false, error: result.error || 'Failed to update package' };
-    }
-    const pkg = result.data || result.package;
     return { success: true, package: pkg, data: pkg, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to update package' };
@@ -267,13 +243,7 @@ export async function updatePackage(packageId: string, input: Partial<CreatePack
  */
 export async function deletePackage(packageId: string): Promise<{ success: boolean; error: string | null }> {
   try {
-    const response = await fetch(`/api/admin/packages/${packageId}`, {
-      method: 'DELETE',
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      return { success: false, error: data.error || 'Failed to delete package' };
-    }
+    await apiRequest(`/api/admin/packages/${packageId}`, { method: 'DELETE' });
     return { success: true, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to delete package' };
@@ -285,17 +255,25 @@ export async function deletePackage(packageId: string): Promise<{ success: boole
  */
 export async function togglePackageStatus(packageId: string, isActive: boolean): Promise<{ success: boolean; error: string | null }> {
   try {
-    const response = await fetch(`/api/admin/packages/${packageId}/status`, {
+    await apiRequest(`/api/admin/packages/${packageId}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isActive }),
+      body: JSON.stringify({ active: isActive }),
     });
-    const data = await response.json();
-    if (!response.ok) {
-      return { success: false, error: data.error || 'Failed to toggle package status' };
-    }
     return { success: true, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to toggle package status' };
+  }
+}
+
+/**
+ * 获取单个套餐（管理员）
+ */
+export async function getPackageById(packageId: string): Promise<{ package: AdminPackage | null; data?: AdminPackage | null; error: string | null }> {
+  try {
+    const pkg = await apiRequest<AdminPackage>(`/api/admin/packages/${packageId}`);
+    return { package: pkg, data: pkg, error: null };
+  } catch (error: any) {
+    return { package: null, data: null, error: error.message || 'Package not found' };
   }
 }

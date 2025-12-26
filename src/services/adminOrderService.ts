@@ -3,12 +3,7 @@
  * 管理员订单管理功能
  */
 
-import {
-  getAdminOrderByIdAction,
-  getAdminOrderStatsAction,
-  getAdminOrdersAction,
-  updateAdminOrderStatusAction,
-} from '@/actions/admin-orders.actions';
+import { apiRequest, getApiErrorMessage } from '@/services/apiClient';
 
 export type OrderStatus =
   | 'pending'
@@ -87,12 +82,13 @@ export async function getAllOrders(filters?: {
   limit?: number;
 }): Promise<{ orders: AdminOrder[]; total: number; error: { message: string } | null }> {
   try {
-    const payload = await getAdminOrdersAction({
-      status: filters?.status,
-      q: undefined,
-      page: filters?.page,
-      limit: filters?.limit,
-    });
+    const params = new URLSearchParams();
+    if (filters?.status) params.set('status', filters.status);
+    if (filters?.page) params.set('page', String(filters.page));
+    if (filters?.limit) params.set('limit', String(filters.limit));
+    const payload = await apiRequest<{ orders: AdminOrder[]; pagination?: { total?: number } }>(
+      `/api/admin/orders?${params.toString()}`
+    );
     return { orders: payload.orders || [], total: payload.pagination?.total || 0, error: null };
   } catch (error: any) {
     console.error('Failed to fetch orders:', error);
@@ -102,7 +98,7 @@ export async function getAllOrders(filters?: {
 
 export async function getOrderById(orderId: string): Promise<{ order: AdminOrder | null; error: { message: string } | null }> {
   try {
-    const order = await getAdminOrderByIdAction(orderId);
+    const order = await apiRequest<AdminOrder>(`/api/admin/orders/${orderId}`);
     return { order, error: null };
   } catch (error: any) {
     console.error('Failed to fetch order:', error);
@@ -116,7 +112,11 @@ export async function updateOrderStatus(
   notes?: string
 ): Promise<{ order: AdminOrder | null; error: { message: string } | null }> {
   try {
-    const order = await updateAdminOrderStatusAction(orderId, status, notes);
+    const order = await apiRequest<AdminOrder>(`/api/admin/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, notes }),
+    });
     return { order, error: null };
   } catch (error: any) {
     console.error('Failed to update order status:', error);
@@ -163,10 +163,10 @@ export async function getOrderStats(filters?: {
   endDate?: string;
 }): Promise<{ stats: OrderStats | null; error: string | null }> {
   try {
-    const stats = await getAdminOrderStatsAction({
-      startDate: filters?.startDate,
-      endDate: filters?.endDate,
-    });
+    const params = new URLSearchParams();
+    if (filters?.startDate) params.set('startDate', filters.startDate);
+    if (filters?.endDate) params.set('endDate', filters.endDate);
+    const stats = await apiRequest<OrderStats>(`/api/admin/orders/stats?${params.toString()}`);
     return { stats: stats as OrderStats, error: null };
   } catch (error: any) {
     return { stats: null, error: error.message || 'Failed to fetch order stats' };
@@ -184,12 +184,14 @@ export async function searchOrders(query: string, filters?: {
   limit?: number;
 }): Promise<{ orders: AdminOrder[]; total?: number; error: { message: string } | null }> {
   try {
-    const payload = await getAdminOrdersAction({
-      q: query,
-      status: filters?.status,
-      page: filters?.page,
-      limit: filters?.limit,
-    });
+    const params = new URLSearchParams();
+    params.set('q', query);
+    if (filters?.status) params.set('status', filters.status);
+    if (filters?.page) params.set('page', String(filters.page));
+    if (filters?.limit) params.set('limit', String(filters.limit));
+    const payload = await apiRequest<{ orders: AdminOrder[]; pagination?: { total?: number } }>(
+      `/api/admin/orders?${params.toString()}`
+    );
     return { orders: payload.orders || [], total: payload.pagination?.total || 0, error: null };
   } catch (error: any) {
     return { orders: [], total: 0, error: { message: error.message || 'Failed to search orders' } };
@@ -211,7 +213,7 @@ export async function updateOrderPhotos(
     });
     const data = await response.json();
     if (!response.ok) {
-      return { success: false, error: data.error || 'Failed to update order photos' };
+      return { success: false, error: getApiErrorMessage(data, 'Failed to update order photos') };
     }
     return { success: true, error: null };
   } catch (error: any) {

@@ -141,6 +141,7 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
     message: '',
     type: 'success',
   });
+  const isCommentValid = comment.trim().length >= 10;
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags((prev) =>
@@ -153,7 +154,8 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (false) { // Comment is now optional
+    const trimmedComment = comment.trim();
+    if (trimmedComment.length < 10) {
       setToast({
         show: true,
         message: '评价内容至少需要 10 个字',
@@ -167,7 +169,7 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
     const params: SubmitReviewParams = {
       order_id: orderId,
       rating,
-      comment: comment.trim(),
+      comment: trimmedComment,
       service_rating: serviceRating,
       quality_rating: qualityRating,
       speed_rating: speedRating,
@@ -293,7 +295,7 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
           <details className="bg-white rounded-xl shadow-sm border border-gray-100 group">
             <summary className="p-4 cursor-pointer flex items-center justify-between hover:bg-gray-50/50 transition-colors rounded-xl">
               <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                ✍️ 评价内容 <span className="text-gray-400 font-normal">(可选)</span>
+                ✍️ 评价内容 <span className="text-gray-400 font-normal">(至少10字)</span>
                 {comment.length > 0 && (
                   <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full">已填写</span>
                 )}
@@ -317,7 +319,7 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
                 </div>
               </div>
               {comment.length > 0 && comment.length < 10 && (
-                <p className="mt-1 text-xs text-gray-400">建议至少 10 个字以获得更好的评价效果</p>
+                <p className="mt-1 text-xs text-gray-400">评价内容需要至少 10 个字</p>
               )}
             </div>
           </details>
@@ -398,7 +400,7 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
               type="submit"
               variant="primary"
               fullWidth
-              disabled={submitting}
+              disabled={submitting || !isCommentValid}
               className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 shadow-lg shadow-orange-200"
             >
               {submitting ? (

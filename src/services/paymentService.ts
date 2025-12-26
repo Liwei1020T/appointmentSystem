@@ -3,16 +3,7 @@
  * Consolidated from payment.service.ts + paymentService.ts
  */
 
-import {
-  confirmCashPaymentAction,
-  confirmPaymentAction,
-  createCashPaymentAction,
-  createPaymentAction,
-  getPaymentAction,
-  getPendingPaymentsAction,
-  rejectPaymentAction,
-  uploadPaymentReceiptAction,
-} from '@/actions/payments.actions';
+import { apiRequest } from '@/services/apiClient';
 
 export type PaymentMethod = 'tng' | 'fpx' | 'cash' | 'manual' | 'card';
 
@@ -24,7 +15,7 @@ export interface PaymentProof {
  * 获取支付详情
  */
 export async function getPayment(paymentId: string): Promise<any> {
-  return getPaymentAction(paymentId);
+  return apiRequest(`/api/payments/${paymentId}`);
 }
 
 /**
@@ -42,13 +33,13 @@ export async function uploadPaymentProof(
     body: formData,
   });
 
-  const data = await response.json();
+  const data = await response.json().catch(() => null);
 
-  if (!response.ok) {
-    throw new Error(data.error || '上传支付凭证失败');
+  if (!response.ok || data?.ok === false) {
+    throw new Error(data?.error?.message || data?.error || 'Failed to upload payment proof');
   }
 
-  return data.data.proofUrl;
+  return data?.data?.proofUrl || data?.proofUrl;
 }
 
 /**
@@ -58,7 +49,7 @@ export async function getPendingPayments(
   page = 1,
   limit = 20
 ): Promise<any> {
-  return getPendingPaymentsAction({ page, limit });
+  return apiRequest(`/api/admin/payments/pending?page=${page}&limit=${limit}`);
 }
 
 /**
@@ -69,7 +60,11 @@ export async function confirmPayment(
   transactionId?: string,
   notes?: string
 ): Promise<void> {
-  await confirmPaymentAction(paymentId, transactionId, notes);
+  await apiRequest(`/api/payments/${paymentId}/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transactionId, notes }),
+  });
 }
 
 /**
@@ -79,7 +74,11 @@ export async function rejectPayment(
   paymentId: string,
   reason: string
 ): Promise<void> {
-  await rejectPaymentAction(paymentId, reason);
+  await apiRequest(`/api/payments/${paymentId}/reject`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason }),
+  });
 }
 
 /**
@@ -130,13 +129,16 @@ export async function createPayment(
       ? { amount: orderIdOrAmount, paymentMethod, orderId }
       : { orderId: orderIdOrAmount, paymentMethod };
 
-    const data = await createPaymentAction({
-      amount: Number(body.amount),
-      orderId: body.orderId || null,
-      packageId: null,
-      paymentMethod: body.paymentMethod,
+    const payment = await apiRequest(`/api/payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: Number(body.amount),
+        orderId: body.orderId || null,
+        paymentMethod: body.paymentMethod,
+      }),
     });
-    const id = data?.id || null;
+    const id = payment?.id || null;
     return { paymentId: id, payment: id ? { id } : null, error: null };
   } catch (error: any) {
     return { paymentId: null, payment: null, error: error.message || 'Failed to create payment' };
@@ -148,7 +150,11 @@ export async function createPayment(
  */
 export async function createCashPayment(orderId: string, amount: number): Promise<{ payment: any; error: string | null }> {
   try {
-    const payment = await createCashPaymentAction({ orderId, amount });
+    const payment = await apiRequest(`/api/payments/cash`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, amount }),
+    });
     return { payment, error: null };
   } catch (error: any) {
     return { payment: null, error: error.message || '现金支付处理失败' };
@@ -167,7 +173,11 @@ export async function uploadPaymentReceipt(
 ): Promise<{ url: string | null; error: string | null }> {
   try {
     if (typeof fileOrUrl === 'string') {
-      await uploadPaymentReceiptAction({ paymentId, receiptUrl: fileOrUrl });
+      await apiRequest(`/api/payments/${paymentId}/receipt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receiptUrl: fileOrUrl }),
+      });
       return { url: fileOrUrl, error: null };
     }
 
@@ -181,7 +191,9 @@ export async function uploadPaymentReceipt(
  * 管理员 - 确认现金支付
  */
 export async function confirmCashPayment(paymentId: string): Promise<void> {
-  await confirmCashPaymentAction(paymentId);
+  await apiRequest(`/api/payments/${paymentId}/verify`, {
+    method: 'POST',
+  });
 }
 
 /**
@@ -194,9 +206,9 @@ export async function verifyPaymentReceipt(
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     if (approved) {
-      await confirmPaymentAction(paymentId, undefined, notes);
+      await confirmPayment(paymentId, undefined, notes);
     } else {
-      await rejectPaymentAction(paymentId, notes || '收据审核未通过');
+      await rejectPayment(paymentId, notes || 'Receipt review failed');
     }
     return { success: true, error: null };
   } catch (error: any) {

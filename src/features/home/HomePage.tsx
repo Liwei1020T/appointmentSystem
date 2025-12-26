@@ -58,8 +58,8 @@ export default function HomePage() {
     setDataLoading(true);
     try {
       const [statsResult, ordersResult, packagesResult] = await Promise.all([
-        getUserStats(user.id),
-        getRecentOrders(user.id, 3),
+        getUserStats(),
+        getRecentOrders(3),
         getFeaturedPackages(3),
       ]);
 
@@ -147,4 +147,3 @@ export default function HomePage() {
     </div>
   );
 }
-

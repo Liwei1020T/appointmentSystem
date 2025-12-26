@@ -3,6 +3,8 @@
  * Re-export from auth.service.ts for backward compatibility
  */
 
+import { getApiErrorMessage } from '@/services/apiClient';
+
 export * from './authService';
 
 /**
@@ -18,9 +20,9 @@ export async function adminLogin(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
     if (!response.ok) {
-      return { success: false, error: data.error || 'Admin login failed' };
+      return { success: false, error: getApiErrorMessage(data, 'Admin login failed') };
     }
     return { success: true, error: null };
   } catch (error: any) {

@@ -3,7 +3,7 @@
  * 处理推荐/邀请相关逻辑
  */
 
-import { getReferralsAction } from '@/actions/referrals.actions';
+import { apiRequest } from '@/services/apiClient';
 
 export interface ReferralLog {
   id: string;
@@ -43,7 +43,7 @@ export interface ReferralStats {
  */
 export async function getReferralStats(): Promise<ReferralStats> {
   try {
-    const data = await getReferralsAction();
+    const data = await apiRequest<any>(`/api/referrals`);
     return {
       referralCode: data?.referralCode || '',
       totalReferrals: data?.stats?.totalReferrals || 0,
@@ -192,11 +192,7 @@ export interface MyReferralStats {
  */
 export async function getMyReferralStats(): Promise<MyReferralStats> {
   try {
-    const response = await fetch('/api/referrals/my-stats');
-    if (!response.ok) {
-      throw new Error('Failed to fetch referral stats');
-    }
-    const data = await response.json();
+    const data = await apiRequest<any>(`/api/referrals/my-stats`);
     return {
       referralCode: data.referralCode || '',
       referralCount: data.referralCount || 0,
@@ -233,11 +229,7 @@ export interface LeaderboardEntry {
  */
 export async function getReferralLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
   try {
-    const response = await fetch(`/api/referrals/leaderboard?limit=${limit}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch leaderboard');
-    }
-    const data = await response.json();
+    const data = await apiRequest<{ leaderboard: any[] }>(`/api/referrals/leaderboard?limit=${limit}`);
     return (data.leaderboard || []).map((entry: any, index: number) => ({
       rank: index + 1,
       userId: entry.userId || '',

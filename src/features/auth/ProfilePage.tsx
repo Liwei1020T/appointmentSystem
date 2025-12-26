@@ -17,6 +17,7 @@ import { Button, Input, Card, Badge, Toast, Spinner } from '@/components';
 import { useSession, signOut } from 'next-auth/react';
 import { updateProfile, updatePassword } from '@/services/authService';
 import { normalizeMyPhone, validatePassword, validatePhone } from '@/lib/utils';
+import { isAdminRole } from '@/lib/roles';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -255,7 +256,7 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-text-primary">个人资料</h2>
               <Badge variant="blue">
-                {user.role === 'admin' ? '管理员' : '用户'}
+                {isAdminRole(user.role) ? '管理员' : '用户'}
               </Badge>
             </div>
 

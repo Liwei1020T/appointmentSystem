@@ -4,21 +4,15 @@
  * 管理员登录验证
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { failResponse } from '@/lib/api-response';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     // Deprecated: platform migrated to phone OTP login (方案B) and removed email-based auth.
     await request.json().catch(() => null);
-    return NextResponse.json(
-      { error: '已切换为手机号验证码管理员登录，请使用 /admin/login' },
-      { status: 410 }
-    );
+    return failResponse('FEATURE_DISABLED', '已切换为手机号验证码管理员登录，请使用 /admin/login', 410);
   } catch (error) {
     console.error('Admin login error:', error);
-    return NextResponse.json(
-      { error: '服务器错误，请稍后重试' },
-      { status: 500 }
-    );
+    return failResponse('INTERNAL_ERROR', '服务器错误，请稍后重试', 500);
   }
 }

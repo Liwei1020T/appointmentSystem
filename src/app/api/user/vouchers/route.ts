@@ -1,65 +1,57 @@
 /**
- * 用户优惠券 API 路由
- * GET /api/user/vouchers - 获取当前用户的优惠券列表
+ * User vouchers API
+ * GET /api/user/vouchers
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import prisma from '@/lib/prisma';
+import { requireUser } from '@/lib/server-auth';
+import { okResponse, failResponse } from '@/lib/api-response';
+import { isApiError } from '@/lib/api-errors';
+import { getUserVouchers } from '@/server/services/voucher.service';
 
-export async function GET(request: NextRequest) {
-    try {
-        const session = await getServerSession(authOptions);
+export const dynamic = 'force-dynamic';
 
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: '未登录' }, { status: 401 });
-        }
+export async function GET() {
+  try {
+    const user = await requireUser();
+    const userVouchers = await getUserVouchers(user.id);
 
-        const userId = session.user.id;
+    const vouchers = userVouchers.map((uv) => {
+      const v = uv.voucher;
+      const now = new Date();
+      const expiryDate = uv.expiry || v.validUntil;
+      const isExpired = expiryDate ? new Date(expiryDate) < now : false;
+      const isUsed = !!uv.usedAt;
+      const discountValue =
+        typeof v.value === 'object' && 'toNumber' in v.value ? v.value.toNumber() : Number(v.value);
+      const minPurchase =
+        typeof v.minPurchase === 'object' && 'toNumber' in v.minPurchase
+          ? v.minPurchase.toNumber()
+          : Number(v.minPurchase || 0);
 
-        // 获取用户优惠券及关联的优惠券信息
-        const userVouchers = await prisma.userVoucher.findMany({
-            where: { userId },
-            include: {
-                voucher: true,
-            },
-            orderBy: { createdAt: 'desc' },
-        });
+      return {
+        id: uv.id,
+        voucherId: v.id,
+        code: v.code,
+        name: v.name,
+        description: v.description,
+        discountType: v.type,
+        discountValue,
+        minPurchase,
+        maxDiscount: null,
+        expiry: expiryDate,
+        used: isUsed,
+        usedAt: uv.usedAt,
+        expired: isExpired,
+        status: isUsed ? 'used' : isExpired ? 'expired' : 'active',
+        createdAt: uv.createdAt,
+      };
+    });
 
-        // 转换为前端期望的格式
-        const vouchers = userVouchers.map((uv) => {
-            const v = uv.voucher;
-            const now = new Date();
-            const expiryDate = uv.expiry || v.validUntil;
-            const isExpired = expiryDate ? new Date(expiryDate) < now : false;
-            const isUsed = !!uv.usedAt;
-
-            return {
-                id: uv.id,
-                voucherId: v.id,
-                code: v.code,
-                name: v.name,
-                description: v.description,
-                discountType: v.discountType,
-                discountValue: Number(v.discountValue),
-                minPurchase: v.minPurchase ? Number(v.minPurchase) : 0,
-                maxDiscount: v.maxDiscount ? Number(v.maxDiscount) : null,
-                expiry: expiryDate,
-                used: isUsed,
-                usedAt: uv.usedAt,
-                expired: isExpired,
-                status: isUsed ? 'used' : isExpired ? 'expired' : 'active',
-                createdAt: uv.createdAt,
-            };
-        });
-
-        return NextResponse.json({ vouchers });
-    } catch (error: any) {
-        console.error('[API] Error fetching user vouchers:', error);
-        return NextResponse.json(
-            { error: error.message || '获取优惠券失败' },
-            { status: 500 }
-        );
+    return okResponse({ vouchers });
+  } catch (error: any) {
+    if (isApiError(error)) {
+      return failResponse(error.code, error.message, error.status, error.details);
     }
+    return failResponse('INTERNAL_ERROR', 'Failed to fetch user vouchers', 500);
+  }
 }

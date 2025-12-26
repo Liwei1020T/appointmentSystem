@@ -54,7 +54,7 @@ export default function RecentOrders() {
   const loadRecentOrders = async () => {
     setLoading(true);
     try {
-      const data = await getRecentOrders(undefined, 3); // 只获取3条
+      const data = await getRecentOrders(3); // 只获取3条
       if (data) {
         setOrders(data as any);
       }
@@ -201,4 +201,3 @@ export default function RecentOrders() {
     </Card>
   );
 }
-

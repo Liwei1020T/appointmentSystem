@@ -19,7 +19,9 @@ import {
   UserProfile,
 } from '@/services/profileService';
 import { Card, Spinner, Badge, Button, Modal, Toast } from '@/components';
+import { ProfileSkeleton } from '@/components/skeletons';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { isAdminRole } from '@/lib/roles';
 
 // 图标组件 - 统一使用橙色主题
 const ChevronRightIcon = () => (
@@ -134,11 +136,7 @@ export default function ProfilePage() {
   };
 
   if (authLoading || loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Spinner size="large" />
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (!user || !profile) {
@@ -359,7 +357,7 @@ export default function ProfilePage() {
         {/* ========== 我的评价 ========== */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <button
-            onClick={() => router.push('/profile/reviews')}
+            onClick={() => router.push('/reviews')}
             className="w-full p-4 flex items-center justify-between hover:bg-orange-50/50 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -447,8 +445,8 @@ export default function ProfilePage() {
             </div>
             <div className="flex justify-between items-center">
               <span>账户类型</span>
-              <Badge variant={profile.role === 'admin' ? 'info' : 'neutral'}>
-                {profile.role === 'admin' ? '管理员' : '普通用户'}
+              <Badge variant={isAdminRole(profile.role) ? 'info' : 'neutral'}>
+                {isAdminRole(profile.role) ? '管理员' : '普通用户'}
               </Badge>
             </div>
           </div>

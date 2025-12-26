@@ -3,6 +3,8 @@
  * 管理员优惠券管理功能
  */
 
+import { getApiErrorMessage } from '@/services/apiClient';
+
 export type VoucherType = 'FIXED' | 'PERCENTAGE' | 'fixed' | 'percentage' | 'fixed_amount' | 'percentage_off' | string;
 export type VoucherStatus = 'all' | 'active' | 'inactive' | 'expired' | string;
 
@@ -106,8 +108,8 @@ export async function getAllVouchers(filters?: GetVouchersFilter): Promise<{ vou
 
     const response = await fetch(url);
     const result = await response.json();
-    if (!response.ok || result?.success === false) {
-      return { vouchers: [], data: [], error: result?.error || 'Failed to fetch vouchers' };
+    if (!response.ok || result?.ok === false || result?.success === false) {
+      return { vouchers: [], data: [], error: getApiErrorMessage(result, 'Failed to fetch vouchers') };
     }
     const vouchers = Array.isArray(result?.data)
       ? (result.data as any[]).map(normalizeVoucher)
@@ -123,8 +125,8 @@ export async function getVoucherById(voucherId: string): Promise<{ voucher: Vouc
   try {
     const response = await fetch(`/api/admin/vouchers?id=${voucherId}`);
     const result = await response.json();
-    if (!response.ok || result?.success === false) {
-      return { voucher: null, data: null, error: result?.error || 'Voucher not found' };
+    if (!response.ok || result?.ok === false || result?.success === false) {
+      return { voucher: null, data: null, error: getApiErrorMessage(result, 'Voucher not found') };
     }
     const voucherData = normalizeVoucher(result?.data);
     return { voucher: voucherData, data: voucherData, error: null };
@@ -142,11 +144,11 @@ export async function createVoucher(data: Partial<Voucher>): Promise<{ voucher: 
       body: JSON.stringify(data),
     });
     const result = await response.json().catch(() => null);
-    if (!response.ok || result?.success === false) {
+    if (!response.ok || result?.ok === false || result?.success === false) {
       return {
         voucher: null,
         success: false,
-        error: result?.error || result?.message || 'Failed to create voucher',
+        error: getApiErrorMessage(result, 'Failed to create voucher'),
       };
     }
 
@@ -169,8 +171,8 @@ export async function updateVoucher(
       body: JSON.stringify({ id: voucherId, ...data }),
     });
     const result = await response.json();
-    if (!response.ok || result?.success === false) {
-      return { voucher: null, success: false, error: result?.error || 'Failed to update voucher' };
+    if (!response.ok || result?.ok === false || result?.success === false) {
+      return { voucher: null, success: false, error: getApiErrorMessage(result, 'Failed to update voucher') };
     }
     const voucher = normalizeVoucher(result?.data) || null;
     return { voucher, success: true, error: null };
@@ -196,11 +198,10 @@ export async function distributeVoucher(
       body: JSON.stringify(body),
     });
 
-    if (!response.ok) {
-      return { success: false, error: 'Failed to distribute voucher' };
-    }
-
     const raw = await response.json().catch(() => ({}));
+    if (!response.ok || raw?.ok === false || raw?.success === false) {
+      return { success: false, error: getApiErrorMessage(raw, 'Failed to distribute voucher') };
+    }
     const payload = raw?.data ?? raw;
     return { success: true, count: payload.count || payload.distributed || 0, error: null };
   } catch (error) {
@@ -218,7 +219,7 @@ export async function deleteVoucher(voucherId: string): Promise<{ success: boole
     });
     const result = await response.json().catch(() => null);
     if (!response.ok) {
-      return { success: false, error: result?.error || 'Failed to delete voucher' };
+      return { success: false, error: getApiErrorMessage(result, 'Failed to delete voucher') };
     }
     return { success: true, error: null };
   } catch (error) {
@@ -254,6 +255,9 @@ export async function getUserVouchers(userId: string): Promise<{ data: UserVouch
   try {
     const response = await fetch(`/api/admin/vouchers/user/${userId}`);
     const raw = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return { data: [], error: getApiErrorMessage(raw, 'Failed to fetch user vouchers') };
+    }
     const payload = raw?.data ?? raw;
     return { data: payload.vouchers || [], error: null };
   } catch (error) {
@@ -270,8 +274,8 @@ export async function toggleVoucherStatus(voucherId: string, active?: boolean): 
       body: JSON.stringify({ id: voucherId, active }),
     });
     const result = await response.json().catch(() => null);
-    if (!response.ok || result?.success === false) {
-      return { success: false, error: result?.error || 'Failed to toggle voucher status' };
+    if (!response.ok || result?.ok === false || result?.success === false) {
+      return { success: false, error: getApiErrorMessage(result, 'Failed to toggle voucher status') };
     }
     return { success: true, error: null };
   } catch (error) {
@@ -308,6 +312,10 @@ export async function getVoucherStats(): Promise<{ stats: VoucherStats; data?: V
   try {
     const response = await fetch('/api/admin/vouchers/stats');
     const raw = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const fallback = { totalVouchers: 0, activeVouchers: 0, totalRedemptions: 0, totalDiscount: 0 };
+      return { stats: fallback, data: fallback, error: getApiErrorMessage(raw, 'Failed to fetch voucher stats') };
+    }
     const payload = raw?.data ?? raw;
     return { stats: payload, data: payload, error: null };
   } catch (error) {

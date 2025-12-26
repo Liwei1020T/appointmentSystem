@@ -1,12 +1,10 @@
 /**
  * Home Service
- * 首页数据获取服务
+ * Fetches homepage data via API routes.
  */
 
-import { getSystemStatsAction } from '@/actions/stats.actions';
-import { getUserStatsAction } from '@/actions/profile.actions';
-import { getUserOrdersAction } from '@/actions/orders.actions';
-import { getFeaturedPackagesAction } from '@/actions/packages.actions';
+import { apiRequest } from '@/services/apiClient';
+
 export interface HomeStats {
   totalOrders: number;
   activeUsers: number;
@@ -68,18 +66,25 @@ export interface RecentOrder {
   };
 }
 
+/**
+ * Fetch system-level stats for the homepage.
+ */
 export async function getHomeStats(): Promise<HomeStats> {
   try {
-    return await getSystemStatsAction();
+    return await apiRequest<HomeStats>('/api/stats');
   } catch (error) {
     console.error('Failed to fetch home stats:', error);
     return { totalOrders: 0, activeUsers: 0, totalReviews: 0 };
   }
 }
 
+/**
+ * Fetch featured packages.
+ */
 export async function getFeaturedPackages(limit?: number): Promise<FeaturedPackage[]> {
   try {
-    return await getFeaturedPackagesAction(limit || 3);
+    const query = limit ? `?limit=${limit}` : '';
+    return await apiRequest<FeaturedPackage[]>(`/api/packages/featured${query}`);
   } catch (error) {
     console.error('Failed to fetch featured packages:', error);
     return [];
@@ -87,11 +92,11 @@ export async function getFeaturedPackages(limit?: number): Promise<FeaturedPacka
 }
 
 /**
- * Get user statistics
+ * Fetch current user stats.
  */
-export async function getUserStats(userId?: string): Promise<UserStats | null> {
+export async function getUserStats(): Promise<UserStats | null> {
   try {
-    return await getUserStatsAction();
+    return await apiRequest<UserStats>('/api/user/stats');
   } catch (error) {
     console.error('Failed to fetch user stats:', error);
     return null;
@@ -99,12 +104,12 @@ export async function getUserStats(userId?: string): Promise<UserStats | null> {
 }
 
 /**
- * Get recent orders
+ * Fetch recent orders for the current user.
  */
-export async function getRecentOrders(userId?: string, limit?: number): Promise<RecentOrder[]> {
+export async function getRecentOrders(limit?: number): Promise<RecentOrder[]> {
   try {
-    const orders = await getUserOrdersAction({ limit: limit || 5 });
-    return orders || [];
+    const query = limit ? `?limit=${limit}` : '';
+    return await apiRequest<RecentOrder[]>(`/api/orders${query}`);
   } catch (error) {
     console.error('Failed to fetch recent orders:', error);
     return [];

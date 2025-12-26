@@ -28,8 +28,8 @@ import {
     Package,
     UserPackageWithPackage,
     getPackageUsage,
+    getPendingPackagePayments,
 } from '@/services/packageService';
-import { getPendingPackagePaymentsAction } from '@/actions/packages.actions';
 import PackageCard from '@/components/PackageCard';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
@@ -174,7 +174,7 @@ function MyPackagesTab({ isVisible }: { isVisible: boolean }) {
                 if (err) setError(err.message || '加载失败');
                 else setPackages(data || []);
 
-                const p = await getPendingPackagePaymentsAction();
+                const p = await getPendingPackagePayments();
                 setPending(p);
             } catch (e: any) {
                 setError(e.message || '加载失败');

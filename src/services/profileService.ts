@@ -1,13 +1,5 @@
 import { MembershipTierId } from '@/lib/membership';
-import {
-  changePasswordAction,
-  generateReferralCodeAction,
-  getUserProfileAction,
-  getUserStatsAction,
-  updateUserProfileAction,
-} from '@/actions/profile.actions';
-import { getPointsAction } from '@/actions/points.actions';
-import { getReferralsAction } from '@/actions/referrals.actions';
+import { apiRequest } from '@/services/apiClient';
 
 /**
  * Profile Service
@@ -43,7 +35,7 @@ export interface UpdateProfileParams {
 
 export async function getUserProfile(userId?: string): Promise<{ profile?: UserProfile; error?: any }> {
   try {
-    const profile = await getUserProfileAction();
+    const profile = await apiRequest<UserProfile>(`/api/profile`);
     return { profile };
   } catch (error: any) {
     console.error('Failed to fetch user profile:', error);
@@ -57,7 +49,11 @@ export async function updateUserProfile(data: {
   email?: string;
 }): Promise<boolean> {
   try {
-    await updateUserProfileAction(data);
+    await apiRequest(`/api/profile`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
     return true;
   } catch (error) {
     console.error('Failed to update profile:', error);
@@ -70,7 +66,11 @@ export async function changePassword(
   newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await changePasswordAction({ currentPassword, newPassword });
+    await apiRequest(`/api/profile/password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
     return { success: true };
   } catch (error: any) {
     console.error('Failed to change password:', error);
@@ -83,7 +83,11 @@ export async function changePassword(
  */
 export async function updateProfile(data: UpdateProfileParams): Promise<{ success: boolean; error: string | null }> {
   try {
-    await updateUserProfileAction(data);
+    await apiRequest(`/api/profile`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
     return { success: true, error: null };
   } catch (error: any) {
     console.error('Failed to update profile:', error);
@@ -124,7 +128,7 @@ export interface UserStats {
  */
 export async function getUserStats(): Promise<UserStats> {
   try {
-    const data = await getUserStatsAction();
+    const data = await apiRequest<UserStats>(`/api/user/stats`);
     const membership = data?.membership || {
       tier: 'standard' as MembershipTierId,
       label: '普通会员',
@@ -173,7 +177,9 @@ export async function getUserStats(): Promise<UserStats> {
  */
 export async function generateReferralCode(): Promise<{ code: string; error: string | null }> {
   try {
-    const result = await generateReferralCodeAction();
+    const result = await apiRequest<{ code: string }>(`/api/profile/referral-code`, {
+      method: 'POST',
+    });
     return { code: result.code, error: null };
   } catch (error: any) {
     console.error('Failed to generate referral code:', error);
@@ -186,11 +192,9 @@ export async function generateReferralCode(): Promise<{ code: string; error: str
  */
 export async function logout(): Promise<{ success: boolean }> {
   try {
-    const response = await fetch('/api/auth/logout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    return { success: response.ok };
+    const { signOut } = await import('next-auth/react');
+    await signOut({ redirect: true, callbackUrl: '/login' });
+    return { success: true };
   } catch (error) {
     console.error('Failed to logout:', error);
     return { success: false };
@@ -201,12 +205,12 @@ export async function logout(): Promise<{ success: boolean }> {
  * 获取用户积分信息
  */
 export async function getPoints(): Promise<{ balance: number; logs: any[] }> {
-  return getPointsAction();
+  return apiRequest(`/api/points`);
 }
 
 /**
  * 获取推荐记录
  */
 export async function getReferrals(): Promise<any> {
-  return getReferralsAction();
+  return apiRequest(`/api/referrals`);
 }

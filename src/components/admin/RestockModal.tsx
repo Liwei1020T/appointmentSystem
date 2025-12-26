@@ -14,7 +14,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { X, Package, DollarSign, FileText, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { addStock } from '@/services/inventoryService';
+import { addStock, getAdminInventory } from '@/services/inventoryService';
 
 interface RestockModalProps {
   isOpen: boolean;
@@ -60,17 +60,15 @@ export default function RestockModal({
 
   const loadStrings = async () => {
     try {
-      const response = await fetch('/api/admin/strings?active=true');
-      if (!response.ok) throw new Error('Failed to load strings');
-      const data = await response.json();
+      const data = await getAdminInventory();
       setStrings(
         data.map((s: any) => ({
           id: s.id,
-          name: s.name,
+          name: s.name || s.model,
           brand: s.brand,
           model: s.model,
-          currentStock: s.stock_quantity || 0,
-          costPrice: s.cost_price,
+          currentStock: Number(s.stock ?? 0),
+          costPrice: s.costPrice ?? s.cost_price,
         }))
       );
     } catch (err) {

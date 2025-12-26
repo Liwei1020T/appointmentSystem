@@ -50,9 +50,9 @@ export default function LowStockAlert({ threshold = 3, onRestockClick }: LowStoc
   }
 
   // 获取库存状态颜色
-  const getStockColor = (stock: number) => {
+  const getStockColor = (stock: number, minimumStock: number) => {
     if (stock === 0) return 'text-danger';
-    if (stock === 1) return 'text-warning';
+    if (stock <= minimumStock) return 'text-warning';
     return 'text-warning';
   };
 
@@ -119,10 +119,16 @@ export default function LowStockAlert({ threshold = 3, onRestockClick }: LowStoc
 
                 {/* 当前库存 */}
                 <div className="text-center">
-                  <div className={`text-2xl font-bold ${getStockColor(item.stock)}`}>
+                  <div className={`text-2xl font-bold ${getStockColor(item.stock, item.minimumStock)}`}>
                     {item.stock}
                   </div>
                   <div className="text-xs text-text-tertiary">当前库存</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm font-medium text-text-secondary">
+                    {item.minimumStock}
+                  </div>
+                  <div className="text-xs text-text-tertiary">最低库存</div>
                 </div>
 
                 {/* 成本价（可选） */}
@@ -153,7 +159,7 @@ export default function LowStockAlert({ threshold = 3, onRestockClick }: LowStoc
         <div className="mt-4 pt-4 border-t border-warning/40">
           <p className="text-xs text-text-secondary">
             <strong>提示：</strong>
-            当球线库存低于 {threshold} 时会显示预警。建议及时补货以确保正常营业。
+            当球线库存低于设定的最低库存或预警阈值时会显示预警。建议及时补货以确保正常营业。
           </p>
         </div>
       )}

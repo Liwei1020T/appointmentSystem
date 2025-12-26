@@ -17,9 +17,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Badge, Button, Card, StatsCard } from '@/components';
+import { DashboardSkeleton } from '@/components/skeletons';
 import LowStockAlert from '@/components/admin/LowStockAlert';
 import RestockModal from '@/components/admin/RestockModal';
 import { AlertTriangle, BarChart3, Boxes, ClipboardList, Clock, LayoutDashboard, Package, Tag, Wallet } from 'lucide-react';
+import { getDashboardStats } from '@/services/adminStatsService';
 
 interface DashboardStats {
   todayOrders: number;
@@ -106,13 +108,8 @@ export default function AdminDashboardPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/admin/dashboard-stats?limit=5');
-      if (!response.ok) {
-        throw new Error('Failed to load dashboard data');
-      }
-      const data = await response.json();
-
-      if (data.stats) {
+      const data = await getDashboardStats(5);
+      if (data?.stats) {
         setStats({
           todayOrders: Number(data.stats.todayOrders) || 0,
           todayRevenue: Number(data.stats.todayRevenue) || 0,
@@ -125,7 +122,7 @@ export default function AdminDashboardPage() {
         setLastUpdated(new Date());
       }
 
-      if (data.recentOrders) {
+      if (data?.recentOrders) {
         setRecentOrders(data.recentOrders);
       }
     } catch (error) {
@@ -169,14 +166,7 @@ export default function AdminDashboardPage() {
   };
 
   if (authLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-ink">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent mb-4"></div>
-          <p className="text-text-secondary">加载中...</p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (

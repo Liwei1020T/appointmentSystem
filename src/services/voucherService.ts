@@ -4,14 +4,7 @@
  */
 
 import { UserVoucher, Voucher } from '.prisma/client';
-import {
-  getRedeemableVouchersAction,
-  getUserVouchersAction,
-  getUserVouchersMappedAction,
-  getVoucherStatsAction,
-  redeemVoucherAction,
-  redeemVoucherWithPointsAction,
-} from '@/actions/vouchers.actions';
+import { apiRequest } from '@/services/apiClient';
 
 export interface UserVoucherWithVoucher extends UserVoucher {
   voucher: Voucher;
@@ -24,8 +17,12 @@ export async function getUserVouchers(
   status?: 'active' | 'used' | 'expired'
 ): Promise<{ vouchers?: UserVoucherWithVoucher[]; error?: string }> {
   try {
-    const vouchers = await getUserVouchersAction(status);
-    return { vouchers };
+    const params = new URLSearchParams();
+    if (status) params.set('status', status);
+    const payload = await apiRequest<{ vouchers: UserVoucherWithVoucher[] }>(
+      `/api/vouchers/user?${params.toString()}`
+    );
+    return { vouchers: payload?.vouchers || [] };
   } catch (error) {
     console.error('Error getting user vouchers:', error);
     return { error: '获取优惠券失败' };
@@ -39,8 +36,11 @@ export async function getUserVouchersForProfile(
   status?: 'active' | 'used' | 'expired'
 ): Promise<{ vouchers?: any[]; error?: string }> {
   try {
-    const vouchers = await getUserVouchersMappedAction(status);
-    return { vouchers };
+    const params = new URLSearchParams();
+    params.set('mapped', 'true');
+    if (status) params.set('status', status);
+    const payload = await apiRequest<{ vouchers: any[] }>(`/api/vouchers/user?${params.toString()}`);
+    return { vouchers: payload?.vouchers || [] };
   } catch (error) {
     console.error('Error getting user vouchers for profile:', error);
     return { error: '获取优惠券失败' };
@@ -54,7 +54,11 @@ export async function redeemVoucher(
   code: string,
   usePoints = false
 ): Promise<any> {
-  return redeemVoucherAction({ code, usePoints });
+  return apiRequest(`/api/vouchers/redeem`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, usePoints }),
+  });
 }
 
 /**
@@ -117,8 +121,8 @@ export function validateVoucherForOrder(voucher: any, orderAmount: number): { va
  */
 export async function getRedeemableVouchers(): Promise<{ vouchers: Voucher[]; error: string | null }> {
   try {
-    const vouchers = await getRedeemableVouchersAction();
-    return { vouchers: Array.isArray(vouchers) ? vouchers : [], error: null };
+    const payload = await apiRequest<{ vouchers: Voucher[] }>(`/api/vouchers/redeemable`);
+    return { vouchers: Array.isArray(payload?.vouchers) ? payload.vouchers : [], error: null };
   } catch (error: any) {
     return { vouchers: [], error: error.message || '获取可兑换优惠券失败' };
   }
@@ -132,7 +136,11 @@ export async function redeemVoucherWithPoints(
   points?: number
 ): Promise<{ success: boolean; userVoucher?: any; error: string | null }> {
   try {
-    const result = await redeemVoucherWithPointsAction({ voucherId, points });
+    const result = await apiRequest<{ userVoucher: any }>(`/api/vouchers/redeem-with-points`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voucherId, points }),
+    });
     return { success: true, userVoucher: result.userVoucher, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || '兑换失败' };
@@ -175,12 +183,8 @@ export function calculateDiscount(voucher: Voucher | UserVoucher | any, orderAmo
  */
 export async function getAvailableVouchers(): Promise<{ vouchers: Voucher[]; error: string | null }> {
   try {
-    const response = await fetch('/api/vouchers/available');
-    const data = await response.json();
-    if (!response.ok) {
-      return { vouchers: [], error: data.error || '获取可用优惠券失败' };
-    }
-    return { vouchers: data.data || [], error: null };
+    const payload = await apiRequest<{ vouchers: Voucher[] }>(`/api/vouchers/redeemable`);
+    return { vouchers: payload?.vouchers || [], error: null };
   } catch (error: any) {
     return { vouchers: [], error: error.message || '获取可用优惠券失败' };
   }
@@ -202,7 +206,16 @@ export interface VoucherStats {
  */
 export async function getVoucherStats(): Promise<VoucherStats> {
   try {
-    const payload = await getVoucherStatsAction();
+    const payload = await apiRequest<VoucherStats>(`/api/vouchers/stats`);
+    if (!payload) {
+      return {
+        totalVouchers: 0,
+        usedVouchers: 0,
+        expiredVouchers: 0,
+        activeVouchers: 0,
+        totalSavings: 0,
+      };
+    }
     return {
       totalVouchers: payload.totalVouchers || payload.total || 0,
       usedVouchers: payload.usedVouchers || payload.used || 0,

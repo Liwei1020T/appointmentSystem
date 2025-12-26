@@ -26,7 +26,7 @@
 
 ## Overview
 
-**Note (2025-12-20):** Internal UI flows for profile, points, referrals, vouchers, stats, notifications, orders, payments, packages, reviews, and inventory (including admin orders/payments/reviews/inventory) now use Next.js Server Actions in `src/actions/*`. The legacy `/api/*` routes for these areas were removed. External inbound endpoints (e.g., NextAuth callbacks, payment webhooks, uploads, order photos) remain as API routes.
+**Note (2025-12-26):** Internal UI flows now use Next.js App Router Route Handlers (`app/api/*`) as the primary boundary. Server Actions in `src/actions/*` have been removed. External inbound endpoints (e.g., NextAuth callbacks, payment webhooks, uploads, order photos) remain as API routes.
 
 ### Base URL
 
@@ -43,23 +43,32 @@ All authenticated endpoints require:
 
 ### Response Format
 
-**Success Response:**
+**Success Response (current standard):**
+```json
+{
+  "ok": true,
+  "data": { ... }
+}
+```
+
+**Error Response (current standard):**
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human-readable error message",
+    "details": { }
+  }
+}
+```
+
+**Legacy Response (still used by some endpoints):**
 ```json
 {
   "success": true,
   "data": { ... },
   "message": "Operation successful"
-}
-```
-
-**Error Response:**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "Human-readable error message"
-  }
 }
 ```
 
@@ -906,26 +915,72 @@ All authenticated endpoints require:
 
 ### Local Implemented Endpoints (Next.js App Router)
 
-- `GET /api/user/vouchers` → Prisma `user_vouchers` + `vouchers` 联表，返回 `{ vouchers: [...] }`（需要登录）。  
-- `GET /api/vouchers/redeemable` → Prisma `vouchers` 表筛选 active + valid window，返回 `{ vouchers: [...] }`（需要登录）。  
-- `POST /api/vouchers/redeem-with-points` → 使用积分兑换指定 `voucherId`，写入 `user_vouchers` 与 `points_log`（需要登录）。  
-- `GET /api/vouchers/stats` → 当前用户优惠券统计（total/active/used/expired/usageRate，需要登录）。  
-- `GET /api/admin/vouchers/stats` → 管理端优惠券统计（total/active/expired/distributed/used/usage_rate/total_discount_given，管理员）。  
+- `GET /api/profile` → 当前用户资料 + 统计（需登录）。  
+- `PATCH /api/profile` → 更新用户资料（需登录）。  
+- `POST /api/profile/password` → 修改登录密码（需登录）。  
+- `POST /api/profile/referral-code` → 获取/生成推荐码（需登录）。  
+- `GET /api/referrals` → 推荐记录 + 统计（需登录）。  
+- `GET /api/referrals/my-stats` → 推荐统计（需登录）。  
+- `GET /api/referrals/leaderboard` → 推荐排行榜（需登录）。  
+- `GET /api/points` → 积分余额 + 明细（需登录）。  
+- `GET /api/points/history` → 积分明细（支持 type/limit，需登录）。  
+- `GET /api/points/stats` → 积分统计（需登录）。  
+- `POST /api/points/redeem` → 积分扣减（需登录）。  
+- `GET /api/vouchers/user` → 用户优惠券列表（支持 `status/mapped`，需登录）。  
+- `POST /api/vouchers/redeem` → 通过 code 领取优惠券（需登录）。  
+- `GET /api/user/vouchers` → Prisma `user_vouchers` + `vouchers` 联表，返回 `{ vouchers: [...] }`（需登录，legacy）。  
+- `GET /api/vouchers/redeemable` → Prisma `vouchers` 表筛选 active + valid window，返回 `{ vouchers: [...] }`（需登录）。  
+- `POST /api/vouchers/redeem-with-points` → 使用积分兑换指定 `voucherId`，写入 `user_vouchers` 与 `points_log`（需登录）。  
+- `GET /api/vouchers/stats` → 当前用户优惠券统计（total/active/used/expired/usageRate，需登录）。  
+- `GET /api/notifications` → 通知列表 + 未读数（需登录）。  
+- `POST /api/notifications` → 标记已读（单条/全部，需登录）。  
+- `DELETE /api/notifications/:id` → 删除通知（需登录）。  
+- `POST /api/reviews` → 提交评价（需登录）。  
+- `GET /api/reviews/user` → 当前用户评价（需登录）。  
+- `GET /api/reviews/order/:orderId` → 订单评价（订单 owner/管理员）。  
+- `GET /api/reviews/pending` → 待评价订单（需登录）。  
+- `GET /api/reviews/featured` → 精选评价（公开）。  
+- `GET /api/admin/reviews` → 管理端评价列表（管理员）。  
+- `GET /api/admin/reviews/stats` → 管理端评价统计（管理员）。  
+- `POST /api/admin/reviews/:id/reply` → 管理端回复评价（管理员）。  
+- `GET /api/admin/stats` → 管理端统计（管理员）。  
+- `GET /api/admin/dashboard-stats` → 管理端首页统计（管理员）。  
+- `GET /api/admin/orders` → 管理端订单列表（支持 status/q/page/limit，管理员）。  
+- `GET /api/admin/orders/:id` → 管理端订单详情（管理员）。  
+- `PATCH /api/admin/orders/:id/status` → 管理端更新订单状态（管理员）。  
+- `GET /api/admin/orders/stats` → 管理端订单统计（支持时间筛选，管理员）。  
+- `GET /api/admin/vouchers/stats` → 管理端优惠券统计（管理员）。  
 - `GET /api/admin/vouchers/user/:userId` → 管理端查看指定用户的优惠券列表（管理员）。  
 - `POST /api/admin/vouchers/:id/distribute` → 管理端分发优惠券（支持 all/specific；返回 `{ count, distributed, skipped }`，管理员）。  
-- `POST /api/packages/buy` → 创建“套餐支付单”（Prisma `payments`），`provider=tng|cash`、`status=pending`；TNG 上传收据后变更为 `pending_verification`；管理员确认后创建 `user_packages`（需要登录）。  
+- `POST /api/packages/buy` → 创建“套餐支付单”（Prisma `payments`），`provider=tng|cash`、`status=pending`；TNG 上传收据后变更为 `pending_verification`；管理员确认后创建 `user_packages`（需登录）。  
 - `GET /api/admin/packages` → 套餐列表（支持 status/search/includeInactive，管理员）。  
 - `POST /api/admin/packages` → 创建套餐（兼容 `validityDays/validity_days`，管理员）。  
 - `PATCH /api/admin/packages` → 更新套餐（兼容 `validityDays/validity_days`，管理员）。  
+- `GET /api/admin/packages/:id` → 获取套餐详情（管理员）。  
+- `PUT /api/admin/packages/:id` → 更新套餐（管理员）。  
+- `DELETE /api/admin/packages/:id` → 删除套餐（管理员；存在购买记录则返回 409）。  
+- `PATCH /api/admin/packages/:id/status` → 上下架套餐（管理员）。  
+- `GET /api/admin/packages/purchases` → 套餐购买记录（支持 packageId/userId/date/page/limit，管理员）。  
 - `GET /api/admin/packages/stats` → 套餐统计（总购买数/收入/本月数据/最受欢迎，管理员）。  
 - `GET /api/admin/packages/sales` → 套餐销量聚合（按套餐统计销量、收入、活跃用户，管理员）。  
+- `GET /api/orders` → 当前用户订单列表（支持 status/limit/page，需登录）。  
+- `POST /api/orders` → 创建订单（支持单球拍/多球拍 payload，需登录）。  
+- `POST /api/orders/create` → legacy 套餐/优惠券创建接口（需登录）。  
+- `GET /api/orders/:id` → 订单详情（订单 owner，需登录）。  
+- `POST /api/orders/:id/cancel` → 取消待处理订单（订单 owner，需登录）。  
+- `POST /api/orders/:id/complete` → 完成订单（管理员）。  
+- `GET /api/orders/:id/photos` → 订单照片列表（订单 owner 或管理员）。  
+- `POST /api/orders/:id/photos` → 上传订单照片（管理员）。  
+- `DELETE /api/orders/:id/photos/:photoId` → 删除订单照片（管理员）。  
+- `POST /api/orders/:id/photos/reorder` → 重排订单照片（管理员）。  
+- `GET /api/payments/:id` → 获取支付详情（需要登录；订单 owner 或管理员）。  
 - `POST /api/payments` → 创建支付记录（订单/套餐，二选一：`orderId` 或 `packageId`；默认 `paymentMethod=tng`）。  
+- `POST /api/payments/cash` → 创建现金支付记录（需要登录）。  
 - `POST /api/payments/:id/receipt` → 更新 `receiptUrl` 并进入 `pending_verification`（需要登录，仅本人）。  
 - `POST /api/payments/:id/proof` → 上传支付凭证（multipart）并进入 `pending_verification`（需要登录，仅本人）。  
 - `GET /api/admin/payments/pending` → 待审核支付列表（TNG：`pending_verification`；现金：`pending|pending_verification`，管理员）。  
-- `POST /api/admin/payments/:id/confirm` → 审核通过（置 `success`；订单推进至 `in_progress`；套餐创建 `user_packages`，管理员）。  
-- `POST /api/admin/payments/:id/confirm-cash` → 现金确认收款（置 `success`；订单推进至 `in_progress`；套餐创建 `user_packages`，管理员）。  
-- `POST /api/admin/payments/:id/reject` → 拒绝支付并记录原因（置 `rejected`，管理员）。  
+- `POST /api/payments/:id/verify` → 管理员确认支付（支持现金与非现金；置 `success` 并按需创建 `user_packages`）。  
+- `POST /api/payments/:id/reject` → 管理员拒绝支付并记录原因（置 `rejected`）。  
 - `GET /api/admin/reports` → 报表概览（revenue/orders/customers，管理员）。  
 - `GET /api/admin/reports/revenue` → 收入趋势与分类（管理员）。  
 - `GET /api/admin/reports/profit` → 利润分析 + Profit by Product（管理员）。  

@@ -3,11 +3,15 @@
  * Touch 'n Go 支付功能
  */
 
+import { apiRequest } from '@/services/apiClient';
+
 export interface PaymentResult {
   orderId: string;
   status: 'SUCCESS' | 'PENDING' | 'FAILED';
   amount: number;
   transactionId?: string;
+  order_id?: string;
+  transaction_id?: string;
 }
 
 export async function verifyTngPayment(
@@ -66,12 +70,24 @@ export async function getTNGPayment(
   paymentId: string
 ): Promise<{ payment: PaymentResult | null; error: string | null }> {
   try {
-    const response = await fetch(`/api/payments/tng/${paymentId}`);
-    const data = await response.json();
-    if (!response.ok) {
-      return { payment: null, error: data.error || 'Failed to get TNG payment' };
-    }
-    return { payment: data.payment || null, error: null };
+    const payment = await apiRequest<any>(`/api/payments/${paymentId}`);
+    const orderId = payment.orderId || payment.order?.id || payment.order_id;
+    const transactionId = payment.transactionId || payment.transaction_id;
+    const amount = Number(payment.amount ?? payment.order?.price ?? 0) || 0;
+    const statusRaw = payment.status || payment.payment_status || 'pending';
+    const status = String(statusRaw).toUpperCase() as PaymentResult['status'];
+
+    return {
+      payment: {
+        orderId,
+        order_id: orderId,
+        status,
+        amount,
+        transactionId,
+        transaction_id: transactionId,
+      },
+      error: null,
+    };
   } catch (error: any) {
     console.error('Failed to get TNG payment:', error);
     return { payment: null, error: error.message || 'Failed to get TNG payment' };

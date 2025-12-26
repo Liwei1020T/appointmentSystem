@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import NotificationBell from '@/components/NotificationBell';
 import NotificationPanel from '@/components/NotificationPanel';
+import { isAdminRole } from '@/lib/roles';
 
 export default function Navbar() {
   const { data: session, status } = useSession();
@@ -129,7 +130,7 @@ export default function Navbar() {
                 </Link>
 
 
-                {session.user.role === 'admin' && (
+                {isAdminRole(session.user.role) && (
                   <Link
                     href="/admin/dashboard"
                     className={`px-3 py-2 rounded-md text-sm font-medium ${pathname?.startsWith('/admin')

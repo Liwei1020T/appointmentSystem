@@ -10,7 +10,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createInventoryItemAction } from '@/actions/inventory.actions';
+import { createInventoryItem } from '@/services/inventoryService';
 
 function AddStringForm() {
   const router = useRouter();
@@ -59,7 +59,7 @@ function AddStringForm() {
 
     let newString;
     try {
-      newString = await createInventoryItemAction({
+      newString = await createInventoryItem({
         name: formData.name,
         brand: formData.brand,
         cost_price: formData.cost_price,

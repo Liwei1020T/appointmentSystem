@@ -2,7 +2,7 @@
  * 订单照片展示组件 (Order Photos Display Component)
  * 
  * 用户端查看订单照片，支持点击放大
- * 使用 Server Actions 替代 API 调用
+ * Uses API routes for read access.
  */
 
 'use client';
@@ -10,7 +10,7 @@
 import React, { useState, useEffect } from 'react';
 import Spinner from '@/components/Spinner';
 import { Camera, ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react';
-import { getOrderPhotosAction, OrderPhoto } from '@/actions/orderPhotos.actions';
+import { getOrderPhotos, OrderPhoto } from '@/services/orderPhotosService';
 
 interface OrderPhotosDisplayProps {
   orderId: string;
@@ -44,7 +44,7 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
     setLoading(true);
 
     try {
-      const photosList = await getOrderPhotosAction(orderId);
+      const photosList = await getOrderPhotos(orderId);
       setPhotos(photosList);
     } catch (error) {
       console.error('Failed to load photos:', error);

@@ -4,17 +4,7 @@
  */
 
 import { isValidUUID } from '@/lib/utils';
-import { getOrderByIdAction } from '@/actions/orders.actions';
-import {
-  getAdminReviewStatsAction,
-  getAdminReviewsAction,
-  getFeaturedReviewsAction,
-  getPendingReviewOrdersAction,
-  getReviewByOrderAction,
-  getUserReviewsAction,
-  replyReviewAction,
-  submitReviewAction,
-} from '@/actions/reviews.actions';
+import { apiRequest } from '@/services/apiClient';
 
 // 待评价订单接口
 export interface PendingReviewOrder {
@@ -140,10 +130,10 @@ function normalizeReview(r: any): OrderReview {
 /**
  * 获取用户的所有评价
  */
-export async function getUserReviews(userId: string): Promise<OrderReview[]> {
-  if (!isValidUUID(userId)) return [];
+export async function getUserReviews(userId?: string): Promise<OrderReview[]> {
+  if (userId && !isValidUUID(userId)) return [];
   try {
-    const payload = await getUserReviewsAction();
+    const payload = await apiRequest<any[]>(`/api/reviews/user`);
     if (!Array.isArray(payload)) return [];
     return payload.map(normalizeReview);
   } catch (_error) {
@@ -158,7 +148,7 @@ export async function getOrderReview(orderId: string): Promise<OrderReview | nul
   if (!isValidUUID(orderId)) return null;
 
   try {
-    const review = await getReviewByOrderAction(orderId);
+    const review = await apiRequest<any>(`/api/reviews/order/${orderId}`);
     return review ? normalizeReview(review) : null;
   } catch (_err) {
     return null;
@@ -175,7 +165,7 @@ export async function canReviewOrder(orderId: string, userId: string): Promise<b
   if (existingReview) return false;
 
   try {
-    const order = await getOrderByIdAction(orderId);
+    const order = await apiRequest<{ status?: string }>(`/api/orders/${orderId}`);
     return order?.status === 'completed';
   } catch (_error) {
     return false;
@@ -187,16 +177,20 @@ export async function canReviewOrder(orderId: string, userId: string): Promise<b
  */
 export async function submitReview(params: SubmitReviewParams, userId?: string): Promise<{ reviewId?: string; review?: OrderReview; error?: string }> {
   try {
-    const reviewPayload = await submitReviewAction(params);
+    const reviewPayload = await apiRequest<any>(`/api/reviews`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    });
     const normalized = normalizeReview({
       ...reviewPayload,
       order_id: params.order_id || params.orderId || reviewPayload?.order_id,
       user_id: (reviewPayload as any)?.user_id || (reviewPayload as any)?.userId || userId,
     });
     return { reviewId: normalized.id, review: normalized };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to submit review:', error);
-    return { error: 'Failed to submit review' };
+    return { error: error?.message || 'Failed to submit review' };
   }
 }
 
@@ -205,7 +199,7 @@ export async function submitReview(params: SubmitReviewParams, userId?: string):
  */
 export async function getFeaturedReviews(): Promise<OrderReview[]> {
   try {
-    const payload = await getFeaturedReviewsAction();
+    const payload = await apiRequest<any[]>(`/api/reviews/featured`);
     if (!Array.isArray(payload)) return [];
     return payload.map(normalizeReview);
   } catch {
@@ -218,7 +212,7 @@ export async function getFeaturedReviews(): Promise<OrderReview[]> {
  */
 export async function getAdminReviews(): Promise<OrderReview[]> {
   try {
-    const payload = await getAdminReviewsAction();
+    const payload = await apiRequest<any[]>(`/api/admin/reviews`);
     if (!Array.isArray(payload)) return [];
     return payload.map(normalizeReview);
   } catch {
@@ -230,14 +224,18 @@ export async function getAdminReviews(): Promise<OrderReview[]> {
  * Admin: 获取评价统计
  */
 export async function getAdminReviewStats(): Promise<any> {
-  return getAdminReviewStatsAction();
+  return apiRequest(`/api/admin/reviews/stats`);
 }
 
 /**
  * Admin: 回复评价
  */
 export async function replyReview(reviewId: string, reply: string): Promise<any> {
-  return replyReviewAction(reviewId, reply);
+  return apiRequest(`/api/admin/reviews/${reviewId}/reply`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reply }),
+  });
 }
 
 /**
@@ -245,7 +243,7 @@ export async function replyReview(reviewId: string, reply: string): Promise<any>
  */
 export async function getPendingReviewOrders(): Promise<PendingReviewOrder[]> {
   try {
-    const orders = await getPendingReviewOrdersAction();
+    const orders = await apiRequest<PendingReviewOrder[]>(`/api/reviews/pending`);
     return Array.isArray(orders) ? orders : [];
   } catch {
     return [];

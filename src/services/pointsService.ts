@@ -3,11 +3,7 @@
  * 积分系统服务
  */
 
-import {
-  getPointsAction,
-  getPointsHistoryAction,
-  getPointsStatsAction,
-} from '@/actions/points.actions';
+import { apiRequest } from '@/services/apiClient';
 
 export type PointsLogType = 'EARN' | 'REDEEM' | 'earn' | 'redeem' | 'spend' | 'expire' | 'order' | 'referral' | 'review' | 'registration' | 'admin_adjust' | string;
 
@@ -48,7 +44,7 @@ export interface PointsStats {
 
 export async function getPointsBalance(userId?: string): Promise<{ balance: number; error: string | null }> {
   try {
-    const payload = await getPointsAction();
+    const payload = await apiRequest<{ balance?: number; points?: number }>(`/api/points`);
     const rawBalance = payload?.balance ?? payload?.points ?? 0;
     const balance = Number.isFinite(Number(rawBalance)) ? Number(rawBalance) : 0;
     return { balance, error: null };
@@ -63,7 +59,10 @@ export async function getPointsHistory(
   limit?: number
 ): Promise<{ logs: PointsLog[]; error: string | null }> {
   try {
-    const data = await getPointsHistoryAction({ type: filterType, limit });
+    const params = new URLSearchParams();
+    if (filterType) params.set('type', String(filterType));
+    if (limit) params.set('limit', String(limit));
+    const data = await apiRequest<{ logs?: PointsLog[] }>(`/api/points/history?${params.toString()}`);
     const payload = data?.logs ?? [];
     return { logs: Array.isArray(payload) ? payload : [], error: null };
   } catch (error: any) {
@@ -74,7 +73,7 @@ export async function getPointsHistory(
 
 export async function getPointsStats(userId: string): Promise<PointsStats> {
   try {
-    const payload = await getPointsStatsAction();
+    const payload = await apiRequest<PointsStats>(`/api/points/stats`);
     return {
       totalPoints: payload.totalPoints || 0,
       earnedThisMonth: payload.earnedThisMonth || 0,
@@ -90,12 +89,12 @@ export async function getPointsStats(userId: string): Promise<PointsStats> {
 
 export async function addPoints(userId: string, points: number, reason: string): Promise<boolean> {
   try {
-    const response = await fetch('/api/points/add', {
+    await apiRequest(`/api/admin/users/${userId}/points`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ points, reason }),
+      body: JSON.stringify({ points, reason, type: 'add' }),
     });
-    return response.ok;
+    return true;
   } catch (error) {
     console.error('Failed to add points:', error);
     return false;
@@ -104,12 +103,12 @@ export async function addPoints(userId: string, points: number, reason: string):
 
 export async function redeemPoints(userId: string, points: number): Promise<boolean> {
   try {
-    const response = await fetch('/api/points/redeem', {
+    await apiRequest(`/api/points/redeem`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ points }),
     });
-    return response.ok;
+    return true;
   } catch (error) {
     console.error('Failed to redeem points:', error);
     return false;

@@ -2,7 +2,7 @@
  * 订单照片上传组件 (Order Photos Upload Component)
  * 
  * 管理员在订单完成后上传穿线照片
- * 使用 Server Actions 替代 API 调用
+ * Uses API routes for CRUD operations.
  */
 
 'use client';
@@ -13,12 +13,12 @@ import Toast from '@/components/Toast';
 import { UploadResult } from '@/services/imageUploadService';
 import { Camera, X, MoveUp, MoveDown } from 'lucide-react';
 import {
-  getOrderPhotosAction,
-  addOrderPhotoAction,
-  deleteOrderPhotoAction,
-  reorderOrderPhotosAction,
+  getOrderPhotos,
+  addOrderPhoto,
+  deleteOrderPhoto,
+  reorderOrderPhotos,
   OrderPhoto,
-} from '@/actions/orderPhotos.actions';
+} from '@/services/orderPhotosService';
 
 interface OrderPhotosUploadProps {
   orderId: string;
@@ -59,7 +59,7 @@ export default function OrderPhotosUpload({
     const loadExisting = async () => {
       setLoading(true);
       try {
-        const list = await getOrderPhotosAction(orderId);
+        const list = await getOrderPhotos(orderId);
         setPhotos(list);
       } catch (error) {
         console.error('Failed to load existing photos:', error);
@@ -77,7 +77,7 @@ export default function OrderPhotosUpload({
 
   // 上传照片到数据库
   const savePhotoToDatabase = async (photoUrl: string) => {
-    return await addOrderPhotoAction({
+    return await addOrderPhoto({
       orderId,
       photoUrl,
       photoType: selectedType as 'before' | 'after' | 'detail' | 'other',
@@ -129,7 +129,7 @@ export default function OrderPhotosUpload({
     setDeleting(photoId);
 
     try {
-      await deleteOrderPhotoAction(orderId, photoId);
+      await deleteOrderPhoto(orderId, photoId);
       setPhotos((prev) => prev.filter((p) => p.id !== photoId));
       setToast({
         show: true,
@@ -163,7 +163,7 @@ export default function OrderPhotosUpload({
 
     // 更新 display_order
     try {
-      await reorderOrderPhotosAction(
+      await reorderOrderPhotos(
         orderId,
         newPhotos.map((p, i) => ({ id: p.id, displayOrder: i }))
       );

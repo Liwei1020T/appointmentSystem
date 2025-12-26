@@ -19,7 +19,7 @@ import { StringInventory, UserVoucher } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { hasAvailablePackage } from '@/services/packageService';
 import { calculateDiscount } from '@/services/voucherService';
-import { createOrderAction, getUserOrdersAction } from '@/actions/orders.actions';
+import { createOrder } from '@/services/orderService';
 import { getUserStats, type MembershipTierInfo } from '@/services/profileService';
 import PageHeader from '@/components/layout/PageHeader';
 
@@ -176,7 +176,6 @@ export default function BookingFlow() {
         : `[竖/横分拉: ${tension}/${crossTension} LBS] ${notes}`;
 
       const orderData = {
-        user_id: user.id,
         string_id: selectedString.id,
         tension,
         price: Number(selectedString.sellingPrice),
@@ -185,11 +184,10 @@ export default function BookingFlow() {
         final_price: final,
         use_package: usePackage,
         voucher_id: selectedVoucher?.voucher?.id || null,
-        status: 'pending',
         notes: finalNotes,
       };
 
-      const order = await createOrderAction(orderData);
+      const order = await createOrder(orderData);
 
       if (!order) {
         throw new Error('订单创建失败');

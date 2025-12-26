@@ -3,12 +3,7 @@
  * Consolidated from notification.service.ts
  */
 
-import {
-  deleteNotificationAction,
-  getNotificationsAction,
-  markAllNotificationsAsReadAction,
-  markNotificationAsReadAction,
-} from '@/actions/notifications.actions';
+import { apiRequest } from '@/services/apiClient';
 
 // Type exports for Notification components
 export interface Notification {
@@ -169,7 +164,12 @@ export async function getNotifications(
   unreadOnly = false,
   limit?: number
 ): Promise<NotificationData> {
-  const payload = await getNotificationsAction({ unreadOnly, limit });
+  const params = new URLSearchParams();
+  if (unreadOnly) params.set('unread', 'true');
+  if (limit) params.set('limit', String(limit));
+  const payload = await apiRequest<{ notifications: Notification[]; unreadCount: number }>(
+    `/api/notifications?${params.toString()}`
+  );
   return {
     unreadCount: Number(payload?.unreadCount ?? 0) || 0,
     notifications: Array.isArray(payload?.notifications)
@@ -182,14 +182,22 @@ export async function getNotifications(
  * 标记单个通知为已读
  */
 export async function markAsRead(notificationId: string): Promise<void> {
-  await markNotificationAsReadAction(notificationId);
+  await apiRequest(`/api/notifications`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ notificationId }),
+  });
 }
 
 /**
  * 标记所有通知为已读
  */
 export async function markAllAsRead(): Promise<void> {
-  await markAllNotificationsAsReadAction();
+  await apiRequest(`/api/notifications`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ markAll: true }),
+  });
 }
 
 /**
@@ -204,22 +212,18 @@ export async function getUnreadCount(userId?: string): Promise<{ count: number }
  * 删除通知
  */
 export async function deleteNotification(notificationId: string): Promise<void> {
-  await deleteNotificationAction(notificationId);
+  await apiRequest(`/api/notifications/${notificationId}`, {
+    method: 'DELETE',
+  });
 }
 
 /**
  * 重试失败的通知
  */
 export async function retryFailedNotification(notificationId: string): Promise<void> {
-  const response = await fetch(`/api/admin/notifications/${notificationId}/retry`, {
+  await apiRequest(`/api/admin/notifications/${notificationId}/retry`, {
     method: 'POST',
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || '重试失败');
-  }
 }
 
 /**
@@ -227,12 +231,9 @@ export async function retryFailedNotification(notificationId: string): Promise<v
  */
 export async function getNotificationStats(days = 7): Promise<{ data: NotificationStats | null; error: string | null }> {
   try {
-    const response = await fetch(`/api/admin/notifications/stats?days=${days}`);
-    const result = await response.json();
-    if (!response.ok) {
-      return { data: null, error: result.error || 'Failed to fetch stats' };
-    }
-    return { data: result.data, error: null };
+    const result = await apiRequest<any>(`/api/admin/notifications/stats?days=${days}`);
+    const payload = (result as any)?.data ?? result;
+    return { data: payload as NotificationStats, error: null };
   } catch (error: any) {
     return { data: null, error: error.message };
   }
@@ -255,13 +256,9 @@ export async function getAllNotifications(filters?: {
     if (filters?.event_type) params.append('event_type', filters.event_type);
     if (filters?.date_from) params.append('date_from', filters.date_from);
     if (filters?.date_to) params.append('date_to', filters.date_to);
-
-    const response = await fetch(`/api/admin/notifications?${params.toString()}`);
-    const result = await response.json();
-    if (!response.ok) {
-      return { data: [], error: result.error || 'Failed to fetch notifications' };
-    }
-    return { data: result.data || [], error: null };
+    const result = await apiRequest<any>(`/api/admin/notifications?${params.toString()}`);
+    const payload = (result as any)?.data ?? result;
+    return { data: Array.isArray(payload) ? payload : [], error: null };
   } catch (error: any) {
     return { data: [], error: error.message };
   }
@@ -272,12 +269,9 @@ export async function getAllNotifications(filters?: {
  */
 export async function getAllTemplates(): Promise<{ data: NotificationTemplate[]; error: string | null }> {
   try {
-    const response = await fetch('/api/admin/notifications/templates');
-    const result = await response.json();
-    if (!response.ok) {
-      return { data: [], error: result.error || 'Failed to fetch templates' };
-    }
-    return { data: result.data || [], error: null };
+    const result = await apiRequest<any>('/api/admin/notifications/templates');
+    const payload = (result as any)?.data ?? result;
+    return { data: Array.isArray(payload) ? payload : [], error: null };
   } catch (error: any) {
     return { data: [], error: error.message };
   }
@@ -290,16 +284,11 @@ export async function updateTemplate(
   templateId: string,
   data: Partial<NotificationTemplate>
 ): Promise<void> {
-  const response = await fetch(`/api/admin/notifications/templates/${templateId}`, {
+  await apiRequest(`/api/admin/notifications/templates/${templateId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-
-  const result = await response.json();
-  if (!response.ok) {
-    throw new Error(result.error || 'Failed to update template');
-  }
 }
 
 /**
@@ -310,16 +299,11 @@ export async function testNotification(
   eventType: string,
   variables: Record<string, any>
 ): Promise<void> {
-  const response = await fetch('/api/admin/notifications/test', {
+  await apiRequest(`/api/admin/notifications/test`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId, eventType, variables }),
   });
-
-  const result = await response.json();
-  if (!response.ok) {
-    throw new Error(result.error || 'Failed to send test notification');
-  }
 }
 
 /**
@@ -328,12 +312,9 @@ export async function testNotification(
 export async function getUserDevices(userId?: string): Promise<{ data: UserDevice[]; error: string | null }> {
   try {
     const params = userId ? `?userId=${userId}` : '';
-    const response = await fetch(`/api/admin/notifications/devices${params}`);
-    const result = await response.json();
-    if (!response.ok) {
-      return { data: [], error: result.error || 'Failed to fetch devices' };
-    }
-    return { data: result.data || [], error: null };
+    const result = await apiRequest<any>(`/api/admin/notifications/devices${params}`);
+    const payload = (result as any)?.data ?? result;
+    return { data: Array.isArray(payload) ? payload : [], error: null };
   } catch (error: any) {
     return { data: [], error: error.message };
   }

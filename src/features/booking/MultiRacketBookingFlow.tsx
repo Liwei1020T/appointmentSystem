@@ -15,7 +15,7 @@ import { StringInventory, UserVoucher } from '@/types';
 import { Spinner } from '@/components';
 import { formatCurrency } from '@/lib/utils';
 import { hasAvailablePackage, getUserPackages } from '@/services/packageService';
-import { createMultiRacketOrderAction } from '@/actions/orders.actions';
+import { createMultiRacketOrder } from '@/services/orderService';
 import { getUserStats, type MembershipTierInfo } from '@/services/profileService';
 import StringSelector from './StringSelector';
 import RacketItemCard, { RacketItemData } from './RacketItemCard';
@@ -216,7 +216,7 @@ export default function MultiRacketBookingFlow() {
         setLoading(true);
 
         try {
-            const result = await createMultiRacketOrderAction({
+            const result = await createMultiRacketOrder({
                 items: cartItems.map(item => ({
                     stringId: item.stringId,
                     tensionVertical: item.tensionVertical,

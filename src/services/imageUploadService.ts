@@ -3,6 +3,8 @@
  * 处理图片上传到本地存储
  */
 
+import { getApiErrorMessage } from '@/services/apiClient';
+
 export interface UploadResult {
   success: boolean;
   url?: string;
@@ -63,7 +65,7 @@ export async function uploadImage(
       const fallbackError = !fileUrl ? 'Upload failed: missing file URL' : 'Upload failed';
       return {
         success: false,
-        error: payload?.error || payload?.message || fallbackError,
+        error: getApiErrorMessage(payload, fallbackError),
       };
     }
 
