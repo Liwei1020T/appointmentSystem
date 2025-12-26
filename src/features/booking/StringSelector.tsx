@@ -23,9 +23,10 @@ interface StringSelectorProps {
   selectedString: StringInventory | null;
   onSelect: (string: StringInventory | null) => void;
   onNext: () => void;
+  hideBottomBar?: boolean; // 允许父组件控制底部栏显示
 }
 
-export default function StringSelector({ selectedString, onSelect, onNext }: StringSelectorProps) {
+export default function StringSelector({ selectedString, onSelect, onNext, hideBottomBar = false }: StringSelectorProps) {
   // Data state
   const [strings, setStrings] = useState<StringInventory[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
@@ -218,7 +219,7 @@ export default function StringSelector({ selectedString, onSelect, onNext }: Str
   }
 
   return (
-    <div className="space-y-4 pb-28">
+    <div className={`space-y-4 ${hideBottomBar ? 'pb-4' : 'pb-28'}`}>
       {/* Search Bar */}
       <SearchBar
         value={searchTerm}
@@ -277,12 +278,14 @@ export default function StringSelector({ selectedString, onSelect, onNext }: Str
         </div>
       )}
 
-      {/* Sticky Selection Bar */}
-      <StickySelectionBar
-        selectedString={selectedString}
-        onClearSelection={handleClearSelection}
-        onNext={onNext}
-      />
+      {/* Sticky Selection Bar - 可隐藏 */}
+      {!hideBottomBar && (
+        <StickySelectionBar
+          selectedString={selectedString}
+          onClearSelection={handleClearSelection}
+          onNext={onNext}
+        />
+      )}
     </div>
   );
 }

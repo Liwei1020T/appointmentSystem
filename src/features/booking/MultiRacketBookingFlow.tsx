@@ -10,7 +10,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Plus, ShoppingCart, ArrowRight, ArrowLeft, Check } from 'lucide-react';
+import { Plus, ShoppingCart, ArrowRight, ArrowLeft, Check, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { StringInventory, UserVoucher } from '@/types';
 import { Spinner } from '@/components';
 import { formatCurrency } from '@/lib/utils';
@@ -44,6 +44,7 @@ export default function MultiRacketBookingFlow() {
 
     // UI 状态
     const [step, setStep] = useState(1); // 1: 选择球线添加, 2: 配置球拍, 3: 优惠/套餐, 4: 确认
+    const [isCartExpanded, setIsCartExpanded] = useState(false); // 购物车预览折叠状态
     const [loading, setLoading] = useState(false);
     const [packageAvailable, setPackageAvailable] = useState(false);
     const [userPackages, setUserPackages] = useState<any[]>([]);
@@ -302,9 +303,9 @@ export default function MultiRacketBookingFlow() {
                 </div>
             </div>
 
-            {/* 进度指示器 */}
-            <div className="max-w-2xl mx-auto px-4 py-4">
-                <div className="flex items-center justify-between px-2">
+            {/* 进度指示器 - 移动端优化版 */}
+            <div className="max-w-2xl mx-auto px-4 py-3">
+                <div className="flex items-center justify-between">
                     {[
                         { num: 1, label: '选择球线' },
                         { num: 2, label: '配置球拍' },
@@ -314,22 +315,22 @@ export default function MultiRacketBookingFlow() {
                         <div key={num} className="flex items-center flex-1 last:flex-none">
                             <div className="flex flex-col items-center">
                                 <div
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black transition-all ${num < step
+                                    className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xs md:text-sm font-black transition-all ${num < step
                                         ? 'bg-accent text-white'
                                         : num === step
-                                            ? 'bg-accent text-white shadow-glow ring-4 ring-accent/15 scale-110'
+                                            ? 'bg-accent text-white shadow-glow ring-2 md:ring-4 ring-accent/15 scale-105 md:scale-110'
                                             : 'bg-ink-surface text-text-tertiary border border-border-subtle'
                                         }`}
                                 >
-                                    {num < step ? <Check className="w-5 h-5" /> : num}
+                                    {num < step ? <Check className="w-4 h-4 md:w-5 md:h-5" /> : num}
                                 </div>
-                                <span className={`text-xs mt-1 ${num === step ? 'text-accent font-medium' : 'text-text-tertiary'}`}>
+                                <span className={`text-[10px] md:text-xs mt-1 hidden sm:block ${num === step ? 'text-accent font-medium' : 'text-text-tertiary'}`}>
                                     {label}
                                 </span>
                             </div>
                             {num < 4 && (
                                 <div
-                                    className={`flex-1 h-1 mx-2 rounded-full transition-all ${num < step ? 'bg-accent' : 'bg-ink-surface'
+                                    className={`flex-1 h-0.5 md:h-1 mx-1 md:mx-2 rounded-full transition-all ${num < step ? 'bg-accent' : 'bg-ink-surface'
                                         }`}
                                 />
                             )}
@@ -339,7 +340,7 @@ export default function MultiRacketBookingFlow() {
             </div>
 
             {/* 主内容区 */}
-            <div className="max-w-2xl mx-auto px-4 py-4 space-y-4 pb-32">
+            <div className={`max-w-2xl mx-auto px-4 py-4 space-y-4 ${step === 1 ? 'pb-28' : 'pb-24'}`}>
                 {/* Step 1: 选择球线添加到购物车 */}
                 {step === 1 && (
                     <div className="space-y-4">
@@ -356,6 +357,7 @@ export default function MultiRacketBookingFlow() {
                             )}
                         </div>
 
+<<<<<<< HEAD
                         {/* 已配置清单 - 紧凑可折叠样式 */}
                         {cartItems.length > 0 && (
                             <details className="bg-white rounded-xl border border-gray-200 shadow-sm group" open>
@@ -386,11 +388,49 @@ export default function MultiRacketBookingFlow() {
                                             <div
                                                 key={item.id}
                                                 className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg"
+=======
+                        {/* 已添加的球拍预览 - 可折叠式设计 */}
+                        {cartItems.length > 0 && (
+                            <div className="bg-accent/10 rounded-xl border border-accent/20 overflow-hidden">
+                                {/* 折叠头部 - 始终显示 */}
+                                <button
+                                    onClick={() => setIsCartExpanded(!isCartExpanded)}
+                                    className="w-full flex items-center justify-between p-3 hover:bg-accent/5 transition-colors"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-6 h-6 bg-accent text-white rounded-full text-xs flex items-center justify-center font-bold">
+                                            {cartItems.length}
+                                        </span>
+                                        <span className="text-sm font-medium text-accent">
+                                            已添加 {cartItems.length} 支球拍
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-bold text-accent font-mono">
+                                            {formatCurrency(baseTotal)}
+                                        </span>
+                                        {isCartExpanded ? (
+                                            <ChevronUp className="w-4 h-4 text-accent" />
+                                        ) : (
+                                            <ChevronDown className="w-4 h-4 text-accent" />
+                                        )}
+                                    </div>
+                                </button>
+
+                                {/* 折叠内容 - 球拍列表 */}
+                                <div className={`overflow-hidden transition-all duration-300 ${isCartExpanded ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                    <div className="px-3 pb-3 space-y-2">
+                                        {cartItems.map((item, index) => (
+                                            <div
+                                                key={item.id}
+                                                className="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-border-subtle"
+>>>>>>> a3cf7b9 (feat: 移动端优化 - 可折叠购物车、统一底部栏、精简进度指示器)
                                             >
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <span className="w-5 h-5 bg-accent text-white rounded-full text-xs flex items-center justify-center font-bold flex-shrink-0">
                                                         {index + 1}
                                                     </span>
+<<<<<<< HEAD
                                                     <span className="text-sm text-gray-700 truncate">
                                                         {item.string.brand} {item.string.model}
                                                     </span>
@@ -413,6 +453,20 @@ export default function MultiRacketBookingFlow() {
                                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                     </svg>
+=======
+                                                    <span className="text-sm text-text-primary truncate">
+                                                        {item.string.brand} {item.string.model}
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRemoveItem(item.id);
+                                                    }}
+                                                    className="p-1 text-text-tertiary hover:text-danger hover:bg-danger/10 rounded-full transition-colors flex-shrink-0"
+                                                >
+                                                    <X className="w-4 h-4" />
+>>>>>>> a3cf7b9 (feat: 移动端优化 - 可折叠购物车、统一底部栏、精简进度指示器)
                                                 </button>
                                             </div>
                                         ))}
@@ -421,11 +475,12 @@ export default function MultiRacketBookingFlow() {
                             </details>
                         )}
 
-                        {/* 球线选择器 */}
+                        {/* 球线选择器 - 不再渲染 StickySelectionBar */}
                         <StringSelector
                             selectedString={selectedStringForAdd}
                             onSelect={setSelectedStringForAdd}
                             onNext={() => { }}
+                            hideBottomBar={true}
                         />
                     </div>
                 )}
@@ -643,6 +698,7 @@ export default function MultiRacketBookingFlow() {
                 )}
             </div>
 
+<<<<<<< HEAD
             {/* 底部操作栏 - Step 1: 添加到购物车 */}
             {step === 1 && selectedStringForAdd && (
                 <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-50">
@@ -672,6 +728,43 @@ export default function MultiRacketBookingFlow() {
                             <Plus className="w-5 h-5" />
                             添加
                         </button>
+=======
+            {/* 底部操作栏 - Step 1: 统一底部栏 */}
+            {step === 1 && (
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-subtle shadow-lg z-50 safe-area-pb">
+                    <div className="max-w-2xl mx-auto px-4 py-3">
+                        {selectedStringForAdd ? (
+                            /* 已选中球线 */
+                            <div className="flex items-center gap-3">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-text-primary truncate">
+                                        {selectedStringForAdd.brand} {selectedStringForAdd.model}
+                                    </p>
+                                    <p className="text-lg font-bold text-accent font-mono">
+                                        {formatCurrency(Number(selectedStringForAdd.sellingPrice) || Number(selectedStringForAdd.selling_price) || 0)}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={handleAddToCart}
+                                    className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-xl font-bold hover:shadow-glow transition-all active:scale-[0.98]"
+                                >
+                                    <Plus className="w-5 h-5" />
+                                    添加
+                                </button>
+                            </div>
+                        ) : (
+                            /* 未选中状态 */
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm text-text-tertiary">请选择一款球线</p>
+                                <button
+                                    disabled
+                                    className="px-6 py-3 bg-gray-200 text-gray-400 rounded-xl font-bold cursor-not-allowed"
+                                >
+                                    下一步
+                                </button>
+                            </div>
+                        )}
+>>>>>>> a3cf7b9 (feat: 移动端优化 - 可折叠购物车、统一底部栏、精简进度指示器)
                     </div>
                 </div>
             )}
