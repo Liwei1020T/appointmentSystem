@@ -264,7 +264,7 @@ export default function MultiRacketBookingFlow() {
 
     if (authLoading) {
         return (
-            <div className="min-h-screen bg-ink flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <Spinner size="large" />
             </div>
         );
@@ -275,27 +275,28 @@ export default function MultiRacketBookingFlow() {
     }
 
     return (
-        <div className="min-h-screen bg-ink">
-            {/* 顶部导航栏 */}
-            <div className="bg-ink-surface border-b border-border-subtle sticky top-0 z-10">
-                <div className="max-w-2xl mx-auto px-4 py-6 flex items-center gap-4">
+        <div className="min-h-screen bg-gray-50">
+            {/* 顶部导航栏 - 与 PageHeader 统一 */}
+            <div className="bg-white/80 backdrop-blur-md sticky top-[64px] z-30 border-b border-gray-100 shadow-sm">
+                <div className="max-w-2xl mx-auto px-4 py-5 flex items-center gap-4">
                     <button
                         onClick={() => step === 1 ? router.push('/') : handleBack()}
-                        className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
+                        className="w-10 h-10 flex items-center justify-center bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors shrink-0"
+                        aria-label="返回"
                     >
-                        <ArrowLeft className="w-5 h-5 text-text-secondary" />
+                        <ArrowLeft className="w-5 h-5 text-gray-600" />
                     </button>
-                    <div className="flex-1">
-                        <h1 className="text-2xl font-bold text-text-primary">预约穿线</h1>
-                        <p className="text-sm text-text-tertiary mt-1">
+                    <div className="flex-1 min-w-0">
+                        <h1 className="text-xl font-bold text-gray-900 truncate">预约穿线</h1>
+                        <p className="text-sm text-gray-500 mt-0.5 truncate">
                             步骤 {step}/4 · {cartItems.length} 支球拍
                         </p>
                     </div>
                     {/* 购物车徽章 */}
                     <div className="relative">
-                        <ShoppingCart className="w-6 h-6 text-text-secondary" />
+                        <ShoppingCart className="w-6 h-6 text-gray-500" />
                         {cartItems.length > 0 && (
-                            <span className="absolute -top-2 -right-2 w-5 h-5 bg-accent text-white text-xs font-bold rounded-full flex items-center justify-center">
+                            <span className="absolute -top-2 -right-2 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
                                 {cartItems.length}
                             </span>
                         )}
@@ -303,39 +304,41 @@ export default function MultiRacketBookingFlow() {
                 </div>
             </div>
 
-            {/* 进度指示器 - 移动端优化版 */}
-            <div className="max-w-2xl mx-auto px-4 py-3">
-                <div className="flex items-center justify-between">
-                    {[
-                        { num: 1, label: '选择球线' },
-                        { num: 2, label: '配置球拍' },
-                        { num: 3, label: '优惠' },
-                        { num: 4, label: '确认' },
-                    ].map(({ num, label }) => (
-                        <div key={num} className="flex items-center flex-1 last:flex-none">
-                            <div className="flex flex-col items-center">
-                                <div
-                                    className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xs md:text-sm font-black transition-all ${num < step
-                                        ? 'bg-accent text-white'
-                                        : num === step
-                                            ? 'bg-accent text-white shadow-glow ring-2 md:ring-4 ring-accent/15 scale-105 md:scale-110'
-                                            : 'bg-ink-surface text-text-tertiary border border-border-subtle'
-                                        }`}
-                                >
-                                    {num < step ? <Check className="w-4 h-4 md:w-5 md:h-5" /> : num}
+            {/* 进度指示器 - 白色卡片 */}
+            <div className="max-w-2xl mx-auto px-4 py-4">
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                    <div className="flex items-center justify-between">
+                        {[
+                            { num: 1, label: '选择球线' },
+                            { num: 2, label: '配置球拍' },
+                            { num: 3, label: '优惠' },
+                            { num: 4, label: '确认' },
+                        ].map(({ num, label }) => (
+                            <div key={num} className="flex items-center flex-1 last:flex-none">
+                                <div className="flex flex-col items-center">
+                                    <div
+                                        className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xs md:text-sm font-bold transition-all ${num < step
+                                            ? 'bg-orange-500 text-white'
+                                            : num === step
+                                                ? 'bg-orange-500 text-white shadow-lg ring-4 ring-orange-100 scale-110'
+                                                : 'bg-gray-100 text-gray-400'
+                                            }`}
+                                    >
+                                        {num < step ? <Check className="w-4 h-4 md:w-5 md:h-5" /> : num}
+                                    </div>
+                                    <span className={`text-[10px] md:text-xs mt-1.5 ${num === step ? 'text-orange-600 font-medium' : 'text-gray-400'}`}>
+                                        {label}
+                                    </span>
                                 </div>
-                                <span className={`text-[10px] md:text-xs mt-1 hidden sm:block ${num === step ? 'text-accent font-medium' : 'text-text-tertiary'}`}>
-                                    {label}
-                                </span>
+                                {num < 4 && (
+                                    <div
+                                        className={`flex-1 h-0.5 md:h-1 mx-2 md:mx-3 rounded-full transition-all ${num < step ? 'bg-orange-500' : 'bg-gray-200'
+                                            }`}
+                                    />
+                                )}
                             </div>
-                            {num < 4 && (
-                                <div
-                                    className={`flex-1 h-0.5 md:h-1 mx-1 md:mx-2 rounded-full transition-all ${num < step ? 'bg-accent' : 'bg-ink-surface'
-                                        }`}
-                                />
-                            )}
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -345,11 +348,11 @@ export default function MultiRacketBookingFlow() {
                 {step === 1 && (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-text-primary">选择球线</h2>
+                            <h2 className="text-lg font-bold text-gray-900">选择球线</h2>
                             {cartItems.length > 0 && (
                                 <button
                                     onClick={handleNext}
-                                    className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg font-medium hover:shadow-glow transition-all"
+                                    className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-all"
                                 >
                                     继续配置
                                     <ArrowRight className="w-4 h-4" />
@@ -357,30 +360,30 @@ export default function MultiRacketBookingFlow() {
                             )}
                         </div>
 
-                        {/* 已添加的球拍预览 - 可折叠式设计 */}
+                        {/* 已添加的球拍预览 - 浅橙色卡片 */}
                         {cartItems.length > 0 && (
-                            <div className="bg-accent/10 rounded-xl border border-accent/20 overflow-hidden">
-                                {/* 折叠头部 - 始终显示 */}
+                            <div className="bg-orange-50 rounded-xl border border-orange-200 overflow-hidden">
+                                {/* 折叠头部 */}
                                 <button
                                     onClick={() => setIsCartExpanded(!isCartExpanded)}
-                                    className="w-full flex items-center justify-between p-3 hover:bg-accent/5 transition-colors"
+                                    className="w-full flex items-center justify-between p-3 hover:bg-orange-100/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        <span className="w-6 h-6 bg-accent text-white rounded-full text-xs flex items-center justify-center font-bold">
+                                        <span className="w-6 h-6 bg-orange-500 text-white rounded-full text-xs flex items-center justify-center font-bold">
                                             {cartItems.length}
                                         </span>
-                                        <span className="text-sm font-medium text-accent">
+                                        <span className="text-sm font-medium text-orange-700">
                                             已添加 {cartItems.length} 支球拍
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-sm font-bold text-accent font-mono">
+                                        <span className="text-sm font-bold text-orange-600" style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}>
                                             {formatCurrency(baseTotal)}
                                         </span>
                                         {isCartExpanded ? (
-                                            <ChevronUp className="w-4 h-4 text-accent" />
+                                            <ChevronUp className="w-4 h-4 text-orange-500" />
                                         ) : (
-                                            <ChevronDown className="w-4 h-4 text-accent" />
+                                            <ChevronDown className="w-4 h-4 text-orange-500" />
                                         )}
                                     </div>
                                 </button>
@@ -681,12 +684,12 @@ export default function MultiRacketBookingFlow() {
 
             {/* 底部操作栏 - Step 2-4 */}
             {step > 1 && (
-                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-subtle p-4 shadow-lg z-50">
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-50">
                     <div className="max-w-2xl mx-auto flex gap-3">
                         <button
                             onClick={handleBack}
                             disabled={loading}
-                            className="px-6 py-3 rounded-xl border border-border-subtle text-text-secondary font-medium hover:bg-ink-elevated transition-colors disabled:opacity-50"
+                            className="px-6 py-3 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
                         >
                             返回
                         </button>
@@ -694,7 +697,7 @@ export default function MultiRacketBookingFlow() {
                             <button
                                 onClick={handleNext}
                                 disabled={loading || (step === 2 && !allItemsComplete)}
-                                className="flex-1 py-3 bg-accent text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-glow transition-all disabled:opacity-50"
+                                className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-orange-600 transition-all disabled:opacity-50"
                             >
                                 下一步
                                 <ArrowRight className="w-5 h-5" />
@@ -703,7 +706,7 @@ export default function MultiRacketBookingFlow() {
                             <button
                                 onClick={handleSubmit}
                                 disabled={loading}
-                                className="flex-1 py-3 bg-accent text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-glow transition-all disabled:opacity-50"
+                                className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-orange-600 transition-all disabled:opacity-50"
                             >
                                 {loading ? (
                                     <>

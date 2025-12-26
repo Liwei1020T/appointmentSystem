@@ -173,20 +173,22 @@ export default function OrderList({ initialStatus }: OrderListProps) {
 
   return (
     <div className="space-y-4">
-      {/* 状态筛选 */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {statusFilters.map((filter) => (
-          <button
-            key={filter.value}
-            onClick={() => handleStatusChange(filter.value)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${activeStatus === filter.value
-              ? 'bg-accent text-text-onAccent'
-              : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
-              }`}
-          >
-            {filter.label}
-          </button>
-        ))}
+      {/* 分段式状态筛选 - 统一设计 */}
+      <div className="bg-white rounded-xl p-1.5 shadow-sm border border-gray-100">
+        <div className="flex gap-1">
+          {statusFilters.map((filter) => (
+            <button
+              key={filter.value}
+              onClick={() => handleStatusChange(filter.value)}
+              className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${activeStatus === filter.value
+                ? 'bg-orange-50 text-orange-600 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* 加载状态 */}
@@ -264,10 +266,10 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                 onClick={() => handleOrderClick(order.id)}
                 className={`
                   relative overflow-hidden rounded-xl border-l-4 ${config.borderColor}
-                  bg-ink-surface ${config.bgColor} 
+                  bg-white border border-gray-100 shadow-sm
                   p-5 cursor-pointer
                   transition-all duration-300 ease-out
-                  hover:shadow-lg hover:shadow-ink-elevated/20
+                  hover:shadow-lg hover:shadow-gray-200/50
                   hover:-translate-y-0.5 hover:scale-[1.01]
                   active:scale-[0.99]
                   group
@@ -314,27 +316,27 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                 </div>
 
                 {/* Info Grid */}
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  <div className="bg-ink-elevated rounded-lg p-3 text-center border border-border-subtle">
-                    <p className="text-xs text-text-tertiary mb-1">
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-gray-500 mb-1">
                       {isMultiRacket ? '球拍' : '拉力'}
                     </p>
-                    <p className="font-semibold text-text-primary">
+                    <p className="font-semibold text-gray-900">
                       {isMultiRacket
                         ? `${(order as any).items.length} 支`
                         : `${order.tension || '-'} 磅`
                       }
                     </p>
                   </div>
-                  <div className="bg-ink-elevated rounded-lg p-3 text-center border border-border-subtle">
-                    <p className="text-xs text-text-tertiary mb-1">价格</p>
-                    <p className="font-semibold text-accent font-mono">
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-gray-500 mb-1">价格</p>
+                    <p className="font-bold text-orange-500" style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}>
                       RM {Number(order.final_price ?? order.price ?? 0).toFixed(2)}
                     </p>
                   </div>
-                  <div className="bg-ink-elevated rounded-lg p-3 text-center border border-border-subtle">
-                    <p className="text-xs text-text-tertiary mb-1">日期</p>
-                    <p className="font-medium text-text-primary text-xs">
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-gray-500 mb-1">日期</p>
+                    <p className="font-medium text-gray-900 text-xs">
                       {formatDate(order.created_at || order.createdAt!, 'MM/dd')}
                     </p>
                   </div>

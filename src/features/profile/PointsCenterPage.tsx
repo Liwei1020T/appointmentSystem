@@ -307,9 +307,9 @@ function PointsCenterContent() {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="flex border-b border-gray-100">
+        {/* Tab Navigation - 分段式设计 */}
+        <div className="bg-white rounded-xl p-1.5 shadow-sm border border-gray-100">
+          <div className="flex gap-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.key;
@@ -317,8 +317,8 @@ function PointsCenterContent() {
                 <button
                   key={tab.key}
                   onClick={() => setTab(tab.key)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-medium transition-all ${isActive
-                    ? 'text-accent border-b-2 border-accent bg-accent/5'
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
+                    ? 'bg-orange-50 text-orange-600 shadow-sm'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                     }`}
                 >
@@ -328,270 +328,271 @@ function PointsCenterContent() {
               );
             })}
           </div>
+        </div>
 
-          <div className="p-5">
-            {/* Tab: 积分兑换 */}
-            {activeTab === 'exchange' && (
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="w-5 h-5 text-accent" />
-                  <h2 className="text-lg font-semibold text-gray-900">使用积分兑换优惠券</h2>
+        {/* Tab Content */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          {/* Tab: 积分兑换 */}
+          {activeTab === 'exchange' && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="w-5 h-5 text-accent" />
+                <h2 className="text-lg font-semibold text-gray-900">使用积分兑换优惠券</h2>
+              </div>
+
+              {availableVouchers.length === 0 ? (
+                <div className="text-center py-12">
+                  <Gift className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">暂无可兑换优惠券</p>
                 </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {availableVouchers.map((voucher) => {
+                    const pointsRequired = voucher.points_required || voucher.pointsCost || 0;
+                    const hasEnoughPoints = currentPoints >= pointsRequired;
+                    const canRedeem = voucher.can_redeem && hasEnoughPoints;
+                    const isMaxedOut = !voucher.can_redeem;
 
-                {availableVouchers.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Gift className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">暂无可兑换优惠券</p>
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {availableVouchers.map((voucher) => {
-                      const pointsRequired = voucher.points_required || voucher.pointsCost || 0;
-                      const hasEnoughPoints = currentPoints >= pointsRequired;
-                      const canRedeem = voucher.can_redeem && hasEnoughPoints;
-                      const isMaxedOut = !voucher.can_redeem;
+                    return (
+                      <div
+                        key={voucher.id}
+                        className={`relative border rounded-xl p-5 transition-all ${canRedeem
+                          ? 'border-accent/40 bg-gradient-to-br from-accent/5 to-white hover:shadow-lg'
+                          : isMaxedOut
+                            ? 'border-gray-200 bg-gray-50 opacity-60'
+                            : 'border-gray-200 bg-gray-50 opacity-80'
+                          }`}
+                      >
+                        {voucher.owned_count > 0 && (
+                          <div className="absolute -top-2 -right-2 px-2 py-0.5 bg-accent text-white text-xs font-bold rounded-full shadow-sm">
+                            已有 {voucher.owned_count} 张
+                          </div>
+                        )}
 
-                      return (
-                        <div
-                          key={voucher.id}
-                          className={`relative border rounded-xl p-5 transition-all ${canRedeem
-                            ? 'border-accent/40 bg-gradient-to-br from-accent/5 to-white hover:shadow-lg'
-                            : isMaxedOut
-                              ? 'border-gray-200 bg-gray-50 opacity-60'
-                              : 'border-gray-200 bg-gray-50 opacity-80'
-                            }`}
-                        >
-                          {voucher.owned_count > 0 && (
-                            <div className="absolute -top-2 -right-2 px-2 py-0.5 bg-accent text-white text-xs font-bold rounded-full shadow-sm">
-                              已有 {voucher.owned_count} 张
-                            </div>
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h3 className="font-bold text-lg text-gray-900 mb-1">
+                              {voucher.discount_type === 'percentage' || voucher.type === 'percentage'
+                                ? `${voucher.discount_value || voucher.value}% OFF`
+                                : `RM ${voucher.discount_value || voucher.value} OFF`}
+                            </h3>
+                            {voucher.name && (
+                              <p className="text-sm text-gray-600 font-medium">{voucher.name}</p>
+                            )}
+                            {(voucher.min_purchase || (voucher as any).minPurchase > 0) && (
+                              <p className="text-xs text-gray-400 mt-1">满 RM {voucher.min_purchase || (voucher as any).minPurchase} 可用</p>
+                            )}
+                          </div>
+                          <div className="p-2 bg-accent/10 rounded-lg">
+                            <Ticket className="w-6 h-6 text-accent" />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 mb-3 text-xs">
+                          {voucher.max_per_user > 1 && (
+                            <span className={`px-2 py-0.5 rounded-full ${voucher.can_redeem ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                              }`}>
+                              {voucher.can_redeem
+                                ? `还可兑换 ${voucher.remaining_redemptions} 张`
+                                : `已达上限 ${voucher.max_per_user} 张`}
+                            </span>
+                          )}
+                          {voucher.max_per_user === 1 && voucher.owned_count > 0 && (
+                            <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-600">已兑换</span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 text-accent font-bold">
+                            <Coins className="w-4 h-4" />
+                            <span>{voucher.points_required || voucher.pointsCost} 积分</span>
+                          </div>
+
+                          <div className="text-right">
+                            {!hasEnoughPoints && !isMaxedOut && (
+                              <p className="text-xs text-warning font-medium mb-1">
+                                还差 {(voucher.points_required || (voucher as any).pointsCost) - currentPoints} 积分
+                              </p>
+                            )}
+                            <button
+                              onClick={() => handleRedeemVoucher(voucher)}
+                              disabled={!canRedeem || redeeming === voucher.id}
+                              className={`px-5 py-2.5 rounded-lg font-semibold transition-all ${canRedeem
+                                ? 'bg-accent text-white hover:shadow-glow hover:scale-105'
+                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                } ${redeeming === voucher.id ? 'opacity-50' : ''}`}
+                            >
+                              {redeeming === voucher.id
+                                ? '兑换中...'
+                                : isMaxedOut
+                                  ? '已达上限'
+                                  : !hasEnoughPoints
+                                    ? '积分不足'
+                                    : '立即兑换'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab: 我的优惠券 */}
+          {activeTab === 'my' && (
+            <div>
+              {/* Filter buttons */}
+              <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+                {[
+                  { key: 'all', label: '全部' },
+                  { key: 'available', label: '可用' },
+                  { key: 'used', label: '已使用' },
+                  { key: 'expired', label: '已过期' },
+                ].map((f) => (
+                  <button
+                    key={f.key}
+                    onClick={() => setVoucherFilter(f.key as any)}
+                    className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all ${voucherFilter === f.key
+                      ? 'bg-accent text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Voucher list */}
+              {getFilteredVouchers().length === 0 ? (
+                <div className="text-center py-12">
+                  <Gift className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 mb-4">暂无优惠券</p>
+                  <button
+                    onClick={() => setTab('exchange')}
+                    className="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:shadow-glow"
+                  >
+                    去兑换优惠券
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {getFilteredVouchers().map((voucher) => {
+                    const v = voucher.voucher;
+                    if (!v) return null;
+                    const used = voucher.used ?? voucher.status === 'used';
+                    const expiresAt = voucher.expires_at || voucher.expiry;
+                    const isExpired = expiresAt && new Date(expiresAt) <= new Date();
+                    const isActive = !used && !isExpired;
+                    const discountType = v.discount_type || 'fixed';
+                    const discountValue = v.discount_value || 0;
+
+                    return (
+                      <div
+                        key={voucher.id}
+                        className={`flex rounded-xl overflow-hidden border transition-all ${isActive
+                          ? 'border-accent/30 bg-white hover:shadow-md'
+                          : 'border-gray-200 bg-gray-50 opacity-70'
+                          }`}
+                      >
+                        {/* Left: Amount */}
+                        <div className={`w-28 flex-shrink-0 flex flex-col items-center justify-center p-4 ${isActive ? 'bg-accent/5' : 'bg-gray-100'
+                          }`}>
+                          <div className="text-center">
+                            {discountType === 'fixed' && (
+                              <span className={`text-sm font-medium ${isActive ? 'text-accent' : 'text-gray-400'}`}>RM</span>
+                            )}
+                            <span className={`text-3xl font-bold font-mono ${isActive ? 'text-accent' : 'text-gray-400'}`}>
+                              {' '}{discountValue}
+                            </span>
+                            {discountType === 'percentage' && (
+                              <span className={`text-lg font-medium ${isActive ? 'text-accent' : 'text-gray-400'}`}>%</span>
+                            )}
+                          </div>
+                          <p className={`text-xs mt-1 ${isActive ? 'text-accent/70' : 'text-gray-400'}`}>
+                            {discountType === 'percentage' ? '折扣' : '立减'}
+                          </p>
+                        </div>
+
+                        {/* Right: Info */}
+                        <div className="flex-1 p-4 border-l border-dashed border-gray-200">
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="text-base font-bold text-gray-900">{v.name || v.code}</h3>
+                            <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${used ? 'bg-gray-100 text-gray-500' : isExpired ? 'bg-red-50 text-red-600' : 'bg-accent/10 text-accent'
+                              }`}>
+                              {used ? '已使用' : isExpired ? '已过期' : '可用'}
+                            </span>
+                          </div>
+
+                          {v.min_purchase && v.min_purchase > 0 && (
+                            <p className="text-sm text-gray-500 mb-2">满 RM {v.min_purchase} 可用</p>
                           )}
 
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <h3 className="font-bold text-lg text-gray-900 mb-1">
-                                {voucher.discount_type === 'percentage' || voucher.type === 'percentage'
-                                  ? `${voucher.discount_value || voucher.value}% OFF`
-                                  : `RM ${voucher.discount_value || voucher.value} OFF`}
-                              </h3>
-                              {voucher.name && (
-                                <p className="text-sm text-gray-600 font-medium">{voucher.name}</p>
-                              )}
-                              {(voucher.min_purchase || (voucher as any).minPurchase > 0) && (
-                                <p className="text-xs text-gray-400 mt-1">满 RM {voucher.min_purchase || (voucher as any).minPurchase} 可用</p>
-                              )}
-                            </div>
-                            <div className="p-2 bg-accent/10 rounded-lg">
-                              <Ticket className="w-6 h-6 text-accent" />
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 mb-3 text-xs">
-                            {voucher.max_per_user > 1 && (
-                              <span className={`px-2 py-0.5 rounded-full ${voucher.can_redeem ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                                }`}>
-                                {voucher.can_redeem
-                                  ? `还可兑换 ${voucher.remaining_redemptions} 张`
-                                  : `已达上限 ${voucher.max_per_user} 张`}
-                              </span>
-                            )}
-                            {voucher.max_per_user === 1 && voucher.owned_count > 0 && (
-                              <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-600">已兑换</span>
+                          <div className="flex items-center gap-4 text-xs text-gray-400">
+                            {expiresAt && (
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                <span>有效期至 {formatDate(expiresAt)}</span>
+                              </div>
                             )}
                           </div>
 
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5 text-accent font-bold">
-                              <Coins className="w-4 h-4" />
-                              <span>{voucher.points_required || voucher.pointsCost} 积分</span>
-                            </div>
-
-                            <div className="text-right">
-                              {!hasEnoughPoints && !isMaxedOut && (
-                                <p className="text-xs text-warning font-medium mb-1">
-                                  还差 {(voucher.points_required || (voucher as any).pointsCost) - currentPoints} 积分
-                                </p>
-                              )}
-                              <button
-                                onClick={() => handleRedeemVoucher(voucher)}
-                                disabled={!canRedeem || redeeming === voucher.id}
-                                className={`px-5 py-2.5 rounded-lg font-semibold transition-all ${canRedeem
-                                  ? 'bg-accent text-white hover:shadow-glow hover:scale-105'
-                                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                  } ${redeeming === voucher.id ? 'opacity-50' : ''}`}
-                              >
-                                {redeeming === voucher.id
-                                  ? '兑换中...'
-                                  : isMaxedOut
-                                    ? '已达上限'
-                                    : !hasEnoughPoints
-                                      ? '积分不足'
-                                      : '立即兑换'}
-                              </button>
-                            </div>
-                          </div>
+                          {isActive && (
+                            <button
+                              onClick={() => router.push('/booking')}
+                              className="mt-3 w-full py-2 bg-accent/10 text-accent text-sm font-medium rounded-lg hover:bg-accent/20 transition-colors"
+                            >
+                              立即使用
+                            </button>
+                          )}
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
-            {/* Tab: 我的优惠券 */}
-            {activeTab === 'my' && (
-              <div>
-                {/* Filter buttons */}
-                <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-                  {[
-                    { key: 'all', label: '全部' },
-                    { key: 'available', label: '可用' },
-                    { key: 'used', label: '已使用' },
-                    { key: 'expired', label: '已过期' },
-                  ].map((f) => (
-                    <button
-                      key={f.key}
-                      onClick={() => setVoucherFilter(f.key as any)}
-                      className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all ${voucherFilter === f.key
-                        ? 'bg-accent text-white shadow-sm'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                    >
-                      {f.label}
-                    </button>
+          {/* Tab: 积分明细 */}
+          {activeTab === 'history' && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar className="w-5 h-5 text-accent" />
+                <h2 className="text-lg font-semibold text-gray-900">积分明细</h2>
+              </div>
+
+              {pointsLogs.length === 0 ? (
+                <div className="text-center py-12">
+                  <Coins className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">暂无积分记录</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 pr-2">
+                  {pointsLogs.map((log) => (
+                    <div key={log.id} className="py-4 flex items-center justify-between hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${log.type === 'earned' ? 'bg-green-50' : log.type === 'spent' ? 'bg-orange-50' : 'bg-gray-100'
+                          }`}>
+                          {getSourceIcon(log.source)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{getSourceLabel(log.source)}</p>
+                          <p className="text-sm text-gray-500">{log.description}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{formatDateStr(log.created_at)}</p>
+                        </div>
+                      </div>
+                      <p className={`text-xl font-bold ${log.type === 'earned' ? 'text-green-600' : log.type === 'spent' ? 'text-orange-500' : 'text-gray-400'
+                        }`}>
+                        {log.type === 'earned' ? '+' : '-'}{log.points}
+                      </p>
+                    </div>
                   ))}
                 </div>
-
-                {/* Voucher list */}
-                {getFilteredVouchers().length === 0 ? (
-                  <div className="text-center py-12">
-                    <Gift className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500 mb-4">暂无优惠券</p>
-                    <button
-                      onClick={() => setTab('exchange')}
-                      className="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:shadow-glow"
-                    >
-                      去兑换优惠券
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {getFilteredVouchers().map((voucher) => {
-                      const v = voucher.voucher;
-                      if (!v) return null;
-                      const used = voucher.used ?? voucher.status === 'used';
-                      const expiresAt = voucher.expires_at || voucher.expiry;
-                      const isExpired = expiresAt && new Date(expiresAt) <= new Date();
-                      const isActive = !used && !isExpired;
-                      const discountType = v.discount_type || 'fixed';
-                      const discountValue = v.discount_value || 0;
-
-                      return (
-                        <div
-                          key={voucher.id}
-                          className={`flex rounded-xl overflow-hidden border transition-all ${isActive
-                            ? 'border-accent/30 bg-white hover:shadow-md'
-                            : 'border-gray-200 bg-gray-50 opacity-70'
-                            }`}
-                        >
-                          {/* Left: Amount */}
-                          <div className={`w-28 flex-shrink-0 flex flex-col items-center justify-center p-4 ${isActive ? 'bg-accent/5' : 'bg-gray-100'
-                            }`}>
-                            <div className="text-center">
-                              {discountType === 'fixed' && (
-                                <span className={`text-sm font-medium ${isActive ? 'text-accent' : 'text-gray-400'}`}>RM</span>
-                              )}
-                              <span className={`text-3xl font-bold font-mono ${isActive ? 'text-accent' : 'text-gray-400'}`}>
-                                {' '}{discountValue}
-                              </span>
-                              {discountType === 'percentage' && (
-                                <span className={`text-lg font-medium ${isActive ? 'text-accent' : 'text-gray-400'}`}>%</span>
-                              )}
-                            </div>
-                            <p className={`text-xs mt-1 ${isActive ? 'text-accent/70' : 'text-gray-400'}`}>
-                              {discountType === 'percentage' ? '折扣' : '立减'}
-                            </p>
-                          </div>
-
-                          {/* Right: Info */}
-                          <div className="flex-1 p-4 border-l border-dashed border-gray-200">
-                            <div className="flex items-start justify-between mb-2">
-                              <h3 className="text-base font-bold text-gray-900">{v.name || v.code}</h3>
-                              <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${used ? 'bg-gray-100 text-gray-500' : isExpired ? 'bg-red-50 text-red-600' : 'bg-accent/10 text-accent'
-                                }`}>
-                                {used ? '已使用' : isExpired ? '已过期' : '可用'}
-                              </span>
-                            </div>
-
-                            {v.min_purchase && v.min_purchase > 0 && (
-                              <p className="text-sm text-gray-500 mb-2">满 RM {v.min_purchase} 可用</p>
-                            )}
-
-                            <div className="flex items-center gap-4 text-xs text-gray-400">
-                              {expiresAt && (
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="w-3 h-3" />
-                                  <span>有效期至 {formatDate(expiresAt)}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {isActive && (
-                              <button
-                                onClick={() => router.push('/booking')}
-                                className="mt-3 w-full py-2 bg-accent/10 text-accent text-sm font-medium rounded-lg hover:bg-accent/20 transition-colors"
-                              >
-                                立即使用
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Tab: 积分明细 */}
-            {activeTab === 'history' && (
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <Calendar className="w-5 h-5 text-accent" />
-                  <h2 className="text-lg font-semibold text-gray-900">积分明细</h2>
-                </div>
-
-                {pointsLogs.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Coins className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">暂无积分记录</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 pr-2">
-                    {pointsLogs.map((log) => (
-                      <div key={log.id} className="py-4 flex items-center justify-between hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${log.type === 'earned' ? 'bg-green-50' : log.type === 'spent' ? 'bg-orange-50' : 'bg-gray-100'
-                            }`}>
-                            {getSourceIcon(log.source)}
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{getSourceLabel(log.source)}</p>
-                            <p className="text-sm text-gray-500">{log.description}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">{formatDateStr(log.created_at)}</p>
-                          </div>
-                        </div>
-                        <p className={`text-xl font-bold ${log.type === 'earned' ? 'text-green-600' : log.type === 'spent' ? 'text-orange-500' : 'text-gray-400'
-                          }`}>
-                          {log.type === 'earned' ? '+' : '-'}{log.points}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
