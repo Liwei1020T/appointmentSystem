@@ -356,39 +356,69 @@ export default function MultiRacketBookingFlow() {
                             )}
                         </div>
 
-                        {/* 已添加的球拍预览 */}
+                        {/* 已配置清单 - 紧凑可折叠样式 */}
                         {cartItems.length > 0 && (
-                            <div className="bg-accent/10 rounded-xl p-4 border border-accent/20">
-                                <div className="flex items-center justify-between mb-3">
-                                    <span className="text-sm font-medium text-accent">
-                                        已添加 {cartItems.length} 支球拍
-                                    </span>
-                                    <span className="text-sm font-bold text-accent">
-                                        {formatCurrency(baseTotal)}
-                                    </span>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                    {cartItems.map((item, index) => (
-                                        <div
-                                            key={item.id}
-                                            className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-border-subtle"
+                            <details className="bg-white rounded-xl border border-gray-200 shadow-sm group" open>
+                                <summary className="flex items-center justify-between px-4 py-3 cursor-pointer select-none hover:bg-gray-50 transition-colors rounded-xl">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-medium text-gray-700">
+                                            已配置清单 ({cartItems.length})
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span
+                                            className="text-sm font-bold text-accent"
+                                            style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}
                                         >
-                                            <span className="w-5 h-5 bg-accent text-white rounded-full text-xs flex items-center justify-center font-bold">
-                                                {index + 1}
-                                            </span>
-                                            <span className="text-sm text-text-primary">
-                                                {item.string.brand} {item.string.model}
-                                            </span>
-                                            <button
-                                                onClick={() => handleRemoveItem(item.id)}
-                                                className="text-text-tertiary hover:text-danger"
+                                            {formatCurrency(baseTotal)}
+                                        </span>
+                                        <svg
+                                            className="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </summary>
+                                <div className="px-4 pb-3 pt-1 border-t border-gray-100">
+                                    <div className="space-y-2">
+                                        {cartItems.map((item, index) => (
+                                            <div
+                                                key={item.id}
+                                                className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg"
                                             >
-                                                ×
-                                            </button>
-                                        </div>
-                                    ))}
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <span className="w-5 h-5 bg-accent text-white rounded-full text-xs flex items-center justify-center font-bold flex-shrink-0">
+                                                        {index + 1}
+                                                    </span>
+                                                    <span className="text-sm text-gray-700 truncate">
+                                                        {item.string.brand} {item.string.model}
+                                                    </span>
+                                                    <span
+                                                        className="text-xs font-semibold text-gray-500"
+                                                        style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}
+                                                    >
+                                                        {formatCurrency(
+                                                            typeof item.string.sellingPrice === 'object'
+                                                                ? item.string.sellingPrice.toNumber()
+                                                                : Number(item.string.sellingPrice)
+                                                        )}
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleRemoveItem(item.id)}
+                                                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="删除"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            </details>
                         )}
 
                         {/* 球线选择器 */}
@@ -615,14 +645,32 @@ export default function MultiRacketBookingFlow() {
 
             {/* 底部操作栏 - Step 1: 添加到购物车 */}
             {step === 1 && selectedStringForAdd && (
-                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-subtle p-4 shadow-lg z-50">
-                    <div className="max-w-2xl mx-auto">
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-50">
+                    <div className="max-w-2xl mx-auto flex items-center gap-3">
+                        {/* 左侧：已选球线信息 */}
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs text-gray-500 mb-0.5">已选</p>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-gray-800 truncate">
+                                    {selectedStringForAdd.brand} {selectedStringForAdd.model}
+                                </span>
+                                <span
+                                    className="text-sm font-bold text-accent flex-shrink-0"
+                                    style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}
+                                >
+                                    {formatCurrency(
+                                        Number(selectedStringForAdd.sellingPrice) || Number(selectedStringForAdd.selling_price) || 0
+                                    )}
+                                </span>
+                            </div>
+                        </div>
+                        {/* 右侧：添加按钮 */}
                         <button
                             onClick={handleAddToCart}
-                            className="w-full py-4 bg-accent text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:shadow-glow transition-all"
+                            className="flex-shrink-0 px-6 py-3.5 bg-accent text-white rounded-xl font-bold text-base flex items-center gap-2 hover:shadow-glow transition-all shadow-lg"
                         >
                             <Plus className="w-5 h-5" />
-                            添加 {selectedStringForAdd.brand} {selectedStringForAdd.model}
+                            添加
                         </button>
                     </div>
                 </div>

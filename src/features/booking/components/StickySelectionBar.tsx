@@ -34,33 +34,29 @@ export default function StickySelectionBar({
                 {selectedString ? (
                     /* Selected State */
                     <div className="flex items-center gap-3">
-                        {/* Selection Summary */}
+                        {/* Selection Summary - Left Side */}
                         <div className="flex-1 min-w-0">
+                            <p className="text-xs text-text-tertiary mb-0.5">已选</p>
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-text-primary truncate">
+                                <span className="text-sm font-semibold text-text-primary truncate">
                                     {selectedString.brand} {selectedString.model}
                                 </span>
-                                <span className="flex-shrink-0 text-sm font-bold text-accent font-mono">
+                                <span
+                                    className="flex-shrink-0 text-sm font-bold text-accent"
+                                    style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}
+                                >
                                     {formatCurrency(price)}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs text-text-tertiary">
-                                    库存: {selectedString.stock}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={onClearSelection}
-                                    className="text-xs text-accent hover:underline"
-                                >
-                                    取消选择
-                                </button>
-                            </div>
                         </div>
 
-                        {/* Next Button */}
-                        <Button variant="primary" onClick={onNext} className="flex-shrink-0">
-                            下一步
+                        {/* Next Button - Large and Prominent */}
+                        <Button
+                            variant="primary"
+                            onClick={onNext}
+                            className="flex-shrink-0 px-6 py-3 text-base font-bold shadow-lg"
+                        >
+                            下一步：配置球拍
                         </Button>
                     </div>
                 ) : (
@@ -69,7 +65,7 @@ export default function StickySelectionBar({
                         <div className="flex-1">
                             <p className="text-sm text-text-tertiary">请选择一款球线</p>
                         </div>
-                        <Button variant="primary" disabled className="flex-shrink-0">
+                        <Button variant="primary" disabled className="flex-shrink-0 px-6 py-3">
                             下一步
                         </Button>
                     </div>
