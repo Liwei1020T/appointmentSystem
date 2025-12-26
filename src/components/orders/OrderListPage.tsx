@@ -51,13 +51,11 @@ export default function OrderListPage() {
 
   const getStatusText = (status: string) => {
     const statusMap: Record<string, string> = {
-      pending: '待支付',
-      pending_payment_verification: '支付审核中',
-      confirmed: '已确认',
-      payment_rejected: '支付被拒',
-      processing: '处理中',
+      pending: '待处理',
+      in_progress: '处理中',
       completed: '已完成',
       cancelled: '已取消',
+      payment_rejected: '支付被拒',
     };
     return statusMap[status] || status;
   };
@@ -65,12 +63,10 @@ export default function OrderListPage() {
   const getStatusColor = (status: string) => {
     const colorMap: Record<string, string> = {
       pending: 'bg-warning/15 text-warning',
-      pending_payment_verification: 'bg-info-soft text-info',
-      confirmed: 'bg-success/15 text-success',
-      payment_rejected: 'bg-danger/15 text-danger',
-      processing: 'bg-info-soft text-info',
-      completed: 'bg-ink-elevated text-text-secondary',
+      in_progress: 'bg-info-soft text-info',
+      completed: 'bg-success/15 text-success',
       cancelled: 'bg-ink-elevated text-text-tertiary',
+      payment_rejected: 'bg-danger/15 text-danger',
     };
     return colorMap[status] || 'bg-ink-elevated text-text-secondary';
   };
@@ -92,17 +88,17 @@ export default function OrderListPage() {
         <div className="flex gap-2 overflow-x-auto pb-2">
           {[
             { value: 'all', label: '全部' },
-            { value: 'pending', label: '待支付' },
-            { value: 'pending_payment_verification', label: '审核中' },
-            { value: 'confirmed', label: '已确认' },
+            { value: 'pending', label: '待处理' },
+            { value: 'in_progress', label: '处理中' },
             { value: 'completed', label: '已完成' },
+            { value: 'cancelled', label: '已取消' },
           ].map((item) => (
             <button
               key={item.value}
               onClick={() => setFilter(item.value)}
               className={`px-4 py-2 rounded-lg whitespace-nowrap ${filter === item.value
-                  ? 'bg-accent text-text-onAccent'
-                  : 'bg-ink-elevated text-text-secondary border border-border-subtle'
+                ? 'bg-accent text-text-onAccent'
+                : 'bg-ink-elevated text-text-secondary border border-border-subtle'
                 }`}
             >
               {item.label}

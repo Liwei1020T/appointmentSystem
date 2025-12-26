@@ -19,7 +19,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { confirmCashPayment, confirmPayment, getPendingPayments, rejectPayment } from '@/services/paymentService';
 import { formatAmount } from '@/lib/payment-helpers';
-import { Badge, Button, Card } from '@/components';
+import { Badge, Button, Card, Modal, Toast } from '@/components';
 
 interface PaymentUser {
   id: string;
@@ -88,6 +88,8 @@ export default function PaymentVerificationPage() {
 
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'warning' } | null>(null);
 
   const pendingCount = useMemo(() => payments.length, [payments.length]);
   const paymentSummary = useMemo(() => {
@@ -121,18 +123,18 @@ export default function PaymentVerificationPage() {
     }
   };
 
-  const handleConfirm = async (payment: Payment) => {
-    const amountText = formatAmount(Number(payment.amount));
-    if (!confirm(`确认收款 ${amountText}？\n${getPaymentTitle(payment)}`)) return;
+  const handleConfirm = async () => {
+    if (!selectedPayment) return;
 
     setProcessing(true);
     try {
-      await confirmPaymentByProvider(payment);
-      alert('支付已确认');
+      await confirmPaymentByProvider(selectedPayment);
+      setToast({ message: '支付已确认', type: 'success' });
       await fetchPayments();
       setSelectedPayment(null);
+      setShowConfirmModal(false);
     } catch (error: any) {
-      alert(error.message || '确认失败');
+      setToast({ message: error.message || '确认失败', type: 'error' });
     } finally {
       setProcessing(false);
     }
@@ -141,20 +143,20 @@ export default function PaymentVerificationPage() {
   const handleReject = async () => {
     if (!selectedPayment) return;
     if (!rejectReason.trim()) {
-      alert('请输入拒绝原因');
+      setToast({ message: '请输入拒绝原因', type: 'warning' });
       return;
     }
 
     setProcessing(true);
     try {
       await rejectPayment(selectedPayment.id, rejectReason.trim());
-      alert('支付已拒绝');
+      setToast({ message: '支付已拒绝', type: 'success' });
       await fetchPayments();
       setSelectedPayment(null);
       setShowRejectModal(false);
       setRejectReason('');
     } catch (error: any) {
-      alert(error.message || '拒绝失败');
+      setToast({ message: error.message || '拒绝失败', type: 'error' });
     } finally {
       setProcessing(false);
     }
@@ -259,7 +261,10 @@ export default function PaymentVerificationPage() {
                     <Button
                       size="sm"
                       className="flex-1 bg-success text-text-primary hover:bg-success/90"
-                      onClick={() => handleConfirm(payment)}
+                      onClick={() => {
+                        setSelectedPayment(payment);
+                        setShowConfirmModal(true);
+                      }}
                       disabled={processing}
                     >
                       确认
@@ -307,41 +312,143 @@ export default function PaymentVerificationPage() {
       ) : null}
 
 
-      {/* 拒绝原因模态框 */}
-      {showRejectModal && selectedPayment ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-lg bg-ink-surface p-6 border border-border-subtle">
-            <h2 className="mb-4 text-xl font-bold text-text-primary">拒绝支付</h2>
-            <p className="mb-4 text-text-secondary">请输入拒绝原因，用户将收到通知</p>
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="例如：支付金额不符、凭证不清晰等"
-              className="mb-4 min-h-[100px] w-full rounded-lg border border-border-subtle bg-ink-elevated p-3 text-text-primary placeholder:text-text-tertiary focus:ring-2 focus:ring-accent"
-            />
-            <div className="flex gap-4">
+      {/* 确认收款模态框 */}
+      <Modal
+        isOpen={showConfirmModal && !!selectedPayment}
+        onClose={() => {
+          if (!processing) {
+            setShowConfirmModal(false);
+            setSelectedPayment(null);
+          }
+        }}
+        title="💰 确认收款"
+        className="!bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl"
+      >
+        {selectedPayment && (
+          <div className="space-y-6 py-2">
+            <div className="text-center space-y-2">
+              <p className="text-sm text-text-tertiary">确认收到以下款项吗？</p>
+              <p className="text-4xl font-bold tracking-tight text-gradient font-mono">
+                {formatAmount(Number(selectedPayment.amount))}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border-subtle bg-accent-soft/30 p-5 space-y-3">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-text-secondary">支付方式</span>
+                <Badge variant={selectedPayment.provider === 'cash' ? 'neutral' : 'info'} size="sm">
+                  {selectedPayment.provider === 'cash' ? '现金' : 'TNG'}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-text-secondary">订单编号</span>
+                <span className="font-mono text-text-primary">{selectedPayment.order?.id.slice(0, 12) || '-'}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-text-secondary">业务类型</span>
+                <span className="text-text-primary">{getPaymentTitle(selectedPayment).split('：')[0]}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
               <Button
-                variant="danger"
-                className="flex-1"
-                onClick={handleReject}
-                disabled={processing || !rejectReason.trim()}
+                variant="gradient"
+                className="flex-[2] h-12 text-lg shadow-glow"
+                onClick={handleConfirm}
+                loading={processing}
+                disabled={processing}
+                glow
               >
-                确认拒绝
+                确认收款
               </Button>
               <Button
-                variant="secondary"
-                className="flex-1"
+                variant="ghost"
+                className="flex-1 h-12 text-text-tertiary hover:text-text-primary"
                 onClick={() => {
-                  setShowRejectModal(false);
-                  setRejectReason('');
+                  setShowConfirmModal(false);
+                  setSelectedPayment(null);
                 }}
+                disabled={processing}
               >
                 取消
               </Button>
             </div>
           </div>
-        </div>
-      ) : null}
+        )}
+      </Modal>
+
+      {/* 拒绝原因模态框 */}
+      <Modal
+        isOpen={showRejectModal && !!selectedPayment}
+        onClose={() => {
+          if (!processing) {
+            setShowRejectModal(false);
+            setRejectReason('');
+          }
+        }}
+        title="⚠️ 拒绝支付"
+        className="!bg-white/95 backdrop-blur-xl border border-danger/10 shadow-2xl"
+      >
+        {selectedPayment && (
+          <div className="space-y-6 py-2">
+            <div className="rounded-2xl border border-danger/10 bg-danger/5 p-5 space-y-3">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-text-secondary">待处理支付</span>
+                <span className="font-bold text-danger font-mono">{formatAmount(Number(selectedPayment.amount))}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-text-secondary">内容摘要</span>
+                <span className="text-text-primary text-right truncate max-w-[180px]">{getPaymentTitle(selectedPayment)}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-text-secondary flex items-center gap-2">
+                填写拒绝原因
+                <span className="text-xs font-normal text-text-tertiary">（用户将收到此反馈）</span>
+              </label>
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="例如：支付金额不符、凭证无法辨认等..."
+                className="min-h-[140px] w-full rounded-xl border border-border-subtle bg-white p-4 text-text-primary placeholder:text-text-tertiary transition-all focus:ring-4 focus:ring-danger/5 focus:border-danger outline-none resize-none shadow-sm"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="danger"
+                className="flex-[2] h-12 text-lg shadow-md hover:shadow-lg transition-shadow"
+                onClick={handleReject}
+                loading={processing}
+                disabled={processing || !rejectReason.trim()}
+              >
+                确认拒绝
+              </Button>
+              <Button
+                variant="ghost"
+                className="flex-1 h-12 text-text-tertiary hover:text-text-primary"
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason('');
+                }}
+                disabled={processing}
+              >
+                取消
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Toast 提示 */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

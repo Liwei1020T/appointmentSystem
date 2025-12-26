@@ -48,14 +48,22 @@ export default function OrderSummaryCard({
 }: OrderSummaryCardProps) {
     const router = useRouter();
 
-    const status = statusConfig[order.status] || statusConfig.pending;
-    const racketCount = order.items?.length || 1;
-    const finalAmount = Number(order.final_price ?? order.price ?? 0);
-
-    // 支付状态判断
+    // 支付状态判断（需要放在 status 判断之前）
     const hasCompletedPayment = order.payments?.some((p: any) =>
         p.status === 'completed' || p.status === 'success'
     ) || false;
+
+    // 根据支付状态确定显示的状态
+    // 如果订单还是 pending 但已支付，显示 "已支付" 状态
+    const displayStatus = (order.status === 'pending' && hasCompletedPayment)
+        ? { label: '已支付', tip: '等待处理', icon: '✅', color: 'text-success' }
+        : (statusConfig[order.status] || statusConfig.pending);
+
+    const status = displayStatus;
+    const racketCount = order.items?.length || 1;
+    const finalAmount = Number(order.final_price ?? order.price ?? 0);
+
+
     const hasPendingPayment = order.payments?.some((p: any) => p.status === 'pending') || false;
     const hasPendingVerification = order.payments?.some((p: any) => p.status === 'pending_verification') || false;
     const paymentProvider = order.payments?.[0]?.provider;

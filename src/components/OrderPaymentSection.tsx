@@ -66,7 +66,7 @@ export default function OrderPaymentSection({
     setCreatePaymentError(null);
     try {
       const { payment, error } = await createPayment(amount, 'tng', orderId);
-      
+
       if (error) {
         toast.error('创建支付记录失败: ' + error);
         console.error(error);
@@ -86,7 +86,7 @@ export default function OrderPaymentSection({
 
   const handleCashPayment = async () => {
     setProcessingCash(true);
-    
+
     try {
       const result = await createCashPayment(orderId, amount);
       if (result.error) {
@@ -94,7 +94,7 @@ export default function OrderPaymentSection({
       }
 
       toast.success('现金支付已提交！请到店支付并等待管理员确认');
-      
+
       // 强制刷新页面以显示最新状态
       if (onPaymentSuccess) {
         onPaymentSuccess();
@@ -117,7 +117,7 @@ export default function OrderPaymentSection({
 
     try {
       const { error } = await uploadPaymentReceipt(paymentId, receiptUrl);
-      
+
       if (error) {
         toast.error('更新支付记录失败');
         console.error(error);
@@ -196,7 +196,7 @@ export default function OrderPaymentSection({
               更换支付方式
             </button>
           </div>
-          
+
           <TngQRCodeDisplay amount={amount} orderId={orderId} />
 
           {/* Receipt Uploader */}
@@ -253,7 +253,7 @@ export default function OrderPaymentSection({
               更换支付方式
             </button>
           </div>
-          
+
           <div className="rounded-lg border border-border-subtle bg-ink-elevated p-6">
             <div className="mb-4 text-center">
               <div className="mb-2 text-4xl">💵</div>

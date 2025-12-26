@@ -123,7 +123,7 @@ export default function OrderTimeline({
 
     // 2. 支付流程（如果不使用套餐）
     if (!usePackage && hasPayment) {
-      // 如果订单已经进入处理阶段，支付应该视为已完成
+      // 如果订单已经进入处理阶段，或者支付状态为 success/completed，支付应该视为已完成
       const isPaymentDone =
         paymentStatus === 'success' ||
         paymentStatus === 'completed' ||
@@ -138,7 +138,7 @@ export default function OrderTimeline({
             : (paymentPendingAt || updatedAt || createdAt),
         description: isPaymentDone ? '支付已确认' : '等待支付确认',
         completed: isPaymentDone,
-        active: currentStatus === 'pending' && paymentStatus === 'pending',
+        active: !isPaymentDone && currentStatus === 'pending',
       });
     }
 

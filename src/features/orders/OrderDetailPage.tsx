@@ -240,20 +240,28 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   const discountAmount = Number(order.discount_amount ?? 0);
   const createdAt = order.created_at ?? (order as any).createdAt;
   const updatedAt = order.updated_at ?? (order as any).updatedAt;
-  const paymentRecord = order.payments?.[0];
-  const paymentConfirmedAt = (paymentRecord as any)?.updated_at || (paymentRecord as any)?.paid_at || updatedAt;
+
+  // 找到已完成的支付记录以获取正确的确认时间
+  const completedPayment = order.payments?.find((p: any) => p.status === 'success' || p.status === 'completed') as any;
+  const paymentRecord = completedPayment || order.payments?.[0];
+  // 优先使用 metadata.verifiedAt（管理员确认时间），其次使用 updated_at
+  const paymentConfirmedAt = completedPayment?.metadata?.verifiedAt
+    || completedPayment?.metadata?.confirmed_at
+    || (paymentRecord as any)?.updated_at
+    || updatedAt;
   const paymentPendingAt = (paymentRecord as any)?.created_at || createdAt;
   const inProgressAt = (order as any).in_progress_at || updatedAt;
   const packageName = order.packageUsed?.package?.name || '配套服务';
   const packageRemainingCount = order.packageUsed?.remaining;
   const packageExpiry = order.packageUsed?.expiry ?? order.packageUsed?.expires_at;
 
-  // 判断支付状态：检查是否有已完成的支付记录
+  // 判断支付状态：检查是否有已完成的支付记录（'success' 是确认后的状态，'completed' 是兼容状态）
   const hasCompletedPayment =
-    order.payments?.some((p: any) => p.status === 'completed') || false;
+    order.payments?.some((p: any) => p.status === 'completed' || p.status === 'success') || false;
 
-  const hasPendingPayment =
-    order.payments?.some((p: any) => p.status === 'pending') || false;
+  // 检查是否有真正的待确认支付（用户已选择了支付方式，不是 'pending' provider）
+  const hasActualPendingPayment =
+    order.payments?.some((p: any) => p.status === 'pending' && p.provider !== 'pending' && p.provider !== 'manual') || false;
 
   const hasPendingCashPayment =
     order.payments?.some((p: any) => p.status === 'pending' && p.provider === 'cash') || false;
@@ -262,9 +270,10 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   const hasPendingTngVerification =
     order.payments?.some((p: any) => p.status === 'pending_verification' && p.provider === 'tng') || false;
 
-  // 只有在没有完成支付、没有现金待确认、没有TNG待审核时才显示支付界面
+  // 只有在没有完成支付、没有真正的待确认支付时才显示支付界面
+  // provider='pending' 的支付记录表示用户还没选择支付方式，应该显示支付选择界面
   const needsPayment =
-    order.status === 'pending' && !hasCompletedPayment && !hasPendingCashPayment && !hasPendingTngVerification && finalAmount > 0 && !order.use_package;
+    order.status === 'pending' && !hasCompletedPayment && !hasActualPendingPayment && !hasPendingCashPayment && !hasPendingTngVerification && finalAmount > 0 && !order.use_package;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -288,7 +297,11 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             completedAt={order.completed_at}
             cancelledAt={order.cancelled_at || undefined}
             hasPayment={!!order.payments && order.payments.length > 0}
-            paymentStatus={order.payments?.[0]?.status}
+            paymentStatus={
+              // 优先使用已完成的支付状态，否则使用第一个支付的状态
+              order.payments?.find((p: any) => p.status === 'success' || p.status === 'completed')?.status
+              || order.payments?.[0]?.status
+            }
             usePackage={!!order.use_package}
             paymentConfirmedAt={paymentConfirmedAt as any}
             inProgressAt={inProgressAt as any}
@@ -475,56 +488,58 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
         {/* 支付区域 */}
         {needsPayment && (
-          <>
-            {showPayment ? (
-              <OrderPaymentSection
-                orderId={order.id}
-                amount={finalAmount}
-                onPaymentSuccess={() => {
-                  setShowPayment(false);
-                  setToast({
-                    show: true,
-                    message: '收据已提交，等待管理员审核',
-                    type: 'success',
-                  });
-                  // 使用静默刷新，避免页面闪烁
-                  refreshOrderSilently();
-                }}
-                onCancel={() => setShowPayment(false)}
-              />
-            ) : (
-              <Card className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-lg font-semibold text-text-primary">订单待支付</h2>
-                    <p className="text-sm text-text-tertiary mt-1">
-                      请完成支付以确认订单
-                    </p>
+          <div id="payment-section">
+            <>
+              {showPayment ? (
+                <OrderPaymentSection
+                  orderId={order.id}
+                  amount={finalAmount}
+                  onPaymentSuccess={() => {
+                    setShowPayment(false);
+                    setToast({
+                      show: true,
+                      message: '收据已提交，等待管理员审核',
+                      type: 'success',
+                    });
+                    // 使用静默刷新，避免页面闪烁
+                    refreshOrderSilently();
+                  }}
+                  onCancel={() => setShowPayment(false)}
+                />
+              ) : (
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-lg font-semibold text-text-primary">订单待支付</h2>
+                      <p className="text-sm text-text-tertiary mt-1">
+                        请完成支付以确认订单
+                      </p>
+                    </div>
+                    <div className="bg-danger/15 text-danger text-xs font-medium px-3 py-1 rounded-full">
+                      未支付
+                    </div>
                   </div>
-                  <div className="bg-danger/15 text-danger text-xs font-medium px-3 py-1 rounded-full">
-                    未支付
-                  </div>
-                </div>
 
-                <div className="bg-ink-elevated border border-border-subtle rounded-lg p-4 mb-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-text-tertiary">应付金额</span>
-                    <span className="text-2xl font-bold text-text-primary font-mono">
-                      RM {Number(finalAmount).toFixed(2)}
-                    </span>
+                  <div className="bg-ink-elevated border border-border-subtle rounded-lg p-4 mb-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-text-tertiary">应付金额</span>
+                      <span className="text-2xl font-bold text-text-primary font-mono">
+                        RM {Number(finalAmount).toFixed(2)}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                <Button
-                  onClick={() => setShowPayment(true)}
-                  fullWidth
-                  variant="primary"
-                >
-                  立即支付
-                </Button>
-              </Card>
-            )}
-          </>
+                  <Button
+                    onClick={() => setShowPayment(true)}
+                    fullWidth
+                    variant="primary"
+                  >
+                    立即支付
+                  </Button>
+                </Card>
+              )}
+            </>
+          </div>
         )}
         {/* 收据卡 - 真实收据风格 */}
         <div className="relative">
@@ -619,13 +634,17 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
               </div>
             </div>
 
-            {/* 支付信息 */}
+            {/* 支付信息 - 只有在实际选择了支付方式时才显示 */}
             {(() => {
               const payment = order.payment || order.payments?.[0];
               if (!payment) return null;
 
               const rawProvider = (payment as any).provider || (payment as any).payment_method || '';
               const providerKey = String(rawProvider).toLowerCase();
+
+              // 只有当选择了真正的支付方式（cash 或 tng）时才显示，不显示 'pending' 等待选择状态
+              if (!providerKey || providerKey === 'pending' || providerKey === 'manual') return null;
+
               const providerLabel = providerKey.includes('cash') ? '现金' : 'TnG';
               const providerIcon = providerKey.includes('cash') ? '💵' : '💳';
 
@@ -740,7 +759,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
       </div>
 
       {/* 底部操作栏 */}
-      {order.status === 'pending' && !hasPendingCashPayment && needsPayment && (
+      {order.status === 'pending' && !hasPendingCashPayment && !hasPendingTngVerification && needsPayment && (
         <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-border-subtle p-4 shadow-lg safe-area-pb">
           <div className="max-w-2xl mx-auto flex gap-3">
             <Button
@@ -752,7 +771,13 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             </Button>
             <Button
               variant="primary"
-              onClick={() => setShowPayment(true)}
+              onClick={() => {
+                setShowPayment(true);
+                // 自动滚动到支付区域
+                setTimeout(() => {
+                  document.getElementById('payment-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+              }}
               fullWidth
               className="bg-accent text-text-onAccent hover:shadow-glow"
             >
@@ -785,7 +810,53 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
         </div>
       )}
 
-      {order.status === 'pending' && !needsPayment && !hasPendingCashPayment && (
+      {order.status === 'pending' && hasPendingTngVerification && (
+        <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-info/40 p-4 shadow-lg safe-area-pb">
+          <div className="max-w-2xl mx-auto">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">📱</span>
+                <span className="font-semibold text-text-primary">TnG 收据待审核</span>
+              </div>
+              <span className="text-lg font-bold text-text-primary font-mono">RM {finalAmount.toFixed(2)}</span>
+            </div>
+            <p className="text-sm text-text-secondary mb-3">收据已提交，请等待管理员审核（1-2个工作日）</p>
+            <Button
+              variant="secondary"
+              onClick={() => setShowCancelModal(true)}
+              fullWidth
+              className="bg-ink-surface hover:bg-ink-elevated"
+            >
+              ❌ 取消订单
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {order.status === 'pending' && hasActualPendingPayment && !hasPendingCashPayment && !hasPendingTngVerification && (
+        <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-warning/40 p-4 shadow-lg safe-area-pb">
+          <div className="max-w-2xl mx-auto">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">💳</span>
+                <span className="font-semibold text-text-primary">支付待确认</span>
+              </div>
+              <span className="text-lg font-bold text-text-primary font-mono">RM {finalAmount.toFixed(2)}</span>
+            </div>
+            <p className="text-sm text-text-secondary mb-3">支付处理中，请等待确认</p>
+            <Button
+              variant="secondary"
+              onClick={() => setShowCancelModal(true)}
+              fullWidth
+              className="bg-ink-surface hover:bg-ink-elevated"
+            >
+              ❌ 取消订单
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {order.status === 'pending' && !needsPayment && !hasActualPendingPayment && !hasPendingCashPayment && !hasPendingTngVerification && (
         <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-border-subtle p-4 shadow-lg safe-area-pb">
           <div className="max-w-2xl mx-auto">
             <Button

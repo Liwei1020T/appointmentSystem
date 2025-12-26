@@ -2,25 +2,23 @@
  * 订单照片上传组件 (Order Photos Upload Component)
  * 
  * 管理员在订单完成后上传穿线照片
+ * 使用 Server Actions 替代 API 调用
  */
 
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import ImageUploader from '@/components/ImageUploader';
-import Button from '@/components/Button';
 import Toast from '@/components/Toast';
 import { UploadResult } from '@/services/imageUploadService';
 import { Camera, X, MoveUp, MoveDown } from 'lucide-react';
-
-interface OrderPhoto {
-  id: string;
-  photo_url: string;
-  photo_type: 'before' | 'after' | 'detail' | 'other';
-  caption: string | null;
-  display_order: number;
-  created_at: string;
-}
+import {
+  getOrderPhotosAction,
+  addOrderPhotoAction,
+  deleteOrderPhotoAction,
+  reorderOrderPhotosAction,
+  OrderPhoto,
+} from '@/actions/orderPhotos.actions';
 
 interface OrderPhotosUploadProps {
   orderId: string;
@@ -56,17 +54,13 @@ export default function OrderPhotosUpload({
     type: 'success',
   });
 
-  // 首次加载已存在的照片，确保管理员可见历史上传
+  // 首次加载已存在的照片
   useEffect(() => {
     const loadExisting = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/orders/${orderId}/photos`);
-        if (res.ok) {
-          const data = await res.json();
-          const list = Array.isArray(data) ? data : data.photos || data.data || [];
-          setPhotos(list);
-        }
+        const list = await getOrderPhotosAction(orderId);
+        setPhotos(list);
       } catch (error) {
         console.error('Failed to load existing photos:', error);
       } finally {
@@ -83,23 +77,13 @@ export default function OrderPhotosUpload({
 
   // 上传照片到数据库
   const savePhotoToDatabase = async (photoUrl: string) => {
-    const response = await fetch(`/api/orders/${orderId}/photos`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        photoUrl,
-        photoType: selectedType,
-        caption: caption.trim() || null,
-        displayOrder: photos.length,
-      }),
+    return await addOrderPhotoAction({
+      orderId,
+      photoUrl,
+      photoType: selectedType as 'before' | 'after' | 'detail' | 'other',
+      caption: caption.trim() || undefined,
+      displayOrder: photos.length,
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to save photo');
-    }
-
-    return await response.json();
   };
 
   // 处理上传成功
@@ -145,15 +129,7 @@ export default function OrderPhotosUpload({
     setDeleting(photoId);
 
     try {
-      const response = await fetch(`/api/orders/${orderId}/photos/${photoId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Delete failed');
-      }
-
+      await deleteOrderPhotoAction(orderId, photoId);
       setPhotos((prev) => prev.filter((p) => p.id !== photoId));
       setToast({
         show: true,
@@ -185,13 +161,12 @@ export default function OrderPhotosUpload({
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     [newPhotos[index], newPhotos[targetIndex]] = [newPhotos[targetIndex], newPhotos[index]];
 
-    // 更新display_order
+    // 更新 display_order
     try {
-      await fetch(`/api/orders/${orderId}/photos/reorder`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ photos: newPhotos.map((p, i) => ({ id: p.id, displayOrder: i })) }),
-      });
+      await reorderOrderPhotosAction(
+        orderId,
+        newPhotos.map((p, i) => ({ id: p.id, displayOrder: i }))
+      );
       setPhotos(newPhotos);
     } catch (error) {
       console.error('Failed to reorder photos:', error);
@@ -221,11 +196,10 @@ export default function OrderPhotosUpload({
               <button
                 key={type.value}
                 onClick={() => setSelectedType(type.value)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  selectedType === type.value
-                    ? type.color
-                    : 'bg-ink-elevated text-text-secondary hover:bg-ink-elevated'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedType === type.value
+                  ? type.color
+                  : 'bg-ink-elevated text-text-secondary hover:bg-ink-elevated'
+                  }`}
               >
                 {type.label}
               </button>

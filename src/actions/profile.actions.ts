@@ -191,7 +191,14 @@ export async function getUserStatsAction() {
       },
     }),
     prisma.user.findUnique({ where: { id: user.id }, select: { points: true } }),
-    prisma.order.aggregate({ where: { userId: user.id }, _sum: { price: true } }),
+    // 只计算已完成的订单，排除取消和支付拒绝的订单
+    prisma.order.aggregate({
+      where: {
+        userId: user.id,
+        status: { notIn: ['cancelled', 'payment_rejected'] }
+      },
+      _sum: { price: true }
+    }),
   ]);
 
   const totalSpent = Number(totalSpentResult._sum.price ?? 0);
@@ -215,10 +222,10 @@ export async function getUserStatsAction() {
       progress: getTierProgress(totalSpent),
       nextTier: nextTier
         ? {
-            id: nextTier.id,
-            label: nextTier.label,
-            minSpend: nextTier.minSpend,
-          }
+          id: nextTier.id,
+          label: nextTier.label,
+          minSpend: nextTier.minSpend,
+        }
         : null,
     },
   };
@@ -230,7 +237,7 @@ export async function getUserStatsAction() {
 export async function changePasswordAction(params: {
   currentPassword?: string;
   newPassword: string;
-}): Promise<{ ok: boolean }>{
+}): Promise<{ ok: boolean }> {
   const user = await requireAuth();
   const currentPassword = params.currentPassword ? String(params.currentPassword) : '';
   const newPassword = String(params.newPassword || '');
@@ -270,7 +277,7 @@ export async function changePasswordAction(params: {
 /**
  * 生成或修复当前用户推荐码（Server Action）
  */
-export async function generateReferralCodeAction(): Promise<{ code: string }>{
+export async function generateReferralCodeAction(): Promise<{ code: string }> {
   const user = await requireAuth();
 
   const existing = await prisma.user.findUnique({
@@ -314,15 +321,15 @@ export async function generateReferralCodeAction(): Promise<{ code: string }>{
         }),
         ...(oldCode
           ? [
-              prisma.user.updateMany({
-                where: { referredBy: oldCode },
-                data: { referredBy: code },
-              }),
-              prisma.referralLog.updateMany({
-                where: { referralCode: oldCode },
-                data: { referralCode: code },
-              }),
-            ]
+            prisma.user.updateMany({
+              where: { referredBy: oldCode },
+              data: { referredBy: code },
+            }),
+            prisma.referralLog.updateMany({
+              where: { referralCode: oldCode },
+              data: { referralCode: code },
+            }),
+          ]
           : []),
       ]);
 

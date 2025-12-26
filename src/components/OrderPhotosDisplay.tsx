@@ -2,23 +2,15 @@
  * 订单照片展示组件 (Order Photos Display Component)
  * 
  * 用户端查看订单照片，支持点击放大
+ * 使用 Server Actions 替代 API 调用
  */
 
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Modal from '@/components/Modal';
 import Spinner from '@/components/Spinner';
 import { Camera, ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react';
-
-interface OrderPhoto {
-  id: string;
-  photo_url: string;
-  photo_type: 'before' | 'after' | 'detail' | 'other';
-  caption: string | null;
-  display_order: number;
-  created_at: string;
-}
+import { getOrderPhotosAction, OrderPhoto } from '@/actions/orderPhotos.actions';
 
 interface OrderPhotosDisplayProps {
   orderId: string;
@@ -52,17 +44,11 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/orders/${orderId}/photos`);
-      if (response.ok) {
-        const data = await response.json();
-        // API可能返回 { data: [...] } 或直接返回数组
-        const photosList = Array.isArray(data) ? data : (data.data || []);
-        setPhotos(photosList);
-      } else {
-        setPhotos([]);
-      }
+      const photosList = await getOrderPhotosAction(orderId);
+      setPhotos(photosList);
     } catch (error) {
-      setPhotos([]); // 出错时设置为空数组
+      console.error('Failed to load photos:', error);
+      setPhotos([]);
     }
 
     setLoading(false);
@@ -222,11 +208,10 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
                 <button
                   key={photo.id}
                   onClick={() => setCurrentIndex(index)}
-                  className={`w-16 h-16 rounded overflow-hidden border-2 transition-all flex-shrink-0 ${
-                    index === currentIndex
+                  className={`w-16 h-16 rounded overflow-hidden border-2 transition-all flex-shrink-0 ${index === currentIndex
                       ? 'border-accent scale-110'
                       : 'border-transparent opacity-60 hover:opacity-100'
-                  }`}
+                    }`}
                 >
                   <img
                     src={photo.photo_url}
