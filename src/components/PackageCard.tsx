@@ -7,6 +7,7 @@
 import React from 'react';
 import { Package } from '@/services/packageService';
 import Button from '@/components/Button';
+import { Sparkles, Calendar, TrendingDown, CheckCircle2 } from 'lucide-react';
 
 interface PackageCardProps {
   package: Package;
@@ -21,139 +22,116 @@ export default function PackageCard({
   onPurchase,
   disabled = false,
   showSavings = true,
-  averagePrice = 50, // 默认单次价格 RM50
+  averagePrice = 35,
 }: PackageCardProps) {
   const price = Number(pkg.price);
-
-  // 计算单次价格
   const pricePerTime = price / pkg.times;
+  const originalPrice = averagePrice * pkg.times;
+  const savings = originalPrice - price;
+  const savingsPercentage = ((savings / originalPrice) * 100).toFixed(0);
 
-  // 计算节省金额
-  const savings = (averagePrice * pkg.times) - price;
-  const savingsPercentage = ((savings / (averagePrice * pkg.times)) * 100).toFixed(0);
+  // Standard package (10-times) is the "Hero" card
+  const isHero = pkg.times === 10;
 
-  // 是否为推荐套餐（通常是10次套餐）
-  const isRecommended = pkg.times === 10;
+  // Feature list for the card
+  const features = [
+    `${pkg.times} 次穿线服务`,
+    pkg.validityDays ? `有效期 ${pkg.validityDays} 天` : '永久有效',
+    '专业技师操作',
+    '优先预约权',
+  ];
 
   return (
     <div
       className={`
-        relative overflow-hidden rounded-2xl
-        bg-ink-surface border
-        ${isRecommended
-          ? 'border-accent shadow-lg shadow-accent/20'
-          : 'border-border-subtle'
-        }
-        ${disabled ? 'opacity-60' : ''}
+        relative overflow-visible rounded-2xl bg-white
         transition-all duration-300 ease-out
-        hover:shadow-xl hover:-translate-y-1
-        group
+        ${isHero
+          ? 'border-2 border-orange-400 shadow-[0_8px_30px_rgba(255,107,0,0.15)] scale-[1.02] md:scale-105 z-10'
+          : 'border border-gray-200 shadow-md hover:shadow-lg'
+        }
+        ${disabled ? 'opacity-50 pointer-events-none' : ''}
       `}
     >
-      {/* 推荐标签 */}
-      {isRecommended && (
-        <div className="absolute top-0 right-0 overflow-hidden">
-          <div className="absolute top-3 right-[-35px] w-32 transform rotate-45 bg-accent py-1 text-center">
-            <span className="text-xs font-bold text-text-onAccent">🔥 推荐</span>
+      {/* Most Popular Badge - Centered at top */}
+      {isHero && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+          <div className="bg-orange-500 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg whitespace-nowrap">
+            🔥 最受欢迎
           </div>
         </div>
       )}
 
-      {/* 卡片内容 */}
-      <div className="p-6">
-        {/* 套餐名称 */}
-        <h3 className="text-xl font-bold text-text-primary mb-4">{pkg.name}</h3>
+      <div className="p-6 pt-8">
+        {/* Package Name */}
+        <h3 className={`text-center text-lg font-semibold mb-2 ${isHero ? 'text-orange-600' : 'text-gray-800'}`}>
+          {pkg.name}
+        </h3>
 
-        {/* 次数 - 重点突出 */}
-        <div className="flex items-baseline gap-2 mb-2">
-          <span className={`
-            text-5xl font-black font-mono
-            ${isRecommended ? 'text-accent' : 'text-text-primary'}
-            transition-transform duration-300 group-hover:scale-105
-          `}>
-            {pkg.times}
-          </span>
-          <span className="text-lg text-text-tertiary">次穿线</span>
-        </div>
-
-        {/* 价格 */}
-        <div className="mb-4 pb-4 border-b border-border-subtle">
-          <div className="flex items-baseline gap-2">
-            <span className="text-sm text-text-tertiary">RM</span>
-            <span className="text-3xl font-bold text-text-primary font-mono">
-              {price.toFixed(2)}
+        {/* Price Section */}
+        <div className="text-center mb-4">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <span className="text-4xl font-extrabold text-gray-900 tracking-tight" style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}>
+              RM {price.toFixed(0)}
             </span>
+            {showSavings && savings > 0 && (
+              <span className="text-xs text-gray-400 line-through">
+                RM {originalPrice.toFixed(0)}
+              </span>
+            )}
           </div>
-          <p className="text-sm text-text-tertiary mt-1">
-            平均每次 <span className="text-text-secondary font-medium">RM {pricePerTime.toFixed(2)}</span>
+          <p className="text-sm text-gray-500">
+            平均 <span className="font-semibold text-gray-700">RM {pricePerTime.toFixed(2)}</span>/次
           </p>
         </div>
 
-        {/* 节省金额 */}
+        {/* Savings Tag - Positioned near price */}
         {showSavings && savings > 0 && (
-          <div className={`
-            mb-4 p-4 rounded-xl
-            ${isRecommended
-              ? 'bg-gradient-to-r from-accent/15 to-accent/5 border border-accent/30'
-              : 'bg-success/10 border border-success/20'
-            }
-            transition-transform duration-300 group-hover:scale-[1.02]
-          `}>
-            <div className="flex items-center gap-3">
-              <div className={`
-                w-10 h-10 rounded-full flex items-center justify-center
-                ${isRecommended ? 'bg-accent/20 text-accent' : 'bg-success/20 text-success'}
-              `}>
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className={`text-base font-bold ${isRecommended ? 'text-accent' : 'text-success'}`}>
-                  节省 RM {savings.toFixed(2)}
-                </p>
-                <p className="text-xs text-text-tertiary">
-                  相比单次购买省 {savingsPercentage}%
-                </p>
-              </div>
-            </div>
+          <div className="flex justify-center mb-5">
+            <span className={`
+              inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold
+              ${isHero
+                ? 'bg-orange-100 text-orange-700 border border-orange-200'
+                : 'bg-green-100 text-green-700 border border-green-200'
+              }
+            `}>
+              <TrendingDown className="w-3 h-3" />
+              立省 RM {savings.toFixed(0)} ({savingsPercentage}%)
+            </span>
           </div>
         )}
 
-        {/* 有效期 */}
-        {pkg.validityDays && (
-          <div className="flex items-center gap-2 text-sm text-text-secondary mb-4">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span>有效期：<strong>{pkg.validityDays} 天</strong></span>
-          </div>
-        )}
+        {/* Feature List with Checkmarks */}
+        <ul className="space-y-2.5 mb-6">
+          {features.map((feature, idx) => (
+            <li key={idx} className="flex items-center gap-2.5 text-sm text-gray-600">
+              <CheckCircle2 className={`w-4 h-4 shrink-0 ${isHero ? 'text-orange-500' : 'text-orange-400'}`} />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
 
-        {/* 描述 */}
-        {pkg.description && (
-          <p className="text-sm text-text-secondary mb-4 line-clamp-2">{pkg.description}</p>
-        )}
-
-        {/* 购买按钮 */}
-        <Button
-          onClick={() => onPurchase(pkg)}
-          fullWidth
+        {/* CTA Button - Full Width */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!disabled && pkg.active) onPurchase(pkg);
+          }}
           disabled={disabled || !pkg.active}
-          variant={isRecommended ? 'primary' : 'secondary'}
           className={`
-            ${isRecommended ? 'shadow-lg shadow-accent/30' : ''}
-            transition-all duration-300
-            hover:scale-[1.02]
+            w-full py-3 rounded-xl text-sm font-bold transition-all duration-200
+            ${isHero
+              ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-md hover:shadow-lg active:scale-[0.98]'
+              : 'bg-white border-2 border-orange-400 text-orange-500 hover:bg-orange-50 active:scale-[0.98]'
+            }
+            disabled:opacity-50 disabled:cursor-not-allowed
           `}
         >
           {!pkg.active ? '暂不可购买' : '立即购买'}
-        </Button>
+        </button>
       </div>
     </div>
   );
 }
+
+
