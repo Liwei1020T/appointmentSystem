@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { buildDayKeys, parseDateRangeFromSearchParams, toDayKey } from '@/lib/reporting';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 /**
  * 管理员 - 销售统计（订单维度）
@@ -96,9 +97,8 @@ export async function GET(request: NextRequest) {
       ordersByStatus,
       salesByDay,
     });
-  } catch (error: any) {
-    console.error('Sales stats error:', error);
-    return errorResponse(error.message || 'Failed to fetch sales stats', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

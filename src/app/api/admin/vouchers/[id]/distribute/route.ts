@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { isValidUUID } from '@/lib/utils';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 /**
  * Admin - Distribute voucher
@@ -169,8 +170,7 @@ export async function POST(
       },
       '优惠券已分发'
     );
-  } catch (error: any) {
-    console.error('Distribute voucher error:', error);
-    return errorResponse(error.message || '分发优惠券失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

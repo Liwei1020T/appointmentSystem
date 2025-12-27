@@ -5,6 +5,7 @@ import { parseJson } from '@/lib/validation';
 import { okResponse, failResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { submitReview } from '@/server/services/review.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 const bodySchema = z
   .object({
@@ -48,10 +49,7 @@ export async function POST(request: NextRequest) {
 
     const review = await submitReview(user.id, parsed.data);
     return okResponse(review);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to submit review', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

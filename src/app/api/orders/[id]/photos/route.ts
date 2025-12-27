@@ -12,6 +12,7 @@ import {
   addOrderPhoto,
   listOrderPhotos,
 } from '@/server/services/order-photos.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,11 +54,7 @@ export async function GET(
     const photos = await listOrderPhotos(user, parsedParams.data.id);
     return okResponse(photos);
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Get order photos error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to fetch order photos', 500);
+    return handleApiError(error);
   }
 }
 
@@ -75,8 +72,8 @@ export async function POST(
     let body: unknown;
     try {
       body = await request.json();
-    } catch {
-      return failResponse('BAD_REQUEST', 'Invalid JSON body', 400);
+    } catch (error) {
+      return handleApiError(error);
     }
 
     const parsedBody = bodySchema.safeParse(body);
@@ -95,10 +92,6 @@ export async function POST(
 
     return okResponse(newPhoto, { status: 201 });
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Add order photo error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to add order photo', 500);
+    return handleApiError(error);
   }
 }

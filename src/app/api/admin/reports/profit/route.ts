@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { parseDateRangeFromSearchParams } from '@/lib/reporting';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 /**
  * 管理员 - 利润分析
@@ -179,9 +180,8 @@ export async function GET(request: NextRequest) {
       profitByProduct,
       topProfitableItems,
     });
-  } catch (error: any) {
-    console.error('Profit report error:', error);
-    return errorResponse(error.message || 'Failed to fetch profit analysis', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

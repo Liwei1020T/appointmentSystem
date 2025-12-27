@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { listInventory } from '@/server/services/inventory.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,10 +30,6 @@ export async function GET(request: Request) {
     const inventory = await listInventory(activeOnly);
     return okResponse(inventory);
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Get inventory error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to fetch inventory', 500);
+    return handleApiError(error);
   }
 }

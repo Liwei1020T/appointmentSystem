@@ -6,6 +6,7 @@ import { okResponse, failResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { redeemVoucherWithPoints } from '@/server/services/voucher.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 const bodySchema = z.object({
   voucherId: z.string().trim().min(1),
@@ -33,10 +34,7 @@ export async function POST(request: NextRequest) {
 
     const result = await redeemVoucherWithPoints(user.id, parsed.data.voucherId, parsed.data.points);
     return okResponse(result);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to redeem voucher', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

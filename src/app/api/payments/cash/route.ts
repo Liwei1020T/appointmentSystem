@@ -4,6 +4,7 @@ import { parseJson } from '@/lib/validation';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { createCashPayment } from '@/server/services/payment.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 const bodySchema = z.object({
   orderId: z.string().uuid(),
@@ -34,11 +35,7 @@ export async function POST(request: Request) {
     });
 
     return okResponse(payment);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    if (error?.json) return error.json();
-    return failResponse('INTERNAL_ERROR', 'Failed to create cash payment', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

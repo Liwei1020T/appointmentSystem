@@ -2,6 +2,7 @@ import { requireUser } from '@/lib/server-auth';
 import { okResponse, failResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { generateReferralCode } from '@/server/services/profile.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 /**
  * Referral code API
@@ -12,10 +13,7 @@ export async function POST() {
     const user = await requireUser();
     const result = await generateReferralCode(user.id);
     return okResponse(result);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to generate referral code', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

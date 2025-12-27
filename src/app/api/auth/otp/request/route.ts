@@ -20,6 +20,7 @@ import { generateOtpCode, hashOtpCode } from '@/lib/otp';
 import { isValidMyPhone, toE164, toMyCanonicalPhone } from '@/lib/phone';
 import { sendSms } from '@/lib/sms';
 import { Prisma } from '@prisma/client';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 const OTP_PURPOSE = 'password_reset';
 const OTP_EXPIRES_SECONDS = 5 * 60; // 5 minutes
@@ -127,8 +128,7 @@ export async function POST(request: NextRequest) {
       },
       '验证码已发送'
     );
-  } catch (error: any) {
-    console.error('OTP request error:', error);
-    return errorResponse('发送验证码失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

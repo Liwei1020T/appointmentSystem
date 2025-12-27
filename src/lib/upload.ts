@@ -11,6 +11,15 @@ import sharp from 'sharp';
 const UPLOAD_DIR = process.env.UPLOAD_DIR || 'uploads';
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '5') * 1024 * 1024; // MB to bytes
 
+function getUploadRoot() {
+  return path.resolve(process.cwd(), 'public', UPLOAD_DIR);
+}
+
+function isPathWithin(basePath: string, targetPath: string) {
+  const normalizedBase = basePath.endsWith(path.sep) ? basePath : `${basePath}${path.sep}`;
+  return targetPath === basePath || targetPath.startsWith(normalizedBase);
+}
+
 /**
  * 保存上传的文件
  */
@@ -33,8 +42,18 @@ export async function saveFile(
   // 生成文件名
   const ext = file.type?.split('/')[1] || 'jpg';
   const filename = `${randomUUID()}.${ext}`;
-  const uploadPath = path.join(process.cwd(), 'public', UPLOAD_DIR, folder);
-  const filePath = path.join(uploadPath, filename);
+  const safeFolder = folder.replace(/^[\\/]+/, '').replace(/\\+/g, '/');
+  const uploadRoot = getUploadRoot();
+  const uploadPath = path.resolve(uploadRoot, safeFolder);
+
+  if (!isPathWithin(uploadRoot, uploadPath)) {
+    throw new Error('Invalid upload path');
+  }
+
+  const filePath = path.resolve(uploadPath, filename);
+  if (!isPathWithin(uploadRoot, filePath)) {
+    throw new Error('Invalid upload path');
+  }
 
   // 确保目录存在
   await fs.mkdir(uploadPath, { recursive: true });
@@ -60,7 +79,8 @@ export async function saveFile(
   }
 
   // 返回相对于 public 的路径
-  return `/${UPLOAD_DIR}/${folder}/${filename}`;
+  const folderPath = safeFolder ? `${safeFolder}/` : '';
+  return `/${UPLOAD_DIR}/${folderPath}${filename}`;
 }
 
 /**
@@ -68,7 +88,14 @@ export async function saveFile(
  */
 export async function deleteFile(filePath: string): Promise<boolean> {
   try {
-    const fullPath = path.join(process.cwd(), 'public', filePath);
+    const sanitizedPath = filePath.replace(/^[\\/]+/, '');
+    const uploadRoot = getUploadRoot();
+    const fullPath = path.resolve(process.cwd(), 'public', sanitizedPath);
+
+    if (!isPathWithin(uploadRoot, fullPath)) {
+      throw new Error('Invalid delete path');
+    }
+
     await fs.unlink(fullPath);
     return true;
   } catch (error) {

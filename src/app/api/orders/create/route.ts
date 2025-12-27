@@ -8,6 +8,7 @@ import { requireAuth } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { createOrderWithPackage } from '@/server/services/order.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,8 +39,8 @@ export async function POST(request: Request) {
 
     try {
       body = await request.json();
-    } catch {
-      return failResponse('BAD_REQUEST', 'Invalid JSON body', 400);
+    } catch (error) {
+      return handleApiError(error);
     }
 
     const parsed = createOrderSchema.safeParse(body);
@@ -59,10 +60,6 @@ export async function POST(request: Request) {
 
     return okResponse(result, { status: 201 });
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Create order error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to create order', 500);
+    return handleApiError(error);
   }
 }

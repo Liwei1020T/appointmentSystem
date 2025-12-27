@@ -9,6 +9,7 @@ import { NextRequest } from 'next/server';
 import { handleTNGCallback } from '@/services/tngPaymentService';
 import type { TNGCallbackData } from '@/services/tngPaymentService';
 import { failResponse, okResponse } from '@/lib/api-response';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 const CALLBACK_ENABLED = process.env.TNG_CALLBACK_ENABLED === 'true';
 
@@ -37,9 +38,8 @@ export async function POST(request: NextRequest) {
 
         // 3. 返回成功响应给 TNG
         return okResponse({ message: 'Callback processed' });
-    } catch (error: any) {
-        console.error('[TNG Callback] Error:', error);
-        return failResponse('INTERNAL_ERROR', error.message || 'Callback failed', 500);
+    } catch (error) {
+      return handleApiError(error);
     }
 }
 

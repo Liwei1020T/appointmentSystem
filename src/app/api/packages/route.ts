@@ -6,6 +6,7 @@
 import { failResponse, okResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { listAvailablePackages } from '@/server/services/package.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,10 +15,6 @@ export async function GET() {
     const packages = await listAvailablePackages();
     return okResponse(packages);
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Get packages error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to fetch packages', 500);
+    return handleApiError(error);
   }
 }

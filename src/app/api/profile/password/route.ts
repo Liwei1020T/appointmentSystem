@@ -5,6 +5,7 @@ import { parseJson } from '@/lib/validation';
 import { okResponse, failResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { changePassword } from '@/server/services/profile.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 const bodySchema = z.object({
   currentPassword: z.string().trim().optional(),
@@ -31,10 +32,7 @@ export async function POST(request: NextRequest) {
       newPassword: parsed.data.newPassword,
     });
     return okResponse(result);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to change password', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

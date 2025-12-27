@@ -8,6 +8,7 @@ import { requireAuth } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { listPackageUsage } from '@/server/services/package.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,10 +31,6 @@ export async function GET(
     const usage = await listPackageUsage(user.id, parsedParams.data.id);
     return okResponse(usage);
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Get package usage error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to fetch package usage', 500);
+    return handleApiError(error);
   }
 }

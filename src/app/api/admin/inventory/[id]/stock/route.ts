@@ -8,6 +8,7 @@ import { requireAdmin } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { adjustInventoryStock } from '@/server/services/inventory.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,8 +37,8 @@ export async function POST(
     let body: unknown;
     try {
       body = await request.json();
-    } catch {
-      return failResponse('BAD_REQUEST', 'Invalid JSON body', 400);
+    } catch (error) {
+      return handleApiError(error);
     }
 
     const parsedBody = bodySchema.safeParse(body);
@@ -48,10 +49,6 @@ export async function POST(
     const result = await adjustInventoryStock(admin, parsedParams.data.id, parsedBody.data);
     return okResponse(result);
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Adjust stock error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to adjust stock', 500);
+    return handleApiError(error);
   }
 }

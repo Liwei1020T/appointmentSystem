@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/server-auth';
 import { okResponse, failResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { getAdminDashboardStats } from '@/server/services/stats.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,10 +23,7 @@ export async function GET(request: Request) {
     const limit = query.data.limit ?? 5;
     const data = await getAdminDashboardStats(limit);
     return okResponse(data);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to fetch dashboard data', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

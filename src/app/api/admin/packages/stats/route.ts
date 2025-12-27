@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import type { Prisma } from '@prisma/client';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 /**
  * GET /api/admin/packages/stats
@@ -100,8 +101,7 @@ export async function GET(_request: NextRequest) {
         ? { name: mostPopularName, purchase_count: mostPopularCount }
         : null,
     });
-  } catch (error: any) {
-    console.error('Get package stats error:', error);
-    return errorResponse(error.message || '获取套餐统计失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

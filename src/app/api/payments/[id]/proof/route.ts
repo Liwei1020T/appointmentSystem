@@ -10,6 +10,7 @@ import { saveFile } from '@/lib/upload';
 import { isValidUUID } from '@/lib/utils';
 import { isApiError } from '@/lib/api-errors';
 import { recordPaymentProof } from '@/server/services/payment.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export async function POST(
   request: NextRequest,
@@ -56,11 +57,7 @@ export async function POST(
     });
 
     return okResponse({ proofUrl: filePath });
-  } catch (error: any) {
-    console.error('Upload proof error:', error);
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to upload payment proof', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

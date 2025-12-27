@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { setAdminPackageStatus } from '@/server/services/admin-package.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,8 +28,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     let body: unknown;
     try {
       body = await request.json();
-    } catch {
-      return failResponse('BAD_REQUEST', 'Invalid JSON body', 400);
+    } catch (error) {
+      return handleApiError(error);
     }
 
     const parsedBody = bodySchema.safeParse(body);
@@ -43,10 +44,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
     const pkg = await setAdminPackageStatus(parsedParams.data.id, active);
     return okResponse(pkg);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to update package status', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

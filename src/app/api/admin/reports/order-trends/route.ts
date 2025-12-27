@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { buildDayKeys, parseDateRangeFromSearchParams, toDayKey } from '@/lib/reporting';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 /**
  * 管理员 - 订单趋势
@@ -116,8 +117,7 @@ export async function GET(request: NextRequest) {
       ordersByMonth,
       averageCompletionTime: Number(averageCompletionTime.toFixed(2)),
     });
-  } catch (error: any) {
-    console.error('Order trends error:', error);
-    return errorResponse(error.message || 'Failed to fetch order trends', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export async function GET(_request: NextRequest) {
   try {
@@ -75,8 +76,7 @@ export async function GET(_request: NextRequest) {
     };
 
     return successResponse(payload);
-  } catch (error: any) {
-    console.error('Get voucher stats error:', error);
-    return errorResponse(error.message || '获取优惠券统计失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

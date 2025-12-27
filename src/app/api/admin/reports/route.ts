@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 /**
  * 管理员 - 报表概览（用于简单 KPI）
@@ -61,9 +62,8 @@ export async function GET(request: NextRequest) {
       customers: customers.length,
       period,
     });
-  } catch (error: any) {
-    console.error('Reports summary error:', error);
-    return errorResponse(error.message || 'Failed to load reports', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

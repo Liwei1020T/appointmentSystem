@@ -16,6 +16,7 @@ import {
   markNotificationAsRead,
 } from '@/server/services/notification.service';
 import { isValidUUID } from '@/lib/utils';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,11 +43,8 @@ export async function GET(request: NextRequest) {
       limit: query.data.limit,
     });
     return okResponse(data);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to fetch notifications', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -74,10 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     return okResponse({ ok: true });
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to update notifications', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

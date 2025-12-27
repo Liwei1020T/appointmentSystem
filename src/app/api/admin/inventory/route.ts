@@ -12,6 +12,7 @@ import {
   createInventoryItem,
   listAdminInventory,
 } from '@/server/services/inventory.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,11 +42,7 @@ export async function GET() {
     const inventory = await listAdminInventory();
     return okResponse(inventory);
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Get admin inventory error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to fetch inventory', 500);
+    return handleApiError(error);
   }
 }
 
@@ -56,8 +53,8 @@ export async function POST(request: Request) {
 
     try {
       body = await request.json();
-    } catch {
-      return failResponse('BAD_REQUEST', 'Invalid JSON body', 400);
+    } catch (error) {
+      return handleApiError(error);
     }
 
     const parsed = createSchema.safeParse(body);
@@ -68,10 +65,6 @@ export async function POST(request: Request) {
     const item = await createInventoryItem(admin, parsed.data);
     return okResponse(item, { status: 201 });
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Create inventory error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to create inventory item', 500);
+    return handleApiError(error);
   }
 }

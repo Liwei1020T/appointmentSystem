@@ -7,13 +7,12 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 async function handleUpdatePoints(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  await requireAdmin();
-
   const userId = params.id;
   const body = await request.json().catch(() => ({}));
 
@@ -84,19 +83,19 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    await requireAdmin();
     return await handleUpdatePoints(request, { params });
-  } catch (error: any) {
-    console.error('Update points error:', error);
-    return errorResponse(error.message || '更新积分失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
 // Backward-compatible method used by some clients
 export async function PUT(request: NextRequest, ctx: { params: { id: string } }) {
   try {
+    await requireAdmin();
     return await handleUpdatePoints(request, ctx);
-  } catch (error: any) {
-    console.error('Update points error:', error);
-    return errorResponse(error.message || '更新积分失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

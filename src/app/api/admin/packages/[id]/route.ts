@@ -7,6 +7,7 @@ import {
   getAdminPackageById,
   updateAdminPackage,
 } from '@/server/services/admin-package.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,11 +37,8 @@ export async function GET(_request: Request, { params }: { params: { id: string 
 
     const pkg = await getAdminPackageById(parsed.data.id);
     return okResponse(pkg);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to fetch package', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -55,8 +53,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     let body: unknown;
     try {
       body = await request.json();
-    } catch {
-      return failResponse('BAD_REQUEST', 'Invalid JSON body', 400);
+    } catch (error) {
+      return handleApiError(error);
     }
 
     const parsedBody = updateSchema.safeParse(body);
@@ -81,11 +79,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     });
 
     return okResponse(pkg);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to update package', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -99,10 +94,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
 
     await deleteAdminPackage(parsed.data.id);
     return okResponse({ id: parsed.data.id });
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to delete package', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

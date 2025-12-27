@@ -13,6 +13,7 @@ import {
   createOrder,
   getUserOrders,
 } from '@/server/services/order.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -99,11 +100,7 @@ export async function GET(request: Request) {
 
     return okResponse(orders);
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Get orders error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to fetch orders', 500);
+    return handleApiError(error);
   }
 }
 
@@ -114,8 +111,8 @@ export async function POST(request: Request) {
 
     try {
       body = await request.json();
-    } catch {
-      return failResponse('BAD_REQUEST', 'Invalid JSON body', 400);
+    } catch (error) {
+      return handleApiError(error);
     }
 
     if (body && typeof body === 'object' && Array.isArray((body as any).items)) {
@@ -135,10 +132,6 @@ export async function POST(request: Request) {
     const order = await createOrder(user, parsed.data);
     return okResponse(order, { status: 201 });
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Create order error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to create order', 500);
+    return handleApiError(error);
   }
 }

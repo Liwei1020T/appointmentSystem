@@ -11,6 +11,7 @@ import { parseJson } from '@/lib/validation';
 import { okResponse, failResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { getUserProfile, updateUserProfile } from '@/server/services/profile.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,11 +29,8 @@ export async function GET() {
     const user = await requireUser();
     const profile = await getUserProfile(user.id);
     return okResponse(profile);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to fetch profile', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -49,10 +47,7 @@ export async function PATCH(request: NextRequest) {
 
     const updated = await updateUserProfile(user.id, parsed.data);
     return okResponse(updated);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to update profile', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

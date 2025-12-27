@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { isValidUUID } from '@/lib/utils';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -45,10 +46,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }));
 
     return successResponse({ data: mapped, total, page, limit }, '获取积分记录成功');
-  } catch (error: any) {
-    if (error?.json) return error.json();
-    console.error('Admin get user points log error:', error);
-    return errorResponse(error.message || '获取积分记录失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

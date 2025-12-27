@@ -8,6 +8,7 @@ import { requireAuth } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { buyPackage } from '@/server/services/package.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,8 +24,8 @@ export async function POST(request: Request) {
 
     try {
       body = await request.json();
-    } catch {
-      return failResponse('BAD_REQUEST', 'Invalid JSON body', 400);
+    } catch (error) {
+      return handleApiError(error);
     }
 
     const parsedBody = bodySchema.safeParse(body);
@@ -35,10 +36,6 @@ export async function POST(request: Request) {
     const result = await buyPackage(user, parsedBody.data);
     return okResponse(result, { status: 201 });
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Buy package error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to create package payment', 500);
+    return handleApiError(error);
   }
 }

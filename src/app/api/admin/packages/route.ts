@@ -14,6 +14,7 @@ import {
   listAdminPackages,
   updateAdminPackage,
 } from '@/server/services/admin-package.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,12 +94,8 @@ export async function GET(request: Request) {
     });
 
     return okResponse(packages);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Get packages error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to fetch packages', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -109,8 +106,8 @@ export async function POST(request: Request) {
     let body: unknown;
     try {
       body = await request.json();
-    } catch {
-      return failResponse('BAD_REQUEST', 'Invalid JSON body', 400);
+    } catch (error) {
+      return handleApiError(error);
     }
 
     const parsed = createSchema.safeParse(body);
@@ -130,12 +127,8 @@ export async function POST(request: Request) {
     });
 
     return okResponse(pkg, { status: 201 });
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Create package error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to create package', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -150,8 +143,8 @@ export async function PATCH(request: Request) {
     let body: unknown;
     try {
       body = await request.json();
-    } catch {
-      return failResponse('BAD_REQUEST', 'Invalid JSON body', 400);
+    } catch (error) {
+      return handleApiError(error);
     }
 
     const parsed = updateSchema.safeParse(body);
@@ -179,11 +172,7 @@ export async function PATCH(request: Request) {
     });
 
     return okResponse(pkg);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Update package error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to update package', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

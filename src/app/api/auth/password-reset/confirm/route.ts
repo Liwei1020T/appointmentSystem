@@ -22,6 +22,7 @@ import { hashOtpCode, timingSafeEqualHex } from '@/lib/otp';
 import { isValidMyPhone, toMyCanonicalPhone } from '@/lib/phone';
 import { normalizeMyPhone, validatePassword } from '@/lib/utils';
 import { Prisma } from '@prisma/client';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 const OTP_PURPOSE = 'password_reset';
 
@@ -125,8 +126,7 @@ export async function POST(request: NextRequest) {
     ]);
 
     return successResponse({ ok: true }, '密码已重置');
-  } catch (error: any) {
-    console.error('Password reset confirm error:', error);
-    return errorResponse('重置密码失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

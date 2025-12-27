@@ -37,7 +37,13 @@ export async function uploadImage(
       ? { folder: folderOrOptions }
       : folderOrOptions;
     
-    const folder = options.folder || options.bucket || 'uploads';
+    const baseFolder = options.bucket || '';
+    const subFolder = options.folder || '';
+    const folder = baseFolder
+      ? subFolder
+        ? `${baseFolder}/${subFolder}`
+        : baseFolder
+      : subFolder || 'uploads';
     
     const formData = new FormData();
     formData.append('file', file);

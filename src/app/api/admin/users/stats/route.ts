@@ -9,6 +9,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 function getStartOfDay(date: Date) {
   const d = new Date(date);
@@ -106,9 +107,8 @@ export async function GET(_request: NextRequest) {
       usersByRole,
       users_by_role: usersByRole,
     });
-  } catch (error: any) {
-    console.error('Admin user stats error:', error);
-    return errorResponse(error.message || '获取用户统计失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

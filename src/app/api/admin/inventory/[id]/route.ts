@@ -16,6 +16,7 @@ import {
   getInventoryItem,
   updateInventoryItem,
 } from '@/server/services/inventory.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,11 +62,7 @@ export async function GET(
     const item = await getInventoryItem(parsedParams.data.id);
     return okResponse(item);
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Get admin inventory item error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to fetch inventory item', 500);
+    return handleApiError(error);
   }
 }
 
@@ -84,8 +81,8 @@ export async function PUT(
     let body: unknown;
     try {
       body = await request.json();
-    } catch {
-      return failResponse('BAD_REQUEST', 'Invalid JSON body', 400);
+    } catch (error) {
+      return handleApiError(error);
     }
 
     const parsedBody = updateSchema.safeParse(body);
@@ -96,11 +93,7 @@ export async function PUT(
     const item = await updateInventoryItem(parsedParams.data.id, parsedBody.data);
     return okResponse(item);
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Update inventory item error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to update inventory item', 500);
+    return handleApiError(error);
   }
 }
 
@@ -119,8 +112,8 @@ export async function PATCH(
     let body: unknown;
     try {
       body = await request.json();
-    } catch {
-      return failResponse('BAD_REQUEST', 'Invalid JSON body', 400);
+    } catch (error) {
+      return handleApiError(error);
     }
 
     const parsedBody = updateSchema.safeParse(body);
@@ -140,11 +133,7 @@ export async function PATCH(
     const item = await updateInventoryItem(parsedParams.data.id, parsedBody.data);
     return okResponse(item);
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Patch inventory item error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to update inventory item', 500);
+    return handleApiError(error);
   }
 }
 
@@ -163,10 +152,6 @@ export async function DELETE(
     const result = await deleteInventoryItem(parsedParams.data.id);
     return okResponse(result);
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Delete inventory item error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to delete inventory item', 500);
+    return handleApiError(error);
   }
 }

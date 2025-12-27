@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { parseDateRangeFromSearchParams } from '@/lib/reporting';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 /**
  * 管理员 - 热门套餐（按已确认套餐支付聚合）
@@ -97,9 +98,8 @@ export async function GET(request: NextRequest) {
       .slice(0, limit);
 
     return successResponse(data);
-  } catch (error: any) {
-    console.error('Top packages error:', error);
-    return errorResponse(error.message || 'Failed to fetch top packages', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

@@ -5,6 +5,7 @@ import { failResponse, okResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { recordPaymentProof } from '@/server/services/payment.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 const bodySchema = z.object({
   receiptUrl: z.string().trim().min(1),
@@ -42,11 +43,7 @@ export async function POST(
     });
 
     return okResponse({ receiptUrl: parsed.data.receiptUrl });
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    if (error?.json) return error.json();
-    return failResponse('INTERNAL_ERROR', 'Failed to update payment receipt', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

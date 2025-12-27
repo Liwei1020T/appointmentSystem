@@ -5,6 +5,7 @@ import { parseJson } from '@/lib/validation';
 import { okResponse, failResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { updateAdminOrderStatus } from '@/server/services/admin-order.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 const bodySchema = z.object({
   status: z.string().trim().min(1),
@@ -31,10 +32,7 @@ export async function PATCH(
 
     const order = await updateAdminOrderStatus(params?.id, parsed.data.status as any, parsed.data.notes);
     return okResponse(order);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to update order status', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

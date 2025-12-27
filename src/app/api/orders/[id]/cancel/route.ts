@@ -8,6 +8,7 @@ import { requireAuth } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { cancelOrder } from '@/server/services/order.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,10 +31,6 @@ export async function POST(
     await cancelOrder(user, parsedParams.data.id);
     return okResponse({ success: true });
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Cancel order error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to cancel order', 500);
+    return handleApiError(error);
   }
 }

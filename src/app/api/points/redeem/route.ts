@@ -5,6 +5,7 @@ import { parseJson } from '@/lib/validation';
 import { okResponse, failResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { redeemPoints } from '@/server/services/points.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 const bodySchema = z.object({
   points: z.coerce.number().int().positive(),
@@ -28,10 +29,7 @@ export async function POST(request: NextRequest) {
 
     const result = await redeemPoints(user.id, parsed.data.points, parsed.data.reason);
     return okResponse(result);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to redeem points', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

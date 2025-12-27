@@ -9,6 +9,7 @@ import { prisma } from '@/lib/prisma';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { isValidMyPhone, toMyCanonicalPhone } from '@/lib/phone';
 import { normalizeMyPhone, validatePassword } from '@/lib/utils';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 /**
  * Generate a unique 6-digit numeric referral code.
@@ -174,8 +175,7 @@ export async function POST(request: NextRequest) {
       },
       '注册成功'
     );
-  } catch (error: any) {
-    console.error('Signup error:', error);
-    return errorResponse('注册失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

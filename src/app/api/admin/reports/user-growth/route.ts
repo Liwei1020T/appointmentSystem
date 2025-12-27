@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { buildDayKeys, parseDateRangeFromSearchParams, toDayKey } from '@/lib/reporting';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 /**
  * 管理员 - 用户增长统计
@@ -111,9 +112,8 @@ export async function GET(request: NextRequest) {
       dailyGrowth,
       usersBySource,
     });
-  } catch (error: any) {
-    console.error('User growth error:', error);
-    return errorResponse(error.message || 'Failed to fetch user growth stats', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { listPackagePurchases } from '@/server/services/admin-package.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,10 +26,7 @@ export async function GET(request: Request) {
 
     const payload = await listPackagePurchases(parsed.data);
     return okResponse(payload);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to fetch package purchases', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

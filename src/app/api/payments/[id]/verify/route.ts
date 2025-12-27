@@ -6,6 +6,7 @@ import { parseJson } from '@/lib/validation';
 import { okResponse, failResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { verifyPayment } from '@/server/services/payment.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 const bodySchema = z.object({
   transactionId: z.string().trim().min(1).optional().nullable(),
@@ -45,10 +46,7 @@ export async function POST(
     });
 
     return okResponse({ paymentId: payment.id, status: payment.status });
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to verify payment', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

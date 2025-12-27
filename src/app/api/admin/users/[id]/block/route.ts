@@ -9,14 +9,14 @@
 import { NextRequest } from 'next/server';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse } from '@/lib/api-response';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export async function PUT(_request: NextRequest) {
   try {
     await requireAdmin();
     return errorResponse('当前版本未实现封禁功能（缺少 is_blocked 字段）', 400);
-  } catch (error: any) {
-    if (error?.json) return error.json();
-    return errorResponse(error.message || '操作失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

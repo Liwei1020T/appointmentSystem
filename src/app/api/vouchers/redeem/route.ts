@@ -10,6 +10,7 @@ import { parseJson } from '@/lib/validation';
 import { okResponse, failResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { redeemVoucherByCode } from '@/server/services/voucher.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 const bodySchema = z.object({
   code: z.string().trim().min(1),
@@ -29,10 +30,7 @@ export async function POST(request: NextRequest) {
 
     const data = await redeemVoucherByCode(user.id, parsed.data.code, Boolean(parsed.data.usePoints));
     return okResponse(data);
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to redeem voucher', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

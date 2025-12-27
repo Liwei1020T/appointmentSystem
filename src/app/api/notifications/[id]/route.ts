@@ -3,6 +3,7 @@ import { okResponse, failResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { deleteNotification } from '@/server/services/notification.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,10 +24,7 @@ export async function DELETE(
 
     await deleteNotification(user.id, notificationId);
     return okResponse({ ok: true });
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    return failResponse('INTERNAL_ERROR', 'Failed to delete notification', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

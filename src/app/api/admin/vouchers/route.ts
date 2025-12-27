@@ -7,6 +7,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,9 +69,8 @@ export async function POST(request: NextRequest) {
     });
 
     return successResponse(voucher, '优惠券创建成功');
-  } catch (error: any) {
-    console.error('Create voucher error:', error);
-    return errorResponse(error.message || '创建优惠券失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -110,9 +110,8 @@ export async function GET(request: NextRequest) {
     });
 
     return successResponse(vouchers);
-  } catch (error: any) {
-    console.error('Get vouchers error:', error);
-    return errorResponse(error.message || '获取优惠券失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -195,9 +194,8 @@ export async function PATCH(request: NextRequest) {
     });
 
     return successResponse(voucher, '优惠券更新成功');
-  } catch (error: any) {
-    console.error('Update voucher error:', error);
-    return errorResponse(error.message || '更新优惠券失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -226,8 +224,7 @@ export async function DELETE(request: NextRequest) {
 
     await prisma.voucher.delete({ where: { id } });
     return successResponse({ id }, '优惠券已删除');
-  } catch (error: any) {
-    console.error('Delete voucher error:', error);
-    return errorResponse(error.message || '删除优惠券失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

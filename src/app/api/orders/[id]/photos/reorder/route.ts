@@ -8,6 +8,7 @@ import { requireAdmin } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { reorderOrderPhotos } from '@/server/services/order-photos.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,8 +40,8 @@ export async function POST(
     let body: unknown;
     try {
       body = await request.json();
-    } catch {
-      return failResponse('BAD_REQUEST', 'Invalid JSON body', 400);
+    } catch (error) {
+      return handleApiError(error);
     }
 
     const parsedBody = bodySchema.safeParse(body);
@@ -51,10 +52,6 @@ export async function POST(
     await reorderOrderPhotos(admin, parsedParams.data.id, parsedBody.data.photos);
     return okResponse({ success: true });
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Reorder order photos error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to reorder order photos', 500);
+    return handleApiError(error);
   }
 }

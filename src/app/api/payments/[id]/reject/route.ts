@@ -5,6 +5,7 @@ import { failResponse, okResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { rejectPayment } from '@/server/services/payment.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 const bodySchema = z.object({
   reason: z.string().trim().min(3).max(500),
@@ -37,11 +38,7 @@ export async function POST(
 
     await rejectPayment({ paymentId, reason: parsed.data.reason });
     return okResponse({ paymentId, status: 'rejected' });
-  } catch (error: any) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    if (error?.json) return error.json();
-    return failResponse('INTERNAL_ERROR', 'Failed to reject payment', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

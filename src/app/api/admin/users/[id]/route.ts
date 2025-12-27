@@ -9,6 +9,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { isValidUUID } from '@/lib/utils';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 function mapUserToPayload(user: any) {
   return {
@@ -58,10 +59,8 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
     if (!user) return errorResponse('用户不存在', 404);
 
     return successResponse({ user: mapUserToPayload(user) });
-  } catch (error: any) {
-    if (error?.json) return error.json();
-    console.error('Admin get user by id error:', error);
-    return errorResponse(error.message || '获取用户失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -97,10 +96,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     });
 
     return successResponse({ user: mapUserToPayload(updated) }, '用户更新成功');
-  } catch (error: any) {
-    if (error?.json) return error.json();
-    console.error('Admin update user error:', error);
-    return errorResponse(error.message || '更新用户失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

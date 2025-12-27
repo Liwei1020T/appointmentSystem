@@ -7,6 +7,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export async function GET(request: NextRequest) {
   try {
@@ -80,8 +81,7 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error: any) {
-    console.error('Admin get users error:', error);
-    return errorResponse(error.message || '获取用户失败', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 }

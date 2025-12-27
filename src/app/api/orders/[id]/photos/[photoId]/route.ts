@@ -8,6 +8,7 @@ import { requireAdmin } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { isApiError } from '@/lib/api-errors';
 import { deleteOrderPhoto } from '@/server/services/order-photos.service';
+import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,10 +32,6 @@ export async function DELETE(
     await deleteOrderPhoto(admin, parsedParams.data.id, parsedParams.data.photoId);
     return okResponse({ success: true });
   } catch (error) {
-    if (isApiError(error)) {
-      return failResponse(error.code, error.message, error.status, error.details);
-    }
-    console.error('Delete order photo error:', error);
-    return failResponse('INTERNAL_ERROR', 'Failed to delete order photo', 500);
+    return handleApiError(error);
   }
 }
