@@ -262,6 +262,74 @@ export async function getFeaturedReviews() {
   );
 }
 
+function mapPublicReview(review: any) {
+  const payload = mapReviewToApiPayload(review, {
+    includeOrder: true,
+    includeUser: true,
+    maskAnonymousUser: true,
+  });
+
+  if (payload.user) {
+    payload.user.email = null;
+  }
+
+  return payload;
+}
+
+/**
+ * Fetch public reviews for the "View all" page.
+ */
+export async function getPublicReviews() {
+  const reviews = await prisma.review.findMany({
+    where: { comment: { not: null } },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      user: { select: { id: true, fullName: true, email: true } },
+      order: {
+        select: {
+          id: true,
+          price: true,
+          discount: true,
+          discountAmount: true,
+          string: { select: { brand: true, model: true } },
+        },
+      },
+    },
+  });
+
+  const filtered = reviews.filter((review) => String(review.comment || '').trim().length >= 10);
+  return filtered.map(mapPublicReview);
+}
+
+/**
+ * Fetch public review by id for detail view.
+ */
+export async function getPublicReviewById(reviewId: string) {
+  if (!isValidUUID(reviewId)) {
+    throw new ApiError('BAD_REQUEST', 400, 'Invalid review id');
+  }
+
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId },
+    include: {
+      user: { select: { id: true, fullName: true, email: true } },
+      order: {
+        select: {
+          id: true,
+          price: true,
+          discount: true,
+          discountAmount: true,
+          string: { select: { brand: true, model: true } },
+        },
+      },
+    },
+  });
+
+  if (!review) return null;
+
+  return mapPublicReview(review);
+}
+
 /**
  * Admin: fetch all reviews.
  */

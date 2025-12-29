@@ -22,6 +22,7 @@ export default function PackageSummary() {
   const [packages, setPackages] = useState<UserPackage[]>([]);
   const [couponsCount, setCouponsCount] = useState(0);
   const [points, setPoints] = useState(0);
+  const [showAllPackages, setShowAllPackages] = useState(false);
 
   useEffect(() => {
     loadBenefitsData();
@@ -76,6 +77,8 @@ export default function PackageSummary() {
   }
 
   const hasPackages = packages.length > 0;
+  const visiblePackages = showAllPackages ? packages : packages.slice(0, 2);
+  const hiddenCount = Math.max(packages.length - 2, 0);
 
   return (
     <Card className="overflow-hidden">
@@ -170,7 +173,7 @@ export default function PackageSummary() {
         {/* 有套餐时显示快捷标签 */}
         {hasPackages && packages.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
-            {packages.slice(0, 2).map((pkg) => (
+            {visiblePackages.map((pkg) => (
               <span
                 key={pkg.id}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-ink-elevated border border-border-subtle text-text-secondary"
@@ -179,10 +182,23 @@ export default function PackageSummary() {
                 {pkg.package?.name || '套餐'}: 剩余 {pkg.remaining} 次
               </span>
             ))}
-            {packages.length > 2 && (
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-ink-elevated border border-border-subtle text-text-tertiary">
-                +{packages.length - 2} 更多
-              </span>
+            {packages.length > 2 && !showAllPackages && (
+              <button
+                type="button"
+                onClick={() => setShowAllPackages(true)}
+                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-ink-elevated border border-border-subtle text-text-tertiary hover:text-text-secondary hover:border-gray-200 transition-colors"
+              >
+                +{hiddenCount} 更多
+              </button>
+            )}
+            {packages.length > 2 && showAllPackages && (
+              <button
+                type="button"
+                onClick={() => setShowAllPackages(false)}
+                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-ink-elevated border border-border-subtle text-text-tertiary hover:text-text-secondary hover:border-gray-200 transition-colors"
+              >
+                收起
+              </button>
             )}
           </div>
         )}

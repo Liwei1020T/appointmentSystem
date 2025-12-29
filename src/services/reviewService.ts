@@ -208,6 +208,32 @@ export async function getFeaturedReviews(): Promise<OrderReview[]> {
 }
 
 /**
+ * 获取公开评价（用于"查看全部"）
+ */
+export async function getPublicReviews(): Promise<OrderReview[]> {
+  try {
+    const payload = await apiRequest<any[]>(`/api/reviews/public`);
+    if (!Array.isArray(payload)) return [];
+    return payload.map(normalizeReview);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 获取公开评价详情
+ */
+export async function getPublicReviewById(reviewId: string): Promise<OrderReview | null> {
+  if (!isValidUUID(reviewId)) return null;
+  try {
+    const payload = await apiRequest<any>(`/api/reviews/public/${reviewId}`);
+    return payload ? normalizeReview(payload) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Admin: 获取评价列表
  */
 export async function getAdminReviews(): Promise<OrderReview[]> {

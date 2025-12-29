@@ -1,0 +1,151 @@
+/**
+ * 评价详情页面 (Review Detail Page)
+ *
+ * 展示单条评价的完整内容与图片。
+ */
+
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import PageHeader from '@/components/layout/PageHeader';
+import { Card } from '@/components';
+import ImagePreview from '@/components/ImagePreview';
+import StarRating from '@/components/StarRating';
+import { formatCurrency, formatDate } from '@/lib/utils';
+import { getPublicReviewById, type OrderReview } from '@/services/reviewService';
+
+export default function ReviewDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const reviewId = params?.id as string | undefined;
+  const [review, setReview] = useState<OrderReview | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [showPreview, setShowPreview] = useState(false);
+
+  useEffect(() => {
+    if (!reviewId) return;
+    const loadReview = async () => {
+      const data = await getPublicReviewById(reviewId);
+      setReview(data);
+      setLoading(false);
+    };
+    loadReview();
+  }, [reviewId]);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <PageHeader title="评价详情" subtitle="查看完整评价内容" onBack={() => router.push('/reviews/all')} />
+
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+        {loading ? (
+          <Card className="p-6">
+            <p className="text-sm text-gray-500">正在加载评价...</p>
+          </Card>
+        ) : !review ? (
+          <Card className="p-6">
+            <p className="text-sm text-gray-500">评价不存在或已隐藏</p>
+          </Card>
+        ) : (
+          <>
+            <Card className="p-6 space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <StarRating value={Number(review.rating) || 0} readonly size="md" />
+                  <span className="text-sm font-semibold text-gray-800">
+                    {(Number(review.rating) || 0).toFixed(1)} 分
+                  </span>
+                </div>
+                <div className="text-xs text-gray-400">
+                  {formatDate(review.created_at || review.createdAt)}
+                </div>
+              </div>
+
+              <div className="text-sm text-gray-600">
+                {review.is_anonymous ? '匿名用户' : review.user?.full_name || '用户'}
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 pt-1">
+                <div className="space-y-1">
+                  <div className="text-xs text-gray-500">服务态度</div>
+                  <StarRating value={Number(review.service_rating || review.rating) || 0} readonly size="sm" />
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs text-gray-500">穿线质量</div>
+                  <StarRating value={Number(review.quality_rating || review.rating) || 0} readonly size="sm" />
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs text-gray-500">服务速度</div>
+                  <StarRating value={Number(review.speed_rating || review.rating) || 0} readonly size="sm" />
+                </div>
+              </div>
+
+              <div className="border-t border-gray-100 pt-4 space-y-3">
+                {review.tags && review.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {review.tags.map((tag, index) => (
+                      <span key={index} className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-medium">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                  {review.comment}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-gray-100 pt-4 text-sm text-gray-600">
+                <span>订单:</span>
+                <span className="font-semibold text-gray-700">
+                  {formatCurrency(Number(review.order?.final_price ?? review.order?.finalPrice ?? 0))}
+                </span>
+              </div>
+            </Card>
+
+            {review.imageUrls && review.imageUrls.length > 0 && (
+              <Card className="p-5 space-y-3">
+                <h3 className="text-sm font-semibold text-gray-700">评价图片</h3>
+                <div className="grid grid-cols-3 gap-3">
+                  {review.imageUrls.map((url, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => {
+                        setPreviewIndex(index);
+                        setShowPreview(true);
+                      }}
+                      className="group w-full h-24 overflow-hidden rounded-lg border border-gray-100"
+                    >
+                      <img
+                        src={url}
+                        alt={`review-${index}`}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {review.admin_reply && (
+              <Card className="p-5 space-y-2 border border-gray-100">
+                <div className="text-sm font-semibold text-gray-700">管理员回复</div>
+                <p className="text-sm text-gray-600">{review.admin_reply}</p>
+              </Card>
+            )}
+          </>
+        )}
+      </div>
+
+      <ImagePreview
+        images={review?.imageUrls || []}
+        initialIndex={previewIndex}
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+      />
+    </div>
+  );
+}

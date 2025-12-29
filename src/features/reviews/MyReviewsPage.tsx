@@ -128,13 +128,14 @@ export default function MyReviewsPage() {
             {reviews.length > 0 ? (
               <div className="space-y-4">
                 {reviews.map((review, index) => (
-                  <div
+                  <Link
                     key={review.id}
-                    className="animate-fade-in"
+                    href={`/reviews/all/${review.id}`}
+                    className="block animate-fade-in"
                     style={{ animationDelay: `${index * 80}ms` }}
                   >
                     <ReviewCard review={review} showOrder />
-                  </div>
+                  </Link>
                 ))}
               </div>
             ) : (
