@@ -2,7 +2,7 @@
  * 拉力输入组件 (Tension Input)
  * 
  * 输入球线拉力值，支持滑块同步、竖横线独立设置、推荐值一键使用、视觉磅数分级提示等。
- * 包含专业限制：竖线不能高于横线，且差磅不能超过 3 磅。
+ * 包含专业限制：横线需高于竖线，差磅需在 1-3 磅之间。
  */
 
 'use client';
@@ -25,10 +25,28 @@ export default function TensionInput({
   recommendedTension,
   error
 }: TensionInputProps) {
+  const MIN_TENSION = 18;
+  const MAX_TENSION = 30;
+  const MIN_DIFF = 1;
+  const MAX_DIFF = 3;
   const commonTensions = [20, 22, 24, 26, 28];
   const [isAdvanced, setIsAdvanced] = useState(initialCrossTension !== null && initialCrossTension !== tension);
   const [mainTension, setMainTension] = useState<number>(tension || 24);
   const [crossTension, setCrossTension] = useState<number>(initialCrossTension || tension || 24);
+
+  /**
+   * Normalize tensions to keep difference within 1-3 lbs in advanced mode.
+   * @param main - Vertical tension value.
+   * @param cross - Horizontal tension value.
+   * @returns Clamped vertical/horizontal values with valid diff range.
+   */
+  const normalizeAdvanced = (main: number, cross: number) => {
+    const clampedMain = Math.max(MIN_TENSION, Math.min(MAX_TENSION - MIN_DIFF, main));
+    const minCross = clampedMain + MIN_DIFF;
+    const maxCross = Math.min(MAX_TENSION, clampedMain + MAX_DIFF);
+    const clampedCross = Math.max(minCross, Math.min(maxCross, cross));
+    return { main: clampedMain, cross: clampedCross, minCross, maxCross };
+  };
 
   // 同步外部状态
   useEffect(() => {
@@ -38,32 +56,42 @@ export default function TensionInput({
     }
   }, [tension, isAdvanced]);
 
+  // Advanced 模式下同步差磅范围
+  useEffect(() => {
+    if (!isAdvanced) return;
+    const normalized = normalizeAdvanced(mainTension, crossTension);
+    if (normalized.main !== mainTension || normalized.cross !== crossTension) {
+      setMainTension(normalized.main);
+      setCrossTension(normalized.cross);
+      onTensionChange(normalized.main, normalized.cross);
+    }
+  }, [isAdvanced, mainTension, crossTension, onTensionChange]);
+
   // 当竖线下发生变化时，如果非高级模式，自动同步横线并通知外部
   const handleMainChange = (val: number) => {
-    const clampedMain = Math.max(18, Math.min(30, val));
+    const clampedMain = Math.max(MIN_TENSION, Math.min(MAX_TENSION, val));
 
     if (!isAdvanced) {
       setMainTension(clampedMain);
       setCrossTension(clampedMain);
       onTensionChange(clampedMain, clampedMain);
     } else {
-      // 限制：竖线不能超过横线
-      const finalMain = Math.min(clampedMain, crossTension);
-      setMainTension(finalMain);
-      onTensionChange(finalMain, crossTension);
+      const normalized = normalizeAdvanced(clampedMain, crossTension);
+      setMainTension(normalized.main);
+      setCrossTension(normalized.cross);
+      onTensionChange(normalized.main, normalized.cross);
     }
   };
 
   const handleCrossChange = (val: number) => {
-    const clampedCross = Math.max(18, Math.min(30, val));
+    const clampedCross = Math.max(MIN_TENSION, Math.min(MAX_TENSION, val));
 
-    // 限制：横线不能低于竖线，且不能多于竖线 3 磅
-    const minCross = mainTension;
-    const maxCross = Math.min(30, mainTension + 3);
-    const finalCross = Math.max(minCross, Math.min(maxCross, clampedCross));
+    // 限制：横线需高于竖线，差磅控制在 1-3 磅
+    const normalized = normalizeAdvanced(mainTension, clampedCross);
 
-    setCrossTension(finalCross);
-    onTensionChange(mainTension, finalCross);
+    setMainTension(normalized.main);
+    setCrossTension(normalized.cross);
+    onTensionChange(normalized.main, normalized.cross);
   };
 
   // 根据磅数返回颜色分级 (18 - 30)
@@ -125,16 +153,16 @@ export default function TensionInput({
         </div>
 
         <div className="space-y-6">
-          <div className="relative h-3 w-full bg-ink-surface/50 rounded-full overflow-hidden border border-border-subtle">
+            <div className="relative h-3 w-full bg-ink-surface/50 rounded-full overflow-hidden border border-border-subtle">
             <div
               className={`absolute top-0 left-0 h-full transition-all duration-300 opacity-40 shadow-inner ${getGaugeColor(mainTension)}`}
-              style={{ width: `${((mainTension - 18) / (30 - 18)) * 100}%` }}
+              style={{ width: `${((mainTension - MIN_TENSION) / (MAX_TENSION - MIN_TENSION)) * 100}%` }}
             />
           </div>
           <input
             type="range"
-            min="18"
-            max="30"
+            min={MIN_TENSION}
+            max={MAX_TENSION}
             step="1"
             value={mainTension}
             onChange={(e) => handleMainChange(parseInt(e.target.value))}
@@ -160,7 +188,7 @@ export default function TensionInput({
                 </span>
               </div>
               <p className="text-sm font-medium text-text-secondary">
-                建议：横线通常比竖线高 1-2 磅（上限 3 磅）
+                建议：横线通常比竖线高 1-2 磅（差磅 1-3 磅）
               </p>
             </div>
           </div>
@@ -169,28 +197,28 @@ export default function TensionInput({
             <div className="relative h-3 w-full bg-ink-surface/50 rounded-full overflow-hidden border border-border-subtle">
               <div
                 className={`absolute top-0 left-0 h-full transition-all duration-300 opacity-40 shadow-inner ${getGaugeColor(crossTension)}`}
-                style={{ width: `${((crossTension - 18) / (30 - 18)) * 100}%` }}
+                style={{ width: `${((crossTension - MIN_TENSION) / (MAX_TENSION - MIN_TENSION)) * 100}%` }}
               />
             </div>
             <input
               type="range"
-              min="18"
-              max="30"
+              min={MIN_TENSION}
+              max={MAX_TENSION}
               step="1"
               value={crossTension}
               onChange={(e) => handleCrossChange(parseInt(e.target.value))}
               className="w-full h-3 bg-transparent appearance-none cursor-pointer accent-accent relative z-10 -mt-[42px]"
             />
             <div className="flex justify-between px-1 text-[10px] text-text-tertiary font-bold font-mono">
-              <span>{mainTension} (min)</span>
+              <span>{mainTension + MIN_DIFF} (min)</span>
               <span className="text-accent">当前可调范围</span>
-              <span>{Math.min(30, mainTension + 3)} (max)</span>
+              <span>{Math.min(MAX_TENSION, mainTension + MAX_DIFF)} (max)</span>
             </div>
 
             <div className="bg-accent/5 border border-accent/10 rounded-lg p-3 mt-2">
               <p className="text-[11px] text-accent/80 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                专业限制：横线需 ≥ 竖线，且差值不得超过 3 磅。
+                专业限制：横线需高于竖线，差值需在 1-3 磅，系统自动监测异常。
               </p>
             </div>
           </div>

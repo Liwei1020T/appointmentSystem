@@ -29,6 +29,8 @@ export default function BookingFlow() {
   const user = session?.user;
   const isAuthenticated = !!session;
   const authLoading = status === 'loading';
+  const MIN_TENSION_DIFF = 1;
+  const MAX_TENSION_DIFF = 3;
 
   // 订单状态
   const [selectedString, setSelectedString] = useState<StringInventory | null>(null);
@@ -144,6 +146,11 @@ export default function BookingFlow() {
         newErrors.tension = '请输入拉力值';
       } else if (tension < 18 || tension > 30) {
         newErrors.tension = '拉力范围应在 18-30 磅之间';
+      } else if (crossTension && crossTension !== tension) {
+        const diff = crossTension - tension;
+        if (diff < MIN_TENSION_DIFF || diff > MAX_TENSION_DIFF) {
+          newErrors.tension = `竖/横差磅需在 ${MIN_TENSION_DIFF}-${MAX_TENSION_DIFF} 磅之间`;
+        }
       }
     }
 
@@ -174,6 +181,17 @@ export default function BookingFlow() {
    */
   const handleSubmit = async () => {
     if (!selectedString || !tension || !user) return;
+    if (crossTension && crossTension !== tension) {
+      const diff = crossTension - tension;
+      if (diff < MIN_TENSION_DIFF || diff > MAX_TENSION_DIFF) {
+        setToast({
+          show: true,
+          message: `竖/横差磅需在 ${MIN_TENSION_DIFF}-${MAX_TENSION_DIFF} 磅之间`,
+          type: 'warning',
+        });
+        return;
+      }
+    }
 
     setLoading(true);
 

@@ -45,6 +45,8 @@ export default function ProfilePage() {
   const [showLogoutModal, setShowLogoutModal] = useState<boolean>(false);
   const [loggingOut, setLoggingOut] = useState<boolean>(false);
   const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
     type: 'success' | 'error' | 'info' | 'warning';
   }>({ show: false, message: '', type: 'info' });
 

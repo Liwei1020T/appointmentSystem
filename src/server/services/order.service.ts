@@ -467,6 +467,15 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
     if (item.tensionHorizontal < ORDER_RULES.MIN_TENSION || item.tensionHorizontal > ORDER_RULES.MAX_TENSION) {
       throw new ApiError('UNPROCESSABLE_ENTITY', 422, `Racket ${i + 1} horizontal tension must be ${ORDER_RULES.MIN_TENSION}-${ORDER_RULES.MAX_TENSION}`);
     }
+    // Enforce cross/main tension difference within the allowed range.
+    const diff = item.tensionHorizontal - item.tensionVertical;
+    if (diff < ORDER_RULES.MIN_TENSION_DIFF || diff > ORDER_RULES.MAX_TENSION_DIFF) {
+      throw new ApiError(
+        'UNPROCESSABLE_ENTITY',
+        422,
+        `Racket ${i + 1} tension difference must be ${ORDER_RULES.MIN_TENSION_DIFF}-${ORDER_RULES.MAX_TENSION_DIFF} lbs`
+      );
+    }
   }
 
   const stringIds = [...new Set(items.map((item) => item.stringId))];

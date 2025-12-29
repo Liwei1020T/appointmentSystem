@@ -251,15 +251,15 @@ export interface UserVoucher {
   };
 }
 
-export async function getUserVouchers(userId: string): Promise<{ data: UserVoucher[]; error: string | null }> {
+export async function getUserVouchers(voucherId: string): Promise<{ data: UserVoucher[]; error: string | null }> {
   try {
-    const response = await fetch(`/api/admin/vouchers/user/${userId}`);
+    const response = await fetch(`/api/admin/vouchers/${voucherId}/users`);
     const raw = await response.json().catch(() => ({}));
     if (!response.ok) {
       return { data: [], error: getApiErrorMessage(raw, 'Failed to fetch user vouchers') };
     }
     const payload = raw?.data ?? raw;
-    return { data: payload.vouchers || [], error: null };
+    return { data: payload.vouchers || payload.data || payload || [], error: null };
   } catch (error) {
     console.error('Failed to fetch user vouchers:', error);
     return { data: [], error: 'Failed to fetch user vouchers' };

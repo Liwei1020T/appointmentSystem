@@ -16,7 +16,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button, Input, Card, Toast, Checkbox } from '@/components';
+import { getSession } from 'next-auth/react';
 import { signIn } from '@/services/authService';
+import { isAdminRole } from '@/lib/roles';
 import { normalizeMyPhone, validatePhone } from '@/lib/utils';
 
 export default function LoginPage() {
@@ -121,8 +123,11 @@ export default function LoginPage() {
       });
 
       // 延迟跳转，让用户看到成功提示
-      setTimeout(() => {
-        router.push('/');
+      setTimeout(async () => {
+        const session = await getSession();
+        const role = (session?.user as any)?.role;
+        const nextPath = isAdminRole(role) ? '/admin/dashboard' : '/dashboard';
+        router.push(nextPath);
       }, 1500);
     } catch (err: any) {
       setToast({

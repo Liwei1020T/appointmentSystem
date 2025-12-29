@@ -31,6 +31,8 @@ export default function MultiRacketBookingFlow() {
     const user = session?.user;
     const isAuthenticated = !!session;
     const authLoading = status === 'loading';
+    const MIN_TENSION_DIFF = 1;
+    const MAX_TENSION_DIFF = 3;
 
     // 购物车状态
     const [cartItems, setCartItems] = useState<RacketItemData[]>([]);
@@ -199,10 +201,15 @@ export default function MultiRacketBookingFlow() {
                 toast.error(`第 ${i + 1} 支球拍未上传照片`);
                 return false;
             }
+            const diff = item.tensionHorizontal - item.tensionVertical;
+            if (diff < MIN_TENSION_DIFF || diff > MAX_TENSION_DIFF) {
+                toast.error(`第 ${i + 1} 支球拍差磅需在 ${MIN_TENSION_DIFF}-${MAX_TENSION_DIFF} 磅之间`);
+                return false;
+            }
         }
 
         return true;
-    }, [cartItems]);
+    }, [cartItems, MAX_TENSION_DIFF, MIN_TENSION_DIFF]);
 
     // 验证套餐次数
     const validatePackage = useCallback(() => {

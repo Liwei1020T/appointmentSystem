@@ -30,7 +30,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 
       return {
         id: uv.id,
-        status: uv.status,
+        status: uv.status === 'active' ? 'available' : uv.status,
         isUsed: uv.status === 'used',
         is_used: uv.status === 'used',
         usedAt: uv.usedAt,
@@ -58,4 +58,3 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
     return handleApiError(error);
   }
 }
-

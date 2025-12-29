@@ -9,6 +9,7 @@
 
 import React, { useState } from 'react';
 import { Trash2, ChevronDown, ChevronUp, Settings } from 'lucide-react';
+import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
 import RacketPhotoUploader from './RacketPhotoUploader';
 
@@ -47,17 +48,55 @@ export default function RacketItemCard({
     disabled = false,
 }: RacketItemCardProps) {
     const [expanded, setExpanded] = useState(true);
+    const MIN_TENSION = 18;
+    const MAX_TENSION = 35;
+    const MIN_DIFF = 1;
+    const MAX_DIFF = 3;
 
     const price = typeof item.string.sellingPrice === 'object'
         ? item.string.sellingPrice.toNumber()
         : Number(item.string.sellingPrice);
 
+    /**
+     * Normalize tension values to enforce valid difference rules.
+     * @param vertical - Vertical string tension.
+     * @param horizontal - Horizontal string tension.
+     * @returns Clamped vertical/horizontal tensions respecting diff limits.
+     */
+    const normalizeTension = (vertical: number, horizontal: number) => {
+        const clampedVertical = Math.max(MIN_TENSION, Math.min(MAX_TENSION - MIN_DIFF, vertical));
+        const minHorizontal = clampedVertical + MIN_DIFF;
+        const maxHorizontal = Math.min(MAX_TENSION, clampedVertical + MAX_DIFF);
+        const clampedHorizontal = Math.max(minHorizontal, Math.min(maxHorizontal, horizontal));
+        return { vertical: clampedVertical, horizontal: clampedHorizontal };
+    };
+
+    const showLimitToast = (message: string) => {
+        toast.error(message, { duration: 2000 });
+    };
+
     const handleTensionChange = (type: 'vertical' | 'horizontal', value: number) => {
         if (type === 'vertical') {
-            onUpdate(item.id, { tensionVertical: value });
-        } else {
-            onUpdate(item.id, { tensionHorizontal: value });
+            if (value > item.tensionVertical) {
+                const maxVerticalAllowed = Math.min(MAX_TENSION - MIN_DIFF, item.tensionHorizontal - MIN_DIFF);
+                if (value > maxVerticalAllowed) {
+                    showLimitToast('已达到拉力上限或差磅下限，无法继续增加');
+                    return;
+                }
+            }
+            const normalized = normalizeTension(value, item.tensionHorizontal);
+            onUpdate(item.id, { tensionVertical: normalized.vertical, tensionHorizontal: normalized.horizontal });
+            return;
         }
+        if (value > item.tensionHorizontal) {
+            const maxHorizontalAllowed = Math.min(MAX_TENSION, item.tensionVertical + MAX_DIFF);
+            if (value > maxHorizontalAllowed) {
+                showLimitToast('差磅上限 3 磅，无法继续增加');
+                return;
+            }
+        }
+        const normalized = normalizeTension(item.tensionVertical, value);
+        onUpdate(item.id, { tensionVertical: normalized.vertical, tensionHorizontal: normalized.horizontal });
     };
 
     const handlePhotoChange = (url: string) => {
@@ -76,8 +115,10 @@ export default function RacketItemCard({
         onUpdate(item.id, { notes: value });
     };
 
-    // 检查是否完成配置
-    const isComplete = item.racketPhoto && item.tensionVertical && item.tensionHorizontal;
+    // 检查是否完成配置（含差磅有效性）
+    const tensionDiff = item.tensionHorizontal - item.tensionVertical;
+    const diffValid = tensionDiff >= MIN_DIFF && tensionDiff <= MAX_DIFF;
+    const isComplete = item.racketPhoto && item.tensionVertical && item.tensionHorizontal && diffValid;
 
     return (
         <div className={`
@@ -158,9 +199,9 @@ export default function RacketItemCard({
                                 <div className="flex items-center gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => handleTensionChange('vertical', Math.max(18, item.tensionVertical - 1))}
-                                        disabled={disabled || item.tensionVertical <= 18}
-                                        className="w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink-elevated disabled:opacity-50"
+                                        onClick={() => handleTensionChange('vertical', Math.max(MIN_TENSION, item.tensionVertical - 1))}
+                                        disabled={disabled}
+                                        className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink-elevated disabled:opacity-50 ${item.tensionVertical <= MIN_TENSION ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
                                         -
                                     </button>
@@ -170,9 +211,9 @@ export default function RacketItemCard({
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() => handleTensionChange('vertical', Math.min(35, item.tensionVertical + 1))}
-                                        disabled={disabled || item.tensionVertical >= 35}
-                                        className="w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink-elevated disabled:opacity-50"
+                                        onClick={() => handleTensionChange('vertical', Math.min(MAX_TENSION, item.tensionVertical + 1))}
+                                        disabled={disabled}
+                                        className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink-elevated disabled:opacity-50 ${item.tensionVertical >= MAX_TENSION - MIN_DIFF ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
                                         +
                                     </button>
@@ -183,9 +224,9 @@ export default function RacketItemCard({
                                 <div className="flex items-center gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => handleTensionChange('horizontal', Math.max(18, item.tensionHorizontal - 1))}
-                                        disabled={disabled || item.tensionHorizontal <= 18}
-                                        className="w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink-elevated disabled:opacity-50"
+                                        onClick={() => handleTensionChange('horizontal', Math.max(MIN_TENSION, item.tensionHorizontal - 1))}
+                                        disabled={disabled}
+                                        className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink-elevated disabled:opacity-50 ${item.tensionHorizontal <= MIN_TENSION ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
                                         -
                                     </button>
@@ -195,14 +236,24 @@ export default function RacketItemCard({
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() => handleTensionChange('horizontal', Math.min(35, item.tensionHorizontal + 1))}
-                                        disabled={disabled || item.tensionHorizontal >= 35}
-                                        className="w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink-elevated disabled:opacity-50"
+                                        onClick={() => handleTensionChange('horizontal', Math.min(MAX_TENSION, item.tensionHorizontal + 1))}
+                                        disabled={disabled}
+                                        className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink-elevated disabled:opacity-50 ${item.tensionHorizontal >= Math.min(MAX_TENSION, item.tensionVertical + MAX_DIFF) ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
                                         +
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                        <div className="mt-2">
+                            <p className="text-[11px] text-text-tertiary">
+                                差磅需在 1-3 磅之间，系统会自动监测异常。
+                            </p>
+                            {!diffValid && (
+                                <p className="text-[11px] text-warning mt-1">
+                                    当前差磅异常，请调整为 1-3 磅。
+                                </p>
+                            )}
                         </div>
                     </div>
 
