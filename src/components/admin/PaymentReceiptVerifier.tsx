@@ -11,8 +11,9 @@
  */
 
 import React, { useState } from 'react';
-import { Check, X, Image as ImageIcon, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
+import { Check, X, Image as ImageIcon, AlertCircle, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import LoadingSpinner from '@/components/loading/LoadingSpinner';
 
 interface PaymentReceiptVerifierProps {
   receiptUrl?: string | null;
@@ -162,7 +163,7 @@ export default function PaymentReceiptVerifier({
             >
               {verifying ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <LoadingSpinner size="sm" tone="inverse" />
                   处理中...
                 </>
               ) : (
@@ -179,7 +180,7 @@ export default function PaymentReceiptVerifier({
             >
               {verifying ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <LoadingSpinner size="sm" tone="inverse" />
                   处理中...
                 </>
               ) : (

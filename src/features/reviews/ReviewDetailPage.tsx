@@ -12,6 +12,7 @@ import PageHeader from '@/components/layout/PageHeader';
 import { Card } from '@/components';
 import ImagePreview from '@/components/ImagePreview';
 import StarRating from '@/components/StarRating';
+import SectionLoading from '@/components/loading/SectionLoading';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { getPublicReviewById, type OrderReview } from '@/services/reviewService';
 
@@ -41,7 +42,7 @@ export default function ReviewDetailPage() {
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {loading ? (
           <Card className="p-6">
-            <p className="text-sm text-gray-500">正在加载评价...</p>
+            <SectionLoading label="正在加载评价..." />
           </Card>
         ) : !review ? (
           <Card className="p-6">

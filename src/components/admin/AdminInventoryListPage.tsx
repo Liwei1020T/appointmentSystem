@@ -20,6 +20,7 @@ import {
   type LowStockAlert,
 } from '@/services/inventoryService';
 import { Badge, Button, Card, Input, StatsCard, Tabs } from '@/components';
+import SectionLoading from '@/components/loading/SectionLoading';
 import { AlertTriangle, Boxes, Search, XCircle } from 'lucide-react';
 
 export default function AdminInventoryListPage() {
@@ -263,9 +264,7 @@ export default function AdminInventoryListPage() {
 
         {/* Loading State */}
         {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
-          </div>
+          <SectionLoading label="加载库存..." minHeightClassName="min-h-[240px]" />
         ) : (
           <>
             {/* Strings Table */}

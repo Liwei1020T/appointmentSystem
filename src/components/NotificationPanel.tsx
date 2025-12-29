@@ -21,6 +21,7 @@ import {
   type Notification,
 } from '@/services/notificationService';
 import NotificationItem from './NotificationItem';
+import SectionLoading from '@/components/loading/SectionLoading';
 
 interface NotificationPanelProps {
   userId: string;
@@ -190,9 +191,7 @@ export default function NotificationPanel({ userId, isOpen, onClose, onUnreadCou
         {/* 通知列表 */}
         <div className="flex-1 min-h-[400px] overflow-y-auto custom-scrollbar">
           {loading ? (
-            <div className="flex items-center justify-center h-48">
-              <RefreshCw className="w-6 h-6 animate-spin text-accent" />
-            </div>
+            <SectionLoading label="加载通知..." minHeightClassName="min-h-[192px]" />
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-text-tertiary">
               <div className="text-5xl mb-3">🔔</div>

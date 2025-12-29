@@ -10,7 +10,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { changePassword } from '@/services/profileService';
-import { Card, Spinner, Button, Toast, Input } from '@/components';
+import { Card, Button, Toast, Input } from '@/components';
+import PageLoading from '@/components/loading/PageLoading';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -132,11 +133,7 @@ export default function ChangePasswordPage() {
   };
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-ink flex items-center justify-center">
-        <Spinner size="large" />
-      </div>
-    );
+    return <PageLoading surface="dark" />;
   }
 
   if (!user) {

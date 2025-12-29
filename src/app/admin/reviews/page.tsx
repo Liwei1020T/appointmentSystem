@@ -2,7 +2,12 @@
  * 管理员评价页面路由 (Admin Reviews Page Route)
  */
 
-import AdminReviewsPage from '@/features/admin/AdminReviewsPage';
+import dynamic from 'next/dynamic';
+import PageLoading from '@/components/loading/PageLoading';
+
+const AdminReviewsPage = dynamic(() => import('@/features/admin/AdminReviewsPage'), {
+  loading: () => <PageLoading surface="dark" />,
+});
 
 export const metadata = {
   title: '评价管理 - 管理后台',

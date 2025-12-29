@@ -15,7 +15,8 @@ import {
   UserProfile,
   UpdateProfileParams,
 } from '@/services/profileService';
-import { Card, Spinner, Button, Toast, Input } from '@/components';
+import { Card, Button, Toast, Input } from '@/components';
+import PageLoading from '@/components/loading/PageLoading';
 import AvatarUploader from '@/components/AvatarUploader';
 import { normalizeMyPhone } from '@/lib/utils';
 
@@ -164,11 +165,7 @@ export default function EditProfilePage() {
   }, [formData, router, validateForm]);
 
   if (authLoading || loading) {
-    return (
-      <div className="min-h-screen bg-ink flex items-center justify-center">
-        <Spinner size="large" />
-      </div>
-    );
+    return <PageLoading surface="dark" />;
   }
 
   if (!user || !profile) {

@@ -9,7 +9,8 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Card, Spinner } from '@/components';
+import { Card } from '@/components';
+import SectionLoading from '@/components/loading/SectionLoading';
 import { getUserPackageSummary } from '@/services/packageService';
 import { getVoucherStats } from '@/services/voucherService';
 import { UserPackage } from '@/types';
@@ -69,9 +70,7 @@ export default function PackageSummary() {
   if (loading) {
     return (
       <Card>
-        <div className="p-6 flex items-center justify-center min-h-[180px]">
-          <Spinner size="medium" />
-        </div>
+        <SectionLoading label="加载权益信息..." minHeightClassName="min-h-[180px]" />
       </Card>
     );
   }

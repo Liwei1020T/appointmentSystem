@@ -7,9 +7,10 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Camera, X, Loader2, Upload } from 'lucide-react';
+import { Camera, X, Upload } from 'lucide-react';
 import { uploadImage } from '@/services/imageUploadService';
 import { toast } from 'sonner';
+import LoadingSpinner from '@/components/loading/LoadingSpinner';
 
 interface RacketPhotoUploaderProps {
     value?: string;
@@ -151,7 +152,7 @@ export default function RacketPhotoUploader({
 
                     {uploading ? (
                         <div className="flex flex-col items-center gap-2 py-4">
-                            <Loader2 className="h-8 w-8 animate-spin text-accent" />
+                            <LoadingSpinner size="md" className="w-8 h-8" />
                             <p className="text-sm text-text-secondary">上传中...</p>
                         </div>
                     ) : (

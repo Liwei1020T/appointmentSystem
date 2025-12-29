@@ -18,6 +18,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { getOrderById, updateOrderStatus, updateOrderPhotos } from '@/services/adminOrderService';
 import type { AdminOrder, OrderStatus } from '@/services/adminOrderService';
 import { Badge, Button, Card } from '@/components';
+import PageLoading from '@/components/loading/PageLoading';
 import OrderPhotosUploader from '@/components/admin/OrderPhotosUploader';
 import OrderPhotosUpload from '@/components/OrderPhotosUpload';
 import PaymentReceiptVerifier from '@/components/admin/PaymentReceiptVerifier';
@@ -196,14 +197,7 @@ export default function AdminOrderDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-ink-elevated">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent mb-4"></div>
-          <p className="text-text-secondary">加载中...</p>
-        </div>
-      </div>
-    );
+    return <PageLoading surface="dark" />;
   }
 
   if (error || !order) {

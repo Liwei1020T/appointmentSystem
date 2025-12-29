@@ -20,7 +20,7 @@ import {
 } from '@/lib/orderNotificationHelper';
 import { Order } from '@/types';
 import Card from '@/components/Card';
-import Spinner from '@/components/Spinner';
+import PageLoading from '@/components/loading/PageLoading';
 import Button from '@/components/Button';
 import OrderStatusBadge, { OrderStatus } from '@/components/OrderStatusBadge';
 import OrderTimeline from '@/components/OrderTimeline';
@@ -216,11 +216,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
   // 加载状态
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <PageLoading />;
   }
 
   // 错误状态

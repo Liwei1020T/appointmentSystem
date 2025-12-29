@@ -5,6 +5,7 @@
  */
 
 import SignupPage from '@/features/auth/SignupPage';
+import PageLoading from '@/components/loading/PageLoading';
 import { Suspense } from 'react';
 
 export const metadata = {
@@ -14,7 +15,7 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageLoading />}>
       <SignupPage />
     </Suspense>
   );

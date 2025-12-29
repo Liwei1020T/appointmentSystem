@@ -8,8 +8,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CheckCircle, XCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import { Button, Card } from '@/components';
+import LoadingSpinner from '@/components/loading/LoadingSpinner';
 import { getTNGPayment } from '@/services/tngPaymentService';
 
 export default function PaymentResultPage() {
@@ -58,7 +59,7 @@ export default function PaymentResultPage() {
     return (
       <div className="min-h-screen bg-ink flex items-center justify-center p-6">
         <Card className="w-full max-w-md border border-border-subtle bg-ink-surface text-center">
-          <Loader2 className="w-16 h-16 text-accent animate-spin mx-auto mb-4" />
+          <LoadingSpinner size="lg" className="w-16 h-16 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-text-primary mb-2">
             正在确认支付状态...
           </h2>

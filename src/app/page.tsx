@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import HomePage from '@/features/home/HomePage';
 import LandingPage from '@/features/landing/LandingPage';
-import { Spinner } from '@/components';
+import PageLoading from '@/components/loading/PageLoading';
 
 export default function Page() {
   const { data: session, status } = useSession();
@@ -26,11 +26,7 @@ export default function Page() {
 
   // 避免 SSR 不匹配
   if (!mounted || loading) {
-    return (
-      <div className="min-h-screen bg-ink flex items-center justify-center">
-        <Spinner size="large" />
-      </div>
-    );
+    return <PageLoading surface="dark" />;
   }
 
   // 根据登录状态渲染不同页面

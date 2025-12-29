@@ -12,7 +12,8 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Plus, ShoppingCart, ArrowRight, ArrowLeft, Check, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { StringInventory, UserVoucher } from '@/types';
-import { Spinner } from '@/components';
+import PageLoading from '@/components/loading/PageLoading';
+import LoadingSpinner from '@/components/loading/LoadingSpinner';
 import { formatCurrency } from '@/lib/utils';
 import { hasAvailablePackage, getUserPackages } from '@/services/packageService';
 import { createMultiRacketOrder } from '@/services/orderService';
@@ -279,11 +280,7 @@ export default function MultiRacketBookingFlow() {
     const allItemsComplete = cartItems.every(item => item.racketPhoto);
 
     if (authLoading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Spinner size="large" />
-            </div>
-        );
+        return <PageLoading />;
     }
 
     if (!user) {
@@ -732,7 +729,7 @@ export default function MultiRacketBookingFlow() {
                             >
                                 {loading ? (
                                     <>
-                                        <Spinner size="small" />
+                                        <LoadingSpinner size="sm" tone="inverse" />
                                         提交中...
                                     </>
                                 ) : (

@@ -27,6 +27,7 @@ import {
   History,
 } from 'lucide-react';
 import PageHeader from '@/components/layout/PageHeader';
+import PageLoading from '@/components/loading/PageLoading';
 import { getPointsBalance, getPointsHistory } from '@/services/pointsService';
 import { getRedeemableVouchers, redeemVoucherWithPoints, getUserVouchersForProfile, getVoucherStats } from '@/services/voucherService';
 import { formatDate } from '@/lib/utils';
@@ -257,14 +258,7 @@ function PointsCenterContent() {
   const totalSpent = Math.abs(pointsLogs.filter((log) => log.type === 'spent').reduce((sum, log) => sum + log.points, 0));
 
   if (authLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent mb-4"></div>
-          <p className="text-gray-500">加载中...</p>
-        </div>
-      </div>
-    );
+    return <PageLoading />;
   }
 
   const tabs = [
@@ -625,11 +619,7 @@ function PointsCenterContent() {
 
 export default function PointsCenterPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
-      </div>
-    }>
+    <Suspense fallback={<PageLoading />}>
       <PointsCenterContent />
     </Suspense>
   );

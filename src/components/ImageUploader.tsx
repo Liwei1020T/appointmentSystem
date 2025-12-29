@@ -15,8 +15,9 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { uploadImage, UploadOptions, UploadResult } from '@/services/imageUploadService';
+import LoadingSpinner from '@/components/loading/LoadingSpinner';
 
 interface ImageUploaderProps {
   uploadOptions: Omit<UploadOptions, 'fileName'>;
@@ -236,7 +237,7 @@ export default function ImageUploader({
               {/* 上传中遮罩 */}
               {image.uploading && (
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 text-text-onAccent animate-spin" />
+                  <LoadingSpinner size="md" tone="inverse" className="w-8 h-8" />
                 </div>
               )}
 

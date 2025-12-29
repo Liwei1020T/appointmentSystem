@@ -17,6 +17,7 @@ import {
   type UserPackage,
 } from '@/services/adminPackageService';
 import { Badge, Button, Card, StatsCard } from '@/components';
+import PageLoading from '@/components/loading/PageLoading';
 
 interface AdminPackageDetailPageProps {
   packageId: string;
@@ -67,11 +68,7 @@ export default function AdminPackageDetailPage({ packageId }: AdminPackageDetail
   const formatDate = (date: string) => new Date(date).toLocaleString('zh-CN');
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-ink-elevated flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
-      </div>
-    );
+    return <PageLoading surface="dark" />;
   }
 
   if (error || !pkg) {

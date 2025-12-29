@@ -1,4 +1,9 @@
-import AdminReportsPage from '@/components/admin/AdminReportsPage';
+import dynamic from 'next/dynamic';
+import PageLoading from '@/components/loading/PageLoading';
+
+const AdminReportsPage = dynamic(() => import('@/components/admin/AdminReportsPage'), {
+  loading: () => <PageLoading surface="dark" />,
+});
 
 /**
  * Admin Reports Route

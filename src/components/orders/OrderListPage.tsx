@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getUserOrders, type OrderWithDetails } from '@/services/orderService';
 import { formatAmount } from '@/lib/payment-helpers';
+import SectionLoading from '@/components/loading/SectionLoading';
 import Link from 'next/link';
 
 // Just use OrderWithDetails directly
@@ -72,11 +73,7 @@ export default function OrderListPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-text-tertiary">加载中...</div>
-      </div>
-    );
+    return <SectionLoading label="加载订单..." minHeightClassName="min-h-[256px]" />;
   }
 
   return (

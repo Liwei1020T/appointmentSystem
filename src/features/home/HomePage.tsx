@@ -14,13 +14,14 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Card, Spinner, Button, Badge, SkeletonCard } from '@/components';
+import { Card, Button, Badge, SkeletonCard } from '@/components';
 import FeaturedReviews from '@/components/FeaturedReviews';
 import QuickActions from './QuickActions';
 import RecentOrders from './RecentOrders';
 import PackageSummary from './PackageSummary';
 import { useSession } from 'next-auth/react';
 import { getUserStats, getRecentOrders, getFeaturedPackages, UserStats, RecentOrder, FeaturedPackage } from '@/services/homeService';
+import PageLoading from '@/components/loading/PageLoading';
 
 export default function HomePage() {
   const router = useRouter();
@@ -105,11 +106,7 @@ export default function HomePage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-ink flex items-center justify-center">
-        <Spinner size="large" />
-      </div>
-    );
+    return <PageLoading surface="dark" />;
   }
 
   if (!user) {

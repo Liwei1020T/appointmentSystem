@@ -26,6 +26,7 @@ import {
   type VoucherType,
 } from '@/services/adminVoucherService';
 import { Badge, Button, Card, Input, StatsCard } from '@/components';
+import PageLoading from '@/components/loading/PageLoading';
 import DistributeVoucherModal from './DistributeVoucherModal';
 
 interface AdminVoucherDetailPageProps {
@@ -187,11 +188,7 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
   }
 
   if (loading && !voucher) {
-    return (
-      <div className="min-h-screen bg-ink-elevated flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
-      </div>
-    );
+    return <PageLoading surface="dark" />;
   }
 
   if (error || !voucher) {

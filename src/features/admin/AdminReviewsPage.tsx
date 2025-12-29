@@ -12,57 +12,67 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Card from '@/components/Card';
-import Spinner from '@/components/Spinner';
+import PageLoading from '@/components/loading/PageLoading';
 import Button from '@/components/Button';
+import ImagePreview from '@/components/ImagePreview';
 import StarRating from '@/components/StarRating';
 import Modal from '@/components/Modal';
 import Toast from '@/components/Toast';
-import { formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { getAdminReviewStats, getAdminReviews, replyReview } from '@/services/reviewService';
 import { 
   Star, 
   MessageSquare, 
   TrendingUp, 
-  Users, 
   Award,
   Search,
   Filter,
   Download,
-  Reply
+  Reply,
+  Eye,
+  ArrowUpRight
 } from 'lucide-react';
 
 interface Review {
   id: string;
-  order_id: string;
-  user_id: string;
+  order_id?: string;
+  user_id?: string;
   rating: number;
-  service_rating: number;
-  quality_rating: number;
-  speed_rating: number;
+  service_rating?: number;
+  quality_rating?: number;
+  speed_rating?: number;
   comment: string;
-  tags: string[];
-  images: string[];
-  is_anonymous: boolean;
-  helpful_count: number;
-  admin_reply: string | null;
-  admin_reply_at: string | null;
-  admin_reply_by: string | null;
-  created_at: string;
-  updated_at: string;
+  tags?: string[];
+  images?: string[];
+  image_urls?: string[];
+  imageUrls?: string[];
+  is_anonymous?: boolean;
+  isAnonymous?: boolean;
+  helpful_count?: number;
+  admin_reply?: string | null;
+  admin_reply_at?: string | null;
+  admin_reply_by?: string | null;
+  created_at?: string | Date;
+  createdAt?: string | Date;
+  updated_at?: string | Date;
+  updatedAt?: string | Date;
   order?: {
-    id: string;
-    order_number: string;
-    final_price: number;
+    id?: string;
+    order_number?: string;
+    orderNumber?: string;
+    final_price?: number;
+    finalPrice?: number;
     string?: {
-      brand: string;
-      model: string;
+      brand?: string;
+      model?: string;
     };
   };
   user?: {
-    id: string;
-    full_name: string;
-    email: string;
+    id?: string;
+    full_name?: string;
+    email?: string;
   };
 }
 
@@ -82,14 +92,19 @@ interface ReviewStats {
 type FilterRating = 'all' | '5' | '4' | '3' | '2' | '1';
 
 export default function AdminReviewsPage() {
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [filteredReviews, setFilteredReviews] = useState<any[]>([]);
+  const router = useRouter();
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<ReviewStats | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterRating, setFilterRating] = useState<FilterRating>('all');
   const [showReplyModal, setShowReplyModal] = useState<boolean>(false);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState<boolean>(false);
+  const [detailReview, setDetailReview] = useState<Review | null>(null);
+  const [previewIndex, setPreviewIndex] = useState<number>(0);
+  const [showPreview, setShowPreview] = useState<boolean>(false);
   const [replyText, setReplyText] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [toast, setToast] = useState<{
@@ -150,12 +165,20 @@ export default function AdminReviewsPage() {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        (r) =>
-          r.comment.toLowerCase().includes(query) ||
-          r.user?.full_name?.toLowerCase().includes(query) ||
-          r.order?.order_number?.toLowerCase().includes(query) ||
-          r.order?.string?.brand?.toLowerCase().includes(query) ||
-          r.order?.string?.model?.toLowerCase().includes(query)
+        (r) => {
+          const comment = r.comment?.toLowerCase() || '';
+          const userName = r.user?.full_name?.toLowerCase() || '';
+          const orderNumber = (r.order?.order_number || r.order?.orderNumber || '').toLowerCase();
+          const brand = r.order?.string?.brand?.toLowerCase() || '';
+          const model = r.order?.string?.model?.toLowerCase() || '';
+          return (
+            comment.includes(query) ||
+            userName.includes(query) ||
+            orderNumber.includes(query) ||
+            brand.includes(query) ||
+            model.includes(query)
+          );
+        }
       );
     }
 
@@ -167,6 +190,36 @@ export default function AdminReviewsPage() {
     setSelectedReview(review);
     setReplyText(review.admin_reply || '');
     setShowReplyModal(true);
+  };
+
+  // 打开详情弹窗
+  const handleOpenDetail = (review: Review) => {
+    setDetailReview(review);
+    setPreviewIndex(0);
+    setShowPreview(false);
+    setShowDetailModal(true);
+  };
+
+  // 关闭详情弹窗
+  const handleCloseDetail = () => {
+    setShowDetailModal(false);
+    setDetailReview(null);
+    setShowPreview(false);
+  };
+
+  // 跳转订单详情
+  const handleOpenOrderDetail = (review: Review | null) => {
+    const orderId = review?.order?.id;
+    if (!orderId) return;
+    setShowDetailModal(false);
+    router.push(`/admin/orders/${orderId}`);
+  };
+
+  // 提取评价图片列表
+  const getReviewImages = (review: Review | null) => {
+    if (!review) return [];
+    const images = review.imageUrls || review.images || review.image_urls || [];
+    return Array.isArray(images) ? images : [];
   };
 
   // 提交回复
@@ -217,7 +270,7 @@ export default function AdminReviewsPage() {
           r.quality_rating,
           r.speed_rating,
           `"${r.comment.replace(/"/g, '""')}"`,
-          `"${r.tags.join(', ')}"`,
+          `"${(r.tags ?? []).join(', ')}"`,
           formatDate(r.created_at),
           r.admin_reply ? `"${r.admin_reply.replace(/"/g, '""')}"` : '',
         ].join(',')
@@ -231,12 +284,10 @@ export default function AdminReviewsPage() {
     link.click();
   };
 
+  const detailImages = getReviewImages(detailReview);
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-ink">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <PageLoading surface="dark" />;
   }
 
   return (
@@ -412,17 +463,19 @@ export default function AdminReviewsPage() {
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 bg-accent/15 rounded-full flex items-center justify-center">
                         <span className="text-accent font-semibold">
-                          {review.is_anonymous
+                          {(review.is_anonymous ?? review.isAnonymous)
                             ? '?'
                             : (review.user?.full_name?.[0] || 'U')}
                         </span>
                       </div>
                       <div>
                         <p className="font-medium text-text-primary">
-                          {review.is_anonymous ? '匿名用户' : review.user?.full_name}
+                          {(review.is_anonymous ?? review.isAnonymous)
+                            ? '匿名用户'
+                            : review.user?.full_name}
                         </p>
                         <p className="text-xs text-text-tertiary">
-                          {formatDate(review.created_at)}
+                          {formatDate(review.created_at || review.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -430,7 +483,7 @@ export default function AdminReviewsPage() {
                     <div className="flex items-center gap-2 mb-3">
                       <StarRating value={review.rating} readonly size="sm" />
                       <span className="text-sm text-text-secondary">
-                        订单 #{review.order?.order_number}
+                        订单 #{review.order?.order_number || review.order?.orderNumber || '-'}
                       </span>
                     </div>
 
@@ -441,29 +494,39 @@ export default function AdminReviewsPage() {
                     )}
                   </div>
 
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleOpenReply(review)}
-                  >
-                    <Reply className="w-4 h-4 mr-1" />
-                    {review.admin_reply ? '编辑回复' : '回复'}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleOpenDetail(review)}
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      查看详情
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleOpenReply(review)}
+                    >
+                      <Reply className="w-4 h-4 mr-1" />
+                      {review.admin_reply ? '编辑回复' : '回复'}
+                    </Button>
+                  </div>
                 </div>
 
                 {/* 详细评分 */}
                 <div className="grid grid-cols-3 gap-4 mb-4 p-3 bg-ink-elevated rounded-lg border border-border-subtle">
                   <div>
                     <p className="text-xs text-text-tertiary mb-1">服务态度</p>
-                    <StarRating value={review.service_rating} readonly size="xs" />
+                    <StarRating value={review.service_rating ?? review.rating} readonly size="xs" />
                   </div>
                   <div>
                     <p className="text-xs text-text-tertiary mb-1">穿线质量</p>
-                    <StarRating value={review.quality_rating} readonly size="xs" />
+                    <StarRating value={review.quality_rating ?? review.rating} readonly size="xs" />
                   </div>
                   <div>
                     <p className="text-xs text-text-tertiary mb-1">服务速度</p>
-                    <StarRating value={review.speed_rating} readonly size="xs" />
+                    <StarRating value={review.speed_rating ?? review.rating} readonly size="xs" />
                   </div>
                 </div>
 
@@ -491,9 +554,11 @@ export default function AdminReviewsPage() {
                       管理员回复
                     </p>
                     <p className="text-sm text-text-secondary">{review.admin_reply}</p>
-                    <p className="text-xs text-text-tertiary mt-2">
-                      {formatDate(review.admin_reply_at!)}
-                    </p>
+                    {review.admin_reply_at && (
+                      <p className="text-xs text-text-tertiary mt-2">
+                        {formatDate(review.admin_reply_at)}
+                      </p>
+                    )}
                   </div>
                 )}
               </Card>
@@ -501,6 +566,154 @@ export default function AdminReviewsPage() {
           )}
         </div>
       </div>
+
+      {/* 详情弹窗 */}
+      <Modal
+        isOpen={showDetailModal && !!detailReview}
+        onClose={handleCloseDetail}
+        title="评价详情"
+        size="lg"
+        className="!bg-ink-surface border border-border-subtle"
+      >
+        {detailReview && (
+          <div className="space-y-5">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-accent/15 rounded-full flex items-center justify-center">
+                    <span className="text-accent font-semibold">
+                      {(detailReview.is_anonymous ?? detailReview.isAnonymous)
+                        ? '?'
+                        : (detailReview.user?.full_name?.[0] || 'U')}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-text-primary">
+                      {(detailReview.is_anonymous ?? detailReview.isAnonymous)
+                        ? '匿名用户'
+                        : detailReview.user?.full_name}
+                    </p>
+                    <p className="text-xs text-text-tertiary">
+                      {formatDate(detailReview.created_at || detailReview.createdAt)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <StarRating value={detailReview.rating} readonly size="sm" />
+                  <span className="text-sm text-text-secondary">
+                    {detailReview.rating.toFixed(1)} 分
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-lg border border-border-subtle bg-ink-elevated/70 p-4 text-sm text-text-secondary">
+                <div className="flex items-center justify-between gap-4">
+                  <span>订单号</span>
+                  <span className="font-mono text-text-primary">
+                    {detailReview.order?.order_number || detailReview.order?.orderNumber || '—'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span>订单金额</span>
+                  <span className="font-mono text-text-primary">
+                    {formatCurrency(
+                      Number(
+                        detailReview.order?.final_price ??
+                          detailReview.order?.finalPrice ??
+                          0
+                      )
+                    )}
+                  </span>
+                </div>
+                {detailReview.order?.id && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-center"
+                    onClick={() => handleOpenOrderDetail(detailReview)}
+                  >
+                    <ArrowUpRight className="w-4 h-4 mr-1" />
+                    查看订单详情
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 rounded-lg border border-border-subtle bg-ink-elevated/70 p-4">
+              <div>
+                <p className="text-xs text-text-tertiary mb-1">服务态度</p>
+                <StarRating value={detailReview.service_rating ?? detailReview.rating} readonly size="xs" />
+              </div>
+              <div>
+                <p className="text-xs text-text-tertiary mb-1">穿线质量</p>
+                <StarRating value={detailReview.quality_rating ?? detailReview.rating} readonly size="xs" />
+              </div>
+              <div>
+                <p className="text-xs text-text-tertiary mb-1">服务速度</p>
+                <StarRating value={detailReview.speed_rating ?? detailReview.rating} readonly size="xs" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-text-primary">评价内容</p>
+              <p className="text-sm text-text-secondary whitespace-pre-line">
+                {detailReview.comment}
+              </p>
+            </div>
+
+            {detailReview.tags && detailReview.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {detailReview.tags.map((tag: string, idx: number) => (
+                  <span
+                    key={idx}
+                    className="px-2 py-1 bg-info-soft text-info text-xs rounded-full"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {detailImages.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-text-primary">评价图片</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {detailImages.map((url, index) => (
+                    <button
+                      key={`${url}-${index}`}
+                      type="button"
+                      onClick={() => {
+                        setPreviewIndex(index);
+                        setShowPreview(true);
+                      }}
+                      className="group w-full h-24 overflow-hidden rounded-lg border border-border-subtle bg-ink-elevated/70"
+                    >
+                      <img
+                        src={url}
+                        alt={`review-${index + 1}`}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {detailReview.admin_reply && (
+              <div className="rounded-lg border border-warning/30 bg-warning/10 p-4">
+                <p className="text-xs text-warning font-medium mb-1">管理员回复</p>
+                <p className="text-sm text-text-secondary">{detailReview.admin_reply}</p>
+                {detailReview.admin_reply_at && (
+                  <p className="text-xs text-text-tertiary mt-2">
+                    {formatDate(detailReview.admin_reply_at)}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
 
       {/* 回复弹窗 */}
       <Modal
@@ -515,7 +728,7 @@ export default function AdminReviewsPage() {
                 <div className="flex items-center gap-2 mb-2">
                   <StarRating value={selectedReview.rating} readonly size="sm" />
                   <span className="text-sm text-text-secondary">
-                    {selectedReview.is_anonymous
+                    {(selectedReview.is_anonymous ?? selectedReview.isAnonymous)
                       ? '匿名用户'
                       : selectedReview.user?.full_name}
                   </span>
@@ -567,6 +780,13 @@ export default function AdminReviewsPage() {
           onClose={() => setToast({ ...toast, show: false })}
         />
       )}
+
+      <ImagePreview
+        images={detailImages}
+        initialIndex={previewIndex}
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+      />
     </div>
   );
 }

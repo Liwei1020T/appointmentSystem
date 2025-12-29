@@ -9,7 +9,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Badge, Spinner } from '@/components';
+import { Card, Badge } from '@/components';
+import SectionLoading from '@/components/loading/SectionLoading';
 import { getRecentOrders } from '@/services/homeService';
 import { Order } from '@/types';
 import { formatDate } from '@/lib/utils';
@@ -97,9 +98,7 @@ export default function RecentOrders() {
   if (loading) {
     return (
       <Card>
-        <div className="p-6 flex items-center justify-center">
-          <Spinner size="medium" />
-        </div>
+        <SectionLoading label="加载最近订单..." minHeightClassName="min-h-[180px]" />
       </Card>
     );
   }

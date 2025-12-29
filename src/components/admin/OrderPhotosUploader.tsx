@@ -13,9 +13,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Camera, Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Camera, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { uploadOrderImage, deleteImage, UploadResult } from '@/services/imageUploadService';
 import ImagePreview from '@/components/ImagePreview';
+import LoadingSpinner from '@/components/loading/LoadingSpinner';
 
 interface OrderPhotosUploaderProps {
   orderId: string;
@@ -189,7 +190,7 @@ export default function OrderPhotosUploader({
         />
         
         {uploading ? (
-          <Loader2 className="w-8 h-8 text-accent animate-spin" />
+          <LoadingSpinner size="md" className="w-8 h-8" />
         ) : (
           <>
             <Camera className="w-8 h-8 text-text-tertiary mb-2" />

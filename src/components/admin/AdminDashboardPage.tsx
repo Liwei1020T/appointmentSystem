@@ -104,11 +104,11 @@ export default function AdminDashboardPage() {
     }
   }, [admin, authLoading]);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (skipCache = false) => {
     setLoading(true);
 
     try {
-      const data = await getDashboardStats(5);
+      const data = await getDashboardStats(5, { skipCache });
       if (data?.stats) {
         setStats({
           todayOrders: Number(data.stats.todayOrders) || 0,
@@ -140,7 +140,7 @@ export default function AdminDashboardPage() {
 
   // 补货成功后刷新数据
   const handleRestockSuccess = () => {
-    loadDashboardData();
+    loadDashboardData(true);
   };
 
   const getStatusLabel = (status: string) => {
@@ -191,7 +191,7 @@ export default function AdminDashboardPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={loadDashboardData}
+                onClick={() => loadDashboardData(true)}
               >
                 刷新数据
               </Button>

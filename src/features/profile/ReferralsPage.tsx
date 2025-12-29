@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Users, Copy, Gift, CheckCircle2, Share2, Sparkles } from 'lucide-react';
 import { Toast } from '@/components';
+import PageLoading from '@/components/loading/PageLoading';
 import { getReferrals } from '@/services/profileService';
 
 interface ReferralStats {
@@ -116,11 +117,7 @@ export default function ReferralsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-ink">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
-      </div>
-    );
+    return <PageLoading surface="dark" />;
   }
 
   return (

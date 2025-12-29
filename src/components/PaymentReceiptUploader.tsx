@@ -13,9 +13,10 @@
  */
 
 import React, { useState, useRef } from 'react';
-import { Upload, Image as ImageIcon, X, Check, Loader2, AlertCircle } from 'lucide-react';
+import { Upload, Image as ImageIcon, X, Check, AlertCircle } from 'lucide-react';
 import { uploadImage, deleteImage } from '@/services/imageUploadService';
 import { toast } from 'sonner';
+import LoadingSpinner from '@/components/loading/LoadingSpinner';
 
 interface PaymentReceiptUploaderProps {
   paymentId: string;
@@ -181,7 +182,7 @@ export default function PaymentReceiptUploader({
 
           {uploading ? (
             <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-12 w-12 animate-spin text-accent" />
+              <LoadingSpinner size="lg" className="w-12 h-12" />
               <p className="text-sm text-text-secondary">上传中...</p>
             </div>
           ) : (

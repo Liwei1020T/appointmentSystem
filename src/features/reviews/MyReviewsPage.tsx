@@ -12,12 +12,12 @@ import { useRouter } from 'next/navigation';
 import { MessageSquare, Clock, Star, ChevronRight, Sparkles } from 'lucide-react';
 import { getUserReviews, getPendingReviewOrders, OrderReview, PendingReviewOrder } from '@/services/reviewService';
 import ReviewCard from '@/components/ReviewCard';
-import Spinner from '@/components/Spinner';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
 import PageHeader from '@/components/layout/PageHeader';
+import SectionLoading from '@/components/loading/SectionLoading';
 
 type TabType = 'submitted' | 'pending';
 
@@ -109,9 +109,7 @@ export default function MyReviewsPage() {
 
         {/* 加载状态 */}
         {loading && (
-          <div className="flex justify-center py-16">
-            <Spinner size="lg" />
-          </div>
+          <SectionLoading label="加载评价..." minHeightClassName="min-h-[240px]" />
         )}
 
         {/* 错误提示 */}

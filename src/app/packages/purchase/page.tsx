@@ -4,6 +4,7 @@
 
 import { Metadata } from 'next';
 import PackagePurchaseFlow from '@/features/packages/PackagePurchaseFlow';
+import PageLoading from '@/components/loading/PageLoading';
 import { Suspense } from 'react';
 
 export const metadata: Metadata = {
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function PackagePurchaseRoute() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageLoading />}>
       <PackagePurchaseFlow />
     </Suspense>
   );

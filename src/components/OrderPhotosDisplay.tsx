@@ -8,7 +8,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Spinner from '@/components/Spinner';
+import SectionLoading from '@/components/loading/SectionLoading';
 import { Camera, ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react';
 import { getOrderPhotos, OrderPhoto } from '@/services/orderPhotosService';
 
@@ -83,10 +83,7 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
   if (loading) {
     return (
       <div className="bg-ink-surface rounded-lg border border-border-subtle p-6">
-        <div className="flex items-center justify-center py-12">
-          <Spinner size="md" />
-          <span className="ml-2 text-text-secondary">加载照片中...</span>
-        </div>
+        <SectionLoading label="加载照片中..." minHeightClassName="min-h-[180px]" />
       </div>
     );
   }

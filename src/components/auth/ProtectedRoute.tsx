@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { isAdminRole } from '@/lib/roles';
+import PageLoading from '@/components/loading/PageLoading';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -32,11 +33,7 @@ export default function ProtectedRoute({
   }, [session, status, requireAdmin, router]);
 
   if (status === 'loading') {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-text-secondary">加载中...</div>
-      </div>
-    );
+    return <PageLoading />;
   }
 
   if (!session) {

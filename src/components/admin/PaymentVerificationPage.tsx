@@ -20,6 +20,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { confirmCashPayment, confirmPayment, getPendingPayments, rejectPayment } from '@/services/paymentService';
 import { formatAmount } from '@/lib/payment-helpers';
 import { Badge, Button, Card, Modal, Toast } from '@/components';
+import PageLoading from '@/components/loading/PageLoading';
 
 interface PaymentUser {
   id: string;
@@ -110,10 +111,10 @@ export default function PaymentVerificationPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (skipCache = false) => {
     setLoading(true);
     try {
-      const data = await getPendingPayments(page, 10);
+      const data = await getPendingPayments(page, 10, { skipCache });
       setPayments(data.payments || []);
       setTotalPages(data.pagination?.totalPages || 1);
     } catch (error) {
@@ -163,11 +164,7 @@ export default function PaymentVerificationPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="text-text-secondary">加载中...</div>
-      </div>
-    );
+    return <PageLoading surface="dark" />;
   }
 
   return (
@@ -184,7 +181,7 @@ export default function PaymentVerificationPage() {
             <Badge variant="neutral" size="sm">无凭证 {paymentSummary.withoutProof}</Badge>
           </div>
         </div>
-        <Button variant="secondary" size="sm" onClick={fetchPayments}>
+        <Button variant="secondary" size="sm" onClick={() => fetchPayments(true)}>
           刷新列表
         </Button>
       </div>

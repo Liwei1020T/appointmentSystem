@@ -4,6 +4,7 @@
  */
 
 import { getApiErrorMessage } from '@/services/apiClient';
+import { cachedRequest, invalidateRequestCacheByPrefix } from '@/services/requestCache';
 
 export interface User {
   id: string;
@@ -36,47 +37,51 @@ export async function getAllUsers(filters?: {
   page?: number;
   pageSize?: number;
 }): Promise<{ users: User[]; totalCount: number; error: string | null }> {
-  try {
-    const params = new URLSearchParams();
-    if (filters?.role && filters.role !== 'all') params.append('role', filters.role);
-    if (filters?.status && filters.status !== 'all') params.append('status', filters.status);
-    if (filters?.searchTerm) params.append('search', filters.searchTerm);
-    if (filters?.page) params.append('page', filters.page.toString());
-    if (filters?.pageSize) params.append('limit', filters.pageSize.toString());
+  const params = new URLSearchParams();
+  if (filters?.role && filters.role !== 'all') params.append('role', filters.role);
+  if (filters?.status && filters.status !== 'all') params.append('status', filters.status);
+  if (filters?.searchTerm) params.append('search', filters.searchTerm);
+  if (filters?.page) params.append('page', filters.page.toString());
+  if (filters?.pageSize) params.append('limit', filters.pageSize.toString());
+  const query = params.toString();
+  const cacheKey = `admin:users:list:${query || 'all'}`;
 
-    const response = await fetch(`/api/admin/users?${params.toString()}`);
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      return { users: [], totalCount: 0, error: getApiErrorMessage(data, 'Failed to fetch users') };
+  return cachedRequest(cacheKey, async () => {
+    try {
+      const response = await fetch(`/api/admin/users?${query}`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return { users: [], totalCount: 0, error: getApiErrorMessage(data, 'Failed to fetch users') };
+      }
+      const payload = data?.data ?? data;
+      const rawUsers = Array.isArray(payload?.users) ? payload.users : [];
+      const normalizedUsers: User[] = rawUsers.map((u: any) => ({
+        id: u.id,
+        email: u.email,
+        phone: u.phone,
+        points: Number(u.points ?? 0) || 0,
+        role: u.role,
+        referralCode: u.referralCode,
+        referral_code: u.referralCode,
+        referredBy: u.referredBy,
+        referred_by: u.referredBy,
+        fullName: u.fullName,
+        full_name: u.fullName,
+        createdAt: u.createdAt,
+        created_at: u.createdAt,
+        updatedAt: u.updatedAt,
+        updated_at: u.updatedAt,
+        // Not modeled yet
+        isBlocked: false,
+        is_blocked: false,
+      }));
+
+      const totalCount = Number(payload?.pagination?.total ?? payload?.total ?? 0) || 0;
+      return { users: normalizedUsers, totalCount, error: null };
+    } catch (error: any) {
+      return { users: [], totalCount: 0, error: error.message || 'Failed to fetch users' };
     }
-    const payload = data?.data ?? data;
-    const rawUsers = Array.isArray(payload?.users) ? payload.users : [];
-    const normalizedUsers: User[] = rawUsers.map((u: any) => ({
-      id: u.id,
-      email: u.email,
-      phone: u.phone,
-      points: Number(u.points ?? 0) || 0,
-      role: u.role,
-      referralCode: u.referralCode,
-      referral_code: u.referralCode,
-      referredBy: u.referredBy,
-      referred_by: u.referredBy,
-      fullName: u.fullName,
-      full_name: u.fullName,
-      createdAt: u.createdAt,
-      created_at: u.createdAt,
-      updatedAt: u.updatedAt,
-      updated_at: u.updatedAt,
-      // Not modeled yet
-      isBlocked: false,
-      is_blocked: false,
-    }));
-
-    const totalCount = Number(payload?.pagination?.total ?? payload?.total ?? 0) || 0;
-    return { users: normalizedUsers, totalCount, error: null };
-  } catch (error: any) {
-    return { users: [], totalCount: 0, error: error.message || 'Failed to fetch users' };
-  }
+  }, { ttlMs: 15000 });
 }
 
 export async function getUserById(userId: string): Promise<{ user: User | null; error: string | null }> {
@@ -121,6 +126,9 @@ export async function updateUser(userId: string, data: Partial<User>): Promise<b
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
+    if (response.ok) {
+      invalidateRequestCacheByPrefix('admin:users');
+    }
     return response.ok;
   } catch (error) {
     console.error('Failed to update user:', error);
@@ -135,6 +143,9 @@ export async function addPointsToUser(userId: string, points: number, reason: st
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ points, reason }),
     });
+    if (response.ok) {
+      invalidateRequestCacheByPrefix('admin:users');
+    }
     return response.ok;
   } catch (error) {
     console.error('Failed to add points:', error);
@@ -159,7 +170,15 @@ export interface UserOrder {
   usePackage?: boolean;
   createdAt: Date;
   created_at?: Date;
-  items: { name: string; quantity: number; price: number }[];
+  items: {
+    id?: string;
+    name?: string;
+    quantity?: number;
+    price?: number;
+    tensionVertical?: number;
+    tensionHorizontal?: number;
+    string?: { brand: string; model: string };
+  }[];
 }
 
 export async function getUserOrders(userId: string, filters?: {
@@ -318,6 +337,7 @@ export async function updateUserPoints(userId: string, points: number, reason: s
       return { success: false, error: getApiErrorMessage(data, 'Failed to update user points') };
     }
     const payload = data?.data ?? data;
+    invalidateRequestCacheByPrefix('admin:users');
     return { success: true, newBalance: payload?.newBalance, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to update user points' };
@@ -338,6 +358,7 @@ export async function updateUserRole(userId: string, role: string): Promise<{ su
     if (!response.ok) {
       return { success: false, error: getApiErrorMessage(data, 'Failed to update user role') };
     }
+    invalidateRequestCacheByPrefix('admin:users');
     return { success: true, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to update user role' };
@@ -358,6 +379,7 @@ export async function blockUser(userId: string, blocked: boolean, reason?: strin
     if (!response.ok) {
       return { success: false, error: getApiErrorMessage(data, 'Failed to update user block status') };
     }
+    invalidateRequestCacheByPrefix('admin:users');
     return { success: true, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to update user block status' };
@@ -395,10 +417,41 @@ export interface UserStats {
 }
 
 export async function getUserStats(): Promise<{ data: UserStats; error: string | null }> {
-  try {
-    const response = await fetch('/api/admin/users/stats');
-    const data = await response.json();
-    if (!response.ok) {
+  const cacheKey = 'admin:users:stats';
+
+  return cachedRequest(cacheKey, async () => {
+    try {
+      const response = await fetch('/api/admin/users/stats');
+      const data = await response.json();
+      if (!response.ok) {
+        return { 
+          data: { 
+            totalUsers: 0, 
+            newUsersToday: 0, 
+            newUsersThisWeek: 0, 
+            newUsersThisMonth: 0, 
+            activeUsersToday: 0, 
+            activeUsersThisWeek: 0, 
+            blockedUsers: 0, 
+            usersByRole: [] 
+          }, 
+          error: getApiErrorMessage(data, 'Failed to fetch user stats') 
+        };
+      }
+      return { 
+        data: data.data || { 
+          totalUsers: 0, 
+          newUsersToday: 0, 
+          newUsersThisWeek: 0, 
+          newUsersThisMonth: 0, 
+          activeUsersToday: 0, 
+          activeUsersThisWeek: 0, 
+          blockedUsers: 0, 
+          usersByRole: [] 
+        }, 
+        error: null 
+      };
+    } catch (error: any) {
       return { 
         data: { 
           totalUsers: 0, 
@@ -410,35 +463,8 @@ export async function getUserStats(): Promise<{ data: UserStats; error: string |
           blockedUsers: 0, 
           usersByRole: [] 
         }, 
-        error: getApiErrorMessage(data, 'Failed to fetch user stats') 
+        error: error.message || 'Failed to fetch user stats' 
       };
     }
-    return { 
-      data: data.data || { 
-        totalUsers: 0, 
-        newUsersToday: 0, 
-        newUsersThisWeek: 0, 
-        newUsersThisMonth: 0, 
-        activeUsersToday: 0, 
-        activeUsersThisWeek: 0, 
-        blockedUsers: 0, 
-        usersByRole: [] 
-      }, 
-      error: null 
-    };
-  } catch (error: any) {
-    return { 
-      data: { 
-        totalUsers: 0, 
-        newUsersToday: 0, 
-        newUsersThisWeek: 0, 
-        newUsersThisMonth: 0, 
-        activeUsersToday: 0, 
-        activeUsersThisWeek: 0, 
-        blockedUsers: 0, 
-        usersByRole: [] 
-      }, 
-      error: error.message || 'Failed to fetch user stats' 
-    };
-  }
+  }, { ttlMs: 20000 });
 }

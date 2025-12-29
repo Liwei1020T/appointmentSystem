@@ -12,6 +12,7 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, Package, RefreshCw } from 'lucide-react';
 import { checkLowStock, type StringInventory } from '@/services/inventoryService';
+import InlineLoading from '@/components/loading/InlineLoading';
 
 interface LowStockAlertProps {
   threshold?: number; // 预警阈值，默认 3
@@ -85,9 +86,8 @@ export default function LowStockAlert({ threshold = 3, onRestockClick }: LowStoc
 
       {/* 加载状态 */}
       {loading && (
-        <div className="text-center py-4 text-text-secondary">
-          <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" />
-          <p className="text-sm">加载中...</p>
+        <div className="flex justify-center py-4">
+          <InlineLoading label="加载中..." size="sm" />
         </div>
       )}
 

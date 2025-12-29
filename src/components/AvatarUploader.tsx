@@ -16,8 +16,9 @@
 
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
-import { Camera, Upload, X, Loader2, User } from 'lucide-react';
+import { Camera, Upload, X, User } from 'lucide-react';
 import { uploadAvatar, deleteImage } from '@/services/imageUploadService';
+import LoadingSpinner from '@/components/loading/LoadingSpinner';
 
 interface AvatarUploaderProps {
   userId: string;
@@ -192,7 +193,7 @@ export default function AvatarUploader({
         {/* 上传中遮罩 */}
         {isUploading && (
           <div className="absolute inset-0 bg-ink/60 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 text-text-primary animate-spin" />
+            <LoadingSpinner size="md" tone="inverse" className="w-8 h-8" />
           </div>
         )}
 

@@ -10,6 +10,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Star, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { getFeaturedReviews } from '@/services/reviewService';
+import { Skeleton } from '@/components';
 
 interface Review {
   id: string;
@@ -82,7 +83,43 @@ export default function FeaturedReviews() {
     }
   };
 
-  if (loading || reviews.length === 0) {
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+              <Skeleton variant="circular" className="w-4 h-4" />
+            </div>
+            <Skeleton className="h-4 w-20" />
+          </div>
+          <Skeleton className="h-4 w-14" />
+        </div>
+
+        <div className="flex gap-3 px-5 py-4 overflow-x-hidden">
+          {[1, 2, 3].map((item) => (
+            <div key={item} className="flex-shrink-0 w-[280px]">
+              <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 space-y-3">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Skeleton key={star} className="w-3.5 h-3.5" />
+                  ))}
+                </div>
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-4/5" />
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-3 w-10" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (reviews.length === 0) {
     return null;
   }
 

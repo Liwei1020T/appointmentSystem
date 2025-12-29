@@ -5,6 +5,7 @@
 import { Metadata } from 'next';
 import { Suspense } from 'react';
 import PackagesCenter from '@/features/packages/PackagesCenter';
+import PageLoading from '@/components/loading/PageLoading';
 
 export const metadata: Metadata = {
   title: '套餐中心 | String Service Platform',
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function PackagesRoute() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageLoading />}>
       <PackagesCenter />
     </Suspense>
   );

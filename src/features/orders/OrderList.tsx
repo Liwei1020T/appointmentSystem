@@ -22,7 +22,6 @@ import { Order } from '@/types';
 import { OrderStatus } from '@/components/OrderStatusBadge';
 import OrderStatusBadge from '@/components/OrderStatusBadge';
 import Card from '@/components/Card';
-import Spinner from '@/components/Spinner';
 import Button from '@/components/Button';
 import Toast from '@/components/Toast';
 import { OrderListSkeleton } from '@/components/skeletons';

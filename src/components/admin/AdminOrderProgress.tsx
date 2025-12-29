@@ -11,11 +11,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Clock, CheckCircle, AlertCircle, PlayCircle, XCircle, Loader2 } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, PlayCircle, XCircle } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { updateOrderStatus } from '@/services/adminOrderService';
 import { completeOrder } from '@/services/completeOrderService';
 import { toast } from 'sonner';
+import InlineLoading from '@/components/loading/InlineLoading';
 
 interface AdminOrderProgressProps {
   orderId: string;
@@ -307,10 +308,7 @@ export default function AdminOrderProgress({
                     )}
 
                     {isActionActive && updating && (
-                      <div className="flex items-center gap-2 text-sm text-text-secondary">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        更新中...
-                      </div>
+                      <InlineLoading label="更新中..." />
                     )}
                   </div>
                 </div>

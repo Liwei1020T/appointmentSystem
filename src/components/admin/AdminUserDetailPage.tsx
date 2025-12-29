@@ -34,6 +34,7 @@ import {
   type PointsLog,
   type UserRole,
 } from '@/services/adminUserService';
+import PageLoading from '@/components/loading/PageLoading';
 
 interface AdminUserDetailPageProps {
   userId: string;
@@ -196,6 +197,48 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
     );
   }
 
+  function getOrderStringSummary(order: UserOrder) {
+    if (order.items && order.items.length > 0) {
+      return {
+        title: '多球拍订单',
+        subtitle: `${order.items.length} 支球拍`,
+      };
+    }
+
+    return {
+      title: order.string?.name || '-',
+      subtitle: order.string?.brand || '-',
+    };
+  }
+
+  function getOrderTensionLabel(order: UserOrder) {
+    if (order.tension) {
+      return `${order.tension} lbs`;
+    }
+
+    if (!order.items || order.items.length === 0) {
+      return '-';
+    }
+
+    const normalized = order.items.map((item) => ({
+      vertical: item.tensionVertical ?? null,
+      horizontal: item.tensionHorizontal ?? null,
+    }));
+    const first = normalized[0];
+    const allSame = normalized.every(
+      (value) => value.vertical === first.vertical && value.horizontal === first.horizontal
+    );
+
+    if (allSame && first.vertical) {
+      if (first.horizontal && first.horizontal !== first.vertical) {
+        return `${first.vertical}/${first.horizontal} lbs`;
+      }
+      return `${first.vertical} lbs`;
+    }
+
+    return '多拉力';
+  }
+
   function getVoucherStatusBadge(status: string) {
     const badges = {
       available: 'bg-success/15 text-success',
@@ -237,11 +280,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
   }
 
   if (loading && !user) {
-    return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <div className="text-center py-12 text-text-tertiary">加载中...</div>
-      </div>
-    );
+    return <PageLoading surface="dark" />;
   }
 
   if (error || !user) {
@@ -362,37 +401,61 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
               <div className="text-center py-8 text-text-tertiary">暂无订单</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-ink-elevated">
+                <table className="w-full min-w-[720px]">
+                  <thead className="bg-ink-elevated text-[11px] uppercase tracking-wider text-text-tertiary">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">球线</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">拉力</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">价格</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">状态</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">使用套餐</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase">时间</th>
+                      <th className="px-4 py-3 text-left font-semibold">球线</th>
+                      <th className="px-4 py-3 text-left font-semibold">拉力</th>
+                      <th className="px-4 py-3 text-right font-semibold">价格</th>
+                      <th className="px-4 py-3 text-left font-semibold">状态</th>
+                      <th className="px-4 py-3 text-center font-semibold">使用套餐</th>
+                      <th className="px-4 py-3 text-right font-semibold">时间</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-subtle">
-                    {orders.map((order) => (
-                      <tr key={order.id} className="hover:bg-ink-elevated">
-                        <td className="px-4 py-3">
-                          <div className="font-medium">{order.string?.name || '-'}</div>
-                          <div className="text-sm text-text-tertiary">{order.string?.brand || '-'}</div>
-                        </td>
-                        <td className="px-4 py-3">{order.tension || '-'} lbs</td>
-                        <td className="px-4 py-3 font-semibold">{formatCurrency(order.price || order.totalAmount || 0)}</td>
-                        <td className="px-4 py-3">{getStatusBadge(order.status)}</td>
-                        <td className="px-4 py-3">
-                          {order.use_package ? (
-                            <span className="text-success text-xs">✓</span>
-                          ) : (
-                            <span className="text-text-tertiary text-xs">-</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-sm">{formatDate((order.created_at || order.createdAt) as any)}</td>
-                      </tr>
-                    ))}
+                    {orders.map((order) => {
+                      const orderString = getOrderStringSummary(order);
+                      const tensionLabel = getOrderTensionLabel(order);
+                      const isMultiRacket = order.items && order.items.length > 0;
+                      const orderCode = order.orderNumber || order.order_number || order.id.slice(0, 8).toUpperCase();
+                      return (
+                        <tr
+                          key={order.id}
+                          className="hover:bg-ink-elevated/80 transition-colors cursor-pointer"
+                          onClick={() => router.push(`/admin/orders/${order.id}`)}
+                        >
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-text-primary">{orderString.title}</span>
+                              {isMultiRacket && (
+                                <span className="rounded-full bg-accent/15 text-accent px-2 py-0.5 text-[10px] font-semibold">
+                                  多球拍
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-text-tertiary">{orderString.subtitle}</div>
+                            <div className="text-[11px] text-text-tertiary font-mono">#{orderCode}</div>
+                          </td>
+                          <td className={`px-4 py-3 font-mono text-sm ${tensionLabel === '多拉力' ? 'text-text-tertiary' : 'text-text-primary'}`}>
+                            {tensionLabel}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono font-semibold text-text-primary">
+                            {formatCurrency(order.price || order.totalAmount || 0)}
+                          </td>
+                          <td className="px-4 py-3">{getStatusBadge(order.status)}</td>
+                          <td className="px-4 py-3 text-center">
+                            {order.use_package ? (
+                              <span className="inline-flex items-center gap-1 text-success text-xs font-semibold">✓</span>
+                            ) : (
+                              <span className="text-text-tertiary text-xs">—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right text-sm text-text-secondary">
+                            {formatDate((order.created_at || order.createdAt) as any)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

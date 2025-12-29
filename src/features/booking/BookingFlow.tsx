@@ -9,8 +9,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Card, Badge, Toast, Spinner, Checkbox } from '@/components';
+import { Button, Card, Badge, Toast, Checkbox } from '@/components';
 import { useSession } from 'next-auth/react';
+import PageLoading from '@/components/loading/PageLoading';
 import StringSelector from '@/features/booking/StringSelector';
 import TensionInput from '@/features/booking/TensionInput';
 import VoucherSelector from '@/features/booking/VoucherSelector';
@@ -249,11 +250,7 @@ export default function BookingFlow() {
   };
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-ink flex items-center justify-center">
-        <Spinner size="large" />
-      </div>
-    );
+    return <PageLoading surface="dark" />;
   }
 
   if (!user) {

@@ -4,6 +4,7 @@
  */
 
 import { getApiErrorMessage } from '@/services/apiClient';
+import { cachedRequest, invalidateRequestCacheByPrefix } from '@/services/requestCache';
 
 export type VoucherType = 'FIXED' | 'PERCENTAGE' | 'fixed' | 'percentage' | 'fixed_amount' | 'percentage_off' | string;
 export type VoucherStatus = 'all' | 'active' | 'inactive' | 'expired' | string;
@@ -97,28 +98,31 @@ export interface GetVouchersFilter {
 }
 
 export async function getAllVouchers(filters?: GetVouchersFilter): Promise<{ vouchers: Voucher[]; data?: Voucher[]; error: string | null }> {
-  try {
-    const params = new URLSearchParams();
-    if (filters?.status && filters.status !== 'all') params.append('status', filters.status);
-    if (filters?.type) params.append('type', filters.type);
-    if (filters?.searchTerm) params.append('search', filters.searchTerm);
+  const params = new URLSearchParams();
+  if (filters?.status && filters.status !== 'all') params.append('status', filters.status);
+  if (filters?.type) params.append('type', filters.type);
+  if (filters?.searchTerm) params.append('search', filters.searchTerm);
 
-    const queryString = params.toString();
-    const url = queryString ? `/api/admin/vouchers?${queryString}` : '/api/admin/vouchers';
+  const queryString = params.toString();
+  const url = queryString ? `/api/admin/vouchers?${queryString}` : '/api/admin/vouchers';
+  const cacheKey = `admin:vouchers:list:${queryString || 'all'}`;
 
-    const response = await fetch(url);
-    const result = await response.json();
-    if (!response.ok || result?.ok === false || result?.success === false) {
-      return { vouchers: [], data: [], error: getApiErrorMessage(result, 'Failed to fetch vouchers') };
+  return cachedRequest(cacheKey, async () => {
+    try {
+      const response = await fetch(url);
+      const result = await response.json();
+      if (!response.ok || result?.ok === false || result?.success === false) {
+        return { vouchers: [], data: [], error: getApiErrorMessage(result, 'Failed to fetch vouchers') };
+      }
+      const vouchers = Array.isArray(result?.data)
+        ? (result.data as any[]).map(normalizeVoucher)
+        : [];
+      return { vouchers, data: vouchers, error: null };
+    } catch (error) {
+      console.error('Failed to fetch vouchers:', error);
+      return { vouchers: [], data: [], error: 'Failed to fetch vouchers' };
     }
-    const vouchers = Array.isArray(result?.data)
-      ? (result.data as any[]).map(normalizeVoucher)
-      : [];
-    return { vouchers, data: vouchers, error: null };
-  } catch (error) {
-    console.error('Failed to fetch vouchers:', error);
-    return { vouchers: [], data: [], error: 'Failed to fetch vouchers' };
-  }
+  }, { ttlMs: 20000 });
 }
 
 export async function getVoucherById(voucherId: string): Promise<{ voucher: Voucher | null; data?: Voucher | null; error: string | null }> {
@@ -153,6 +157,7 @@ export async function createVoucher(data: Partial<Voucher>): Promise<{ voucher: 
     }
 
     const voucher = normalizeVoucher(result?.data) || null;
+    invalidateRequestCacheByPrefix('admin:vouchers');
     return { voucher, success: true, error: null };
   } catch (error) {
     console.error('Failed to create voucher:', error);
@@ -175,6 +180,7 @@ export async function updateVoucher(
       return { voucher: null, success: false, error: getApiErrorMessage(result, 'Failed to update voucher') };
     }
     const voucher = normalizeVoucher(result?.data) || null;
+    invalidateRequestCacheByPrefix('admin:vouchers');
     return { voucher, success: true, error: null };
   } catch (error) {
     console.error('Failed to update voucher:', error);
@@ -203,6 +209,7 @@ export async function distributeVoucher(
       return { success: false, error: getApiErrorMessage(raw, 'Failed to distribute voucher') };
     }
     const payload = raw?.data ?? raw;
+    invalidateRequestCacheByPrefix('admin:vouchers');
     return { success: true, count: payload.count || payload.distributed || 0, error: null };
   } catch (error) {
     console.error('Failed to distribute voucher:', error);
@@ -221,6 +228,7 @@ export async function deleteVoucher(voucherId: string): Promise<{ success: boole
     if (!response.ok) {
       return { success: false, error: getApiErrorMessage(result, 'Failed to delete voucher') };
     }
+    invalidateRequestCacheByPrefix('admin:vouchers');
     return { success: true, error: null };
   } catch (error) {
     console.error('Failed to delete voucher:', error);
@@ -277,6 +285,7 @@ export async function toggleVoucherStatus(voucherId: string, active?: boolean): 
     if (!response.ok || result?.ok === false || result?.success === false) {
       return { success: false, error: getApiErrorMessage(result, 'Failed to toggle voucher status') };
     }
+    invalidateRequestCacheByPrefix('admin:vouchers');
     return { success: true, error: null };
   } catch (error) {
     console.error('Failed to toggle voucher status:', error);
@@ -309,18 +318,22 @@ export interface VoucherStats {
 }
 
 export async function getVoucherStats(): Promise<{ stats: VoucherStats; data?: VoucherStats; error: string | null }> {
-  try {
-    const response = await fetch('/api/admin/vouchers/stats');
-    const raw = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      const fallback = { totalVouchers: 0, activeVouchers: 0, totalRedemptions: 0, totalDiscount: 0 };
-      return { stats: fallback, data: fallback, error: getApiErrorMessage(raw, 'Failed to fetch voucher stats') };
+  const cacheKey = 'admin:vouchers:stats';
+
+  return cachedRequest(cacheKey, async () => {
+    try {
+      const response = await fetch('/api/admin/vouchers/stats');
+      const raw = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const fallback = { totalVouchers: 0, activeVouchers: 0, totalRedemptions: 0, totalDiscount: 0 };
+        return { stats: fallback, data: fallback, error: getApiErrorMessage(raw, 'Failed to fetch voucher stats') };
+      }
+      const payload = raw?.data ?? raw;
+      return { stats: payload, data: payload, error: null };
+    } catch (error) {
+      console.error('Failed to fetch voucher stats:', error);
+      const defaultStats = { totalVouchers: 0, activeVouchers: 0, totalRedemptions: 0, totalDiscount: 0 };
+      return { stats: defaultStats, data: defaultStats, error: 'Failed to fetch voucher stats' };
     }
-    const payload = raw?.data ?? raw;
-    return { stats: payload, data: payload, error: null };
-  } catch (error) {
-    console.error('Failed to fetch voucher stats:', error);
-    const defaultStats = { totalVouchers: 0, activeVouchers: 0, totalRedemptions: 0, totalDiscount: 0 };
-    return { stats: defaultStats, data: defaultStats, error: 'Failed to fetch voucher stats' };
-  }
+  }, { ttlMs: 20000 });
 }

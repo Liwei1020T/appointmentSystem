@@ -19,6 +19,7 @@ import { getAllOrders, getOrderStats, searchOrders } from '@/services/adminOrder
 import type { AdminOrder, OrderStatus, OrderStats } from '@/services/adminOrderService';
 import { generateShortCode, formatDate } from '@/lib/utils';
 import { Button, Input, Tabs } from '@/components';
+import SectionLoading from '@/components/loading/SectionLoading';
 import { Search } from 'lucide-react';
 
 type FilterStatus = 'all' | OrderStatus;
@@ -250,10 +251,7 @@ export default function AdminOrderListPage() {
       {/* Order List */}
       <div className="max-w-7xl mx-auto px-6 py-6">
         {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
-            <p className="text-text-tertiary mt-4">加载中...</p>
-          </div>
+          <SectionLoading label="加载订单..." minHeightClassName="min-h-[240px]" />
         ) : error ? (
           <div className="bg-danger/15 border border-danger/40 rounded-lg p-4 text-center">
             <p className="text-danger">{error}</p>

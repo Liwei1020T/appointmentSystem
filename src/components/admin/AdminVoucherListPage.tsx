@@ -30,6 +30,7 @@ import {
   type VoucherStats,
 } from '@/services/adminVoucherService';
 import { Badge, Button, Card, Input, StatsCard, Tabs } from '@/components';
+import SectionLoading from '@/components/loading/SectionLoading';
 import { Search } from 'lucide-react';
 
 export default function AdminVoucherListPage() {
@@ -321,8 +322,8 @@ export default function AdminVoucherListPage() {
 
         {/* Loading/Error States */}
         {loading && (
-          <Card padding="lg" className="text-center text-text-tertiary">
-            加载中...
+          <Card padding="lg">
+            <SectionLoading label="加载中..." minHeightClassName="min-h-[160px]" />
           </Card>
         )}
 

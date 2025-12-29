@@ -11,7 +11,8 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { Card, Badge, Spinner, Modal, Button, Tabs } from '@/components';
+import { Card, Badge, Modal, Button, Tabs } from '@/components';
+import InlineLoading from '@/components/loading/InlineLoading';
 import {
   getUserVouchers,
   calculateDiscount,
@@ -105,8 +106,7 @@ export default function VoucherSelector({ orderAmount, selectedVoucher, onSelect
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8 bg-ink-elevated/30 rounded-2xl border border-dashed border-border-subtle">
-        <Spinner size="small" />
-        <span className="ml-3 text-sm text-text-tertiary">正在寻找优惠券...</span>
+        <InlineLoading label="正在寻找优惠券..." />
       </div>
     );
   }

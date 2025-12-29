@@ -34,6 +34,7 @@ import type {
   NotificationStats as ServiceNotificationStats,
   UserDevice as ServiceUserDevice,
 } from '@/services/notificationService';
+import SectionLoading from '@/components/loading/SectionLoading';
 
 type TabType = 'logs' | 'templates' | 'stats' | 'devices';
 
@@ -267,10 +268,7 @@ export default function AdminNotificationsPage() {
 
           <div className="p-6">
             {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
-                <p className="text-text-tertiary mt-4">Loading...</p>
-              </div>
+              <SectionLoading label="Loading..." minHeightClassName="min-h-[240px]" />
             ) : (
               <>
                 {/* Tab 1: Notification Logs */}

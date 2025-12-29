@@ -38,6 +38,15 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
           usePackage: true,
           createdAt: true,
           string: { select: { brand: true, model: true } },
+          items: {
+            select: {
+              id: true,
+              tensionVertical: true,
+              tensionHorizontal: true,
+              price: true,
+              string: { select: { brand: true, model: true } },
+            },
+          },
         },
       }),
       prisma.order.count({ where }),
@@ -58,7 +67,15 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       string: o.string
         ? { name: `${o.string.brand} ${o.string.model}`, brand: o.string.brand }
         : undefined,
-      items: [],
+      items: (o.items || []).map((item) => ({
+        id: item.id,
+        tensionVertical: item.tensionVertical,
+        tensionHorizontal: item.tensionHorizontal,
+        price: Number(item.price ?? 0),
+        string: item.string
+          ? { brand: item.string.brand, model: item.string.model }
+          : undefined,
+      })),
     }));
 
     return successResponse(
@@ -74,4 +91,3 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     return handleApiError(error);
   }
 }
-

@@ -1,4 +1,5 @@
 import { apiRequest } from '@/services/apiClient';
+import { cachedRequest, type RequestCacheOptions } from '@/services/requestCache';
 
 export interface DashboardStats {
   todayOrders: number;
@@ -24,7 +25,16 @@ export interface DashboardStatsResponse {
   recentOrders: RecentOrder[];
 }
 
-export async function getDashboardStats(limit = 5): Promise<DashboardStatsResponse> {
+export async function getDashboardStats(
+  limit = 5,
+  options?: RequestCacheOptions
+): Promise<DashboardStatsResponse> {
   const query = limit ? `?limit=${limit}` : '';
-  return apiRequest<DashboardStatsResponse>(`/api/admin/dashboard-stats${query}`);
+  const cacheKey = `admin:dashboard:stats:${limit || 'all'}`;
+
+  return cachedRequest(
+    cacheKey,
+    () => apiRequest<DashboardStatsResponse>(`/api/admin/dashboard-stats${query}`),
+    { ttlMs: 8000, skipCache: options?.skipCache }
+  );
 }

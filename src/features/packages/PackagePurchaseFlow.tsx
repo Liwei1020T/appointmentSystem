@@ -13,7 +13,7 @@ import { buyPackage, getPackageById, Package } from '@/services/packageService';
 import { uploadPaymentReceipt, PaymentMethod } from '@/services/paymentService';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
-import Spinner from '@/components/Spinner';
+import LoadingSpinner from '@/components/loading/LoadingSpinner';
 import Toast from '@/components/Toast';
 import { useSession } from 'next-auth/react';
 import PaymentReceiptUploader from '@/components/PaymentReceiptUploader';
@@ -472,7 +472,7 @@ export default function PackagePurchaseFlow() {
             {processing ? (
               <Card className="p-12 text-center">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/15 flex items-center justify-center animate-pulse">
-                  <Spinner size="lg" />
+                  <LoadingSpinner size="lg" />
                 </div>
                 <h3 className="text-lg font-semibold text-text-primary mb-2">
                   正在创建支付记录...

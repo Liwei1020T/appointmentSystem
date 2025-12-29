@@ -13,7 +13,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Card, Badge, Toast, Spinner } from '@/components';
+import { Button, Input, Card, Badge, Toast } from '@/components';
+import PageLoading from '@/components/loading/PageLoading';
 import { useSession, signOut } from 'next-auth/react';
 import { updateProfile, updatePassword } from '@/services/authService';
 import { normalizeMyPhone, validatePassword, validatePhone } from '@/lib/utils';
@@ -236,11 +237,7 @@ export default function ProfilePage() {
   };
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-ink flex items-center justify-center">
-        <Spinner size="large" />
-      </div>
-    );
+    return <PageLoading surface="dark" />;
   }
 
   if (!user) {

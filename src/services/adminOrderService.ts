@@ -4,6 +4,7 @@
  */
 
 import { apiRequest, getApiErrorMessage } from '@/services/apiClient';
+import { cachedRequest, invalidateRequestCacheByPrefix } from '@/services/requestCache';
 
 export type OrderStatus =
   | 'pending'
@@ -81,19 +82,24 @@ export async function getAllOrders(filters?: {
   page?: number;
   limit?: number;
 }): Promise<{ orders: AdminOrder[]; total: number; error: { message: string } | null }> {
-  try {
-    const params = new URLSearchParams();
-    if (filters?.status) params.set('status', filters.status);
-    if (filters?.page) params.set('page', String(filters.page));
-    if (filters?.limit) params.set('limit', String(filters.limit));
-    const payload = await apiRequest<{ orders: AdminOrder[]; pagination?: { total?: number } }>(
-      `/api/admin/orders?${params.toString()}`
-    );
-    return { orders: payload.orders || [], total: payload.pagination?.total || 0, error: null };
-  } catch (error: any) {
-    console.error('Failed to fetch orders:', error);
-    return { orders: [], total: 0, error: { message: error.message || 'Failed to fetch orders' } };
-  }
+  const params = new URLSearchParams();
+  if (filters?.status) params.set('status', filters.status);
+  if (filters?.page) params.set('page', String(filters.page));
+  if (filters?.limit) params.set('limit', String(filters.limit));
+  const query = params.toString();
+  const cacheKey = `admin:orders:list:${query || 'all'}`;
+
+  return cachedRequest(cacheKey, async () => {
+    try {
+      const payload = await apiRequest<{ orders: AdminOrder[]; pagination?: { total?: number } }>(
+        `/api/admin/orders?${query}`
+      );
+      return { orders: payload.orders || [], total: payload.pagination?.total || 0, error: null };
+    } catch (error: any) {
+      console.error('Failed to fetch orders:', error);
+      return { orders: [], total: 0, error: { message: error.message || 'Failed to fetch orders' } };
+    }
+  }, { ttlMs: 10000 });
 }
 
 export async function getOrderById(orderId: string): Promise<{ order: AdminOrder | null; error: { message: string } | null }> {
@@ -117,6 +123,8 @@ export async function updateOrderStatus(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status, notes }),
     });
+    invalidateRequestCacheByPrefix('admin:orders');
+    invalidateRequestCacheByPrefix('admin:dashboard');
     return { order, error: null };
   } catch (error: any) {
     console.error('Failed to update order status:', error);
@@ -134,6 +142,9 @@ export async function assignOrderPhotographer(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ photographerId }),
     });
+    if (response.ok) {
+      invalidateRequestCacheByPrefix('admin:orders');
+    }
     return response.ok;
   } catch (error) {
     console.error('Failed to assign photographer:', error);
@@ -162,15 +173,20 @@ export async function getOrderStats(filters?: {
   startDate?: string;
   endDate?: string;
 }): Promise<{ stats: OrderStats | null; error: string | null }> {
-  try {
-    const params = new URLSearchParams();
-    if (filters?.startDate) params.set('startDate', filters.startDate);
-    if (filters?.endDate) params.set('endDate', filters.endDate);
-    const stats = await apiRequest<OrderStats>(`/api/admin/orders/stats?${params.toString()}`);
-    return { stats: stats as OrderStats, error: null };
-  } catch (error: any) {
-    return { stats: null, error: error.message || 'Failed to fetch order stats' };
-  }
+  const params = new URLSearchParams();
+  if (filters?.startDate) params.set('startDate', filters.startDate);
+  if (filters?.endDate) params.set('endDate', filters.endDate);
+  const query = params.toString();
+  const cacheKey = `admin:orders:stats:${query || 'all'}`;
+
+  return cachedRequest(cacheKey, async () => {
+    try {
+      const stats = await apiRequest<OrderStats>(`/api/admin/orders/stats?${query}`);
+      return { stats: stats as OrderStats, error: null };
+    } catch (error: any) {
+      return { stats: null, error: error.message || 'Failed to fetch order stats' };
+    }
+  }, { ttlMs: 10000 });
 }
 
 /**
@@ -183,19 +199,24 @@ export async function searchOrders(query: string, filters?: {
   page?: number;
   limit?: number;
 }): Promise<{ orders: AdminOrder[]; total?: number; error: { message: string } | null }> {
-  try {
-    const params = new URLSearchParams();
-    params.set('q', query);
-    if (filters?.status) params.set('status', filters.status);
-    if (filters?.page) params.set('page', String(filters.page));
-    if (filters?.limit) params.set('limit', String(filters.limit));
-    const payload = await apiRequest<{ orders: AdminOrder[]; pagination?: { total?: number } }>(
-      `/api/admin/orders?${params.toString()}`
-    );
-    return { orders: payload.orders || [], total: payload.pagination?.total || 0, error: null };
-  } catch (error: any) {
-    return { orders: [], total: 0, error: { message: error.message || 'Failed to search orders' } };
-  }
+  const params = new URLSearchParams();
+  params.set('q', query);
+  if (filters?.status) params.set('status', filters.status);
+  if (filters?.page) params.set('page', String(filters.page));
+  if (filters?.limit) params.set('limit', String(filters.limit));
+  const queryString = params.toString();
+  const cacheKey = `admin:orders:search:${query}:${queryString}`;
+
+  return cachedRequest(cacheKey, async () => {
+    try {
+      const payload = await apiRequest<{ orders: AdminOrder[]; pagination?: { total?: number } }>(
+        `/api/admin/orders?${queryString}`
+      );
+      return { orders: payload.orders || [], total: payload.pagination?.total || 0, error: null };
+    } catch (error: any) {
+      return { orders: [], total: 0, error: { message: error.message || 'Failed to search orders' } };
+    }
+  }, { ttlMs: 10000 });
 }
 
 /**
@@ -215,6 +236,7 @@ export async function updateOrderPhotos(
     if (!response.ok) {
       return { success: false, error: getApiErrorMessage(data, 'Failed to update order photos') };
     }
+    invalidateRequestCacheByPrefix('admin:orders');
     return { success: true, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to update order photos' };

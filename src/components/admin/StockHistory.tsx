@@ -13,6 +13,7 @@
 import { useEffect, useState } from 'react';
 import { History, Package, TrendingDown, TrendingUp, RefreshCw, Filter } from 'lucide-react';
 import { getStockHistory, type StockHistoryEntry } from '@/services/inventoryService';
+import SectionLoading from '@/components/loading/SectionLoading';
 
 interface StockHistoryProps {
   stringId?: string; // 如果提供，只显示该球线的历史
@@ -101,10 +102,7 @@ export default function StockHistory({ stringId, limit = 50 }: StockHistoryProps
 
       {/* 加载状态 */}
       {loading && (
-        <div className="text-center py-12">
-          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-3 text-text-tertiary" />
-          <p className="text-sm text-text-tertiary">加载中...</p>
-        </div>
+        <SectionLoading label="加载中..." minHeightClassName="min-h-[180px]" />
       )}
 
       {/* 错误状态 */}

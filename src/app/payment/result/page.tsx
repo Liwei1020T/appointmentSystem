@@ -1,4 +1,5 @@
 import PaymentResultPage from '@/features/payment/PaymentResultPage';
+import PageLoading from '@/components/loading/PageLoading';
 import { Suspense } from 'react';
 
 export const metadata = {
@@ -8,7 +9,7 @@ export const metadata = {
 
 export default function PaymentPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageLoading />}>
       <PaymentResultPage />
     </Suspense>
   );

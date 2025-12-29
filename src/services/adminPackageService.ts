@@ -4,6 +4,7 @@
  */
 
 import { apiRequest } from '@/services/apiClient';
+import { cachedRequest, invalidateRequestCacheByPrefix } from '@/services/requestCache';
 
 export * from './packageService';
 
@@ -80,23 +81,27 @@ export async function getAllPackages(filters?: {
   searchTerm?: string;
   includeInactive?: boolean;
 }): Promise<{ packages: AdminPackage[]; data?: AdminPackage[]; error: string | null }> {
-  try {
-    const params = new URLSearchParams();
-    if (filters?.status && filters.status !== 'all') {
-      params.append('status', filters.status);
-    }
-    if (filters?.searchTerm) {
-      params.append('search', filters.searchTerm);
-    }
-    if (filters?.includeInactive !== false) {
-      params.append('includeInactive', 'true');
-    }
-
-    const packages = await apiRequest<AdminPackage[]>(`/api/admin/packages?${params.toString()}`);
-    return { packages, data: packages, error: null };
-  } catch (error: any) {
-    return { packages: [], data: [], error: error.message || 'Failed to fetch packages' };
+  const params = new URLSearchParams();
+  if (filters?.status && filters.status !== 'all') {
+    params.append('status', filters.status);
   }
+  if (filters?.searchTerm) {
+    params.append('search', filters.searchTerm);
+  }
+  if (filters?.includeInactive !== false) {
+    params.append('includeInactive', 'true');
+  }
+  const query = params.toString();
+  const cacheKey = `admin:packages:list:${query || 'all'}`;
+
+  return cachedRequest(cacheKey, async () => {
+    try {
+      const packages = await apiRequest<AdminPackage[]>(`/api/admin/packages?${query}`);
+      return { packages, data: packages, error: null };
+    } catch (error: any) {
+      return { packages: [], data: [], error: error.message || 'Failed to fetch packages' };
+    }
+  }, { ttlMs: 20000 });
 }
 
 /**
@@ -146,13 +151,17 @@ export async function getPackageStats(): Promise<{ stats: PackageStats; data?: P
     thisMonthRevenue: 0,
     this_month_revenue: 0,
   };
-  try {
-    const payload = await apiRequest<PackageStats>('/api/admin/packages/stats');
-    const stats = { ...defaultStats, ...payload };
-    return { stats, data: stats, error: null };
-  } catch (error: any) {
-    return { stats: defaultStats, data: defaultStats, error: error.message || 'Failed to fetch package stats' };
-  }
+  const cacheKey = 'admin:packages:stats';
+
+  return cachedRequest(cacheKey, async () => {
+    try {
+      const payload = await apiRequest<PackageStats>('/api/admin/packages/stats');
+      const stats = { ...defaultStats, ...payload };
+      return { stats, data: stats, error: null };
+    } catch (error: any) {
+      return { stats: defaultStats, data: defaultStats, error: error.message || 'Failed to fetch package stats' };
+    }
+  }, { ttlMs: 15000 });
 }
 
 /**
@@ -180,17 +189,21 @@ export async function getPackageSalesData(filters?: {
   endDate?: string;
   packageId?: string;
 }): Promise<{ salesData: PackageSalesData[]; data?: PackageSalesData[]; error: string | null }> {
-  try {
-    const params = new URLSearchParams();
-    if (filters?.startDate) params.append('startDate', filters.startDate);
-    if (filters?.endDate) params.append('endDate', filters.endDate);
-    if (filters?.packageId) params.append('packageId', filters.packageId);
+  const params = new URLSearchParams();
+  if (filters?.startDate) params.append('startDate', filters.startDate);
+  if (filters?.endDate) params.append('endDate', filters.endDate);
+  if (filters?.packageId) params.append('packageId', filters.packageId);
+  const query = params.toString();
+  const cacheKey = `admin:packages:sales:${query || 'all'}`;
 
-    const salesData = await apiRequest<PackageSalesData[]>(`/api/admin/packages/sales?${params.toString()}`);
-    return { salesData: salesData || [], data: salesData || [], error: null };
-  } catch (error: any) {
-    return { salesData: [], data: [], error: error.message || 'Failed to fetch sales data' };
-  }
+  return cachedRequest(cacheKey, async () => {
+    try {
+      const salesData = await apiRequest<PackageSalesData[]>(`/api/admin/packages/sales?${query}`);
+      return { salesData: salesData || [], data: salesData || [], error: null };
+    } catch (error: any) {
+      return { salesData: [], data: [], error: error.message || 'Failed to fetch sales data' };
+    }
+  }, { ttlMs: 30000 });
 }
 
 /**
@@ -216,6 +229,8 @@ export async function createPackage(input: CreatePackageInput): Promise<{ succes
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
+    invalidateRequestCacheByPrefix('admin:packages');
+    invalidateRequestCacheByPrefix('admin:dashboard');
     return { success: true, package: pkg, data: pkg, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to create package' };
@@ -232,6 +247,8 @@ export async function updatePackage(packageId: string, input: Partial<CreatePack
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
+    invalidateRequestCacheByPrefix('admin:packages');
+    invalidateRequestCacheByPrefix('admin:dashboard');
     return { success: true, package: pkg, data: pkg, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to update package' };
@@ -244,6 +261,8 @@ export async function updatePackage(packageId: string, input: Partial<CreatePack
 export async function deletePackage(packageId: string): Promise<{ success: boolean; error: string | null }> {
   try {
     await apiRequest(`/api/admin/packages/${packageId}`, { method: 'DELETE' });
+    invalidateRequestCacheByPrefix('admin:packages');
+    invalidateRequestCacheByPrefix('admin:dashboard');
     return { success: true, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to delete package' };
@@ -260,6 +279,8 @@ export async function togglePackageStatus(packageId: string, isActive: boolean):
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ active: isActive }),
     });
+    invalidateRequestCacheByPrefix('admin:packages');
+    invalidateRequestCacheByPrefix('admin:dashboard');
     return { success: true, error: null };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to toggle package status' };

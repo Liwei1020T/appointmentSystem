@@ -24,6 +24,7 @@ import {
   type UserRole,
   type UserStatus,
 } from '@/services/adminUserService';
+import SectionLoading from '@/components/loading/SectionLoading';
 
 export default function AdminUserListPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -262,7 +263,7 @@ export default function AdminUserListPage() {
 
       {/* Loading/Error States */}
       {loading && users.length === 0 && (
-        <div className="text-center py-12 text-text-tertiary">加载中...</div>
+        <SectionLoading label="加载用户..." minHeightClassName="min-h-[240px]" />
       )}
 
       {error && (

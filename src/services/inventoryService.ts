@@ -5,6 +5,7 @@
 
 import type { StringInventory, StockLog } from '.prisma/client';
 import { apiRequest } from '@/services/apiClient';
+import { cachedRequest, invalidateRequestCacheByPrefix } from '@/services/requestCache';
 
 export type { StringInventory, StockLog };
 export type StockChangeType = 'purchase' | 'restock' | 'adjustment' | 'return' | 'addition' | 'deduction';
@@ -30,7 +31,10 @@ export async function getInventory(activeOnly = false): Promise<StringInventory[
  * Fetch inventory list from admin endpoint.
  */
 export async function getAdminInventory(): Promise<StringInventory[]> {
-  return apiRequest<StringInventory[]>('/api/admin/inventory');
+  const cacheKey = 'admin:inventory:list';
+  return cachedRequest(cacheKey, async () => apiRequest<StringInventory[]>('/api/admin/inventory'), {
+    ttlMs: 15000,
+  });
 }
 
 /**
@@ -87,36 +91,46 @@ export async function checkStock(stringId: string, quantity: number): Promise<bo
  * Fetch all available brands.
  */
 export async function getBrands(): Promise<{ brands?: string[]; error?: string }> {
-  try {
-    const inventory = await getInventory(true);
-    const brands = new Set(inventory.map((item) => item.brand));
-    return { brands: Array.from(brands).sort() };
-  } catch (error) {
-    console.error('Error getting brands:', error);
-    return { error: 'Failed to get brands' };
-  }
+  const cacheKey = 'admin:inventory:brands';
+
+  return cachedRequest(cacheKey, async () => {
+    try {
+      const inventory = await getInventory(true);
+      const brands = new Set(inventory.map((item) => item.brand));
+      return { brands: Array.from(brands).sort() };
+    } catch (error) {
+      console.error('Error getting brands:', error);
+      return { error: 'Failed to get brands' };
+    }
+  }, { ttlMs: 60000 });
 }
 
 /**
  * Update a string inventory record (admin).
  */
 export async function updateString(id: string, data: Partial<StringInventory>): Promise<StringInventory> {
-  return apiRequest<StringInventory>(`/api/admin/inventory/${id}`, {
+  const result = await apiRequest<StringInventory>(`/api/admin/inventory/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
+  invalidateRequestCacheByPrefix('admin:inventory');
+  invalidateRequestCacheByPrefix('admin:dashboard');
+  return result;
 }
 
 /**
  * Create a new inventory item (admin).
  */
 export async function createInventoryItem(data: Record<string, unknown>): Promise<StringInventory> {
-  return apiRequest<StringInventory>('/api/admin/inventory', {
+  const result = await apiRequest<StringInventory>('/api/admin/inventory', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
+  invalidateRequestCacheByPrefix('admin:inventory');
+  invalidateRequestCacheByPrefix('admin:dashboard');
+  return result;
 }
 
 export interface AdjustStockParams {
@@ -148,6 +162,8 @@ export async function adjustStock(params: AdjustStockParams): Promise<AdjustStoc
         reason: params.reason || '',
       }),
     });
+    invalidateRequestCacheByPrefix('admin:inventory');
+    invalidateRequestCacheByPrefix('admin:dashboard');
     return { string: result, error: null };
   } catch (err: any) {
     return { string: null, error: err.message || 'Failed to adjust stock' };
@@ -171,6 +187,8 @@ export async function getStockLogs(stringId: string): Promise<any[]> {
 export async function deleteString(id: string): Promise<{ success: boolean; error: string | null }> {
   try {
     await apiRequest(`/api/admin/inventory/${id}`, { method: 'DELETE' });
+    invalidateRequestCacheByPrefix('admin:inventory');
+    invalidateRequestCacheByPrefix('admin:dashboard');
     return { success: true, error: null };
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to delete string' };

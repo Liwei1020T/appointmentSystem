@@ -19,6 +19,8 @@ import {
   type NotificationPreferences,
 } from '@/services/notificationService';
 import WebPushSubscription from '@/components/WebPushSubscription';
+import PageLoading from '@/components/loading/PageLoading';
+import LoadingSpinner from '@/components/loading/LoadingSpinner';
 
 export default function NotificationSettingsPage() {
   const { data: session } = useSession();
@@ -66,14 +68,7 @@ export default function NotificationSettingsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-ink">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent mb-4"></div>
-          <p className="text-text-secondary">加载中...</p>
-        </div>
-      </div>
-    );
+    return <PageLoading surface="dark" />;
   }
 
   if (!preferences) {
@@ -376,7 +371,7 @@ export default function NotificationSettingsPage() {
           >
             {saving ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <LoadingSpinner size="sm" tone="inverse" className="w-4 h-4" />
                 <span>保存中...</span>
               </>
             ) : (

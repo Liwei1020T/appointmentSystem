@@ -33,7 +33,7 @@ import {
 import PackageCard from '@/components/PackageCard';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
-import Spinner from '@/components/Spinner';
+import SectionLoading from '@/components/loading/SectionLoading';
 import { formatDate, calculateDaysRemaining } from '@/lib/utils';
 import PageHeader from '@/components/layout/PageHeader';
 
@@ -219,7 +219,7 @@ function MyPackagesTab({ isVisible }: { isVisible: boolean }) {
     const activeList = showExpired ? expired : current;
     const totalRemaining = current.reduce((sum, pkg) => sum + ((pkg as any).remaining || 0), 0);
 
-    if (loading) return <div className="flex justify-center py-16"><Spinner size="lg" /></div>;
+    if (loading) return <SectionLoading label="加载套餐..." minHeightClassName="min-h-[240px]" />;
 
     if (error) return (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-md p-6 text-center">

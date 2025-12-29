@@ -25,6 +25,7 @@ import {
   type PackageSalesData,
 } from '@/services/adminPackageService';
 import { Badge, Button, Card, Input, StatsCard, Tabs } from '@/components';
+import SectionLoading from '@/components/loading/SectionLoading';
 import { Search } from 'lucide-react';
 
 export default function AdminPackageListPage() {
@@ -299,9 +300,7 @@ export default function AdminPackageListPage() {
 
         {/* Loading State */}
         {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
-          </div>
+          <SectionLoading label="加载套餐..." minHeightClassName="min-h-[240px]" />
         ) : (
           <>
             {/* Packages Grid */}

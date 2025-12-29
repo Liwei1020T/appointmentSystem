@@ -10,7 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, Star } from 'lucide-react';
-import { Card } from '@/components';
+import { Card, Skeleton } from '@/components';
 import PageHeader from '@/components/layout/PageHeader';
 import StarRating from '@/components/StarRating';
 import { formatDate } from '@/lib/utils';
@@ -35,15 +35,40 @@ export default function AllReviewsPage() {
       <PageHeader title="用户评价" subtitle="查看全部用户评价" onBack={() => router.push('/')} />
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          <Star className="w-4 h-4 text-amber-400" />
-          <span>共 {reviews.length} 条公开评价</span>
-        </div>
+        {loading ? (
+          <div className="flex items-center gap-2">
+            <Skeleton variant="circular" className="w-4 h-4" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <Star className="w-4 h-4 text-amber-400" />
+            <span>共 {reviews.length} 条公开评价</span>
+          </div>
+        )}
 
         {loading ? (
-          <Card className="p-6">
-            <p className="text-sm text-gray-500">正在加载评价...</p>
-          </Card>
+          <div className="space-y-4">
+            {[1, 2, 3].map((item) => (
+              <Card key={item} className="p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-4/5" />
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-3 w-20" />
+                      <Skeleton className="h-3 w-28" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-4 w-4" />
+                </div>
+              </Card>
+            ))}
+          </div>
         ) : reviews.length === 0 ? (
           <Card className="p-6">
             <p className="text-sm text-gray-500">暂无公开评价</p>

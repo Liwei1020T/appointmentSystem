@@ -18,7 +18,8 @@ import {
   logout,
   UserProfile,
 } from '@/services/profileService';
-import { Card, Spinner, Badge, Button, Modal, Toast } from '@/components';
+import { Card, Badge, Button, Modal, Toast } from '@/components';
+import InlineLoading from '@/components/loading/InlineLoading';
 import { ProfileSkeleton } from '@/components/skeletons';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { isAdminRole } from '@/lib/roles';
@@ -337,7 +338,14 @@ export default function ProfilePage() {
               </div>
               <div className="text-left">
                 <span className="font-medium text-gray-900 block">邀请好友</span>
-                <span className="text-xs text-gray-500">邀请码: <span className="font-mono text-orange-500 font-bold">{referralCode || '加载中...'}</span></span>
+                <span className="text-xs text-gray-500">
+                  邀请码:
+                  {referralCode ? (
+                    <span className="ml-1 font-mono text-orange-500 font-bold">{referralCode}</span>
+                  ) : (
+                    <InlineLoading label="加载中..." size="sm" className="ml-1" />
+                  )}
+                </span>
               </div>
             </div>
             <div className="flex items-center gap-2">

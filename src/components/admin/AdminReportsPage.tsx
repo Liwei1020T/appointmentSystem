@@ -32,6 +32,7 @@ import {
   OrderTrends,
 } from '@/services/adminReportsService';
 import { Button } from '@/components';
+import PageLoading from '@/components/loading/PageLoading';
 import {
   LineChart,
   Line,
@@ -173,14 +174,7 @@ export default function AdminReportsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-ink flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
-          <p className="mt-4 text-text-secondary">Loading reports...</p>
-        </div>
-      </div>
-    );
+    return <PageLoading surface="dark" label="Loading reports..." />;
   }
 
   if (error) {

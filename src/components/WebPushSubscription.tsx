@@ -19,6 +19,7 @@ import {
   getPushSubscription,
   sendTestNotification
 } from '@/services/webPushService';
+import LoadingSpinner from '@/components/loading/LoadingSpinner';
 
 export default function WebPushSubscription() {
   const [supported, setSupported] = useState(false);
@@ -189,7 +190,14 @@ export default function WebPushSubscription() {
             disabled={loading}
             className="flex-1 px-4 py-2 bg-accent text-text-onAccent font-medium rounded-lg hover:shadow-glow transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? '处理中...' : '启用推送通知'}
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <LoadingSpinner size="sm" tone="inverse" className="w-4 h-4 text-current" />
+                处理中...
+              </span>
+            ) : (
+              '启用推送通知'
+            )}
           </button>
         ) : (
           <>
@@ -198,14 +206,28 @@ export default function WebPushSubscription() {
               disabled={loading}
               className="flex-1 px-4 py-2 bg-success text-text-primary font-medium rounded-lg hover:bg-success/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '发送中...' : '发送测试通知'}
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <LoadingSpinner size="sm" tone="inverse" className="w-4 h-4 text-current" />
+                  发送中...
+                </span>
+              ) : (
+                '发送测试通知'
+              )}
             </button>
             <button
               onClick={handleUnsubscribe}
               disabled={loading}
               className="px-4 py-2 bg-ink-elevated text-text-secondary font-medium rounded-lg hover:bg-ink-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '处理中...' : '禁用'}
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <LoadingSpinner size="sm" tone="inverse" className="w-4 h-4 text-current" />
+                  处理中...
+                </span>
+              ) : (
+                '禁用'
+              )}
             </button>
           </>
         )}

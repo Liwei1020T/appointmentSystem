@@ -2,6 +2,8 @@ import React from 'react';
 import { Skeleton } from '../Skeleton';
 
 export const DashboardSkeleton: React.FC = () => {
+  const chartHeights = ['h-24', 'h-28', 'h-32', 'h-20', 'h-36', 'h-28', 'h-24'];
+
   return (
     <div className="space-y-6 animate-fade-in p-6">
        {/* Header */}
@@ -46,8 +48,8 @@ export const DashboardSkeleton: React.FC = () => {
                <Skeleton className="h-8 w-24 rounded-lg" />
             </div>
             <div className="flex items-end justify-between h-64 gap-2">
-               {[1, 2, 3, 4, 5, 6, 7].map(i => (
-                 <Skeleton key={i} className={`w-full rounded-t-lg h-${Math.floor(Math.random() * 40 + 20)}`} />
+               {chartHeights.map((heightClass, index) => (
+                 <Skeleton key={index} className={`w-full rounded-t-lg ${heightClass}`} />
                ))}
             </div>
          </div>

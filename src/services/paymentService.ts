@@ -4,6 +4,7 @@
  */
 
 import { apiRequest } from '@/services/apiClient';
+import { cachedRequest, invalidateRequestCacheByPrefix, type RequestCacheOptions } from '@/services/requestCache';
 
 export type PaymentMethod = 'tng' | 'fpx' | 'cash' | 'manual' | 'card';
 
@@ -47,9 +48,15 @@ export async function uploadPaymentProof(
  */
 export async function getPendingPayments(
   page = 1,
-  limit = 20
+  limit = 20,
+  options?: RequestCacheOptions
 ): Promise<any> {
-  return apiRequest(`/api/admin/payments/pending?page=${page}&limit=${limit}`);
+  const cacheKey = `admin:payments:pending:${page}:${limit}`;
+  return cachedRequest(
+    cacheKey,
+    () => apiRequest(`/api/admin/payments/pending?page=${page}&limit=${limit}`),
+    { ttlMs: 10000, skipCache: options?.skipCache }
+  );
 }
 
 /**
@@ -65,6 +72,7 @@ export async function confirmPayment(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ transactionId, notes }),
   });
+  invalidateRequestCacheByPrefix('admin:payments:pending');
 }
 
 /**
@@ -79,6 +87,7 @@ export async function rejectPayment(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ reason }),
   });
+  invalidateRequestCacheByPrefix('admin:payments:pending');
 }
 
 /**
@@ -194,6 +203,7 @@ export async function confirmCashPayment(paymentId: string): Promise<void> {
   await apiRequest(`/api/payments/${paymentId}/verify`, {
     method: 'POST',
   });
+  invalidateRequestCacheByPrefix('admin:payments:pending');
 }
 
 /**
