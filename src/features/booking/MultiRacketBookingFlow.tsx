@@ -46,6 +46,7 @@ export default function MultiRacketBookingFlow() {
     const [step, setStep] = useState(1); // 1: 选择球线添加, 2: 配置球拍, 3: 优惠/套餐, 4: 确认
     const [isCartExpanded, setIsCartExpanded] = useState(false); // 购物车预览折叠状态
     const [loading, setLoading] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
     const [packageAvailable, setPackageAvailable] = useState(false);
     const [userPackages, setUserPackages] = useState<any[]>([]);
     const [membershipInfo, setMembershipInfo] = useState<MembershipTierInfo | null>(null);
@@ -54,6 +55,14 @@ export default function MultiRacketBookingFlow() {
         message: string;
         type: 'success' | 'error' | 'info' | 'warning';
     }>({ show: false, message: '', type: 'info' });
+
+    // 页面进入动画
+    useEffect(() => {
+        if (!authLoading) {
+            const timer = setTimeout(() => setIsVisible(true), 150);
+            return () => clearTimeout(timer);
+        }
+    }, [authLoading]);
 
     // 如果未登录，跳转到登录页
     useEffect(() => {
@@ -304,47 +313,52 @@ export default function MultiRacketBookingFlow() {
                 </div>
             </div>
 
-            {/* 进度指示器 - 白色卡片 */}
-            <div className="max-w-2xl mx-auto px-4 py-4">
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                    <div className="flex items-center justify-between">
-                        {[
-                            { num: 1, label: '选择球线' },
-                            { num: 2, label: '配置球拍' },
-                            { num: 3, label: '优惠' },
-                            { num: 4, label: '确认' },
-                        ].map(({ num, label }) => (
-                            <div key={num} className="flex items-center flex-1 last:flex-none">
-                                <div className="flex flex-col items-center">
-                                    <div
-                                        className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xs md:text-sm font-bold transition-all ${num < step
-                                            ? 'bg-orange-500 text-white'
-                                            : num === step
-                                                ? 'bg-orange-500 text-white shadow-lg ring-4 ring-orange-100 scale-110'
-                                                : 'bg-gray-100 text-gray-400'
-                                            }`}
-                                    >
-                                        {num < step ? <Check className="w-4 h-4 md:w-5 md:h-5" /> : num}
+            {/* 动画包装容器 */}
+            <div className={`
+                transition-all duration-700 ease-out
+                ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+            `}>
+                {/* 进度指示器 - 白色卡片 */}
+                <div className="max-w-2xl mx-auto px-4 py-4">
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                        <div className="flex items-center justify-between">
+                            {[
+                                { num: 1, label: '选择球线' },
+                                { num: 2, label: '配置球拍' },
+                                { num: 3, label: '优惠' },
+                                { num: 4, label: '确认' },
+                            ].map(({ num, label }) => (
+                                <div key={num} className="flex items-center flex-1 last:flex-none">
+                                    <div className="flex flex-col items-center">
+                                        <div
+                                            className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xs md:text-sm font-bold transition-all ${num < step
+                                                ? 'bg-orange-500 text-white'
+                                                : num === step
+                                                    ? 'bg-orange-500 text-white shadow-lg ring-4 ring-orange-100 scale-110'
+                                                    : 'bg-gray-100 text-gray-400'
+                                                }`}
+                                        >
+                                            {num < step ? <Check className="w-4 h-4 md:w-5 md:h-5" /> : num}
+                                        </div>
+                                        <span className={`text-[10px] md:text-xs mt-1.5 ${num === step ? 'text-orange-600 font-medium' : 'text-gray-400'}`}>
+                                            {label}
+                                        </span>
                                     </div>
-                                    <span className={`text-[10px] md:text-xs mt-1.5 ${num === step ? 'text-orange-600 font-medium' : 'text-gray-400'}`}>
-                                        {label}
-                                    </span>
+                                    {num < 4 && (
+                                        <div
+                                            className={`flex-1 h-0.5 md:h-1 mx-2 md:mx-3 rounded-full transition-all ${num < step ? 'bg-orange-500' : 'bg-gray-200'
+                                                }`}
+                                        />
+                                    )}
                                 </div>
-                                {num < 4 && (
-                                    <div
-                                        className={`flex-1 h-0.5 md:h-1 mx-2 md:mx-3 rounded-full transition-all ${num < step ? 'bg-orange-500' : 'bg-gray-200'
-                                            }`}
-                                    />
-                                )}
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* 主内容区 */}
-            <div className={`max-w-2xl mx-auto px-4 py-4 space-y-4 ${step === 1 ? 'pb-28' : 'pb-24'}`}>
-                {/* Step 1: 选择球线添加到购物车 */}
+                {/* 主内容区 */}
+                <div className={`max-w-2xl mx-auto px-4 py-4 space-y-4 ${step === 1 ? 'pb-28' : 'pb-24'}`}>
+                    {/* Step 1: 选择球线添加到购物车 */}
                 {step === 1 && (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
@@ -641,6 +655,7 @@ export default function MultiRacketBookingFlow() {
                         </div>
                     </div>
                 )}
+            </div>
             </div>
 
             {/* 底部操作栏 - Step 1: 统一底部栏 */}

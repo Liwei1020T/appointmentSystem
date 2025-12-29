@@ -352,7 +352,7 @@ export default function PaymentVerificationPage() {
 
             <div className="flex gap-3 pt-2">
               <Button
-                variant="gradient"
+                variant="primary"
                 className="flex-[2] h-12 text-lg shadow-glow"
                 onClick={handleConfirm}
                 loading={processing}

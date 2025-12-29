@@ -206,7 +206,7 @@ export interface VoucherStats {
  */
 export async function getVoucherStats(): Promise<VoucherStats> {
   try {
-    const payload = await apiRequest<VoucherStats>(`/api/vouchers/stats`);
+    const payload = await apiRequest<any>(`/api/vouchers/stats`);
     if (!payload) {
       return {
         totalVouchers: 0,

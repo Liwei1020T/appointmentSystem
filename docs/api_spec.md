@@ -1,9 +1,9 @@
 # 🔌 API Specification
 
 **String Service Platform — API Reference**  
-**Version:** 1.0  
-**Last Updated:** 2025-12-18  
-**Backend:** Supabase Edge Functions + PostgreSQL RPC
+**Version:** 1.1  
+**Last Updated:** 2025-12-28  
+**Backend:** Next.js Route Handlers (Prisma + PostgreSQL)
 
 ---
 
@@ -26,24 +26,24 @@
 
 ## Overview
 
-**Note (2025-12-26):** Internal UI flows now use Next.js App Router Route Handlers (`app/api/*`) as the primary boundary. Server Actions in `src/actions/*` have been removed. External inbound endpoints (e.g., NextAuth callbacks, payment webhooks, uploads, order photos) remain as API routes.
+**Note (2025-12-28):** All internal APIs have been standardized to use `camelCase` for request payloads and response objects. Legacy `snake_case` fields have been removed.
 
 ### Base URL
 
 ```
-Supabase Edge Functions: https://<project-ref>.supabase.co/functions/v1
-Supabase REST API: https://<project-ref>.supabase.co/rest/v1
+Local API: http://localhost:3000/api
+Production API: https://your-domain.com/api
 ```
 
 ### Authentication
 
 All authenticated endpoints require:
-- Header: `Authorization: Bearer <JWT_TOKEN>`
-- Token obtained from Supabase Auth
+- Cookie-based session managed by NextAuth.js v5.
+- For internal Route Handlers, authentication is checked server-side via `requireAuth()` helper.
 
 ### Response Format
 
-**Success Response (current standard):**
+**Standard Success Response:**
 ```json
 {
   "ok": true,
@@ -51,7 +51,7 @@ All authenticated endpoints require:
 }
 ```
 
-**Error Response (current standard):**
+**Standard Error Response:**
 ```json
 {
   "ok": false,
@@ -63,22 +63,11 @@ All authenticated endpoints require:
 }
 ```
 
-**Legacy Response (still used by some endpoints):**
-```json
-{
-  "success": true,
-  "data": { ... },
-  "message": "Operation successful"
-}
-```
-
 ---
 
 ## Authentication
 
-> Note (Local Next.js Auth):
-> 本项目当前的本地后端（Next.js API + Prisma + NextAuth）已支持 **手机号 + 短信验证码 (OTP)** 登录/注册（方案B），并在用户端流程中移除邮箱/密码。
-> Supabase Auth 的 Email/Password 文档仍保留作为未来对接/迁移参考。
+> Note: The platform now supports **Phone + Password** and **OTP-based** authentication via NextAuth.js.
 
 ### Phone + Password (Next.js)
 
@@ -100,7 +89,7 @@ All authenticated endpoints require:
 **Response:**
 ```json
 {
-  "success": true,
+  "ok": true,
   "data": {
     "user": {
       "id": "uuid",
@@ -109,159 +98,7 @@ All authenticated endpoints require:
       "referralCode": "XXXX",
       "points": 0
     }
-  },
-  "message": "注册成功"
-}
-```
-
-#### 2) Sign In (NextAuth Credentials)
-
-**Client Action:** `signIn('credentials', ...)`  
-**Auth Required:** No
-
-**Credentials Payload (Login):**
-```json
-{
-  "phone": "01131609008",
-  "password": "Password123"
-}
-```
-
-**Admin-only Login Payload:**
-```json
-{
-  "phone": "01131609008",
-  "password": "Password123",
-  "admin": "true"
-}
-```
-
-#### 3) Forgot Password (OTP Reset)
-
-**Step A: Request OTP**
-
-**Endpoint:** `POST /api/auth/otp/request`  
-**Auth Required:** No
-
-**Request Body:**
-```json
-{
-  "phone": "01131609008",
-  "purpose": "password_reset"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "cooldownSeconds": 60
-  },
-  "message": "验证码已发送"
-}
-```
-
-**Notes:**
-- OTP 有效期：5 分钟；同手机号 60 秒冷却；每小时最多 5 次。
-- 生产环境通过 Twilio 发送；本地未配置 Twilio 时会 fallback 到 server console log。
-
-**Step B: Confirm Reset**
-
-**Endpoint:** `POST /api/auth/password-reset/confirm`  
-**Auth Required:** No
-
-**Request Body:**
-```json
-{
-  "phone": "01131609008",
-  "code": "123456",
-  "newPassword": "Password123"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": { "ok": true },
-  "message": "密码已重置"
-}
-```
-
-### 1. Sign Up
-
-**Endpoint:** `POST /auth/v1/signup`  
-**Auth Required:** No
-
-**Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "SecurePass123!",
-  "data": {
-    "full_name": "John Doe",
-    "phone": "+60123456789",
-    "referred_by": "ABCD1234"  // Optional
   }
-}
-```
-
-**Response:**
-```json
-{
-  "access_token": "eyJhbGc...",
-  "token_type": "bearer",
-  "expires_in": 3600,
-  "user": {
-    "id": "uuid",
-    "email": "user@example.com",
-    "user_metadata": {
-      "full_name": "John Doe",
-      "phone": "+60123456789"
-    }
-  }
-}
-```
-
-**Trigger:** Creates user profile in `users` table, generates referral code, processes referral reward if code provided.
-
----
-
-### 2. Sign In
-
-**Endpoint:** `POST /auth/v1/token?grant_type=password`  
-**Auth Required:** No
-
-**Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "SecurePass123!"
-}
-```
-
-**Response:** Same as Sign Up
-
----
-
-### 3. Get User Profile
-
-**Endpoint:** `GET /rest/v1/users?id=eq.{user_id}`  
-**Auth Required:** Yes
-
-**Response:**
-```json
-{
-  "id": "uuid",
-  "email": "user@example.com",
-  "full_name": "John Doe",
-  "phone": "+60123456789",
-  "referral_code": "ABCD1234",
-  "referred_by": "XYZW5678",
-  "points": 150,
-  "role": "customer",
-  "created_at": "2025-12-11T10:00:00Z"
 }
 ```
 
@@ -269,181 +106,115 @@ All authenticated endpoints require:
 
 ## User APIs
 
-### 4. Update Profile
+### 1. Update Profile
 
-**Endpoint:** `PATCH /rest/v1/users?id=eq.{user_id}`  
+**Endpoint:** `PATCH /api/profile`  
 **Auth Required:** Yes
 
 **Request Body:**
 ```json
 {
-  "full_name": "Jane Doe",
+  "fullName": "Jane Doe",
   "phone": "+60198765432",
   "address": "No. 8, Jalan SS2/67, Petaling Jaya",
-  "avatar_url": "https://cdn.example.com/avatars/user.png"
+  "avatarUrl": "https://cdn.example.com/avatars/user.png"
 }
 ```
 
-**Response:** Updated user object
-
-**Local Next.js API (current implementation):**  
-`PATCH /api/profile` accepts both `fullName` and `full_name` along with `phone`, `address`, `avatar_url`.
-
----
-
-### 5. Get Points History
-
-**Endpoint:** `GET /rest/v1/points_log?user_id=eq.{user_id}&order=created_at.desc`  
-**Auth Required:** Yes
-
-**Response:**
-```json
-[
-  {
-    "id": "uuid",
-    "amount": 10,
-    "type": "order",
-    "description": "Order completed",
-    "balance_after": 150,
-    "created_at": "2025-12-11T10:00:00Z"
-  }
-]
-```
-
----
-
-### 6. Get User Stats (Membership)
-
-**Endpoint:** `GET /api/user/stats`  
-**Auth Required:** Yes
-
-**Description:** Returns aggregated order/package/coupon counts, total spend, and membership progression for the authenticated user.
-
-**Response:**
-```json
-{
-  "totalOrders": 12,
-  "pendingOrders": 1,
-  "completedOrders": 11,
-  "activePackages": 2,
-  "remainingPackageCount": 5,
-  "availableVouchers": 3,
-  "points": 180,
-  "totalSpent": 842.5,
-  "membership": {
-    "tier": "gold",
-    "label": "黄金会员",
-    "description": "消费满 RM 700，解锁 10% 折扣",
-    "discountRate": 10,
-    "progress": 0.72,
-    "nextTier": {
-      "id": "platinum",
-      "label": "白金会员",
-      "minSpend": 1000
-    }
-  }
-}
-```
-
-### 7. Generate Referral Code
-
-**Endpoint:** `POST /api/profile/referral-code`  
-**Auth Required:** Yes
-
-**Description:** Ensures the authenticated user has a referral code; returns existing code if present, otherwise generates and persists a new one.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "code": "123456"
-  }
-}
-```
+**Response:** `{ "ok": true, "data": { ... } }`
 
 ---
 
 ## Order APIs
 
-### 6. Create Order
+### 2. Create Order (Single Racket)
 
-**Endpoint:** `POST /functions/v1/create-order`  
+**Endpoint:** `POST /api/orders`  
 **Auth Required:** Yes
 
 **Request Body:**
 ```json
 {
-  "string_id": "uuid",
+  "stringId": "uuid",
   "tension": 26,
-  "notes": "Please string by tomorrow",
-  "use_package": false,
-  "package_id": null,  // If use_package is true
-  "voucher_id": null   // Optional
+  "finalPrice": 35.00,
+  "usePackage": false,
+  "voucherId": null,
+  "notes": "Please string by tomorrow"
 }
 ```
-
-**Business Logic:**
-- Validates string availability
-- Calculates price (from `string_inventory.selling_price`)
-- Applies voucher discount if provided
-- If `use_package` is true:
-  - Validates user has active package
-  - Deducts one use from package
-  - Sets order price to 0
-- Creates order record with status `pending`
-- Returns order object and payment details (if payment required)
 
 **Response:**
 ```json
 {
-  "success": true,
+  "ok": true,
   "data": {
-    "order": {
-      "id": "uuid",
-      "user_id": "uuid",
-      "string_id": "uuid",
-      "tension": 26,
-      "price": 28.00,
-      "discount": 0,
-      "status": "pending",
-      "created_at": "2025-12-11T10:00:00Z"
-    },
-    "payment_required": true,
-    "payment_url": "https://payment-gateway.com/pay/xxx"  // If applicable
+    "id": "order-uuid",
+    "status": "pending",
+    "price": 35.00,
+    "createdAt": "2025-12-28T10:00:00Z"
   }
+}
+```
+
+### 3. Create Order (Multi-Racket)
+
+**Endpoint:** `POST /api/orders`  
+**Auth Required:** Yes
+
+**Request Body:**
+```json
+{
+  "items": [
+    {
+      "stringId": "uuid-1",
+      "tensionVertical": 26,
+      "tensionHorizontal": 24,
+      "racketPhoto": "https://...",
+      "notes": "Racket 1 notes"
+    },
+    {
+      "stringId": "uuid-2",
+      "tensionVertical": 28,
+      "tensionHorizontal": 26,
+      "racketPhoto": "https://...",
+      "notes": "Racket 2 notes"
+    }
+  ],
+  "usePackage": false,
+  "notes": "Multi-racket order"
 }
 ```
 
 ---
 
-### 7. Get User Orders
+### 4. Get User Orders
 
-**Endpoint:** `GET /rest/v1/orders?user_id=eq.{user_id}&order=created_at.desc`  
+**Endpoint:** `GET /api/orders`  
 **Auth Required:** Yes
 
 **Query Parameters:**
-- `status=eq.completed` - Filter by status
-- `limit=10` - Pagination
+- `status` (optional): pending, in_progress, completed, cancelled
+- `limit` (optional): number
+- `page` (optional): number
 
 **Response:**
 ```json
-[
-  {
-    "id": "uuid",
-    "string_id": "uuid",
-    "string": {
-      "brand": "YONEX",
-      "model": "BG66UM",
-      "color": "White"
-    },
-    "tension": 26,
-    "price": 28.00,
-    "status": "completed",
-    "completed_at": "2025-12-11T12:00:00Z",
-    "created_at": "2025-12-11T10:00:00Z"
-  }
-]
+{
+  "ok": true,
+  "data": [
+    {
+      "id": "uuid",
+      "status": "completed",
+      "finalPrice": 28.00,
+      "createdAt": "2025-12-28T10:00:00Z",
+      "string": {
+        "brand": "YONEX",
+        "model": "BG66UM"
+      }
+    }
+  ]
+}
 ```
 
 ---

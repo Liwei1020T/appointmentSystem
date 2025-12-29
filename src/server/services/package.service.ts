@@ -1,10 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import { ApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
+import { User } from '@prisma/client';
 
-type UserSnapshot = {
-  id: string;
-};
+type UserSnapshot = Pick<User, 'id'>;
 
 /**
  * Fetch all active packages for purchase.
@@ -133,7 +132,7 @@ export async function listPendingPackagePayments(userId: string) {
     amount: Number(payment.amount),
     status: payment.status,
     provider: payment.provider,
-    receiptUrl: payment.receiptUrl,
+    receiptUrl: (payment.metadata as any)?.receiptUrl,
     createdAt: payment.createdAt.toISOString(),
   }));
 }

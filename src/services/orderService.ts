@@ -7,26 +7,19 @@ import type { Order } from '.prisma/client';
 import { apiRequest } from '@/services/apiClient';
 
 export interface CreateOrderData {
-  string_id?: string;
   stringId?: string;
   tension: number;
   price?: number;
-  cost_price?: number;
   costPrice?: number;
-  discount_amount?: number;
   discountAmount?: number;
-  final_price: number;
-  finalPrice?: number;
-  use_package?: boolean;
+  finalPrice: number;
   usePackage?: boolean;
-  voucher_id?: string | null;
   voucherId?: string | null;
   notes?: string;
 }
 
 export interface CreateOrderWithPackageData {
-  stringId?: string;
-  string_id?: string;
+  stringId: string;
   tension: number;
   usePackage?: boolean;
   packageId?: string;
@@ -54,17 +47,11 @@ export interface CreateMultiRacketOrderData {
 
 export interface OrderWithDetails
   extends Omit<Order, 'createdAt' | 'updatedAt' | 'discountAmount' | 'usePackage'> {
-  final_price?: number;
   finalPrice?: number;
-  use_package?: boolean;
   usePackage?: boolean;
-  discount_amount?: number;
   discountAmount?: number | null;
-  created_at?: string | Date;
   createdAt: Date | string;
-  updated_at?: string | Date;
   updatedAt?: Date | string;
-  payment_status?: string;
   paymentStatus?: string;
   string?: any;
   payments?: any[];

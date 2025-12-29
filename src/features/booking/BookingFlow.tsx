@@ -50,6 +50,15 @@ export default function BookingFlow() {
   }>({ show: false, message: '', type: 'info' });
   const [packageAvailable, setPackageAvailable] = useState(false);
   const [membershipInfo, setMembershipInfo] = useState<MembershipTierInfo | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  // 页面进入动画
+  useEffect(() => {
+    if (!authLoading) {
+      const timer = setTimeout(() => setIsVisible(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading]);
 
   /**
    * 如果未登录，跳转到登录页
@@ -176,14 +185,14 @@ export default function BookingFlow() {
         : `[竖/横分拉: ${tension}/${crossTension} LBS] ${notes}`;
 
       const orderData = {
-        string_id: selectedString.id,
+        stringId: selectedString.id,
         tension,
         price: Number(selectedString.sellingPrice),
-        cost_price: Number(selectedString.costPrice),
-        discount_amount: discount + membershipDiscountTotal,
-        final_price: final,
-        use_package: usePackage,
-        voucher_id: selectedVoucher?.voucher?.id || null,
+        costPrice: Number(selectedString.costPrice),
+        discountAmount: discount + membershipDiscountTotal,
+        finalPrice: final,
+        usePackage: usePackage,
+        voucherId: selectedVoucher?.voucher?.id || null,
         notes: finalNotes,
       };
 
@@ -242,7 +251,11 @@ export default function BookingFlow() {
       />
 
       {/* 主内容区 */}
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6 pb-32">
+      <div className={`
+        max-w-2xl mx-auto px-4 py-6 space-y-6 pb-32
+        transition-all duration-700 ease-out
+        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+      `}>
         {/* 进度指示器 - 优化视觉重量 */}
         <div className="flex items-center justify-between px-2">
           {[1, 2, 3, 4].map((num) => (

@@ -1,22 +1,17 @@
 import { prisma } from '@/lib/prisma';
 import { ApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
+import { INVENTORY, ORDER_RULES, POINTS, PRICING } from '@/lib/constants';
 
 export interface CreateOrderPayload {
-  string_id?: string;
   stringId?: string;
   tension?: number | string;
   price?: number | string;
-  cost_price?: number | string;
   costPrice?: number | string;
-  discount_amount?: number | string;
   discountAmount?: number | string;
-  final_price?: number | string;
   finalPrice?: number | string;
-  use_package?: boolean;
   usePackage?: boolean;
-  voucher_id?: string | null;
   voucherId?: string | null;
   notes?: string;
 }
@@ -48,11 +43,7 @@ export interface CreateMultiRacketOrderPayload {
   notes?: string;
 }
 
-type UserSnapshot = {
-  id: string;
-  role?: string | null;
-  fullName?: string | null;
-};
+type UserSnapshot = Pick<User, 'id' | 'role' | 'fullName'>;
 
 type AdminSnapshot = UserSnapshot;
 
@@ -81,6 +72,10 @@ const orderListInclude = {
   },
 } satisfies Prisma.OrderInclude;
 
+export type OrderListResult = Prisma.OrderGetPayload<{
+  include: typeof orderListInclude;
+}>;
+
 const orderDetailInclude = {
   string: true,
   payments: true,
@@ -99,6 +94,10 @@ const orderDetailInclude = {
     },
   },
 } satisfies Prisma.OrderInclude;
+
+export type OrderDetailResult = Prisma.OrderGetPayload<{
+  include: typeof orderDetailInclude;
+}>;
 
 const orderCompletionInclude = {
   user: true,
@@ -146,20 +145,13 @@ export async function getOrderById(userId: string, orderId: string) {
 }
 
 export async function createOrder(user: UserSnapshot, payload: CreateOrderPayload) {
-  const stringId = payload.string_id || payload.stringId;
+  const stringId = payload.stringId;
   const tension = Number(payload.tension);
-  const finalPrice =
-    payload.final_price !== undefined ? Number(payload.final_price) : payload.finalPrice !== undefined ? Number(payload.finalPrice) : undefined;
-  const costPrice =
-    payload.cost_price !== undefined ? Number(payload.cost_price) : payload.costPrice !== undefined ? Number(payload.costPrice) : undefined;
-  const discountAmount =
-    payload.discount_amount !== undefined
-      ? Number(payload.discount_amount)
-      : payload.discountAmount !== undefined
-        ? Number(payload.discountAmount)
-        : 0;
-  const usePackage = payload.use_package ?? payload.usePackage ?? false;
-  const voucherId = payload.voucher_id ?? payload.voucherId ?? null;
+  const finalPrice = payload.finalPrice !== undefined ? Number(payload.finalPrice) : undefined;
+  const costPrice = payload.costPrice !== undefined ? Number(payload.costPrice) : undefined;
+  const discountAmount = payload.discountAmount !== undefined ? Number(payload.discountAmount) : 0;
+  const usePackage = payload.usePackage ?? false;
+  const voucherId = payload.voucherId ?? null;
   const notes = payload.notes ?? '';
 
   if (!stringId || !Number.isFinite(tension) || finalPrice === undefined) {
@@ -214,8 +206,8 @@ export async function createOrder(user: UserSnapshot, payload: CreateOrderPayloa
 
   const order = await prisma.$transaction(async (tx) => {
     const stockResult = await tx.stringInventory.updateMany({
-      where: { id: stringId, stock: { gte: 1 } },
-      data: { stock: { decrement: 1 } },
+      where: { id: stringId, stock: { gte: INVENTORY.DEDUCT_ON_CREATE } },
+      data: { stock: { decrement: INVENTORY.DEDUCT_ON_CREATE } },
     });
 
     if (stockResult.count === 0) {
@@ -229,7 +221,7 @@ export async function createOrder(user: UserSnapshot, payload: CreateOrderPayloa
         tension,
         price: finalPrice,
         cost: costPrice || string.costPrice,
-        profit: finalPrice - (costPrice || string.costPrice),
+        profit: finalPrice - (costPrice || Number(string.costPrice)),
         discount: discountAmount,
         discountAmount,
         usePackage,
@@ -313,8 +305,8 @@ export async function createOrderWithPackage(user: UserSnapshot, payload: Create
     throw new ApiError('BAD_REQUEST', 400, 'Missing required fields');
   }
 
-  if (tension < 18 || tension > 30) {
-    throw new ApiError('UNPROCESSABLE_ENTITY', 422, 'Tension must be between 18 and 30');
+  if (tension < ORDER_RULES.MIN_TENSION || tension > ORDER_RULES.MAX_TENSION) {
+    throw new ApiError('UNPROCESSABLE_ENTITY', 422, `Tension must be between ${ORDER_RULES.MIN_TENSION} and ${ORDER_RULES.MAX_TENSION}`);
   }
 
   const string = await prisma.stringInventory.findUnique({
@@ -325,12 +317,12 @@ export async function createOrderWithPackage(user: UserSnapshot, payload: Create
     throw new ApiError('NOT_FOUND', 404, 'String not found');
   }
 
-  if (string.stock < 11) {
+  if (string.stock < INVENTORY.DEDUCT_ON_COMPLETE) {
     throw new ApiError('CONFLICT', 409, 'Insufficient stock');
   }
 
   let packageUsed: any = null;
-  let basePrice = 35.0;
+  let basePrice: number = PRICING.DEFAULT_BASE_PRICE;
 
   if (usePackage && packageId) {
     packageUsed = await prisma.userPackage.findFirst({
@@ -469,11 +461,11 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
     if (!item.racketPhoto) {
       throw new ApiError('BAD_REQUEST', 400, `Racket ${i + 1} missing photo`);
     }
-    if (item.tensionVertical < 18 || item.tensionVertical > 35) {
-      throw new ApiError('UNPROCESSABLE_ENTITY', 422, `Racket ${i + 1} vertical tension must be 18-35`);
+    if (item.tensionVertical < ORDER_RULES.MIN_TENSION || item.tensionVertical > ORDER_RULES.MAX_TENSION) {
+      throw new ApiError('UNPROCESSABLE_ENTITY', 422, `Racket ${i + 1} vertical tension must be ${ORDER_RULES.MIN_TENSION}-${ORDER_RULES.MAX_TENSION}`);
     }
-    if (item.tensionHorizontal < 18 || item.tensionHorizontal > 35) {
-      throw new ApiError('UNPROCESSABLE_ENTITY', 422, `Racket ${i + 1} horizontal tension must be 18-35`);
+    if (item.tensionHorizontal < ORDER_RULES.MIN_TENSION || item.tensionHorizontal > ORDER_RULES.MAX_TENSION) {
+      throw new ApiError('UNPROCESSABLE_ENTITY', 422, `Racket ${i + 1} horizontal tension must be ${ORDER_RULES.MIN_TENSION}-${ORDER_RULES.MAX_TENSION}`);
     }
   }
 
@@ -604,8 +596,8 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
       });
 
       const stockResult = await tx.stringInventory.updateMany({
-        where: { id: item.stringId, stock: { gte: 1 } },
-        data: { stock: { decrement: 1 } },
+        where: { id: item.stringId, stock: { gte: INVENTORY.DEDUCT_ON_CREATE } },
+        data: { stock: { decrement: INVENTORY.DEDUCT_ON_CREATE } },
       });
 
       if (stockResult.count === 0) {
@@ -768,7 +760,7 @@ export async function completeOrder(admin: AdminSnapshot, orderId: string, admin
     throw new ApiError('CONFLICT', 409, 'Order missing string');
   }
 
-  const stockToDeduct = 11;
+  const stockToDeduct = INVENTORY.DEDUCT_ON_COMPLETE;
 
   if (!isMultiRacketOrder) {
     if (order.string && order.string.stock < stockToDeduct) {
@@ -783,7 +775,7 @@ export async function completeOrder(admin: AdminSnapshot, orderId: string, admin
     select: { amount: true },
   });
   const orderTotalAmount = Number(latestPayment?.amount ?? order.price ?? 0);
-  const pointsPerOrder = Math.max(0, Math.floor(orderTotalAmount * 0.5));
+  const pointsPerOrder = Math.max(0, Math.floor(orderTotalAmount * POINTS.REWARD_RATE));
 
   await prisma.$transaction(async (tx) => {
     if (!isMultiRacketOrder && order.stringId && order.string) {
@@ -821,7 +813,7 @@ export async function completeOrder(admin: AdminSnapshot, orderId: string, admin
         amount: pointsPerOrder,
         type: 'order',
         referenceId: orderId,
-        description: `订单完成奖励：订单总额 RM${orderTotalAmount.toFixed(2)} × 50% = ${pointsPerOrder} 积分`,
+        description: `订单完成奖励：订单总额 RM${orderTotalAmount.toFixed(2)} × ${POINTS.REWARD_RATE * 100}% = ${pointsPerOrder} 积分`,
         balanceAfter: newBalance,
       },
     });
@@ -835,7 +827,7 @@ export async function completeOrder(admin: AdminSnapshot, orderId: string, admin
       data: {
         userId: order.userId,
         title: '订单已完成',
-        message: `您的订单已完成，订单总额 RM${orderTotalAmount.toFixed(2)}，获得 ${pointsPerOrder} 积分（50%）`,
+        message: `您的订单已完成，订单总额 RM${orderTotalAmount.toFixed(2)}，获得 ${pointsPerOrder} 积分（${POINTS.REWARD_RATE * 100}%）`,
         type: 'order',
         actionUrl: `/orders/${orderId}`,
       },

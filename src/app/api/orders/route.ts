@@ -35,40 +35,17 @@ const createMultiSchema = z.object({
   notes: z.string().optional(),
 });
 
-const createSingleSchema = z
-  .object({
-    string_id: z.string().uuid().optional(),
-    stringId: z.string().uuid().optional(),
-    tension: z.union([z.number(), z.string()]),
-    price: z.union([z.number(), z.string()]).optional(),
-    cost_price: z.union([z.number(), z.string()]).optional(),
-    costPrice: z.union([z.number(), z.string()]).optional(),
-    discount_amount: z.union([z.number(), z.string()]).optional(),
-    discountAmount: z.union([z.number(), z.string()]).optional(),
-    final_price: z.union([z.number(), z.string()]).optional(),
-    finalPrice: z.union([z.number(), z.string()]).optional(),
-    use_package: z.boolean().optional(),
-    usePackage: z.boolean().optional(),
-    voucher_id: z.string().uuid().nullable().optional(),
-    voucherId: z.string().uuid().nullable().optional(),
-    notes: z.string().optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (!data.string_id && !data.stringId) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'string_id or stringId is required',
-        path: ['string_id'],
-      });
-    }
-    if (data.final_price === undefined && data.finalPrice === undefined) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'final_price or finalPrice is required',
-        path: ['final_price'],
-      });
-    }
-  });
+const createSingleSchema = z.object({
+  stringId: z.string().uuid(),
+  tension: z.union([z.number(), z.string()]),
+  price: z.union([z.number(), z.string()]).optional(),
+  costPrice: z.union([z.number(), z.string()]).optional(),
+  discountAmount: z.union([z.number(), z.string()]).optional(),
+  finalPrice: z.union([z.number(), z.string()]),
+  usePackage: z.boolean().optional(),
+  voucherId: z.string().uuid().nullable().optional(),
+  notes: z.string().optional(),
+});
 
 function parseOptionalNumber(value: string | null) {
   if (!value) return undefined;

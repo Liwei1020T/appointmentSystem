@@ -22,6 +22,38 @@ export interface Notification {
   created_at: string | Date;
 }
 
+// User Notification Preferences
+export interface NotificationPreferences {
+  // Global Channels
+  email: boolean;
+  sms: boolean;
+  push: boolean;
+
+  // Email Settings
+  email_enabled?: boolean;
+  email_order_updates?: boolean;
+  email_payment_updates?: boolean;
+  email_promotions?: boolean;
+  email_system?: boolean;
+
+  // Push Settings
+  push_enabled?: boolean;
+  push_order_updates?: boolean;
+  push_payment_updates?: boolean;
+  push_promotions?: boolean;
+  push_system?: boolean;
+
+  // SMS Settings
+  sms_enabled?: boolean;
+  sms_order_updates?: boolean;
+  sms_payment_updates?: boolean;
+
+  // Legacy / Simplified
+  orderUpdates?: boolean;
+  promotions?: boolean;
+  securityAlerts?: boolean;
+}
+
 // Admin notification types
 export interface NotificationLog {
   id: string;
@@ -318,4 +350,47 @@ export async function getUserDevices(userId?: string): Promise<{ data: UserDevic
   } catch (error: any) {
     return { data: [], error: error.message };
   }
+}
+
+/**
+ * 获取用户通知偏好设置 (Mocked)
+ */
+export async function getNotificationPreferences(): Promise<{ data: NotificationPreferences | null; error: string | null }> {
+  // TODO: Implement backend endpoint for user preferences
+  return {
+    data: {
+      email: true,
+      sms: true,
+      push: true,
+      
+      email_enabled: true,
+      email_order_updates: true,
+      email_payment_updates: true,
+      email_promotions: false,
+      email_system: true,
+
+      push_enabled: true,
+      push_order_updates: true,
+      push_payment_updates: true,
+      push_promotions: true,
+      push_system: true,
+
+      sms_enabled: true,
+      sms_order_updates: true,
+      sms_payment_updates: true,
+
+      orderUpdates: true,
+      promotions: false,
+      securityAlerts: true
+    },
+    error: null
+  };
+}
+
+/**
+ * 更新用户通知偏好设置 (Mocked)
+ */
+export async function updateNotificationPreferences(prefs: Partial<NotificationPreferences>): Promise<{ success: boolean; error: string | null }> {
+  // TODO: Implement backend endpoint for user preferences
+  return { success: true, error: null };
 }

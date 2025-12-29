@@ -34,7 +34,6 @@ export async function GET() {
         voucherId: v.id,
         code: v.code,
         name: v.name,
-        description: v.description,
         discountType: v.type,
         discountValue,
         minPurchase,

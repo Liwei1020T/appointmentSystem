@@ -106,6 +106,14 @@ function PointsCenterContent() {
     message: string;
     type: 'success' | 'error';
   }>({ show: false, message: '', type: 'success' });
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !loading) {
+      const timer = setTimeout(() => setIsVisible(true), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, authLoading, loading]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -272,7 +280,11 @@ function PointsCenterContent() {
         subtitle="查看积分余额、明细和兑换优惠"
       />
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <div className={`
+        max-w-2xl mx-auto px-4 py-6 space-y-6
+        transition-all duration-700 ease-out
+        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+      `}>
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-gradient-to-br from-accent/20 to-accent/5 rounded-xl border border-accent/20 p-5">

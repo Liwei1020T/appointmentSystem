@@ -131,8 +131,8 @@ export default function OrderListPage() {
                   </p>
                   <p className="text-sm text-text-tertiary">
                     下单时间:{' '}
-                    {order.createdAt || order.created_at
-                      ? new Date(order.createdAt || order.created_at!).toLocaleString('zh-CN')
+                    {order.createdAt
+                      ? new Date(order.createdAt).toLocaleString('zh-CN')
                       : '未知'}
                   </p>
                 </div>

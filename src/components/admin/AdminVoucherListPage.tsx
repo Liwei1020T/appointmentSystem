@@ -264,12 +264,12 @@ export default function AdminVoucherListPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
               title="总优惠券"
-              value={stats.total_vouchers}
+              value={stats.total_vouchers || 0}
               trend={{ value: `活跃 ${stats.active_vouchers}`, isPositive: true }}
             />
             <StatsCard
               title="已分发"
-              value={stats.total_distributed}
+              value={stats.total_distributed || 0}
               trend={{ value: `已使用 ${stats.total_used}`, isPositive: true }}
             />
             <StatsCard

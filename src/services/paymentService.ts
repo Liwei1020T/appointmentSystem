@@ -129,7 +129,7 @@ export async function createPayment(
       ? { amount: orderIdOrAmount, paymentMethod, orderId }
       : { orderId: orderIdOrAmount, paymentMethod };
 
-    const payment = await apiRequest(`/api/payments`, {
+    const payment = await apiRequest<{ id: string }>(`/api/payments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -45,6 +45,13 @@ export default function OrderList({ initialStatus }: OrderListProps) {
     message: string;
     type: 'success' | 'error' | 'info'
   }>({ show: false, message: '', type: 'info' });
+  const [isVisible, setIsVisible] = useState(false);
+
+  // 页面进入动画
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // 状态筛选选项
   const statusFilters: { value: OrderStatus | 'all'; label: string }[] = [
@@ -63,7 +70,7 @@ export default function OrderList({ initialStatus }: OrderListProps) {
     try {
       const { data, error: err } = await getUserOrders(status);
       if (err) {
-        setError(err?.message || err || '加载订单失败');
+        setError((err as any)?.message || err || '加载订单失败');
         setOrders([]);
       } else {
         setOrders(data || []);
@@ -173,7 +180,11 @@ export default function OrderList({ initialStatus }: OrderListProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className={`
+      space-y-4
+      transition-all duration-700 ease-out
+      ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+    `}>
       {/* 分段式状态筛选 - 统一设计 */}
       <div className="bg-white rounded-xl p-1.5 shadow-sm border border-gray-100">
         <div className="flex gap-1">
@@ -328,28 +339,28 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                   <div className="bg-gray-50 rounded-lg p-3 text-center">
                     <p className="text-xs text-gray-500 mb-1">价格</p>
                     <p className="font-bold text-orange-500" style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}>
-                      RM {Number(order.final_price ?? order.price ?? 0).toFixed(2)}
+                      RM {Number(order.finalPrice ?? order.price ?? 0).toFixed(2)}
                     </p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3 text-center">
                     <p className="text-xs text-gray-500 mb-1">日期</p>
                     <p className="font-medium text-gray-900 text-xs">
-                      {formatDate(order.created_at || order.createdAt!, 'MM/dd')}
+                      {formatDate(order.createdAt, 'MM/dd')}
                     </p>
                   </div>
                 </div>
 
                 {/* Tags Row */}
                 <div className="flex flex-wrap items-center gap-2">
-                  {order.use_package && (
+                  {order.usePackage && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-success/15 text-success">
                       📦 套餐
                     </span>
                   )}
 
-                  {(order.discount_amount ?? 0) > 0 && !order.use_package && (
+                  {(order.discountAmount ?? 0) > 0 && !order.usePackage && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-warning/15 text-warning">
-                      🏷️ 优惠 RM {Number(order.discount_amount ?? 0).toFixed(0)}
+                      🏷️ 优惠 RM {Number(order.discountAmount ?? 0).toFixed(0)}
                     </span>
                   )}
 

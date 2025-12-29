@@ -28,6 +28,15 @@ export default function MyReviewsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<TabType>('submitted');
+  const [isVisible, setIsVisible] = useState(false);
+
+  // 页面进入动画
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => setIsVisible(true), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
 
   // 加载数据
   const loadData = async () => {
@@ -68,7 +77,11 @@ export default function MyReviewsPage() {
       />
 
       {/* 内容区 */}
-      <div className="max-w-2xl mx-auto p-4 space-y-5">
+      <div className={`
+        max-w-2xl mx-auto p-4 space-y-5
+        transition-all duration-700 ease-out
+        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+      `}>
         {/* 现代分段式标签栏 - Segmented Control Tabs */}
         <div className="bg-white rounded-xl p-1.5 shadow-sm border border-gray-100">
           <div className="flex gap-1">

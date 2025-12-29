@@ -56,7 +56,7 @@ export default function ReferralsPage() {
       const rewardPointsPerReferral = totalRewards
         ? Math.round(totalPointsEarned / totalRewards)
         : 0;
-      const mappedReferrals = referrals.map((referral) => ({
+      const mappedReferrals = referrals.map((referral: any) => ({
         id: referral.id,
         full_name: referral.referred?.fullName || '用户',
         created_at: referral.referred?.createdAt || referral.createdAt,

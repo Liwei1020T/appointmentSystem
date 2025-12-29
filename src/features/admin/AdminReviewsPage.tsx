@@ -82,8 +82,8 @@ interface ReviewStats {
 type FilterRating = 'all' | '5' | '4' | '3' | '2' | '1';
 
 export default function AdminReviewsPage() {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [filteredReviews, setFilteredReviews] = useState<any[]>([]);
   const [stats, setStats] = useState<ReviewStats | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -473,7 +473,7 @@ export default function AdminReviewsPage() {
                 {/* 标签 */}
                 {review.tags && review.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {review.tags.map((tag, idx) => (
+                    {review.tags.map((tag: string, idx: number) => (
                       <span
                         key={idx}
                         className="px-2 py-1 bg-info-soft text-info text-xs rounded-full"

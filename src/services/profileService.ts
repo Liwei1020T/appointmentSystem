@@ -128,7 +128,7 @@ export interface UserStats {
  */
 export async function getUserStats(): Promise<UserStats> {
   try {
-    const data = await apiRequest<UserStats>(`/api/user/stats`);
+    const data = await apiRequest<any>(`/api/user/stats`);
     const membership = data?.membership || {
       tier: 'standard' as MembershipTierId,
       label: '普通会员',

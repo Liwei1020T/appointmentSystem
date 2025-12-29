@@ -391,6 +391,12 @@ RLS 策略示例（概念）：
 - 防止重复支付：使用 idempotency key / 唯一业务 ID。  
 - 防止恶意扣库存：所有库存扣减逻辑只在 Edge Function 中执行，不在前端直接操作。  
 
+### 8.3 开发规范（Development Standards）
+
+- **命名规范**：全站 API 严格遵循 `camelCase`（驼峰命名法）。所有 Request Body 和 Response Data 均不使用 `snake_case`。
+- **业务常量**：关键业务逻辑数值（如库存扣减、积分比例、拉力范围）统一维护在 `src/lib/constants.ts` 中，严禁在服务层硬编码魔法数字。
+- **类型安全**：服务端逻辑优先使用 Prisma 生成的推导类型，确保数据库变更能实时反映在类型检查中。
+
 ---
 
 ## 9. 性能设计（Performance Considerations）

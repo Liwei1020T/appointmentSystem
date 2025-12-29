@@ -96,7 +96,7 @@ export default function AdminReportsPage() {
 
   const revenueSeries = revenueReport?.revenueByDate || revenueReport?.revenueByDay || [];
   const hasRevenueSeries = revenueSeries.some(
-    (item) => Number(item.revenue ?? 0) > 0 || Number(item.orders ?? 0) > 0
+    (item) => Number(item.revenue ?? 0) > 0 || Number((item as any).orders ?? 0) > 0
   );
   const statusSeries = salesStats?.ordersByStatus || [];
   const hasStatusSeries = statusSeries.some((item) => Number(item.count) > 0);

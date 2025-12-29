@@ -33,6 +33,15 @@ export default function HomePage() {
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [featuredPackages, setFeaturedPackages] = useState<FeaturedPackage[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+
+  // 页面进入动画
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => setIsVisible(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
 
   /**
    * 如果未登录，跳转到登录页
@@ -131,7 +140,11 @@ export default function HomePage() {
       </div>
 
       {/* 主内容区 - 更大的垂直间距 */}
-      <div className="max-w-xl mx-auto px-5 py-8 space-y-8">
+      <div className={`
+        max-w-xl mx-auto px-5 py-8 space-y-8
+        transition-all duration-700 ease-out
+        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+      `}>
         {/* 快捷操作按钮 */}
         <QuickActions />
 

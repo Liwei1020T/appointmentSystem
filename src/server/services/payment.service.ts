@@ -1,18 +1,13 @@
 import { prisma } from '@/lib/prisma';
 import { ApiError } from '@/lib/api-errors';
 import { ADMIN_ROLES, isAdminRole } from '@/lib/roles';
+import { User } from '@prisma/client';
 
 const CONFIRMED_STATUSES = new Set(['success', 'completed']);
 
-type AdminSnapshot = {
-  id: string;
-  fullName?: string | null;
-};
+type AdminSnapshot = Pick<User, 'id' | 'fullName'>;
 
-type UserSnapshot = {
-  id: string;
-  role?: string | null;
-};
+type UserSnapshot = Pick<User, 'id' | 'role'>;
 
 export async function getPaymentForUser(params: { paymentId: string; user: UserSnapshot }) {
   const { paymentId, user } = params;
@@ -317,7 +312,7 @@ export async function verifyPayment(params: {
   const normalizedNotes = notes?.trim() || null;
 
   return prisma.$transaction(async (tx) => {
-    const metadata: Record<string, unknown> = { ...paymentMeta };
+    const metadata: any = { ...paymentMeta };
 
     if (isCash) {
       metadata.confirmed_by = admin.id;
