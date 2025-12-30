@@ -73,8 +73,8 @@ export default function ChangePasswordPage() {
       newErrors.confirmPassword = '两次输入的密码不一致';
     }
 
-    if (formData.currentPassword && formData.newPassword && 
-        formData.currentPassword === formData.newPassword) {
+    if (formData.currentPassword && formData.newPassword &&
+      formData.currentPassword === formData.newPassword) {
       newErrors.newPassword = '新密码不能与当前密码相同';
     }
 
@@ -180,11 +180,10 @@ export default function ChangePasswordPage() {
                   value={formData.currentPassword}
                   onChange={handleChange}
                   placeholder="请输入当前密码"
-                  className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink bg-ink-surface text-text-primary placeholder:text-text-tertiary ${
-                    errors.currentPassword
+                  className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink bg-ink-surface text-text-primary placeholder:text-text-tertiary ${errors.currentPassword
                       ? 'border-danger'
                       : 'border-border-subtle'
-                  }`}
+                    }`}
                 />
                 <button
                   type="button"
@@ -222,11 +221,10 @@ export default function ChangePasswordPage() {
                   value={formData.newPassword}
                   onChange={handleChange}
                   placeholder="请输入新密码（至少6位）"
-                  className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink bg-ink-surface text-text-primary placeholder:text-text-tertiary ${
-                    errors.newPassword
+                  className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink bg-ink-surface text-text-primary placeholder:text-text-tertiary ${errors.newPassword
                       ? 'border-danger'
                       : 'border-border-subtle'
-                  }`}
+                    }`}
                 />
                 <button
                   type="button"
@@ -264,11 +262,10 @@ export default function ChangePasswordPage() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="请再次输入新密码"
-                  className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink bg-ink-surface text-text-primary placeholder:text-text-tertiary ${
-                    errors.confirmPassword
+                  className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink bg-ink-surface text-text-primary placeholder:text-text-tertiary ${errors.confirmPassword
                       ? 'border-danger'
                       : 'border-border-subtle'
-                  }`}
+                    }`}
                 />
                 <button
                   type="button"
@@ -317,7 +314,7 @@ export default function ChangePasswordPage() {
           </Card>
 
           {/* 提交按钮 */}
-          <div className="fixed bottom-0 left-0 right-0 glass-surface border-t border-border-subtle p-4">
+          <div className="fixed bottom-16 md:bottom-0 left-0 right-0 glass-surface border-t border-border-subtle p-4">
             <div className="max-w-2xl mx-auto flex gap-3">
               <Button
                 type="button"

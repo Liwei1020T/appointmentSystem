@@ -50,7 +50,7 @@ export default function ReferralsPage() {
     try {
       // 获取邀请统计
       const data = await getReferrals();
-      
+
       const referrals = Array.isArray(data?.referrals) ? data.referrals : [];
       const totalRewards = data?.stats?.totalRewards ?? 0;
       const totalPointsEarned = data?.stats?.totalPointsEarned ?? 0;
@@ -121,10 +121,32 @@ export default function ReferralsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-ink py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-text-primary mb-2">邀请好友</h1>
+    <div className="min-h-screen bg-ink pb-24">
+      {/* 顶部导航 */}
+      <div className="glass-surface border-b border-border-subtle sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
+          >
+            <svg
+              className="w-5 h-5 text-text-secondary"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M15 19l-7-7 7-7"></path>
+            </svg>
+          </button>
+          <h1 className="text-lg font-bold text-text-primary">邀请好友</h1>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="mb-6">
           <p className="text-text-secondary">分享邀请码，双方都能获得积分奖励</p>
         </div>
 

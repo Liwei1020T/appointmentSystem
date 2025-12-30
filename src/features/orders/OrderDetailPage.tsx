@@ -756,7 +756,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
       {/* 底部操作栏 */}
       {order.status === 'pending' && !hasPendingCashPayment && !hasPendingTngVerification && needsPayment && (
-        <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-border-subtle p-4 shadow-lg safe-area-pb">
+        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 glass-surface border-t-2 border-border-subtle p-4 shadow-lg safe-area-pb">
           <div className="max-w-2xl mx-auto flex gap-3">
             <Button
               variant="secondary"
@@ -784,7 +784,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
       )}
 
       {order.status === 'pending' && hasPendingCashPayment && (
-        <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-warning/40 p-4 shadow-lg safe-area-pb">
+        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 glass-surface border-t-2 border-warning/40 p-4 shadow-lg safe-area-pb">
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -807,7 +807,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
       )}
 
       {order.status === 'pending' && hasPendingTngVerification && (
-        <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-info/40 p-4 shadow-lg safe-area-pb">
+        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 glass-surface border-t-2 border-info/40 p-4 shadow-lg safe-area-pb">
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -830,7 +830,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
       )}
 
       {order.status === 'pending' && hasActualPendingPayment && !hasPendingCashPayment && !hasPendingTngVerification && (
-        <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-warning/40 p-4 shadow-lg safe-area-pb">
+        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 glass-surface border-t-2 border-warning/40 p-4 shadow-lg safe-area-pb">
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">

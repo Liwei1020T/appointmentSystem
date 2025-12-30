@@ -292,7 +292,7 @@ export default function EditProfilePage() {
           </Card>
 
           {/* 提交按钮 */}
-          <div className="fixed bottom-0 left-0 right-0 glass-surface border-t border-border-subtle p-4">
+          <div className="fixed bottom-16 md:bottom-0 left-0 right-0 glass-surface border-t border-border-subtle p-4">
             <div className="max-w-2xl mx-auto flex gap-3">
               <Button
                 type="button"
