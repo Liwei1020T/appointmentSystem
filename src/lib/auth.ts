@@ -16,6 +16,8 @@ import { isValidMyPhone, toMyCanonicalPhone } from "@/lib/phone";
 import { normalizeMyPhone } from "@/lib/utils";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   adapter: PrismaAdapter(prisma) as any,
   providers: [
     CredentialsProvider({

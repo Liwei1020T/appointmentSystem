@@ -29,7 +29,7 @@ export const ORDER_RULES = {
   // Maximum tension allowed
   MAX_TENSION: 35, // Updated to match validation in createMultiRacketOrder
   // Minimum tension difference between vertical and horizontal
-  MIN_TENSION_DIFF: 1,
+  MIN_TENSION_DIFF: 0,
   // Maximum tension difference between vertical and horizontal
   MAX_TENSION_DIFF: 3,
 } as const;

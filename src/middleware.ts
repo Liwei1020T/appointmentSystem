@@ -33,10 +33,28 @@ export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // 获取用户 token (JWT)
-    const token = await getToken({
+    const isSecureCookie = request.nextUrl.protocol === 'https:' || process.env.NODE_ENV === 'production';
+    const primarySecret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+    const fallbackSecret =
+        process.env.AUTH_SECRET &&
+            process.env.NEXTAUTH_SECRET &&
+            process.env.AUTH_SECRET !== process.env.NEXTAUTH_SECRET
+            ? process.env.NEXTAUTH_SECRET
+            : undefined;
+
+    let token = await getToken({
         req: request,
-        secret: process.env.NEXTAUTH_SECRET,
+        secret: primarySecret,
+        secureCookie: isSecureCookie,
     });
+
+    if (!token && fallbackSecret) {
+        token = await getToken({
+            req: request,
+            secret: fallbackSecret,
+            secureCookie: isSecureCookie,
+        });
+    }
 
     const isLoggedIn = !!token;
     const isAdmin = token?.role === 'admin' || token?.role === 'super_admin';
