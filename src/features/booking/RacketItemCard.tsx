@@ -50,7 +50,7 @@ export default function RacketItemCard({
     const [expanded, setExpanded] = useState(true);
     const MIN_TENSION = 18;
     const MAX_TENSION = 35;
-    const MIN_DIFF = 1;
+    const MIN_DIFF = 0;
     const MAX_DIFF = 3;
 
     const price = typeof item.string.sellingPrice === 'object'
@@ -247,11 +247,11 @@ export default function RacketItemCard({
                         </div>
                         <div className="mt-2">
                             <p className="text-[11px] text-text-tertiary">
-                                差磅需在 1-3 磅之间，系统会自动监测异常。
+                                差磅需在 0-3 磅之间，系统会自动监测异常。
                             </p>
                             {!diffValid && (
                                 <p className="text-[11px] text-warning mt-1">
-                                    当前差磅异常，请调整为 1-3 磅。
+                                    当前差磅异常，请调整为 0-3 磅。
                                 </p>
                             )}
                         </div>

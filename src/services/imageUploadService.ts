@@ -66,9 +66,13 @@ export async function uploadImage(
       payload?.data?.url ||
       payload?.data?.path ||
       payload?.data?.filePath;
+    const resolvedUrl =
+      fileUrl && fileUrl.startsWith('/') && typeof window !== 'undefined'
+        ? `${window.location.origin}${fileUrl}`
+        : fileUrl;
 
-    if (!response.ok || !fileUrl) {
-      const fallbackError = !fileUrl ? 'Upload failed: missing file URL' : 'Upload failed';
+    if (!response.ok || !resolvedUrl) {
+      const fallbackError = !resolvedUrl ? 'Upload failed: missing file URL' : 'Upload failed';
       return {
         success: false,
         error: getApiErrorMessage(payload, fallbackError),
@@ -77,7 +81,7 @@ export async function uploadImage(
 
     return {
       success: true,
-      url: fileUrl,
+      url: resolvedUrl,
     };
   } catch (error: any) {
     return {

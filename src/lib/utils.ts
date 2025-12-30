@@ -1,241 +1,85 @@
-import { format, formatDistance, parseISO } from 'date-fns';
+import { type ClassValue, clsx } from "clsx"
+import { format } from "date-fns"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
 
 /**
- * Format date to readable string
- * @param date - Date string or Date object
- * @param formatStr - Format string (default: 'MMM dd, yyyy')
+ * Validate UUID v4/v5 string input for API parameter checks.
  */
-export function formatDate(date: string | Date | null | undefined, formatStr: string = 'MMM dd, yyyy'): string {
-  if (!date) return '-';
+export function isValidUUID(value: string) {
+  const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  return uuidPattern.test(value)
+}
 
-  try {
-    let dateObj: Date;
+/**
+ * Normalize Malaysian phone input by stripping non-digits.
+ */
+export function normalizeMyPhone(value: string) {
+  return value.replace(/\D/g, '')
+}
 
-    if (typeof date === 'string') {
-      // Try parseISO first (for ISO 8601 strings)
-      dateObj = parseISO(date);
-
-      // If parseISO fails, try native Date constructor
-      if (isNaN(dateObj.getTime())) {
-        dateObj = new Date(date);
-      }
-    } else {
-      dateObj = date;
-    }
-
-    if (isNaN(dateObj.getTime())) return '-';
-    return format(dateObj, formatStr);
-  } catch (error) {
-    console.error('Date format error:', error, date);
-    return '-';
+/**
+ * Validate Malaysian phone input (local 0XXXXXXXXX/0XXXXXXXXXX or 60XXXXXXXXX/60XXXXXXXXXX).
+ */
+export function validatePhone(value: string) {
+  const digits = normalizeMyPhone(value)
+  if (digits.startsWith('60')) {
+    return digits.length === 11 || digits.length === 12
   }
-}
-
-/**
- * Format relative time (e.g., "2 hours ago")
- * @param date - Date string or Date object
- */
-export function formatRelativeTime(date: string | Date | null | undefined): string {
-  if (!date) return '-';
-
-  try {
-    const dateObj = typeof date === 'string' ? parseISO(date) : date;
-    if (isNaN(dateObj.getTime())) return '-';
-    return formatDistance(dateObj, new Date(), { addSuffix: true });
-  } catch (error) {
-    console.error('Relative time format error:', error, date);
-    return '-';
+  if (digits.startsWith('0')) {
+    return digits.length === 10 || digits.length === 11
   }
+  return false
 }
 
 /**
- * Format currency (MYR)
- * @param amount - Amount in RM
+ * Validate password strength: >= 8 chars with upper/lowercase letters and numbers.
  */
-export function formatCurrency(amount: number | null | undefined): string {
-  if (amount === null || amount === undefined || isNaN(amount)) {
-    return 'RM 0.00';
-  }
-  return `RM ${Number(amount).toFixed(2)}`;
+export function validatePassword(value: string) {
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(value)
 }
 
 /**
- * Format phone number (Malaysian format)
- * @param phone - Phone number string
+ * Format date input with a date-fns pattern.
  */
-export function formatPhone(phone: string): string {
-  // Remove all non-digit characters
-  const cleaned = phone.replace(/\D/g, '');
-
-  // Format as +60 12-345 6789
-  if (cleaned.startsWith('60')) {
-    return `+${cleaned.slice(0, 2)} ${cleaned.slice(2, 4)}-${cleaned.slice(4, 7)} ${cleaned.slice(7)}`;
-  }
-
-  // Format as 012-345 6789
-  if (cleaned.length === 10 || cleaned.length === 11) {
-    return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)} ${cleaned.slice(6)}`;
-  }
-
-  return phone;
+export function formatDate(
+  dateInput?: string | Date | null,
+  pattern: string = 'yyyy-MM-dd'
+) {
+  if (!dateInput) return '-'
+  const parsed = dateInput instanceof Date ? dateInput : new Date(dateInput)
+  if (Number.isNaN(parsed.getTime())) return '-'
+  return format(parsed, pattern)
 }
 
 /**
- * Validate email format
+ * Format currency values as RM with 2 decimals.
  */
-export function isValidEmail(email: string): boolean {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
+export function formatCurrency(amount: number | string | null | undefined) {
+  const value = Number(amount ?? 0)
+  if (Number.isNaN(value)) return 'RM 0.00'
+  return `RM ${value.toFixed(2)}`
 }
 
 /**
- * Validate Malaysian phone number
+ * Calculate remaining days until a target date.
  */
-export function isValidPhone(phone: string): boolean {
-  const cleaned = phone.replace(/\D/g, '');
-  // Malaysian phone numbers: 10-11 digits starting with 01 or 60
-  return /^(601\d{8,9}|01\d{8,9})$/.test(cleaned);
+export function calculateDaysRemaining(dateInput?: string | Date | null) {
+  if (!dateInput) return 0
+  const endDate = dateInput instanceof Date ? dateInput : new Date(dateInput)
+  if (Number.isNaN(endDate.getTime())) return 0
+  const diff = endDate.getTime() - Date.now()
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
 }
 
 /**
- * Normalize Malaysian phone input for consistent validation/storage/display.
- *
- * Supported inputs:
- * - `01131609008`
- * - `601131609008`
- * - `+601131609008`
- *
- * Output:
- * - digits only, either starting with `01` or `60` (no `+`).
- *
- * @param phone - Raw user input
- * @returns Normalized digits or empty string
+ * Generate a short, human-friendly code from an ID.
  */
-export function normalizeMyPhone(phone: string): string {
-  return String(phone || '').replace(/\D/g, '');
-}
-
-/**
- * Validate password strength
- * At least 8 characters, 1 uppercase, 1 lowercase, 1 number
- */
-export function isValidPassword(password: string): boolean {
-  return (
-    password.length >= 8 &&
-    /[A-Z]/.test(password) &&
-    /[a-z]/.test(password) &&
-    /[0-9]/.test(password)
-  );
-}
-
-// Legacy aliases for auth forms
-export const validateEmail = isValidEmail;
-export const validatePhone = isValidPhone;
-export const validatePassword = isValidPassword;
-
-/**
- * Generate random string (for referral codes, etc.)
- */
-export function generateRandomString(length: number = 8): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
-
-/**
- * Truncate text with ellipsis
- */
-export function truncate(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength) + '...';
-}
-
-/**
- * Calculate percentage
- */
-export function calculatePercentage(value: number, total: number): number {
-  if (total === 0) return 0;
-  return Math.round((value / total) * 100);
-}
-
-/**
- * 根据 UUID 生成 6 位数字简码（稳定且可读）
- */
-export function generateShortCode(id: string | null | undefined): string {
-  if (!id) return '000000';
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + id.charCodeAt(i)) % 1000000;
-  }
-  return hash.toString().padStart(6, '0');
-}
-
-/**
- * Validate UUID (v4 compatible)
- * Prevents passing invalid IDs to database queries
- */
-export function isValidUUID(value: string | null | undefined): boolean {
-  if (!value) return false;
-  return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(
-    value
-  );
-}
-
-/**
- * Debounce function
- */
-export function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
-
-/**
- * Sleep/delay function
- */
-export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Calculate days remaining until a date
- * @param date - Target date string or Date object
- * @returns Number of days remaining (0 if expired, null if no date)
- */
-export function calculateDaysRemaining(date: string | Date | null): number | null {
-  if (!date) return null;
-
-  const targetDate = typeof date === 'string' ? new Date(date) : date;
-  const now = new Date();
-
-  // Set both dates to midnight for accurate day calculation
-  targetDate.setHours(0, 0, 0, 0);
-  now.setHours(0, 0, 0, 0);
-
-  const diffTime = targetDate.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  return Math.max(0, diffDays);
-}
-
-/**
- * Safe number to fixed decimal places
- * Prevents errors when value is null/undefined/NaN
- * @param value - Number to format
- * @param decimals - Number of decimal places (default: 2)
- * @returns Formatted string
- */
-export function safeToFixed(value: number | null | undefined, decimals: number = 2): string {
-  if (value === null || value === undefined || isNaN(value)) {
-    return '0.' + '0'.repeat(decimals);
-  }
-  return Number(value).toFixed(decimals);
+export function generateShortCode(id?: string | null) {
+  if (!id) return '------'
+  return id.replace(/-/g, '').slice(0, 6).toUpperCase()
 }

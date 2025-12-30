@@ -2,7 +2,7 @@
  * 拉力输入组件 (Tension Input)
  * 
  * 输入球线拉力值，支持滑块同步、竖横线独立设置、推荐值一键使用、视觉磅数分级提示等。
- * 包含专业限制：横线需高于竖线，差磅需在 1-3 磅之间。
+ * 包含专业限制：横线需不低于竖线，差磅需在 0-3 磅之间。
  */
 
 'use client';
@@ -27,7 +27,7 @@ export default function TensionInput({
 }: TensionInputProps) {
   const MIN_TENSION = 18;
   const MAX_TENSION = 30;
-  const MIN_DIFF = 1;
+  const MIN_DIFF = 0;
   const MAX_DIFF = 3;
   const commonTensions = [20, 22, 24, 26, 28];
   const [isAdvanced, setIsAdvanced] = useState(initialCrossTension !== null && initialCrossTension !== tension);
@@ -35,7 +35,7 @@ export default function TensionInput({
   const [crossTension, setCrossTension] = useState<number>(initialCrossTension || tension || 24);
 
   /**
-   * Normalize tensions to keep difference within 1-3 lbs in advanced mode.
+   * Normalize tensions to keep difference within 0-3 lbs in advanced mode.
    * @param main - Vertical tension value.
    * @param cross - Horizontal tension value.
    * @returns Clamped vertical/horizontal values with valid diff range.
@@ -86,7 +86,7 @@ export default function TensionInput({
   const handleCrossChange = (val: number) => {
     const clampedCross = Math.max(MIN_TENSION, Math.min(MAX_TENSION, val));
 
-    // 限制：横线需高于竖线，差磅控制在 1-3 磅
+    // 限制：横线需不低于竖线，差磅控制在 0-3 磅
     const normalized = normalizeAdvanced(mainTension, clampedCross);
 
     setMainTension(normalized.main);
@@ -188,7 +188,7 @@ export default function TensionInput({
                 </span>
               </div>
               <p className="text-sm font-medium text-text-secondary">
-                建议：横线通常比竖线高 1-2 磅（差磅 1-3 磅）
+                建议：横线通常比竖线高 1-2 磅（差磅 0-3 磅）
               </p>
             </div>
           </div>
@@ -218,7 +218,7 @@ export default function TensionInput({
             <div className="bg-accent/5 border border-accent/10 rounded-lg p-3 mt-2">
               <p className="text-[11px] text-accent/80 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                专业限制：横线需高于竖线，差值需在 1-3 磅，系统自动监测异常。
+                专业限制：横线需不低于竖线，差值需在 0-3 磅，系统自动监测异常。
               </p>
             </div>
           </div>

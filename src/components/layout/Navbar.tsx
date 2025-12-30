@@ -14,6 +14,7 @@ export default function Navbar() {
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const [bellRefreshTrigger, setBellRefreshTrigger] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const shouldHideOnLanding = pathname === '/' && status !== 'authenticated';
 
   // 当通知面板中的未读数量变化时刷新铃铛
   const handleUnreadCountChange = useCallback(() => {
@@ -45,6 +46,11 @@ export default function Navbar() {
     setNotificationPanelOpen(false);
     setMobileMenuOpen(false);
   }, [pathname]);
+
+  // Landing page has its own header; avoid rendering the global Navbar there for guests.
+  if (shouldHideOnLanding) {
+    return null;
+  }
 
   return (
     <nav className="glass-strong border-b border-border-subtle sticky top-0 z-40">

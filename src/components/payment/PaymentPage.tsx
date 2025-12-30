@@ -4,8 +4,6 @@ import { useState } from 'react';
 import Image from 'next/image';
 import {
   getTngQrCodeUrl,
-  getPaymentAccountName,
-  getPaymentAccountPhone,
   formatAmount,
   generatePaymentReference,
   getPaymentInstructions,
@@ -34,8 +32,6 @@ export default function PaymentPage({
   const [success, setSuccess] = useState(false);
 
   const qrCodeUrl = getTngQrCodeUrl();
-  const accountName = getPaymentAccountName();
-  const accountPhone = getPaymentAccountPhone();
   const reference = generatePaymentReference(orderId, userId);
   const instructions = getPaymentInstructions();
 
@@ -145,16 +141,6 @@ export default function PaymentPage({
           </div>
 
           <div className="space-y-2 text-sm text-text-secondary">
-            <div className="flex justify-between">
-              <span className="text-text-tertiary">收款账户：</span>
-              <span className="font-medium">{accountName}</span>
-            </div>
-            {accountPhone && (
-              <div className="flex justify-between">
-                <span className="text-text-tertiary">收款号码：</span>
-                <span className="font-medium">{accountPhone}</span>
-              </div>
-            )}
             <div className="flex justify-between">
               <span className="text-text-tertiary">参考号：</span>
               <span className="font-mono font-medium">{reference}</span>

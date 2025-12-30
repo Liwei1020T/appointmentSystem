@@ -14,20 +14,6 @@ export function getTngQrCodeUrl(): string {
 }
 
 /**
- * 获取收款账户名称
- */
-export function getPaymentAccountName(): string {
-  return process.env.NEXT_PUBLIC_PAYMENT_ACCOUNT_NAME || 'LW String Studio';
-}
-
-/**
- * 获取收款电话号码
- */
-export function getPaymentAccountPhone(): string {
-  return process.env.NEXT_PUBLIC_PAYMENT_ACCOUNT_PHONE || '';
-}
-
-/**
  * 格式化金额显示
  */
 export function formatAmount(amount: number | null | undefined): string {

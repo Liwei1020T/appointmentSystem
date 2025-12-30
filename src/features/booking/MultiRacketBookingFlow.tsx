@@ -32,7 +32,7 @@ export default function MultiRacketBookingFlow() {
     const user = session?.user;
     const isAuthenticated = !!session;
     const authLoading = status === 'loading';
-    const MIN_TENSION_DIFF = 1;
+    const MIN_TENSION_DIFF = 0;
     const MAX_TENSION_DIFF = 3;
 
     // 购物车状态
