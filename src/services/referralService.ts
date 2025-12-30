@@ -155,7 +155,7 @@ export async function generateShareMessage(referralCode?: string): Promise<{ mes
       code = result.code;
     }
     const link = generateReferralLink(code);
-    const msg = `Join me on ArtSport! Use my referral code: ${code} or sign up here: ${link}`;
+    const msg = `Join me at LW String Studio! Use my referral code: ${code} or sign up here: ${link}`;
     return { message: msg, error: null };
   } catch (err: any) {
     return { message: null, error: err.message || '生成失败' };
@@ -167,7 +167,7 @@ export async function generateShareMessage(referralCode?: string): Promise<{ mes
  */
 export function generateShareMessageSync(referralCode: string): string {
   const link = generateReferralLink(referralCode);
-  return `Join me on ArtSport! Use my referral code: ${referralCode} or sign up here: ${link}`;
+  return `Join me at LW String Studio! Use my referral code: ${referralCode} or sign up here: ${link}`;
 }
 
 /**

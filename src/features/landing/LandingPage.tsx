@@ -93,7 +93,7 @@ export default function LandingPage() {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary mb-6">
               专业羽毛球穿线服务
             </h1>
-            
+
             <p className="text-lg md:text-xl text-text-secondary mb-8 max-w-2xl mx-auto leading-relaxed">
               在线预约 · 即时通知 · 积分优惠
               <br />
@@ -280,7 +280,7 @@ export default function LandingPage() {
       <footer className="bg-ink text-text-tertiary py-8 border-t border-border-subtle">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-sm">
-            © 2025 String Service Platform. All rights reserved.
+            © 2025 LW String Studio
           </p>
         </div>
       </footer>

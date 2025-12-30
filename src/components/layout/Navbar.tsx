@@ -70,7 +70,7 @@ export default function Navbar() {
                 </svg>
               </div>
               <span className="text-xl font-bold text-text-primary tracking-tight">
-                String Service
+                LW String Studio
               </span>
             </Link>
           </div>

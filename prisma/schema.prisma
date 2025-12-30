@@ -139,6 +139,8 @@ model StringInventory {
   durability    String? // 耐久: low, medium, high  
   control       String? // 控球: low, medium, high
   active        Boolean  @default(true)
+  // Optimistic Locking: version field for concurrency control (防止超卖)
+  version       Int      @default(1)
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 

@@ -173,7 +173,7 @@ export default function LoginPage() {
               欢迎回来
             </h1>
             <p className="text-sm text-text-secondary mt-1">
-              Login to <span className="text-gradient font-semibold">String Service</span>
+              登录 <span className="text-gradient font-semibold">LW String Studio</span>
             </p>
           </div>
 

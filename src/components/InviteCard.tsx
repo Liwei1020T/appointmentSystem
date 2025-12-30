@@ -75,7 +75,7 @@ export default function InviteCard() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: '邀请你加入 String Service Platform',
+          title: '邀请你体验 LW String Studio',
           text: message,
         });
         toast.success('分享成功');
@@ -98,14 +98,14 @@ export default function InviteCard() {
 
   if (loading) {
     return (
-    <div className="bg-gradient-to-r from-accent/25 via-ink-surface to-ink-elevated rounded-lg p-6 text-text-primary border border-border-subtle">
-      <div className="animate-pulse">
-        <div className="h-6 bg-ink-elevated rounded w-1/2 mb-4"></div>
-        <div className="h-12 bg-ink-elevated rounded mb-4"></div>
+      <div className="bg-gradient-to-r from-accent/25 via-ink-surface to-ink-elevated rounded-lg p-6 text-text-primary border border-border-subtle">
+        <div className="animate-pulse">
+          <div className="h-6 bg-ink-elevated rounded w-1/2 mb-4"></div>
+          <div className="h-12 bg-ink-elevated rounded mb-4"></div>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div className="bg-gradient-to-r from-accent/25 via-ink-surface to-ink-elevated rounded-lg p-6 text-text-primary border border-border-subtle">

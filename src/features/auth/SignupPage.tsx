@@ -56,7 +56,7 @@ export default function SignupPage() {
     // Phone input: allow simple digit input like 01131609008 (no +60 needed)
     const nextValue = name === 'phone' ? normalizeMyPhone(value) : value;
     setFormData((prev) => ({ ...prev, [name]: nextValue }));
-    
+
     // 清除对应字段的错误提示
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
@@ -152,7 +152,7 @@ export default function SignupPage() {
           {/* 标题 */}
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-text-primary">创建账户</h1>
-            <p className="text-sm text-text-secondary mt-1">Sign up for String Service</p>
+            <p className="text-sm text-text-secondary mt-1">注册 LW String Studio</p>
           </div>
 
           {/* 表单 */}

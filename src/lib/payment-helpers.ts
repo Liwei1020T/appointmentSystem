@@ -4,7 +4,7 @@
 export function getTngQrCodeUrl(): string {
   // 优先使用环境变量中配置的 URL
   const envUrl = process.env.NEXT_PUBLIC_TNG_QR_CODE_URL;
-  
+
   if (envUrl) {
     return envUrl;
   }
@@ -17,7 +17,7 @@ export function getTngQrCodeUrl(): string {
  * 获取收款账户名称
  */
 export function getPaymentAccountName(): string {
-  return process.env.NEXT_PUBLIC_PAYMENT_ACCOUNT_NAME || 'ArtSport String Service';
+  return process.env.NEXT_PUBLIC_PAYMENT_ACCOUNT_NAME || 'LW String Studio';
 }
 
 /**

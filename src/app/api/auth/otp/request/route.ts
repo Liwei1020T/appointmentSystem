@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       `
     );
 
-    const smsBody = `【String Service】重置密码验证码：${code}（5分钟内有效）。请勿泄露。`;
+    const smsBody = `【LW穿线】重置密码验证码：${code}（5分钟内有效）。请勿泄露。`;
     await sendSms(toE164(canonicalPhone), smsBody);
 
     // Dev helper: optionally return OTP in response for local testing.

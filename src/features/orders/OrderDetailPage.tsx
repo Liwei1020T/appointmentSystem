@@ -553,8 +553,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             {/* 收据头部 - 店铺信息 */}
             <div className="text-center py-4 border-b border-dashed border-border-subtle">
               <div className="text-2xl mb-1">🏸</div>
-              <div className="font-bold text-text-primary">String Service</div>
-              <div className="text-xs text-text-tertiary">羽毛球穿线服务</div>
+              <div className="font-bold text-text-primary">LW String Studio</div>
+              <div className="text-xs text-text-tertiary">羽毛球穿线工作室</div>
             </div>
 
             {/* 订单号 */}
