@@ -12,7 +12,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { Bell, Mail, Smartphone, Save, CheckCircle2 } from 'lucide-react';
+import { Bell, Smartphone, Save, CheckCircle2 } from 'lucide-react';
 import {
   getNotificationPreferences,
   updateNotificationPreferences,
@@ -90,96 +90,18 @@ export default function NotificationSettingsPage() {
           <p className="text-text-secondary">管理您的通知偏好和接收方式</p>
         </div>
 
-        {/* 邮件通知 */}
-        <div className="bg-ink-surface rounded-lg shadow-sm border border-border-subtle mb-6">
-          <div className="p-6 border-b border-border-subtle">
+        {/* WhatsApp 通知（即将推出）*/}
+        <div className="bg-ink-surface rounded-lg shadow-sm border border-border-subtle mb-6 opacity-60">
+          <div className="p-6">
             <div className="flex items-center gap-3 mb-2">
-              <Mail className="w-6 h-6 text-accent" />
-              <h2 className="text-xl font-semibold text-text-primary">邮件通知</h2>
+              <Smartphone className="w-6 h-6 text-success" />
+              <h2 className="text-xl font-semibold text-text-primary">WhatsApp 通知</h2>
+              <span className="px-2 py-0.5 text-xs bg-success/20 text-success rounded-full">即将推出</span>
             </div>
-            <p className="text-sm text-text-secondary">通过电子邮件接收通知</p>
-          </div>
-
-          <div className="p-6 space-y-4">
-            {/* 总开关 */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-text-primary">启用邮件通知</h3>
-                <p className="text-sm text-text-secondary">接收所有邮件通知</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={preferences.email_enabled}
-                  onChange={() => handleToggle('email_enabled')}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-ink-elevated peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-accent-border rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-ink-surface after:border-border-subtle after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
-              </label>
-            </div>
-
-            <hr className="border-border-subtle" />
-
-            {/* 细分选项 */}
-            <div className="space-y-3 opacity-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-medium text-text-secondary">订单更新</h4>
-                  <p className="text-xs text-text-tertiary">订单状态变更通知</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={preferences.email_order_updates}
-                  onChange={() => handleToggle('email_order_updates')}
-                  disabled={!preferences.email_enabled}
-                  className="w-4 h-4 text-accent bg-ink-surface border-border-subtle rounded focus:ring-accent-border disabled:opacity-50"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-medium text-text-secondary">支付更新</h4>
-                  <p className="text-xs text-text-tertiary">支付确认、拒绝通知</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={preferences.email_payment_updates}
-                  onChange={() => handleToggle('email_payment_updates')}
-                  disabled={!preferences.email_enabled}
-                  className="w-4 h-4 text-accent bg-ink-surface border-border-subtle rounded focus:ring-accent-border disabled:opacity-50"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-medium text-text-secondary">促销活动</h4>
-                  <p className="text-xs text-text-tertiary">优惠券、活动通知</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={preferences.email_promotions}
-                  onChange={() => handleToggle('email_promotions')}
-                  disabled={!preferences.email_enabled}
-                  className="w-4 h-4 text-accent bg-ink-surface border-border-subtle rounded focus:ring-accent-border disabled:opacity-50"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-medium text-text-secondary">系统通知</h4>
-                  <p className="text-xs text-text-tertiary">重要系统公告</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={preferences.email_system}
-                  onChange={() => handleToggle('email_system')}
-                  disabled={!preferences.email_enabled}
-                  className="w-4 h-4 text-accent bg-ink-surface border-border-subtle rounded focus:ring-accent-border disabled:opacity-50"
-                />
-              </div>
-            </div>
+            <p className="text-sm text-text-secondary">通过 WhatsApp 接收订单状态和重要通知</p>
           </div>
         </div>
+
 
         {/* 推送通知 */}
         <div className="bg-ink-surface rounded-lg shadow-sm border border-border-subtle mb-6">

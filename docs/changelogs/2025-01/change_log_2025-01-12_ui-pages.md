@@ -299,7 +299,7 @@ Notes:
  * ✅ 2. Set NEXTAUTH_SECRET (generate with: openssl rand -base64 32)
  * ✅ 3. Set NEXTAUTH_URL (production URL)
  * ⬜ 4. Upload real TNG QR Code to /public/images/tng-qr-code.png
- * ⬜ 5. Configure SMTP for email notifications
+ * ⬜ 5. Configure WhatsApp Cloud API for notifications
  * ⬜ 6. Configure SMS gateway credentials
  * 
  * Database Setup:

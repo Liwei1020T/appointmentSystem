@@ -25,16 +25,8 @@ export interface Notification {
 // User Notification Preferences
 export interface NotificationPreferences {
   // Global Channels
-  email: boolean;
   sms: boolean;
   push: boolean;
-
-  // Email Settings
-  email_enabled?: boolean;
-  email_order_updates?: boolean;
-  email_payment_updates?: boolean;
-  email_promotions?: boolean;
-  email_system?: boolean;
 
   // Push Settings
   push_enabled?: boolean;
@@ -359,15 +351,8 @@ export async function getNotificationPreferences(): Promise<{ data: Notification
   // TODO: Implement backend endpoint for user preferences
   return {
     data: {
-      email: true,
       sms: true,
       push: true,
-      
-      email_enabled: true,
-      email_order_updates: true,
-      email_payment_updates: true,
-      email_promotions: false,
-      email_system: true,
 
       push_enabled: true,
       push_order_updates: true,

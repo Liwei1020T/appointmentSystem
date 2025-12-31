@@ -501,7 +501,7 @@ npm run dev
 - [ ] 生成强密码的 `NEXTAUTH_SECRET`
 - [ ] 配置正确的 `NEXTAUTH_URL`
 - [ ] 上传真实的 TNG QR Code 图片
-- [ ] 配置 SMTP（如需邮件通知）
+- [ ] 配置 WhatsApp Cloud API（主要通知渠道）
 - [ ] 配置 SMS Gateway（如需短信通知）
 
 ### 数据库
