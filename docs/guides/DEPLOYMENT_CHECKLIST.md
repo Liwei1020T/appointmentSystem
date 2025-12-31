@@ -76,7 +76,7 @@ public/
 
 ### 4. Environment Variables 🔐
 
-- [ ] Verify `.env.local` has all required variables:
+- [ ] Verify `.env` has all required variables:
 
 ```env
 # Supabase

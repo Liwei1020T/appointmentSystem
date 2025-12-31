@@ -11,9 +11,9 @@
 
 ```bash
 # 1. 复制环境变量模板
-cp .env.example .env.local
+cp .env.example .env
 
-# 2. 编辑 .env.local，填入以下必填项：
+# 2. 编辑 .env，填入以下必填项：
 # - NEXT_PUBLIC_SUPABASE_URL（从 Supabase Dashboard 获取）
 # - NEXT_PUBLIC_SUPABASE_ANON_KEY（从 Supabase Dashboard 获取）
 # - NEXT_PUBLIC_MERCHANT_NAME（你的商家名称）
@@ -191,11 +191,11 @@ npm run dev
 
 ### 问题 4: 环境变量不生效
 
-**症状：** 修改 .env.local 后无变化
+**症状：** 修改 .env 后无变化
 
 **解决方案：**
 ```bash
-# 1. 确认文件名正确：.env.local（不是 .env）
+# 1. 确认文件名正确：.env（不是 .env）
 # 2. 确认变量名以 NEXT_PUBLIC_ 开头（客户端变量）
 # 3. 重启开发服务器
 npm run dev

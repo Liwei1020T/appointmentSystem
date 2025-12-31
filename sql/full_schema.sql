@@ -508,7 +508,6 @@ CREATE POLICY IF NOT EXISTS "Admins can manage system settings" ON public.system
   FOR ALL USING (EXISTS (SELECT 1 FROM public.users u WHERE u.id = auth.uid() AND u.role = 'admin'));
 
 INSERT INTO public.system_settings (key, value, description) VALUES
-  ('points_per_order', to_jsonb(10), 'Points awarded per completed order'),
   ('referral_reward', to_jsonb(50), 'Points for both referrer and referee'),
   ('low_stock_threshold', to_jsonb(5), 'Global low stock alert'),
   ('sms_enabled', to_jsonb(false), 'Enable SMS notifications')
@@ -729,7 +728,7 @@ CREATE TRIGGER trg_process_referral_reward
 CREATE OR REPLACE FUNCTION public.process_order_completion()
 RETURNS TRIGGER AS $$
 DECLARE
-  points_to_award INTEGER := COALESCE((SELECT (value::TEXT)::INT FROM public.system_settings WHERE key = 'points_per_order'), 10);
+  points_to_award INTEGER := GREATEST(0, FLOOR(COALESCE(NEW.final_price, 0) * 0.5));
   new_balance INTEGER;
   string_cost NUMERIC(10,2);
 BEGIN
@@ -749,7 +748,7 @@ BEGIN
       FROM public.string_inventory WHERE id = NEW.string_id;
     END IF;
 
-    -- Award points
+    -- Award points based on order amount (percentage-based)
     UPDATE public.users SET points = points + points_to_award WHERE id = NEW.user_id RETURNING points INTO new_balance;
     INSERT INTO public.points_log (user_id, amount, type, reference_id, balance_after, description)
     VALUES (NEW.user_id, points_to_award, 'order', NEW.id, new_balance, 'Order completed');

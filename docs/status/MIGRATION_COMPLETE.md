@@ -74,10 +74,10 @@ docker-compose up -d
 
 ### 步骤 2: 配置环境变量
 ```powershell
-copy .env.example .env.local
+copy .env.example .env
 ```
 
-编辑 `.env.local`:
+编辑 `.env`:
 ```env
 DATABASE_URL="postgresql://postgres:password@localhost:5432/string_service"
 NEXTAUTH_SECRET="<生成随机32位字符串>"
@@ -233,7 +233,7 @@ docker-compose logs -f  # 查看日志
 
 1. **密码安全**: 默认管理员密码为 `admin123`，生产环境必须修改！
 
-2. **环境变量**: `.env.local` 不要提交到 git，已在 `.gitignore` 中
+2. **环境变量**: `.env` 不要提交到 git，已在 `.gitignore` 中
 
 3. **数据迁移**: 如有现有 Supabase 数据，需要导出并导入到 Postgres
 

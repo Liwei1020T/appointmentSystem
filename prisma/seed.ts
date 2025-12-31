@@ -29,16 +29,6 @@ async function main() {
 
   // 2. 创建系统设置
   await prisma.systemSetting.upsert({
-    where: { key: 'points_per_order' },
-    update: { value: 10 },
-    create: {
-      key: 'points_per_order',
-      value: 10,
-      description: '每个订单奖励积分数',
-    },
-  });
-
-  await prisma.systemSetting.upsert({
     where: { key: 'referral_reward' },
     update: { value: 50 },
     create: {

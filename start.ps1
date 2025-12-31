@@ -20,22 +20,22 @@ try {
 
 # 检查环境变量文件
 Write-Host "`n→ 检查环境变量..." -ForegroundColor Yellow
-if (!(Test-Path ".env.local")) {
-    Write-Host "  ! 未找到 .env.local 文件" -ForegroundColor Yellow
+if (!(Test-Path ".env")) {
+    Write-Host "  ! 未找到 .env 文件" -ForegroundColor Yellow
     Write-Host "  正在从 .env.example 复制..." -ForegroundColor Cyan
-    Copy-Item ".env.example" ".env.local"
+    Copy-Item ".env.example" ".env"
     
-    Write-Host "`n  ⚠️  请编辑 .env.local 文件，设置 NEXTAUTH_SECRET" -ForegroundColor Yellow
+    Write-Host "`n  ⚠️  请编辑 .env 文件，设置 NEXTAUTH_SECRET" -ForegroundColor Yellow
     Write-Host "  可以使用以下命令生成：" -ForegroundColor Gray
     Write-Host "  [Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32))" -ForegroundColor Gray
     
-    $continue = Read-Host "`n  是否现在打开 .env.local 文件进行编辑? (y/n)"
+    $continue = Read-Host "`n  是否现在打开 .env 文件进行编辑? (y/n)"
     if ($continue -eq "y") {
-        notepad ".env.local"
+        notepad ".env"
         Read-Host "`n  编辑完成后按 Enter 继续"
     }
 } else {
-    Write-Host "  ✓ .env.local 已存在" -ForegroundColor Green
+    Write-Host "  ✓ .env 已存在" -ForegroundColor Green
 }
 
 # 启动数据库

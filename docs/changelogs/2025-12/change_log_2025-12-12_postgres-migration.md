@@ -89,7 +89,7 @@ npm run dev
 ## Migration Path
 用户需要：
 1. 安装 Docker（运行 PostgreSQL）
-2. 配置 .env.local (DATABASE_URL, NEXTAUTH_SECRET)
+2. 配置 .env (DATABASE_URL, NEXTAUTH_SECRET)
 3. 运行数据库迁移
 4. 从 Supabase 导出现有数据（如需要）
 5. 测试新认证流程

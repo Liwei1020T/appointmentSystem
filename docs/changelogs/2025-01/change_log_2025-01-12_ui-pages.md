@@ -295,7 +295,7 @@ Notes:
  * =============================================================================
  * 
  * Environment Setup:
- * ✅ 1. Set DATABASE_URL in .env.local
+ * ✅ 1. Set DATABASE_URL in .env
  * ✅ 2. Set NEXTAUTH_SECRET (generate with: openssl rand -base64 32)
  * ✅ 3. Set NEXTAUTH_URL (production URL)
  * ⬜ 4. Upload real TNG QR Code to /public/images/tng-qr-code.png
@@ -328,7 +328,7 @@ Notes:
  * 
  * Development:
  * 1. npm install
- * 2. Setup .env.local (copy from .env.example)
+ * 2. Setup .env (copy from .env.example)
  * 3. docker-compose up -d (start PostgreSQL)
  * 4. npm run db:push
  * 5. npm run db:seed

@@ -432,7 +432,7 @@ node scripts/generate-vapid-keys.js
 
 ### 2. 配置环境变量
 
-**本地开发 (.env.local):**
+**本地开发 (.env):**
 ```bash
 # Web Push (VAPID)
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=BKxTw...
@@ -675,7 +675,7 @@ navigator.serviceWorker.getRegistration('/sw.js').then(reg => {
 **解决方案：**
 ```bash
 # 检查本地环境变量
-cat .env.local | grep VAPID
+cat .env | grep VAPID
 
 # 设置 Supabase secrets
 supabase secrets set VAPID_PUBLIC_KEY=YOUR_PUBLIC_KEY

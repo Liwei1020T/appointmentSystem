@@ -738,7 +738,7 @@ await markAllAsRead(userId);
 ### 1. 环境变量配置
 
 ```bash
-# .env.local
+# .env
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxx
 FROM_EMAIL=noreply@stringservice.com
 NEXT_PUBLIC_APP_URL=https://stringservice.com

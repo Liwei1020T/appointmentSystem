@@ -893,7 +893,7 @@ WHERE brand = 'Victor' AND cost_price IS NULL;
 
 **修改方式 2 - 环境变量：**
 ```bash
-# .env.local
+# .env
 NEXT_PUBLIC_LOW_STOCK_THRESHOLD=5
 ```
 

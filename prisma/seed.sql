@@ -28,7 +28,6 @@ VALUES (
 
 INSERT INTO system_settings (key, value, description, updated_at)
 VALUES 
-  ('points_per_order', '10', '每个订单奖励积分数', NOW()),
   ('referral_reward', '50', '推荐奖励积分数', NOW()),
   ('low_stock_threshold', '5', '低库存警告阈值（米）', NOW()),
   ('order_auto_complete_days', '7', '订单自动完成天数', NOW())

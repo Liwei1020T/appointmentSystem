@@ -30,7 +30,7 @@ TWILIO_FROM_NUMBER=+60XXXXXXXXX
 
 ### 第四步：配置环境变量
 
-**本地开发** (`.env.local`):
+**本地开发** (`.env`):
 ```bash
 TWILIO_ACCOUNT_SID=AC...
 TWILIO_AUTH_TOKEN=...

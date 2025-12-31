@@ -420,7 +420,6 @@ System-wide configuration.
 | `updated_at`    | `timestamptz`| DEFAULT now()            |                                |
 
 **Example Settings:**
-- `points_per_order`: Points awarded per completed order
 - `referral_reward`: Points for referrer and referee
 - `low_stock_threshold`: Global low stock alert
 - `sms_enabled`: Enable SMS notifications

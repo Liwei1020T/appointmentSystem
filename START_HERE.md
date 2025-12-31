@@ -19,10 +19,10 @@ docker-compose ps
 
 ```powershell
 # 复制环境变量模板
-copy .env.example .env.local
+copy .env.example .env
 ```
 
-打开 `.env.local` 文件，**只需修改这一行**：
+打开 `.env` 文件，**只需修改这一行**：
 
 ```env
 NEXTAUTH_SECRET="请生成一个随机字符串"
@@ -33,7 +33,7 @@ NEXTAUTH_SECRET="请生成一个随机字符串"
 [Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
 ```
 
-复制输出的字符串，粘贴到 `.env.local` 的 `NEXTAUTH_SECRET=` 后面。
+复制输出的字符串，粘贴到 `.env` 的 `NEXTAUTH_SECRET=` 后面。
 
 ---
 

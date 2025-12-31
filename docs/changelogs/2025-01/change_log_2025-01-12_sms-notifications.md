@@ -431,7 +431,7 @@ sendSmsNotification({
 
 ### Required Twilio Credentials
 
-Add to `.env.local` (development):
+Add to `.env` (development):
 ```bash
 TWILIO_ACCOUNT_SID=AC...
 TWILIO_AUTH_TOKEN=...

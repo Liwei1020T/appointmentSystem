@@ -1220,7 +1220,7 @@ metadata JSONB,             -- 存储 FPX 请求和回调数据
 
 ### 环境变量
 
-**需要配置（.env.local）：**
+**需要配置（.env）：**
 
 ```env
 # FPX 配置
@@ -1437,7 +1437,7 @@ async function handlePaymentRetry(paymentId: string) {
   ```
 
 - [x] **配置环境变量**
-  - 添加 FPX 相关配置到 .env.local
+  - 添加 FPX 相关配置到 .env
   - 生产环境使用 Vercel 环境变量
 
 - [x] **部署 Edge Function**
@@ -1613,7 +1613,7 @@ npm install
 
 ### 2. 配置环境变量
 
-**开发环境 (.env.local)：**
+**开发环境 (.env)：**
 
 ```env
 # FPX 配置

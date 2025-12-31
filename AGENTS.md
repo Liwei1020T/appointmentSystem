@@ -1,8 +1,8 @@
 🧠 AGENTS.md — AI Coding Agent Development Protocol
 
 String Service Platform — Development Governance Document  
-版本：1.2  
-最后更新：2025-12-23  
+版本：1.3  
+最后更新：2025-12-31  
 
 ---
 
@@ -27,12 +27,12 @@ String Service Platform — Development Governance Document
 
 包括但不限于：
 
-- `docs/System-Design-Document.md`  
-- `docs/UI-Design-Guide.md`  
-- `docs/api_spec.md`  
-- `docs/erd.md`  
-- `docs/components.md`  
-- 以及所有最新的 `docs/change_log_*.md`（必须串读以确认上下文）  
+- `docs/core/System-Design-Document.md`  
+- `docs/core/UI-Design-Guide.md`  
+- `docs/core/api_spec.md`  
+- `docs/core/erd.md`  
+- `docs/core/components.md`  
+- 以及 `docs/changelogs/` 下最新的变更日志（必须串读以确认上下文）  
 
 Agent 必须阅读这些文件并建立上下文。
 
@@ -122,7 +122,7 @@ Agent 需要对以下内容有清晰理解（或在变更时同步更新文档�
 
 必须产出的文档包括：
 
-#### 4.1 `docs/change_log_<date>.md`
+#### 4.1 `docs/changelogs/YYYY-MM/change_log_<date>.md`
 
 内容包含：
 
@@ -157,11 +157,11 @@ Added booking discount system + updated inventory logic.
 
 可能需要同步更新的文档：
 
-- `docs/system_design.md`  
-- `docs/api_spec.md`  
-- `docs/erd.md`  
-- `docs/ui_design.md`  
-- `docs/workflow.md`  
+- `docs/core/System-Design-Document.md`  
+- `docs/core/api_spec.md`  
+- `docs/core/erd.md`  
+- `docs/core/UI-Design-Guide.md`  
+- `docs/status/PROJECT_STATUS.md`  
 
 #### 4.3 调整 README 模块进度（如果有）
 
@@ -182,11 +182,19 @@ src/
   services/           # API service
   hooks/              # React hooks
 docs/
-  system_design.md
-  ui_design.md
-  erd.md
-  api_spec.md
-  change_log_*.md
+  README.md           # 文档索引
+  core/               # 核心设计文档
+    System-Design-Document.md
+    api_spec.md
+    erd.md
+    components.md
+    UI-Design-Guide.md
+  guides/             # 开发与部署指南
+  plans/              # 功能规划文档
+  status/             # 项目状态跟踪
+  changelogs/         # 变更日志（按月份归档）
+    2025-12/
+    2025-01/
 AGENTS.md             # 本文件（Agent 行为规范）
 ```
 
@@ -325,11 +333,10 @@ className="bg-white border border-gray-100 hover:shadow-md"
 
 ## 📌 10. Change Log 文档规范
 
-每次开发完成后，必须在 `docs/` 创建 `change_log_YYYY-MM-DD.md`，格式参考：
+每次开发完成后，必须在 `docs/changelogs/YYYY-MM/` 创建 `change_log_YYYY-MM-DD.md`，格式参考：
 
-- `docs/change_log_2025-12-23.md` — 视觉呼吸感优化 + UX 改进
+- `docs/changelogs/2025-12/change_log_2025-12-23.md` — 视觉呼吸感优化 + UX 改进
 
 ---
 
-> **本文档最后更新：2025-12-23**
-```
+> **本文档最后更新：2025-12-31**

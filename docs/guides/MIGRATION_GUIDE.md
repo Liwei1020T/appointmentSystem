@@ -16,9 +16,9 @@ docker-compose ps
 
 ```bash
 # 复制环境变量模板
-copy .env.example .env.local
+copy .env.example .env
 
-# 编辑 .env.local，填写必要配置
+# 编辑 .env，填写必要配置
 # 最少需要设置：
 # - DATABASE_URL
 # - NEXTAUTH_SECRET (生成方法见下)
@@ -213,7 +213,7 @@ docker-compose ps
 ```
 
 ### Q: NextAuth 报错？
-确保 NEXTAUTH_SECRET 已设置在 .env.local
+确保 NEXTAUTH_SECRET 已设置在 .env
 
 ### Q: 类型错误？
 ```bash

@@ -323,9 +323,9 @@ string/
 # 1. 安装依赖
 npm install
 
-# 2. 配置环境变量（复制 .env.example 为 .env.local）
-cp .env.example .env.local
-# 编辑 .env.local，设置 DATABASE_URL 和 NEXTAUTH_SECRET
+# 2. 配置环境变量（复制 .env.example 为 .env）
+cp .env.example .env
+# 编辑 .env，设置 DATABASE_URL 和 NEXTAUTH_SECRET
 
 # 3. 启动 PostgreSQL (Docker)
 docker-compose up -d
@@ -497,7 +497,7 @@ npm run dev
 
 ### 环境准备
 
-- [ ] 设置生产环境的 `.env.local`
+- [ ] 设置生产环境的 `.env`
 - [ ] 生成强密码的 `NEXTAUTH_SECRET`
 - [ ] 配置正确的 `NEXTAUTH_URL`
 - [ ] 上传真实的 TNG QR Code 图片

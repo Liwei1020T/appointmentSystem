@@ -14,9 +14,9 @@ docker-compose ps
 
 ```powershell
 # 复制环境变量模板
-copy .env.example .env.local
+copy .env.example .env
 
-# 编辑 .env.local，最少配置：
+# 编辑 .env，最少配置：
 # DATABASE_URL="postgresql://postgres:password@localhost:5432/string_service?schema=public"
 # NEXTAUTH_SECRET="<生成一个32位随机字符串>"
 ```
@@ -131,7 +131,7 @@ netstat -ano | findstr :3000
 ```
 
 ### NextAuth 错误
-- 确保 `NEXTAUTH_SECRET` 已在 `.env.local` 中设置
+- 确保 `NEXTAUTH_SECRET` 已在 `.env` 中设置
 - 确保 `NEXTAUTH_URL` 正确 (开发环境 `http://localhost:3000`)
 
 ## 下一步

@@ -280,7 +280,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
    - Email 模板（重置密码、确认邮箱）
    - Redirect URLs 白名单
 
-2. **环境变量**：确保 `.env.local` 配置：
+2. **环境变量**：确保 `.env` 配置：
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your-project-url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key

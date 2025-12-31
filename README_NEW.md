@@ -45,8 +45,8 @@ cd string
 npm install
 
 # 3. 复制环境变量
-cp .env.example .env.local
-# 编辑 .env.local，设置以下变量：
+cp .env.example .env
+# 编辑 .env，设置以下变量：
 # - DATABASE_URL
 # - NEXTAUTH_SECRET (使用: openssl rand -base64 32)
 # - NEXTAUTH_URL
