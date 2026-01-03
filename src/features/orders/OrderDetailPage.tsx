@@ -573,6 +573,35 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                 </button>
               </div>
             </div>
+
+            {/* 服务方式 */}
+            <div className="flex items-center justify-between px-4 py-2 bg-ink-surface/50 border-b border-dashed border-border-subtle">
+              <span className="text-xs text-text-tertiary">服务方式</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-text-primary">
+                  {(order as any).serviceType === 'pickup_delivery' || (order as any).service_type === 'pickup_delivery'
+                    ? '🛵 上门取送'
+                    : '🏪 到店自取'}
+                </span>
+              </div>
+            </div>
+
+            {/* 上门取送地址 */}
+            {((order as any).serviceType === 'pickup_delivery' || (order as any).service_type === 'pickup_delivery') &&
+              ((order as any).pickupAddress || (order as any).pickup_address) && (
+                <div className="px-4 py-2 bg-orange-50 border-b border-dashed border-orange-200">
+                  <div className="flex items-start gap-2">
+                    <span className="text-xs text-orange-600">📍</span>
+                    <div className="flex-1">
+                      <span className="text-xs text-orange-700 font-medium">取拍地址</span>
+                      <p className="text-sm text-orange-800 mt-0.5">
+                        {(order as any).pickupAddress || (order as any).pickup_address}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             {/* 价格明细 - 显示每种球线 */}
             <div className="px-4 py-3 space-y-2 font-mono text-sm border-b border-dashed border-border-subtle">
               {/* 多球拍订单：显示每种球线 */}

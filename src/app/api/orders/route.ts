@@ -33,6 +33,9 @@ const createMultiSchema = z.object({
   packageId: z.string().uuid().optional(),
   voucherId: z.string().uuid().optional(),
   notes: z.string().optional(),
+  // 服务方式：到店自取 | 上门取送
+  serviceType: z.enum(['in_store', 'pickup_delivery']).optional().default('in_store'),
+  pickupAddress: z.string().optional(),
 });
 
 const createSingleSchema = z.object({

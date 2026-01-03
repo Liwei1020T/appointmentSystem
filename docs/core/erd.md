@@ -154,6 +154,8 @@ Customer booking and order records.
 |-----------------|--------------|--------------------------|---------------------------------------|
 | `id`            | `uuid`       | PRIMARY KEY              | Order ID                              |
 | `user_id`       | `uuid`       | FK → users.id, NOT NULL  | Customer ID                           |
+| `service_type`  | `text`       | DEFAULT 'in_store'       | 'in_store' (到店自取) or 'pickup_delivery' (上门取送) — 2026-01-04 新增 |
+| `pickup_address`| `text`       |                          | 上门取送地址（仅 pickup_delivery 时使用）— 2026-01-04 新增 |
 | `string_id`     | `uuid`       | FK → string_inventory.id | String used                           |
 | `tension`       | `integer`    |                          | String tension (lbs)                  |
 | `price`         | `numeric`    | NOT NULL                 | Final price paid                      |

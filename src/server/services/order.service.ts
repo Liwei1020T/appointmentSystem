@@ -41,6 +41,8 @@ export interface CreateMultiRacketOrderPayload {
   packageId?: string;
   voucherId?: string;
   notes?: string;
+  serviceType?: 'in_store' | 'pickup_delivery';
+  pickupAddress?: string;
 }
 
 type UserSnapshot = Pick<User, 'id' | 'role' | 'fullName'>;
@@ -447,7 +449,7 @@ export async function createOrderWithPackage(user: UserSnapshot, payload: Create
 }
 
 export async function createMultiRacketOrder(user: UserSnapshot, payload: CreateMultiRacketOrderPayload) {
-  const { items, usePackage, packageId, voucherId, notes } = payload;
+  const { items, usePackage, packageId, voucherId, notes, serviceType, pickupAddress } = payload;
 
   if (!items || items.length === 0) {
     throw new ApiError('BAD_REQUEST', 400, 'At least one racket is required');
@@ -582,6 +584,8 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
         packageUsedId: packageUsed?.id || null,
         voucherUsedId: voucherUsed?.id || null,
         notes: notes || `多球拍订单：${racketCount} 支球拍`,
+        serviceType: serviceType || 'in_store',
+        pickupAddress: serviceType === 'pickup_delivery' ? pickupAddress : null,
       },
     });
 

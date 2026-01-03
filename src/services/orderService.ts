@@ -6,6 +6,9 @@
 import type { Order } from '.prisma/client';
 import { apiRequest } from '@/services/apiClient';
 
+// 服务类型：到店自取 | 上门取送
+export type ServiceType = 'in_store' | 'pickup_delivery';
+
 export interface CreateOrderData {
   stringId?: string;
   tension: number;
@@ -43,6 +46,8 @@ export interface CreateMultiRacketOrderData {
   packageId?: string;
   voucherId?: string;
   notes?: string;
+  serviceType?: ServiceType;
+  pickupAddress?: string;
 }
 
 export interface OrderWithDetails

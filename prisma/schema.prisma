@@ -179,6 +179,9 @@ model StockLog {
 model Order {
   id             String    @id @default(uuid()) @db.Uuid
   userId         String    @map("user_id") @db.Uuid
+  // Service type: 'in_store' (到店自取/自送) or 'pickup_delivery' (上门取送)
+  serviceType    String    @default("in_store") @map("service_type")
+  pickupAddress  String?   @map("pickup_address") // 上门取送地址（仅 pickup_delivery 时使用）
   // Legacy fields - kept for backward compatibility with existing orders
   stringId       String?   @map("string_id") @db.Uuid
   tension        Int?

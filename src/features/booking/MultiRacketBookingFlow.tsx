@@ -17,10 +17,11 @@ import LoadingSpinner from '@/components/loading/LoadingSpinner';
 import { formatCurrency } from '@/lib/utils';
 import { hasAvailablePackage, getUserPackages } from '@/services/packageService';
 import { createMultiRacketOrder } from '@/services/orderService';
-import { getUserStats, type MembershipTierInfo } from '@/services/profileService';
+import { getUserStats, getUserProfile, type MembershipTierInfo } from '@/services/profileService';
 import StringSelector from './StringSelector';
 import RacketItemCard, { RacketItemData } from './RacketItemCard';
 import VoucherSelector from './VoucherSelector';
+import ServiceMethodSelector, { ServiceType } from './ServiceMethodSelector';
 import { toast } from 'sonner';
 
 // 生成临时 ID
@@ -44,6 +45,11 @@ export default function MultiRacketBookingFlow() {
     const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
     const [selectedVoucher, setSelectedVoucher] = useState<UserVoucher | null>(null);
     const [notes, setNotes] = useState('');
+
+    // 服务方式
+    const [serviceType, setServiceType] = useState<ServiceType>('in_store');
+    const [pickupAddress, setPickupAddress] = useState('');
+    const [userDefaultAddress, setUserDefaultAddress] = useState('');
 
     // UI 状态
     const [step, setStep] = useState(1); // 1: 选择球线添加, 2: 配置球拍, 3: 优惠/套餐, 4: 确认
@@ -80,8 +86,20 @@ export default function MultiRacketBookingFlow() {
             checkPackageAvailability();
             loadUserPackages();
             loadMembershipInfo();
+            loadUserAddress();
         }
     }, [user]);
+
+    const loadUserAddress = async () => {
+        try {
+            const { profile } = await getUserProfile();
+            if (profile?.address) {
+                setUserDefaultAddress(profile.address);
+            }
+        } catch (error) {
+            console.error('Failed to load user address:', error);
+        }
+    };
 
     const checkPackageAvailability = async () => {
         const available = await hasAvailablePackage();
@@ -247,6 +265,8 @@ export default function MultiRacketBookingFlow() {
                 packageId: selectedPackageId || undefined,
                 voucherId: selectedVoucher?.id,
                 notes,
+                serviceType,
+                pickupAddress: serviceType === 'pickup_delivery' ? pickupAddress : undefined,
             });
 
             toast.success(`预约成功！共 ${result.racketCount} 支球拍`);
@@ -363,303 +383,315 @@ export default function MultiRacketBookingFlow() {
                 {/* 主内容区 */}
                 <div className={`max-w-2xl mx-auto px-4 py-4 space-y-4 ${step === 1 ? 'pb-28' : 'pb-24'}`}>
                     {/* Step 1: 选择球线添加到购物车 */}
-                {step === 1 && (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-bold text-gray-900">选择球线</h2>
-                            {cartItems.length > 0 && (
-                                <button
-                                    onClick={handleNext}
-                                    className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-all"
-                                >
-                                    继续配置
-                                    <ArrowRight className="w-4 h-4" />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* 已添加的球拍预览 - 浅橙色卡片 */}
-                        {cartItems.length > 0 && (
-                            <div className="bg-orange-50 rounded-xl border border-orange-200 overflow-hidden">
-                                {/* 折叠头部 */}
-                                <button
-                                    onClick={() => setIsCartExpanded(!isCartExpanded)}
-                                    className="w-full flex items-center justify-between p-3 hover:bg-orange-100/50 transition-colors"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <span className="w-6 h-6 bg-orange-500 text-white rounded-full text-xs flex items-center justify-center font-bold">
-                                            {cartItems.length}
-                                        </span>
-                                        <span className="text-sm font-medium text-orange-700">
-                                            已添加 {cartItems.length} 支球拍
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-bold text-orange-600" style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}>
-                                            {formatCurrency(baseTotal)}
-                                        </span>
-                                        {isCartExpanded ? (
-                                            <ChevronUp className="w-4 h-4 text-orange-500" />
-                                        ) : (
-                                            <ChevronDown className="w-4 h-4 text-orange-500" />
-                                        )}
-                                    </div>
-                                </button>
-
-                                {/* 折叠内容 - 球拍列表 */}
-                                <div className={`overflow-hidden transition-all duration-300 ${isCartExpanded ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'}`}>
-                                    <div className="px-3 pb-3 space-y-2">
-                                        {cartItems.map((item, index) => (
-                                            <div
-                                                key={item.id}
-                                                className="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-border-subtle"
-                                            >
-                                                <div className="flex items-center gap-2 min-w-0">
-                                                    <span className="w-5 h-5 bg-accent text-white rounded-full text-xs flex items-center justify-center font-bold flex-shrink-0">
-                                                        {index + 1}
-                                                    </span>
-                                                    <span className="text-sm text-text-primary truncate">
-                                                        {item.string.brand} {item.string.model}
-                                                    </span>
-                                                </div>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleRemoveItem(item.id);
-                                                    }}
-                                                    className="p-1 text-text-tertiary hover:text-danger hover:bg-danger/10 rounded-full transition-colors flex-shrink-0"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 球线选择器 - 不再渲染 StickySelectionBar */}
-                        <StringSelector
-                            selectedString={selectedStringForAdd}
-                            onSelect={setSelectedStringForAdd}
-                            onNext={() => { }}
-                            hideBottomBar={true}
-                        />
-                    </div>
-                )}
-
-                {/* Step 2: 配置每支球拍 */}
-                {step === 2 && (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-text-primary">配置球拍</h2>
-                            <span className="text-sm text-text-tertiary">
-                                {cartItems.filter(i => i.racketPhoto).length}/{cartItems.length} 已完成
-                            </span>
-                        </div>
-
+                    {step === 1 && (
                         <div className="space-y-4">
-                            {cartItems.map((item, index) => (
-                                <RacketItemCard
-                                    key={item.id}
-                                    item={item}
-                                    index={index}
-                                    onUpdate={handleUpdateItem}
-                                    onRemove={handleRemoveItem}
-                                    disabled={loading}
-                                />
-                            ))}
-                        </div>
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-lg font-bold text-gray-900">选择球线</h2>
+                                {cartItems.length > 0 && (
+                                    <button
+                                        onClick={handleNext}
+                                        className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-all"
+                                    >
+                                        继续配置
+                                        <ArrowRight className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
 
-                        {/* 添加更多球拍 */}
-                        <button
-                            onClick={() => setStep(1)}
-                            className="w-full py-3 border-2 border-dashed border-border-subtle rounded-xl text-text-secondary hover:border-accent hover:text-accent transition-colors flex items-center justify-center gap-2"
-                        >
-                            <Plus className="w-5 h-5" />
-                            添加更多球拍
-                        </button>
-                    </div>
-                )}
-
-                {/* Step 3: 优惠/套餐选择 */}
-                {step === 3 && (
-                    <div className="space-y-6">
-                        <h2 className="text-xl font-bold text-text-primary">选择优惠</h2>
-
-                        {/* 套餐选择 */}
-                        {packageAvailable && userPackages.length > 0 && (
-                            <div className="space-y-3">
-                                <label className="block text-sm font-medium text-text-primary">
-                                    🎁 使用套餐
-                                </label>
-                                <div className="space-y-2">
-                                    {userPackages.map(pkg => (
-                                        <label
-                                            key={pkg.id}
-                                            className={`
-                        flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all
-                        ${usePackage && selectedPackageId === pkg.id
-                                                    ? 'border-success bg-success/5'
-                                                    : 'border-border-subtle hover:border-success/50'
-                                                }
-                        ${pkg.remaining < cartItems.length ? 'opacity-50 cursor-not-allowed' : ''}
-                      `}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="radio"
-                                                    name="package"
-                                                    checked={usePackage && selectedPackageId === pkg.id}
-                                                    onChange={() => {
-                                                        if (pkg.remaining >= cartItems.length) {
-                                                            setUsePackage(true);
-                                                            setSelectedPackageId(pkg.id);
-                                                            setSelectedVoucher(null);
-                                                        }
-                                                    }}
-                                                    disabled={pkg.remaining < cartItems.length}
-                                                    className="w-5 h-5 text-success"
-                                                />
-                                                <div>
-                                                    <p className="font-medium text-text-primary">{pkg.package?.name}</p>
-                                                    <p className="text-sm text-text-secondary">
-                                                        剩余 {pkg.remaining} 次
-                                                        {pkg.remaining < cartItems.length && (
-                                                            <span className="text-danger ml-2">（不足 {cartItems.length} 次）</span>
-                                                        )}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            {usePackage && selectedPackageId === pkg.id && (
-                                                <span className="text-success font-bold">-{formatCurrency(baseTotal)}</span>
+                            {/* 已添加的球拍预览 - 浅橙色卡片 */}
+                            {cartItems.length > 0 && (
+                                <div className="bg-orange-50 rounded-xl border border-orange-200 overflow-hidden">
+                                    {/* 折叠头部 */}
+                                    <button
+                                        onClick={() => setIsCartExpanded(!isCartExpanded)}
+                                        className="w-full flex items-center justify-between p-3 hover:bg-orange-100/50 transition-colors"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-6 h-6 bg-orange-500 text-white rounded-full text-xs flex items-center justify-center font-bold">
+                                                {cartItems.length}
+                                            </span>
+                                            <span className="text-sm font-medium text-orange-700">
+                                                已添加 {cartItems.length} 支球拍
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-bold text-orange-600" style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}>
+                                                {formatCurrency(baseTotal)}
+                                            </span>
+                                            {isCartExpanded ? (
+                                                <ChevronUp className="w-4 h-4 text-orange-500" />
+                                            ) : (
+                                                <ChevronDown className="w-4 h-4 text-orange-500" />
                                             )}
-                                        </label>
-                                    ))}
-                                    {usePackage && (
-                                        <button
-                                            onClick={() => {
-                                                setUsePackage(false);
-                                                setSelectedPackageId(null);
-                                            }}
-                                            className="text-sm text-text-tertiary hover:text-danger"
-                                        >
-                                            取消使用套餐
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        )}
+                                        </div>
+                                    </button>
 
-                        {!usePackage && (
-                            <VoucherSelector
-                                orderAmount={baseTotal}
-                                selectedVoucher={selectedVoucher}
-                                onSelect={setSelectedVoucher}
-                            />
-                        )}
-
-                        {/* 会员折扣提示 */}
-                        {membershipInfo && membershipInfo.discountRate > 0 && !usePackage && (
-                            <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
-                                <p className="text-sm text-accent font-medium">
-                                    🎖️ {membershipInfo.label} 会员专享 {membershipInfo.discountRate}% 折扣
-                                </p>
-                            </div>
-                        )}
-
-                    </div>
-                )}
-
-                {/* Step 4: 确认订单 */}
-                {step === 4 && (
-                    <div className="space-y-6">
-                        <h2 className="text-xl font-bold text-text-primary">确认订单</h2>
-
-                        {/* 订单项列表 */}
-                        <div className="space-y-3">
-                            {cartItems.map((item, index) => (
-                                <div
-                                    key={item.id}
-                                    className="flex items-center gap-3 p-4 rounded-xl bg-ink-surface border border-border-subtle"
-                                >
-                                    {item.racketPhoto && (
-                                        <img
-                                            src={item.racketPhoto}
-                                            alt="球拍"
-                                            className="w-16 h-16 rounded-lg object-cover"
-                                        />
-                                    )}
-                                    <div className="flex-1">
-                                        <p className="font-medium text-text-primary">
-                                            {item.string.brand} {item.string.model}
-                                        </p>
-                                        <p className="text-sm text-text-secondary">
-                                            {item.tensionVertical}/{item.tensionHorizontal} 磅
-                                            {item.racketBrand && ` · ${item.racketBrand}`}
-                                            {item.racketModel && ` ${item.racketModel}`}
-                                        </p>
+                                    {/* 折叠内容 - 球拍列表 */}
+                                    <div className={`overflow-hidden transition-all duration-300 ${isCartExpanded ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                        <div className="px-3 pb-3 space-y-2">
+                                            {cartItems.map((item, index) => (
+                                                <div
+                                                    key={item.id}
+                                                    className="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-border-subtle"
+                                                >
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <span className="w-5 h-5 bg-accent text-white rounded-full text-xs flex items-center justify-center font-bold flex-shrink-0">
+                                                            {index + 1}
+                                                        </span>
+                                                        <span className="text-sm text-text-primary truncate">
+                                                            {item.string.brand} {item.string.model}
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleRemoveItem(item.id);
+                                                        }}
+                                                        className="p-1 text-text-tertiary hover:text-danger hover:bg-danger/10 rounded-full transition-colors flex-shrink-0"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <span className="font-bold text-text-primary">
-                                        {usePackage ? '套餐' : formatCurrency(
-                                            typeof item.string.sellingPrice === 'object'
-                                                ? item.string.sellingPrice.toNumber()
-                                                : Number(item.string.sellingPrice)
-                                        )}
-                                    </span>
                                 </div>
-                            ))}
+                            )}
+
+                            {/* 球线选择器 - 不再渲染 StickySelectionBar */}
+                            <StringSelector
+                                selectedString={selectedStringForAdd}
+                                onSelect={setSelectedStringForAdd}
+                                onNext={() => { }}
+                                hideBottomBar={true}
+                            />
                         </div>
+                    )}
 
-                        {/* 价格汇总 */}
-                        <div className="p-4 rounded-xl bg-ink-surface border border-border-subtle space-y-3">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-text-secondary">球线费用</span>
-                                <span className="text-text-primary">{formatCurrency(baseTotal)}</span>
-                            </div>
-                            {voucherDiscount > 0 && (
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-success">优惠券折扣</span>
-                                    <span className="text-success">-{formatCurrency(voucherDiscount)}</span>
-                                </div>
-                            )}
-                            {membershipDiscount > 0 && (
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-accent">会员折扣 ({membershipInfo?.discountRate}%)</span>
-                                    <span className="text-accent">-{formatCurrency(membershipDiscount)}</span>
-                                </div>
-                            )}
-
-                            {usePackage && (
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-success">套餐抵扣 ({cartItems.length} 次)</span>
-                                    <span className="text-success">-{formatCurrency(baseTotal)}</span>
-                                </div>
-                            )}
-                            <div className="pt-3 border-t border-border-subtle flex justify-between">
-                                <span className="font-bold text-text-primary">实付金额</span>
-                                <span className="text-2xl font-black text-accent">
-                                    {formatCurrency(finalTotal)}
+                    {/* Step 2: 配置每支球拍 */}
+                    {step === 2 && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold text-text-primary">配置球拍</h2>
+                                <span className="text-sm text-text-tertiary">
+                                    {cartItems.filter(i => i.racketPhoto).length}/{cartItems.length} 已完成
                                 </span>
                             </div>
-                        </div>
 
-                        {/* 备注 */}
-                        <div>
-                            <label className="block text-sm font-medium text-text-primary mb-2">
-                                订单备注（可选）
-                            </label>
-                            <textarea
-                                value={notes}
-                                onChange={(e) => setNotes(e.target.value)}
-                                placeholder="特殊要求或备注..."
-                                rows={2}
-                                className="w-full px-4 py-3 rounded-xl border border-border-subtle bg-white text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none"
-                            />
+                            <div className="space-y-4">
+                                {cartItems.map((item, index) => (
+                                    <RacketItemCard
+                                        key={item.id}
+                                        item={item}
+                                        index={index}
+                                        onUpdate={handleUpdateItem}
+                                        onRemove={handleRemoveItem}
+                                        disabled={loading}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* 添加更多球拍 */}
+                            <button
+                                onClick={() => setStep(1)}
+                                className="w-full py-3 border-2 border-dashed border-border-subtle rounded-xl text-text-secondary hover:border-accent hover:text-accent transition-colors flex items-center justify-center gap-2"
+                            >
+                                <Plus className="w-5 h-5" />
+                                添加更多球拍
+                            </button>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )}
+
+                    {/* Step 3: 优惠/套餐选择 */}
+                    {step === 3 && (
+                        <div className="space-y-6">
+                            <h2 className="text-xl font-bold text-text-primary">选择优惠</h2>
+
+                            {/* 套餐选择 */}
+                            {packageAvailable && userPackages.length > 0 && (
+                                <div className="space-y-3">
+                                    <label className="block text-sm font-medium text-text-primary">
+                                        🎁 使用套餐
+                                    </label>
+                                    <div className="space-y-2">
+                                        {userPackages.map(pkg => (
+                                            <label
+                                                key={pkg.id}
+                                                className={`
+                        flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all
+                        ${usePackage && selectedPackageId === pkg.id
+                                                        ? 'border-success bg-success/5'
+                                                        : 'border-border-subtle hover:border-success/50'
+                                                    }
+                        ${pkg.remaining < cartItems.length ? 'opacity-50 cursor-not-allowed' : ''}
+                      `}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <input
+                                                        type="radio"
+                                                        name="package"
+                                                        checked={usePackage && selectedPackageId === pkg.id}
+                                                        onChange={() => {
+                                                            if (pkg.remaining >= cartItems.length) {
+                                                                setUsePackage(true);
+                                                                setSelectedPackageId(pkg.id);
+                                                                setSelectedVoucher(null);
+                                                            }
+                                                        }}
+                                                        disabled={pkg.remaining < cartItems.length}
+                                                        className="w-5 h-5 text-success"
+                                                    />
+                                                    <div>
+                                                        <p className="font-medium text-text-primary">{pkg.package?.name}</p>
+                                                        <p className="text-sm text-text-secondary">
+                                                            剩余 {pkg.remaining} 次
+                                                            {pkg.remaining < cartItems.length && (
+                                                                <span className="text-danger ml-2">（不足 {cartItems.length} 次）</span>
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {usePackage && selectedPackageId === pkg.id && (
+                                                    <span className="text-success font-bold">-{formatCurrency(baseTotal)}</span>
+                                                )}
+                                            </label>
+                                        ))}
+                                        {usePackage && (
+                                            <button
+                                                onClick={() => {
+                                                    setUsePackage(false);
+                                                    setSelectedPackageId(null);
+                                                }}
+                                                className="text-sm text-text-tertiary hover:text-danger"
+                                            >
+                                                取消使用套餐
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {!usePackage && (
+                                <VoucherSelector
+                                    orderAmount={baseTotal}
+                                    selectedVoucher={selectedVoucher}
+                                    onSelect={setSelectedVoucher}
+                                />
+                            )}
+
+                            {/* 会员折扣提示 */}
+                            {membershipInfo && membershipInfo.discountRate > 0 && !usePackage && (
+                                <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
+                                    <p className="text-sm text-accent font-medium">
+                                        🎖️ {membershipInfo.label} 会员专享 {membershipInfo.discountRate}% 折扣
+                                    </p>
+                                </div>
+                            )}
+
+                        </div>
+                    )}
+
+                    {/* Step 4: 确认订单 */}
+                    {step === 4 && (
+                        <div className="space-y-6">
+                            <h2 className="text-xl font-bold text-text-primary">确认订单</h2>
+
+                            {/* 服务方式选择 */}
+                            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                                <ServiceMethodSelector
+                                    value={serviceType}
+                                    onChange={setServiceType}
+                                    pickupAddress={pickupAddress}
+                                    onAddressChange={setPickupAddress}
+                                    defaultAddress={userDefaultAddress}
+                                    disabled={loading}
+                                />
+                            </div>
+
+                            {/* 订单项列表 */}
+                            <div className="space-y-3">
+                                {cartItems.map((item, index) => (
+                                    <div
+                                        key={item.id}
+                                        className="flex items-center gap-3 p-4 rounded-xl bg-ink-surface border border-border-subtle"
+                                    >
+                                        {item.racketPhoto && (
+                                            <img
+                                                src={item.racketPhoto}
+                                                alt="球拍"
+                                                className="w-16 h-16 rounded-lg object-cover"
+                                            />
+                                        )}
+                                        <div className="flex-1">
+                                            <p className="font-medium text-text-primary">
+                                                {item.string.brand} {item.string.model}
+                                            </p>
+                                            <p className="text-sm text-text-secondary">
+                                                {item.tensionVertical}/{item.tensionHorizontal} 磅
+                                                {item.racketBrand && ` · ${item.racketBrand}`}
+                                                {item.racketModel && ` ${item.racketModel}`}
+                                            </p>
+                                        </div>
+                                        <span className="font-bold text-text-primary">
+                                            {usePackage ? '套餐' : formatCurrency(
+                                                typeof item.string.sellingPrice === 'object'
+                                                    ? item.string.sellingPrice.toNumber()
+                                                    : Number(item.string.sellingPrice)
+                                            )}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* 价格汇总 */}
+                            <div className="p-4 rounded-xl bg-ink-surface border border-border-subtle space-y-3">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-text-secondary">球线费用</span>
+                                    <span className="text-text-primary">{formatCurrency(baseTotal)}</span>
+                                </div>
+                                {voucherDiscount > 0 && (
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-success">优惠券折扣</span>
+                                        <span className="text-success">-{formatCurrency(voucherDiscount)}</span>
+                                    </div>
+                                )}
+                                {membershipDiscount > 0 && (
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-accent">会员折扣 ({membershipInfo?.discountRate}%)</span>
+                                        <span className="text-accent">-{formatCurrency(membershipDiscount)}</span>
+                                    </div>
+                                )}
+
+                                {usePackage && (
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-success">套餐抵扣 ({cartItems.length} 次)</span>
+                                        <span className="text-success">-{formatCurrency(baseTotal)}</span>
+                                    </div>
+                                )}
+                                <div className="pt-3 border-t border-border-subtle flex justify-between">
+                                    <span className="font-bold text-text-primary">实付金额</span>
+                                    <span className="text-2xl font-black text-accent">
+                                        {formatCurrency(finalTotal)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* 备注 */}
+                            <div>
+                                <label className="block text-sm font-medium text-text-primary mb-2">
+                                    订单备注（可选）
+                                </label>
+                                <textarea
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    placeholder="特殊要求或备注..."
+                                    rows={2}
+                                    className="w-full px-4 py-3 rounded-xl border border-border-subtle bg-white text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none"
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* 底部操作栏 - Step 1: 统一底部栏 */}
