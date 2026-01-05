@@ -511,7 +511,7 @@ export default function MultiRacketBookingFlow() {
                             {packageAvailable && userPackages.length > 0 && (
                                 <div className="space-y-3">
                                     <label className="block text-sm font-medium text-text-primary">
-                                        🎁 使用套餐
+                                        使用套餐
                                     </label>
                                     <div className="space-y-2">
                                         {userPackages.map(pkg => (
@@ -583,7 +583,7 @@ export default function MultiRacketBookingFlow() {
                             {membershipInfo && membershipInfo.discountRate > 0 && !usePackage && (
                                 <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
                                     <p className="text-sm text-accent font-medium">
-                                        🎖️ {membershipInfo.label} 会员专享 {membershipInfo.discountRate}% 折扣
+                                        {membershipInfo.label} 会员专享 {membershipInfo.discountRate}% 折扣
                                     </p>
                                 </div>
                             )}

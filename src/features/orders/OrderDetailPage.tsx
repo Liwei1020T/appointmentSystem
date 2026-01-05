@@ -34,6 +34,20 @@ import OrderPaymentSection from '@/components/OrderPaymentSection';
 import { formatDate, generateShortCode } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
 import PageHeader from '@/components/layout/PageHeader';
+import BrandLogo from '@/components/BrandLogo';
+import {
+  Disc,
+  Banknote,
+  Clock,
+  Smartphone,
+  MapPin,
+  Gift,
+  Ticket,
+  Star,
+  X,
+  Store,
+  Truck
+} from 'lucide-react';
 
 interface OrderDetailPageProps {
   orderId: string;
@@ -325,7 +339,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
           <details>
             <summary className="px-5 py-4 cursor-pointer hover:bg-ink-surface/30 transition-colors flex items-center justify-between">
               <h2 className="text-base font-semibold text-text-primary flex items-center gap-2">
-                🎾 {(order as any).items?.length > 0
+                <Disc className="w-5 h-5 text-accent" />
+                {(order as any).items?.length > 0
                   ? `球拍清单 (${(order as any).items.length} 支)`
                   : '球线信息'
                 }
@@ -352,7 +367,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                       />
                     ) : (
                       <div className="w-12 h-12 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center flex-shrink-0">
-                        <span className="text-lg">🎾</span>
+                        <Disc className="w-6 h-6 text-text-tertiary" />
                       </div>
                     )}
 
@@ -382,7 +397,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                 /* 单球拍订单（旧格式兼容） */
                 <div className="bg-ink-elevated rounded-lg p-3 border border-border-subtle flex items-center gap-3">
                   <div className="w-12 h-12 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center flex-shrink-0">
-                    <span className="text-lg">🎾</span>
+                    <Disc className="w-6 h-6 text-text-tertiary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-text-primary text-sm">
@@ -412,8 +427,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
           <Card className="p-6 border-2 border-warning/40 bg-ink-elevated">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-warning/15 rounded-full flex items-center justify-center text-2xl border border-warning/30">
-                  💵
+                <div className="w-12 h-12 bg-warning/15 rounded-full flex items-center justify-center border border-warning/30">
+                  <Banknote className="w-6 h-6 text-warning" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-text-primary">现金支付待确认</h2>
@@ -430,7 +445,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             <div className="bg-ink-surface border-2 border-warning/40 rounded-xl p-4 shadow-sm">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-warning/15 rounded-full flex items-center justify-center flex-shrink-0 border border-warning/30">
-                  <span className="text-2xl">⏳</span>
+                  <Clock className="w-5 h-5 text-warning" />
                 </div>
                 <div className="flex-1">
                   <p className="text-base font-semibold text-text-primary mb-2">
@@ -443,7 +458,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                     </div>
                   </div>
                   <p className="text-sm text-text-secondary leading-relaxed">
-                    📍 请携带现金到店支付。管理员确认收款后，将立即开始为您处理穿线服务。
+                    <MapPin className="w-4 h-4 inline-block mr-1 text-text-tertiary" />
+                    请携带现金到店支付。管理员确认收款后，将立即开始为您处理穿线服务。
                   </p>
                 </div>
               </div>
@@ -456,8 +472,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
           <Card className="p-6 border-2 border-info/40 bg-ink-elevated">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-info/15 rounded-full flex items-center justify-center text-2xl border border-info/30">
-                  📱
+                <div className="w-12 h-12 bg-info/15 rounded-full flex items-center justify-center border border-info/30">
+                  <Smartphone className="w-6 h-6 text-info" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-text-primary">收据待审核</h2>
@@ -477,7 +493,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
               </div>
             </div>
             <p className="text-sm text-text-secondary leading-relaxed mt-4">
-              ✅ 您的支付收据已成功提交！管理员将在 1-2 个工作日内审核，审核通过后订单将开始处理。
+              您的支付收据已成功提交！管理员将在 1-2 个工作日内审核，审核通过后订单将开始处理。
             </p>
           </Card>
         )}
@@ -552,7 +568,9 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
           <Card className="p-0 overflow-hidden mt-3 rounded-t-none border-t-0">
             {/* 收据头部 - 店铺信息 */}
             <div className="text-center py-4 border-b border-dashed border-border-subtle">
-              <div className="text-2xl mb-1">🏸</div>
+              <div className="flex justify-center mb-2">
+                <BrandLogo size="md" />
+              </div>
               <div className="font-bold text-text-primary">LW String Studio</div>
               <div className="text-xs text-text-tertiary">羽毛球穿线工作室</div>
             </div>
@@ -578,10 +596,10 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             <div className="flex items-center justify-between px-4 py-2 bg-ink-surface/50 border-b border-dashed border-border-subtle">
               <span className="text-xs text-text-tertiary">服务方式</span>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-text-primary">
+                <span className="text-sm text-text-primary flex items-center gap-1">
                   {(order as any).serviceType === 'pickup_delivery' || (order as any).service_type === 'pickup_delivery'
-                    ? '🛵 上门取送'
-                    : '🏪 到店自取'}
+                    ? <><Truck className="w-4 h-4 text-accent" /> 上门取送</>
+                    : <><Store className="w-4 h-4 text-accent" /> 到店自取</>}
                 </span>
               </div>
             </div>
@@ -591,7 +609,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
               ((order as any).pickupAddress || (order as any).pickup_address) && (
                 <div className="px-4 py-2 bg-orange-50 border-b border-dashed border-orange-200">
                   <div className="flex items-start gap-2">
-                    <span className="text-xs text-orange-600">📍</span>
+                    <MapPin className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <span className="text-xs text-orange-700 font-medium">取拍地址</span>
                       <p className="text-sm text-orange-800 mt-0.5">
@@ -628,7 +646,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
               {discountAmount > 0 && (
                 <div className="flex items-end text-warning">
-                  <span>🎁 优惠</span>
+                  <span className="flex items-center gap-1"><Gift className="w-4 h-4" /> 优惠</span>
                   <span className="flex-1 border-b border-dotted border-warning/30 mx-2 mb-1" />
                   <span>- RM {Number(discountAmount).toFixed(2)}</span>
                 </div>
@@ -636,7 +654,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
               {order.use_package && (
                 <div className="flex items-end text-success">
-                  <span>🎁 套餐抵扣</span>
+                  <span className="flex items-center gap-1"><Gift className="w-4 h-4" /> 套餐抵扣</span>
                   <span className="flex-1 border-b border-dotted border-success/30 mx-2 mb-1" />
                   <span className="text-xs">{packageName}</span>
                 </div>
@@ -644,7 +662,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
               {order.voucher_id && (
                 <div className="flex items-end text-info">
-                  <span>🎫 优惠券</span>
+                  <span className="flex items-center gap-1"><Ticket className="w-4 h-4" /> 优惠券</span>
                   <span className="flex-1 border-b border-dotted border-info/30 mx-2 mb-1" />
                   <span className="text-xs">{order.voucher?.voucher?.name || '已用'}</span>
                 </div>
@@ -671,7 +689,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
               if (!providerKey || providerKey === 'pending' || providerKey === 'manual') return null;
 
               const providerLabel = providerKey.includes('cash') ? '现金' : 'TnG';
-              const providerIcon = providerKey.includes('cash') ? '💵' : '💳';
+              const providerIcon = providerKey.includes('cash') ? '$' : 'TnG';
 
               const rawStatus = (payment as any).status || 'pending';
               const statusLabel =
@@ -692,7 +710,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             {/* 备注（如有） */}
             {order.notes && !order.notes.includes('快捷操作') && !order.notes.includes('管理员') && (
               <div className="mx-4 mb-3 px-3 py-2 bg-ink-surface/30 rounded text-sm">
-                <span className="text-text-tertiary">📝 </span>
+                <span className="text-text-tertiary">备注: </span>
                 <span className="text-text-secondary">{order.notes}</span>
               </div>
             )}
@@ -719,7 +737,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
             {/* 感谢语 */}
             <div className="text-center py-3 bg-ink-surface/30 border-t border-dashed border-border-subtle">
-              <div className="text-sm text-text-secondary">感谢您的惠顾 🙏</div>
+              <div className="text-sm text-text-secondary">感谢您的惠顾</div>
             </div>
           </Card>
 
@@ -744,7 +762,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
               /* 已有评价 - 显示评价内容 */
               <Card className="p-5">
                 <h2 className="text-base font-semibold text-text-primary mb-3 flex items-center gap-2">
-                  ⭐ 我的评价
+                  <Star className="w-5 h-5 text-warning" />
+                  我的评价
                 </h2>
                 <ReviewCard review={review} />
               </Card>
@@ -762,7 +781,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
               <Card className="p-4 bg-ink-elevated border border-accent-border/30">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">⭐</span>
+                    <Star className="w-6 h-6 text-warning" />
                     <div>
                       <p className="text-sm font-medium text-text-primary">分享您的体验</p>
                       <p className="text-xs text-text-tertiary">评价可获得 +10 积分</p>
@@ -790,9 +809,10 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             <Button
               variant="secondary"
               onClick={() => setShowCancelModal(true)}
-              className="flex-shrink-0"
+              className="flex-shrink-0 flex items-center gap-1"
             >
-              ❌ 取消订单
+              <X className="w-4 h-4" />
+              取消订单
             </Button>
             <Button
               variant="primary"
@@ -806,94 +826,107 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
               fullWidth
               className="bg-accent text-text-onAccent hover:shadow-glow"
             >
-              💳 立即支付
+              立即支付
             </Button>
           </div>
         </div>
-      )}
+      )
+      }
 
-      {order.status === 'pending' && hasPendingCashPayment && (
-        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 glass-surface border-t-2 border-warning/40 p-4 shadow-lg safe-area-pb">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">💵</span>
-                <span className="font-semibold text-text-primary">现金支付待确认</span>
+      {
+        order.status === 'pending' && hasPendingCashPayment && (
+          <div className="fixed bottom-16 md:bottom-0 left-0 right-0 glass-surface border-t-2 border-warning/40 p-4 shadow-lg safe-area-pb">
+            <div className="max-w-2xl mx-auto">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Banknote className="w-6 h-6 text-warning" />
+                  <span className="font-semibold text-text-primary">现金支付待确认</span>
+                </div>
+                <span className="text-lg font-bold text-text-primary font-mono">RM {finalAmount.toFixed(2)}</span>
               </div>
-              <span className="text-lg font-bold text-text-primary font-mono">RM {finalAmount.toFixed(2)}</span>
+              <p className="text-sm text-text-secondary mb-3">请到店支付现金，管理员确认后开始处理</p>
+              <Button
+                variant="secondary"
+                onClick={() => setShowCancelModal(true)}
+                fullWidth
+                className="bg-ink-surface hover:bg-ink-elevated"
+              >
+                <X className="w-4 h-4 mr-1" />
+                取消订单
+              </Button>
             </div>
-            <p className="text-sm text-text-secondary mb-3">请到店支付现金，管理员确认后开始处理</p>
-            <Button
-              variant="secondary"
-              onClick={() => setShowCancelModal(true)}
-              fullWidth
-              className="bg-ink-surface hover:bg-ink-elevated"
-            >
-              ❌ 取消订单
-            </Button>
           </div>
-        </div>
-      )}
+        )
+      }
 
-      {order.status === 'pending' && hasPendingTngVerification && (
-        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 glass-surface border-t-2 border-info/40 p-4 shadow-lg safe-area-pb">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">📱</span>
-                <span className="font-semibold text-text-primary">TnG 收据待审核</span>
+      {
+        order.status === 'pending' && hasPendingTngVerification && (
+          <div className="fixed bottom-16 md:bottom-0 left-0 right-0 glass-surface border-t-2 border-info/40 p-4 shadow-lg safe-area-pb">
+            <div className="max-w-2xl mx-auto">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-6 h-6 text-info" />
+                  <span className="font-semibold text-text-primary">TnG 收据待审核</span>
+                </div>
+                <span className="text-lg font-bold text-text-primary font-mono">RM {finalAmount.toFixed(2)}</span>
               </div>
-              <span className="text-lg font-bold text-text-primary font-mono">RM {finalAmount.toFixed(2)}</span>
+              <p className="text-sm text-text-secondary mb-3">收据已提交，请等待管理员审核（1-2个工作日）</p>
+              <Button
+                variant="secondary"
+                onClick={() => setShowCancelModal(true)}
+                fullWidth
+                className="bg-ink-surface hover:bg-ink-elevated"
+              >
+                <X className="w-4 h-4 mr-1" />
+                取消订单
+              </Button>
             </div>
-            <p className="text-sm text-text-secondary mb-3">收据已提交，请等待管理员审核（1-2个工作日）</p>
-            <Button
-              variant="secondary"
-              onClick={() => setShowCancelModal(true)}
-              fullWidth
-              className="bg-ink-surface hover:bg-ink-elevated"
-            >
-              ❌ 取消订单
-            </Button>
           </div>
-        </div>
-      )}
+        )
+      }
 
-      {order.status === 'pending' && hasActualPendingPayment && !hasPendingCashPayment && !hasPendingTngVerification && (
-        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 glass-surface border-t-2 border-warning/40 p-4 shadow-lg safe-area-pb">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">💳</span>
-                <span className="font-semibold text-text-primary">支付待确认</span>
+      {
+        order.status === 'pending' && hasActualPendingPayment && !hasPendingCashPayment && !hasPendingTngVerification && (
+          <div className="fixed bottom-16 md:bottom-0 left-0 right-0 glass-surface border-t-2 border-warning/40 p-4 shadow-lg safe-area-pb">
+            <div className="max-w-2xl mx-auto">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-6 h-6 text-warning" />
+                  <span className="font-semibold text-text-primary">支付待确认</span>
+                </div>
+                <span className="text-lg font-bold text-text-primary font-mono">RM {finalAmount.toFixed(2)}</span>
               </div>
-              <span className="text-lg font-bold text-text-primary font-mono">RM {finalAmount.toFixed(2)}</span>
+              <p className="text-sm text-text-secondary mb-3">支付处理中，请等待确认</p>
+              <Button
+                variant="secondary"
+                onClick={() => setShowCancelModal(true)}
+                fullWidth
+                className="bg-ink-surface hover:bg-ink-elevated"
+              >
+                <X className="w-4 h-4 mr-1" />
+                取消订单
+              </Button>
             </div>
-            <p className="text-sm text-text-secondary mb-3">支付处理中，请等待确认</p>
-            <Button
-              variant="secondary"
-              onClick={() => setShowCancelModal(true)}
-              fullWidth
-              className="bg-ink-surface hover:bg-ink-elevated"
-            >
-              ❌ 取消订单
-            </Button>
           </div>
-        </div>
-      )}
+        )
+      }
 
-      {order.status === 'pending' && !needsPayment && !hasActualPendingPayment && !hasPendingCashPayment && !hasPendingTngVerification && (
-        <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-border-subtle p-4 shadow-lg safe-area-pb">
-          <div className="max-w-2xl mx-auto">
-            <Button
-              variant="secondary"
-              onClick={() => setShowCancelModal(true)}
-              fullWidth
-            >
-              ❌ 取消订单
-            </Button>
+      {
+        order.status === 'pending' && !needsPayment && !hasActualPendingPayment && !hasPendingCashPayment && !hasPendingTngVerification && (
+          <div className="fixed bottom-0 left-0 right-0 glass-surface border-t-2 border-border-subtle p-4 shadow-lg safe-area-pb">
+            <div className="max-w-2xl mx-auto">
+              <Button
+                variant="secondary"
+                onClick={() => setShowCancelModal(true)}
+                fullWidth
+              >
+                <X className="w-4 h-4 mr-1" />
+                取消订单
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* 取消订单确认弹窗 */}
       <Modal
@@ -927,13 +960,15 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
       </Modal>
 
       {/* Toast 提示 */}
-      {toast.show && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast({ ...toast, show: false })}
-        />
-      )}
-    </div>
+      {
+        toast.show && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast({ ...toast, show: false })}
+          />
+        )
+      }
+    </div >
   );
 }

@@ -218,7 +218,9 @@ export default function VoucherSelector({ orderAmount, selectedVoucher, onSelect
             {(activeTab === 'available' ? groupedVouchers.available : groupedVouchers.unavailable).length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-16 h-16 bg-ink-elevated/40 rounded-full flex items-center justify-center mb-4 border border-border-subtle/50">
-                  <span className="text-2xl opacity-40 grayscale">🎟️</span>
+                  <svg className="w-8 h-8 text-text-tertiary opacity-40" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                  </svg>
                 </div>
                 <p className="text-text-secondary font-medium">暂无此类优惠券</p>
                 <p className="text-xs text-text-tertiary mt-1">去积分中心看看吧</p>

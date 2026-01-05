@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Trophy, Medal, Award } from 'lucide-react';
+import { ArrowLeft, Trophy, Medal, Award, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getReferralLeaderboard } from '@/services/referralService';
 import type { LeaderboardEntry } from '@/services/referralService';
@@ -50,7 +50,7 @@ export default function ReferralLeaderboardPage() {
       <div className="min-h-screen bg-ink flex items-center justify-center p-4">
         <div className="bg-ink-surface rounded-lg border border-border-subtle p-6 max-w-sm w-full text-center">
           <div className="bg-danger/15 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">⚠️</span>
+            <AlertTriangle className="w-6 h-6 text-danger" />
           </div>
           <h3 className="text-lg font-semibold text-text-primary mb-2">
             加载失败
@@ -151,7 +151,7 @@ export default function ReferralLeaderboardPage() {
         {/* 提示信息 */}
         <div className="bg-ink-elevated border border-border-subtle rounded-lg p-4 mt-6">
           <p className="text-xs text-text-secondary">
-            💡 <span className="font-semibold">提示：</span>
+            <span className="font-semibold">提示：</span>
             排行榜每小时更新一次，邀请越多排名越高！
           </p>
         </div>

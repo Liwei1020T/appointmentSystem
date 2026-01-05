@@ -18,12 +18,12 @@ import { formatDate } from '@/lib/utils';
 // 订单状态配置
 const statusConfig: Record<string, { label: string; variant: 'warning' | 'info' | 'success' | 'neutral'; icon: string }> = {
 
-  pending: { label: '待付款', variant: 'warning', icon: '💳' },
+  pending: { label: '待付款', variant: 'warning', icon: '$' },
 
-  in_progress: { label: '穿线中', variant: 'info', icon: '🔧' },
-  stringing: { label: '穿线中', variant: 'info', icon: '🔧' },
-  completed: { label: '已完成', variant: 'success', icon: '✅' },
-  ready: { label: '待取拍', variant: 'success', icon: '📦' },
+  in_progress: { label: '穿线中', variant: 'info', icon: '↻' },
+  stringing: { label: '穿线中', variant: 'info', icon: '↻' },
+  completed: { label: '已完成', variant: 'success', icon: '✓' },
+  ready: { label: '待取拍', variant: 'success', icon: '✓' },
   cancelled: { label: '已取消', variant: 'neutral', icon: '✕' },
 };
 

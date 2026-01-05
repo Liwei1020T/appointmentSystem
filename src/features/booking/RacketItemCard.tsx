@@ -174,7 +174,7 @@ export default function RacketItemCard({
                     {/* 球拍照片上传 */}
                     <div className="pt-4">
                         <label className="block text-sm font-medium text-text-primary mb-2">
-                            📷 球拍照片 <span className="text-danger">*</span>
+                            球拍照片 <span className="text-danger">*</span>
                         </label>
                         <RacketPhotoUploader
                             value={item.racketPhoto}
@@ -191,7 +191,7 @@ export default function RacketItemCard({
                     {/* 磅数设置 */}
                     <div>
                         <label className="block text-sm font-medium text-text-primary mb-2">
-                            ⚖️ 拉力设置
+                            拉力设置
                         </label>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
@@ -260,7 +260,7 @@ export default function RacketItemCard({
                     {/* 球拍信息（可选） */}
                     <div>
                         <label className="block text-sm font-medium text-text-primary mb-2">
-                            🏸 球拍信息（可选）
+                            球拍信息（可选）
                         </label>
                         <div className="grid grid-cols-2 gap-3">
                             <input
@@ -285,7 +285,7 @@ export default function RacketItemCard({
                     {/* 备注 */}
                     <div>
                         <label className="block text-sm font-medium text-text-primary mb-2">
-                            📝 备注（可选）
+                            备注（可选）
                         </label>
                         <textarea
                             placeholder="特殊要求或备注..."

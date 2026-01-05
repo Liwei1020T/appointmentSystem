@@ -52,8 +52,8 @@ export default function PackagePurchaseFlow() {
 
   // 支付方式选项 (仅 TNG QR Code 和现金)
   const paymentMethods: { value: PaymentMethod; label: string; icon: string; description: string }[] = [
-    { value: 'tng', label: 'Touch n Go eWallet', icon: '💰', description: '扫描 QR Code 支付' },
-    { value: 'cash', label: '到店支付', icon: '💵', description: '到店后现金支付' },
+    { value: 'tng', label: 'Touch n Go eWallet', icon: 'TnG', description: '扫描 QR Code 支付' },
+    { value: 'cash', label: '到店支付', icon: '$', description: '到店后现金支付' },
   ];
 
   // 加载套餐信息
@@ -313,7 +313,9 @@ export default function PackagePurchaseFlow() {
             <Card className="p-6 border-2 border-border-subtle hover:border-accent/30 transition-colors">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 rounded-xl bg-accent/15 flex items-center justify-center">
-                  <span className="text-2xl">📦</span>
+                  <svg className="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-text-primary">确认套餐信息</h2>
@@ -401,7 +403,9 @@ export default function PackagePurchaseFlow() {
             <Card className="p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 rounded-xl bg-accent/15 flex items-center justify-center">
-                  <span className="text-2xl">💳</span>
+                  <svg className="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-text-primary">选择支付方式</h2>

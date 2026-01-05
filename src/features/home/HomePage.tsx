@@ -121,7 +121,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between">
             <div className="animate-fade-in">
               <h1 className="text-2xl font-bold mb-1 text-gray-900 tracking-tight">
-                欢迎回来，{user.full_name || '用户'}！👋
+                欢迎回来，{user.full_name || '用户'}！
               </h1>
               <p className="text-gray-500 text-sm">准备好为您的球拍穿线了吗？</p>
             </div>

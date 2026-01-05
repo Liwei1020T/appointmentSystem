@@ -20,6 +20,7 @@ import { getSession } from 'next-auth/react';
 import { signIn } from '@/services/authService';
 import { isAdminRole } from '@/lib/roles';
 import { normalizeMyPhone, validatePhone } from '@/lib/utils';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -154,20 +155,8 @@ export default function LoginPage() {
           {/* Logo & Title */}
           <div className="text-center mb-8">
             {/* Brand Logo */}
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl gradient-accent flex items-center justify-center shadow-glow">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
+            <div className="flex justify-center mb-4">
+              <BrandLogo size="xl" className="shadow-glow" />
             </div>
             <h1 className="text-2xl font-bold text-text-primary tracking-tight">
               欢迎回来

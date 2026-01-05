@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { Button, Input, Card, Toast } from '@/components';
 import { signIn, signUp } from '@/services/authService';
 import { normalizeMyPhone, validatePassword, validatePhone } from '@/lib/utils';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -146,13 +147,20 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-ink flex items-center justify-center p-6">
-      <Card className="w-full max-w-md border border-border-subtle bg-ink-surface/90">
+    <div className="min-h-screen bg-ink flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Decorative background gradients (matching LoginPage) */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+
+      <Card className="w-full max-w-md border border-border-subtle bg-ink-elevated/95 backdrop-blur-sm relative z-10">
         <div className="p-6">
           {/* 标题 */}
           <div className="text-center mb-6">
+            <div className="flex justify-center mb-4">
+              <BrandLogo size="xl" className="shadow-glow" />
+            </div>
             <h1 className="text-2xl font-bold text-text-primary">创建账户</h1>
-            <p className="text-sm text-text-secondary mt-1">注册 LW String Studio</p>
+            <p className="text-sm text-text-secondary mt-1">注册 <span className="text-gradient font-semibold">LW String Studio</span></p>
           </div>
 
           {/* 表单 */}

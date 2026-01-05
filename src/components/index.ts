@@ -26,3 +26,5 @@ export type { Tab } from './Tabs';
 export { Skeleton, SkeletonText, SkeletonCard, SkeletonAvatar } from './Skeleton';
 export { LoadingSpinner, PageLoading, SectionLoading, InlineLoading } from './loading';
 export type { LoadingTone } from './loading';
+export { default as BrandLogo } from './BrandLogo';
+export type { LogoSize } from './BrandLogo';

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { Button } from '@/components';
 import { cn } from '@/lib/utils';
-import { BadgeCheck } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function Header() {
   const router = useRouter();
@@ -50,15 +50,10 @@ export default function Header() {
 
         {/* Logo Section */}
         <div
-          className="flex items-center gap-2 cursor-pointer group"
+          className="flex items-center cursor-pointer group"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center text-ink text-sm font-bold shadow-glow transition-transform group-hover:rotate-12">
-            LW
-          </div>
-          <span className="font-bold text-lg tracking-tight text-text-primary hidden sm:block">
-            LW String Studio
-          </span>
+          <BrandLogo size="sm" showName className="group-hover:opacity-90 transition-opacity" />
         </div>
 
         {/* Links (Inserted directly into the header layout) */}

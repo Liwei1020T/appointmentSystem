@@ -197,7 +197,9 @@ export default function PaymentResultPage() {
     <div className="min-h-screen bg-ink flex items-center justify-center p-6">
       <Card className="w-full max-w-md border border-border-subtle bg-ink-surface text-center">
         <div className="bg-warning/15 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
-          <span className="text-4xl">⏳</span>
+          <svg className="w-10 h-10 text-warning animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
         </div>
 
         <h2 className="text-2xl font-bold text-text-primary mb-2">

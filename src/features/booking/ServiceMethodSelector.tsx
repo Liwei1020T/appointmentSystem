@@ -30,14 +30,12 @@ const serviceOptions = [
         icon: Store,
         title: '到店自取',
         description: '您自行送拍到店，穿线完成后自取',
-        emoji: '🏪',
     },
     {
         id: 'pickup_delivery' as ServiceType,
         icon: Truck,
         title: '上门取送',
         description: '专人上门取拍，穿线完成后送回府上',
-        emoji: '🛵',
     },
 ];
 
@@ -67,7 +65,7 @@ export default function ServiceMethodSelector({
     return (
         <div className="space-y-4">
             <label className="block text-sm font-medium text-gray-700">
-                📦 服务方式
+                服务方式
             </label>
 
             {/* 服务方式选择卡片 */}

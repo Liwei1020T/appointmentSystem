@@ -153,7 +153,7 @@ export default function TensionInput({
         </div>
 
         <div className="space-y-6">
-            <div className="relative h-3 w-full bg-ink-surface/50 rounded-full overflow-hidden border border-border-subtle">
+          <div className="relative h-3 w-full bg-ink-surface/50 rounded-full overflow-hidden border border-border-subtle">
             <div
               className={`absolute top-0 left-0 h-full transition-all duration-300 opacity-40 shadow-inner ${getGaugeColor(mainTension)}`}
               style={{ width: `${((mainTension - MIN_TENSION) / (MAX_TENSION - MIN_TENSION)) * 100}%` }}
@@ -252,7 +252,7 @@ export default function TensionInput({
       {/* 错误提示 */}
       {error && (
         <p className="text-red-500 text-xs px-1 animate-pulse">
-          ⚠️ {error}
+          {error}
         </p>
       )}
 
@@ -266,8 +266,8 @@ export default function TensionInput({
 
       {/* 拉力参考科普 */}
       <div className="text-[11px] text-text-tertiary leading-relaxed px-1 space-y-1 mt-4">
-        <p>💡 <strong>小知识：</strong> 高磅位（26+）能提供更精准的控制，但弹性会降低，且对体力要求更高。</p>
-        <p>⚠️ <strong>注意：</strong> 磅数越高，球线在剧烈击球时断裂的风险越大。</p>
+        <p><strong>小知识：</strong> 高磅位（26+）能提供更精准的控制，但弹性会降低，且对体力要求更高。</p>
+        <p><strong>注意：</strong> 磅数越高，球线在剧烈击球时断裂的风险越大。</p>
       </div>
     </div>
   );

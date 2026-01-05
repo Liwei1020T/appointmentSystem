@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { MessageCircle, MapPin, Clock } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -30,13 +31,8 @@ export default function Footer() {
 
           {/* Brand Section */}
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center text-ink text-sm font-bold">
-                LW
-              </div>
-              <span className="font-bold text-lg tracking-tight text-text-primary">
-                LW String Studio
-              </span>
+            <div className="mb-4">
+              <BrandLogo size="sm" showName />
             </div>
             <p className="text-sm text-text-secondary leading-relaxed mb-4">
               居家穿线师工作室，用最实惠的价格，带给你最专业的穿线体验。告别门店溢价，享受冠军级手艺。

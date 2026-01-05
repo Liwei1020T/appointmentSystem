@@ -244,7 +244,7 @@ export default function ProfilePage() {
                 <p className="text-xs text-gray-500">
                   {stats.membership.nextTier
                     ? `再消费 ${formatCurrency(Math.max(0, stats.membership.nextTier.minSpend - stats.totalSpent))} 可升级为 ${stats.membership.nextTier.label}`
-                    : '🎉 已达到最高会员等级！'}
+                    : '已达到最高会员等级！'}
                 </p>
               </div>
             </div>

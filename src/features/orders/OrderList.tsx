@@ -228,21 +228,21 @@ export default function OrderList({ initialStatus }: OrderListProps) {
               textColor: string;
             }> = {
               pending: {
-                icon: '⏳',
+                icon: '…',
                 bgColor: 'bg-warning/5',
                 borderColor: 'border-l-warning',
                 iconBg: 'bg-warning/15',
                 textColor: 'text-warning'
               },
               confirmed: {
-                icon: '✅',
+                icon: '✓',
                 bgColor: 'bg-info/5',
                 borderColor: 'border-l-info',
                 iconBg: 'bg-info/15',
                 textColor: 'text-info'
               },
               in_progress: {
-                icon: '🔧',
+                icon: '↻',
                 bgColor: 'bg-info/5',
                 borderColor: 'border-l-info',
                 iconBg: 'bg-info/15',
@@ -299,7 +299,7 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                       {isMultiRacket ? (
                         <>
                           <h3 className="font-semibold text-text-primary truncate">
-                            🎾 多球拍订单
+                            多球拍订单
                           </h3>
                           <p className="text-sm text-text-secondary mt-0.5">
                             {(order as any).items.length} 支球拍
@@ -353,13 +353,13 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                 <div className="flex flex-wrap items-center gap-2">
                   {order.usePackage && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-success/15 text-success">
-                      📦 套餐
+                      套餐
                     </span>
                   )}
 
                   {(order.discountAmount ?? 0) > 0 && !order.usePackage && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-warning/15 text-warning">
-                      🏷️ 优惠 RM {Number(order.discountAmount ?? 0).toFixed(0)}
+                      优惠 RM {Number(order.discountAmount ?? 0).toFixed(0)}
                     </span>
                   )}
 
