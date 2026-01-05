@@ -23,9 +23,9 @@ export default function Hero() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          
+
           {/* Left Column: Text & CTA */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
@@ -91,7 +91,7 @@ export default function Hero() {
           </motion.div>
 
           {/* Right Column: Abstract Visual */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95, x: 20 }}
             animate={{ opacity: 1, scale: 1, x: 0 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
@@ -100,7 +100,7 @@ export default function Hero() {
             {/* Main Card: Simulate Order Status */}
             <div className="relative z-20 bg-white rounded-2xl shadow-glow-lg border border-border-subtle p-6 max-w-sm mx-auto rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-2xl">🏸</div>
+                <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center text-sm font-bold text-accent">YX</div>
                 <div>
                   <div className="font-bold text-text-primary">我的球拍 - Yonex 100ZZ</div>
                   <div className="text-xs text-text-secondary">订单号 #20250101</div>
@@ -118,7 +118,7 @@ export default function Hero() {
             </div>
 
             {/* Float Card: SMS Notification */}
-            <motion.div 
+            <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
               className="absolute -right-4 top-10 z-30 bg-white/90 backdrop-blur rounded-xl shadow-lg border border-border-subtle p-4 w-64"

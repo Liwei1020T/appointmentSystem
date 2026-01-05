@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { Button } from '@/components';
 import { cn } from '@/lib/utils';
+import { BadgeCheck } from 'lucide-react';
 
 export default function Header() {
   const router = useRouter();
@@ -40,20 +41,20 @@ export default function Header() {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className={cn(
         "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ease-in-out",
-        isScrolled 
-          ? "py-3 bg-white/90 backdrop-blur-md border-b border-border-subtle shadow-sm" 
+        isScrolled
+          ? "py-3 bg-white/90 backdrop-blur-md border-b border-border-subtle shadow-sm"
           : "py-5 bg-transparent border-transparent"
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        
+
         {/* Logo Section */}
-        <div 
-          className="flex items-center gap-2 cursor-pointer group" 
+        <div
+          className="flex items-center gap-2 cursor-pointer group"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center text-ink text-lg shadow-glow transition-transform group-hover:rotate-12">
-            🏸
+          <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center text-ink text-sm font-bold shadow-glow transition-transform group-hover:rotate-12">
+            LW
           </div>
           <span className="font-bold text-lg tracking-tight text-text-primary hidden sm:block">
             LW String Studio
@@ -76,8 +77,8 @@ export default function Header() {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3">
-          <Link 
-            href="/login" 
+          <Link
+            href="/login"
             className="text-sm font-medium text-text-secondary hover:text-text-primary px-3 py-2 transition-colors hidden sm:block"
           >
             登录

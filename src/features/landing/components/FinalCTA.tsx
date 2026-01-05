@@ -13,7 +13,7 @@ export default function FinalCTA() {
     <section className="py-24 bg-ink relative overflow-hidden">
       {/* Background */}
       <BreathingBackground className="opacity-70 scale-x-[-1]" />
-      
+
       {/* Subtle Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-accent/5 via-transparent to-transparent pointer-events-none"></div>
 
@@ -28,25 +28,25 @@ export default function FinalCTA() {
             还在等什么？
           </h2>
           <p className="text-xl text-text-secondary mb-10 max-w-2xl mx-auto">
-            现在就 Register 你的户口，试一次你就知道什么叫 Steady。
+            现在就注册你的账户，试一次你就知道什么叫稳。
             <br className="hidden md:block" />
             让你的每一拍杀球都更有力！
           </p>
-          
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
               onClick={() => router.push('/signup')}
               variant="primary"
               className="w-full sm:w-auto px-10 py-4 text-lg font-semibold shadow-glow hover:shadow-glow-lg transition-all"
             >
-              立即 Register
+              立即注册
             </Button>
             <Button
               onClick={() => router.push('/login')}
               variant="secondary"
               className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border border-border-subtle hover:bg-ink-surface bg-white/80 backdrop-blur-sm"
             >
-              Login 户口
+              登录账户
             </Button>
           </div>
         </motion.div>

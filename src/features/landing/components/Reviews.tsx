@@ -71,10 +71,10 @@ export default function Reviews() {
   return (
     <section id="reviews" className="py-20 md:py-24 bg-ink-elevated border-t border-b border-border-subtle">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Header & Summary */}
         <div className="text-center mb-12">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -82,8 +82,8 @@ export default function Reviews() {
           >
             球友心声
           </motion.h2>
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
@@ -96,8 +96,7 @@ export default function Reviews() {
             </div>
             <span className="text-border-subtle">|</span>
             <div className="flex items-center gap-1">
-              <CheckCircle2 className="w-4 h-4 text-accent" />
-              专业服务
+              <span className="font-semibold text-accent">500+</span> 球友信赖
             </div>
             <span className="text-border-subtle">|</span>
             <div className="flex items-center gap-1">
@@ -108,7 +107,7 @@ export default function Reviews() {
         </div>
 
         {/* Grid */}
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -127,9 +126,9 @@ export default function Reviews() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex text-yellow-400">
                     {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i} 
-                        className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-current' : 'text-gray-200'}`} 
+                      <Star
+                        key={i}
+                        className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-current' : 'text-gray-200'}`}
                       />
                     ))}
                   </div>
@@ -137,12 +136,12 @@ export default function Reviews() {
                     {review.tag}
                   </div>
                 </div>
-                
+
                 {/* Content */}
                 <p className="text-text-secondary text-sm leading-relaxed mb-6 flex-grow line-clamp-3">
                   "{review.content}"
                 </p>
-                
+
                 {/* Footer */}
                 <div className="flex items-center mt-auto border-t border-border-subtle/50 pt-4">
                   <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-xs mr-3">
