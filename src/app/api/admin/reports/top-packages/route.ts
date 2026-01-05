@@ -5,6 +5,8 @@ import { errorResponse, successResponse } from '@/lib/api-response';
 import { parseDateRangeFromSearchParams } from '@/lib/reporting';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * 管理员 - 热门套餐（按已确认套餐支付聚合）
  *
@@ -102,4 +104,3 @@ export async function GET(request: NextRequest) {
     return handleApiError(error);
   }
 }
-

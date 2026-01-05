@@ -29,8 +29,32 @@ const adminRoutes = ['/admin'];
 // 已登录用户不应访问的路由（重定向到首页）
 const authRoutes = ['/login', '/signup'];
 
+function withSecurityHeaders(response: NextResponse) {
+    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.headers.set('X-XSS-Protection', '1; mode=block');
+
+    // CSP 头部 (可根据需要调整)
+    // response.headers.set(
+    //   'Content-Security-Policy',
+    //   "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
+    // );
+
+    return response;
+}
+
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
+
+    const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+    const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+    const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
+
+    // Public route: skip token lookup for lower latency.
+    if (!isAuthRoute && !isProtectedRoute && !isAdminRoute) {
+        return withSecurityHeaders(NextResponse.next());
+    }
 
     // 获取用户 token (JWT)
     const isSecureCookie = request.nextUrl.protocol === 'https:' || process.env.NODE_ENV === 'production';
@@ -60,38 +84,23 @@ export async function middleware(request: NextRequest) {
     const isAdmin = token?.role === 'admin' || token?.role === 'super_admin';
 
     // 1. 已登录用户访问登录/注册页面 → 重定向到首页
-    if (isLoggedIn && authRoutes.some(route => pathname.startsWith(route))) {
-        return NextResponse.redirect(new URL('/', request.url));
+    if (isLoggedIn && isAuthRoute) {
+        return withSecurityHeaders(NextResponse.redirect(new URL('/', request.url)));
     }
 
     // 2. 未登录用户访问受保护路由 → 重定向到登录页
-    if (!isLoggedIn && protectedRoutes.some(route => pathname.startsWith(route))) {
+    if (!isLoggedIn && isProtectedRoute) {
         const loginUrl = new URL('/login', request.url);
-        loginUrl.searchParams.set('callbackUrl', pathname);
-        return NextResponse.redirect(loginUrl);
+        loginUrl.searchParams.set('callbackUrl', `${request.nextUrl.pathname}${request.nextUrl.search}`);
+        return withSecurityHeaders(NextResponse.redirect(loginUrl));
     }
 
     // 3. 非管理员访问管理后台 → 重定向到首页
-    if (!isAdmin && adminRoutes.some(route => pathname.startsWith(route))) {
-        return NextResponse.redirect(new URL('/', request.url));
+    if (!isAdmin && isAdminRoute) {
+        return withSecurityHeaders(NextResponse.redirect(new URL('/', request.url)));
     }
 
-    // 4. 创建响应并添加安全头部
-    const response = NextResponse.next();
-
-    // 安全头部
-    response.headers.set('X-Frame-Options', 'DENY');
-    response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    response.headers.set('X-XSS-Protection', '1; mode=block');
-
-    // CSP 头部 (可根据需要调整)
-    // response.headers.set(
-    //   'Content-Security-Policy',
-    //   "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
-    // );
-
-    return response;
+    return withSecurityHeaders(NextResponse.next());
 }
 
 // 配置 Matcher：指定 middleware 生效的路由

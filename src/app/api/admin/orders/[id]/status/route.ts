@@ -7,6 +7,8 @@ import { isApiError } from '@/lib/api-errors';
 import { updateAdminOrderStatus } from '@/server/services/admin-order.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 const bodySchema = z.object({
   status: z.string().trim().min(1),
   notes: z.string().trim().max(1000).optional(),

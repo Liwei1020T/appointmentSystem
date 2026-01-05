@@ -5,6 +5,8 @@ import { errorResponse, successResponse } from '@/lib/api-response';
 import { buildDayKeys, parseDateRangeFromSearchParams, toDayKey } from '@/lib/reporting';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * 管理员 - 订单趋势
  *

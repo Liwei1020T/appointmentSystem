@@ -8,6 +8,8 @@ import { requireAdmin } from '@/lib/server-auth';
 import { failResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     await requireAdmin();

@@ -9,6 +9,7 @@
 
 import React from 'react';
 import { StringInventory } from '@/types';
+import { INVENTORY } from '@/lib/constants';
 import { formatCurrency } from '@/lib/utils';
 
 interface StringCardProps {
@@ -17,12 +18,9 @@ interface StringCardProps {
     onSelect: (string: StringInventory) => void;
 }
 
-// Stock status thresholds
-const LOW_STOCK_THRESHOLD = 5;
-
 export default function StringCard({ string, isSelected, onSelect }: StringCardProps) {
     const isOutOfStock = string.stock === 0;
-    const isLowStock = string.stock > 0 && string.stock <= LOW_STOCK_THRESHOLD;
+    const isLowStock = string.stock > 0 && string.stock <= INVENTORY.LOW_STOCK_THRESHOLD;
     const isDisabled = isOutOfStock;
     const isRecommended = string.isRecommended || string.is_recommended || false;
 
@@ -178,4 +176,3 @@ export default function StringCard({ string, isSelected, onSelect }: StringCardP
         </div>
     );
 }
-

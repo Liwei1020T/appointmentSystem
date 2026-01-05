@@ -14,6 +14,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 // Cron 密钥验证（生产环境必须配置）
 const CRON_SECRET = process.env.CRON_SECRET || 'dev-secret-key';
 
@@ -23,8 +25,7 @@ const ORDER_TIMEOUT_MS = 60 * 60 * 1000; // 1 小时
 export async function GET(request: NextRequest) {
     try {
         // 验证 Cron 密钥
-        const { searchParams } = new URL(request.url);
-        const secret = searchParams.get('secret');
+        const secret = request.nextUrl.searchParams.get('secret');
 
         // Vercel Cron 会通过 Authorization header 传递密钥
         const authHeader = request.headers.get('authorization');
@@ -52,6 +53,8 @@ export async function GET(request: NextRequest) {
                 userId: true,
                 price: true,
                 createdAt: true,
+                stringId: true,
+                packageUsedId: true,
                 items: {
                     select: {
                         stringId: true,
@@ -70,33 +73,123 @@ export async function GET(request: NextRequest) {
 
         // 批量取消订单
         const cancelledOrderIds = expiredOrders.map(order => order.id);
+        const packageRefundById = new Map<string, number>();
+        for (const order of expiredOrders) {
+            if (!order.packageUsedId) continue;
+            packageRefundById.set(order.packageUsedId, (packageRefundById.get(order.packageUsedId) ?? 0) + 1);
+        }
 
-        await prisma.order.updateMany({
-            where: {
-                id: {
-                    in: cancelledOrderIds,
+        const { restoredStockEntries, cancelledPaymentsCount, restoredVouchersCount } = await prisma.$transaction(async (tx) => {
+            await tx.order.updateMany({
+                where: { id: { in: cancelledOrderIds } },
+                data: { status: 'cancelled' },
+            });
+
+            // Cancel pending payments for these orders.
+            const cancelledPayments = await tx.payment.updateMany({
+                where: { orderId: { in: cancelledOrderIds }, status: 'pending' },
+                data: { status: 'cancelled' },
+            });
+
+            // Restore any vouchers that were marked used during order creation.
+            const restoredVouchers = await tx.userVoucher.updateMany({
+                where: { orderId: { in: cancelledOrderIds }, status: 'used' },
+                data: { status: 'active', usedAt: null, orderId: null },
+            });
+
+            // Restore package remaining if legacy flows used packages while still pending.
+            for (const [packageUsedId, count] of packageRefundById.entries()) {
+                const currentPackage = await tx.userPackage.findUnique({
+                    where: { id: packageUsedId },
+                    select: { remaining: true, expiry: true },
+                });
+
+                if (!currentPackage) continue;
+
+                const now = new Date();
+                const newRemaining = currentPackage.remaining + count;
+                const status = currentPackage.expiry < now ? 'expired' : newRemaining > 0 ? 'active' : 'depleted';
+
+                await tx.userPackage.update({
+                    where: { id: packageUsedId },
+                    data: { remaining: { increment: count }, status },
+                });
+            }
+
+            // Release reserved inventory based on stock logs tied to these orders.
+            const reservedLogs = await tx.stockLog.findMany({
+                where: {
+                    referenceId: { in: cancelledOrderIds },
+                    change: { lt: 0 },
+                    type: 'sale',
                 },
-            },
-            data: {
-                status: 'cancelled',
-            },
-        });
+                select: {
+                    referenceId: true,
+                    stringId: true,
+                    change: true,
+                },
+            });
 
-        // 发送通知给用户（可选）
-        const notifications = expiredOrders.map(order => ({
-            userId: order.userId,
-            title: '订单已自动取消',
-            message: `您的订单因超时未支付已自动取消`,
-            type: 'order',
-            actionUrl: `/orders/${order.id}`,
-        }));
+            const restoreByStringId = new Map<string, number>();
+            const restoreByOrderAndString = new Map<string, { orderId: string; stringId: string; amount: number }>();
 
-        await prisma.notification.createMany({
-            data: notifications,
+            for (const log of reservedLogs) {
+                if (!log.referenceId) continue;
+                const amount = -Number(log.change);
+                if (!Number.isFinite(amount) || amount <= 0) continue;
+
+                restoreByStringId.set(log.stringId, (restoreByStringId.get(log.stringId) ?? 0) + amount);
+
+                const key = `${log.referenceId}:${log.stringId}`;
+                const current = restoreByOrderAndString.get(key) ?? { orderId: log.referenceId, stringId: log.stringId, amount: 0 };
+                current.amount += amount;
+                restoreByOrderAndString.set(key, current);
+            }
+
+            for (const [stringId, amount] of restoreByStringId.entries()) {
+                await tx.stringInventory.update({
+                    where: { id: stringId },
+                    data: { stock: { increment: amount } },
+                });
+            }
+
+            const restoreLogs = Array.from(restoreByOrderAndString.values()).map((entry) => ({
+                stringId: entry.stringId,
+                change: entry.amount,
+                type: 'return',
+                referenceId: entry.orderId,
+                notes: '订单超时自动取消返还',
+            }));
+
+            if (restoreLogs.length > 0) {
+                await tx.stockLog.createMany({ data: restoreLogs });
+            }
+
+            // 发送通知给用户（可选）
+            const notifications = expiredOrders.map(order => ({
+                userId: order.userId,
+                title: '订单已自动取消',
+                message: `您的订单因超时未支付已自动取消`,
+                type: 'order',
+                actionUrl: `/orders/${order.id}`,
+            }));
+
+            if (notifications.length > 0) {
+                await tx.notification.createMany({ data: notifications });
+            }
+
+            return {
+                restoredStockEntries: restoreLogs.length,
+                cancelledPaymentsCount: cancelledPayments.count,
+                restoredVouchersCount: restoredVouchers.count,
+            };
         });
 
         // 记录日志
-        console.log(`[Cron] Cancelled ${cancelledOrderIds.length} expired orders:`, cancelledOrderIds);
+        console.log(
+            `[Cron] Cancelled ${cancelledOrderIds.length} expired orders (payments cancelled: ${cancelledPaymentsCount}, vouchers restored: ${restoredVouchersCount}, stock restore logs: ${restoredStockEntries})`,
+            cancelledOrderIds
+        );
 
         return NextResponse.json({
             success: true,
@@ -104,6 +197,9 @@ export async function GET(request: NextRequest) {
             cancelledCount: cancelledOrderIds.length,
             cancelledOrderIds,
             cutoffTime: cutoffTime.toISOString(),
+            cancelledPaymentsCount,
+            restoredVouchersCount,
+            restoredStockEntries,
         });
     } catch (error) {
         console.error('[Cron] Error cancelling expired orders:', error);

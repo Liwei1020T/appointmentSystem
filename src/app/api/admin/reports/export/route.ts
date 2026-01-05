@@ -4,6 +4,8 @@ import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse } from '@/lib/api-response';
 import { buildDayKeys, parseDateRangeFromSearchParams, toDayKey } from '@/lib/reporting';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * 管理员 - 导出报表（CSV）
  *
@@ -281,4 +283,3 @@ export async function GET(request: NextRequest) {
     return errorResponse(error.message || 'Failed to export report', 500);
   }
 }
-

@@ -4,6 +4,8 @@ import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * 管理员 - 报表概览（用于简单 KPI）
  *
@@ -66,4 +68,3 @@ export async function GET(request: NextRequest) {
     return handleApiError(error);
   }
 }
-

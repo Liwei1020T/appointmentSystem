@@ -12,6 +12,8 @@ import { isApiError } from '@/lib/api-errors';
 import { recordPaymentProof } from '@/server/services/payment.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }

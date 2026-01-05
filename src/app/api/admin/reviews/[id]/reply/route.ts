@@ -8,6 +8,8 @@ import { isValidUUID } from '@/lib/utils';
 import { replyReview } from '@/server/services/review.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 const bodySchema = z.object({
   reply: z.string().trim().min(5).max(1000),
 });

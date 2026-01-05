@@ -11,6 +11,8 @@ import { errorResponse, successResponse } from '@/lib/api-response';
 import { isValidUUID } from '@/lib/utils';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 function mapUserToPayload(user: any) {
   return {
     id: user.id,
@@ -100,4 +102,3 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     return handleApiError(error);
   }
 }
-

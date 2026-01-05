@@ -9,6 +9,8 @@ import { okResponse, failResponse } from '@/lib/api-response';
 import { getPublicReviews } from '@/server/services/review.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 const querySchema = z.object({
   limit: z.coerce.number().int().positive().max(200).optional(),
   page: z.coerce.number().int().positive().optional(),

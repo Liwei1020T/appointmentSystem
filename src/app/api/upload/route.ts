@@ -9,6 +9,8 @@ import { requireAuth } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 const ALLOWED_UPLOAD_ROOTS = new Set([
   'general',
   'payments',

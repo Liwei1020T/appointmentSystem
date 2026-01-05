@@ -19,6 +19,8 @@ import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/packages/sales
  * Query:

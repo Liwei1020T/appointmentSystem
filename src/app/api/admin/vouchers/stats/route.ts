@@ -4,6 +4,8 @@ import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(_request: NextRequest) {
   try {
     await requireAdmin();

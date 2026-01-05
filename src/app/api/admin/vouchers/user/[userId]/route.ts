@@ -4,6 +4,8 @@ import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * 管理员 - 获取指定用户的优惠券列表
  * GET /api/admin/vouchers/user/[userId]

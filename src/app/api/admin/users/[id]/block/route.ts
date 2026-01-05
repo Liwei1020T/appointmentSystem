@@ -11,6 +11,8 @@ import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 export async function PUT(_request: NextRequest) {
   try {
     await requireAdmin();
@@ -19,4 +21,3 @@ export async function PUT(_request: NextRequest) {
     return handleApiError(error);
   }
 }
-

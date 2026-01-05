@@ -11,6 +11,8 @@ import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 function getStartOfDay(date: Date) {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -111,4 +113,3 @@ export async function GET(_request: NextRequest) {
     return handleApiError(error);
   }
 }
-

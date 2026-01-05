@@ -5,6 +5,8 @@ import { errorResponse, successResponse } from '@/lib/api-response';
 import { isValidUUID } from '@/lib/utils';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Admin - Distribute voucher
  * POST /api/admin/vouchers/[id]/distribute

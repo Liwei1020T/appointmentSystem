@@ -9,6 +9,8 @@ import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 async function handleUpdateRole(
   request: NextRequest,
   { params }: { params: { id: string } }

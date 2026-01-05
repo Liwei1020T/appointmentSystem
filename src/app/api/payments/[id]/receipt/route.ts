@@ -7,6 +7,8 @@ import { isValidUUID } from '@/lib/utils';
 import { recordPaymentProof } from '@/server/services/payment.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 const bodySchema = z.object({
   receiptUrl: z.string().trim().min(1),
 });

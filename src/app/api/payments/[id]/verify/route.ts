@@ -8,6 +8,8 @@ import { isApiError } from '@/lib/api-errors';
 import { verifyPayment } from '@/server/services/payment.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 const bodySchema = z.object({
   transactionId: z.string().trim().min(1).optional().nullable(),
   notes: z.string().trim().max(500).optional().nullable(),

@@ -258,7 +258,7 @@ export async function createOrder(user: UserSnapshot, payload: CreateOrderPayloa
     await tx.stockLog.create({
       data: {
         stringId,
-        change: -1,
+        change: -INVENTORY.DEDUCT_ON_CREATE,
         type: 'sale',
         costPrice: costPrice || string.costPrice,
         referenceId: newOrder.id,
@@ -620,7 +620,7 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
       await tx.stockLog.create({
         data: {
           stringId: item.stringId,
-          change: -1,
+          change: -INVENTORY.DEDUCT_ON_CREATE,
           type: 'sale',
           costPrice: string.costPrice,
           referenceId: newOrder.id,
@@ -713,10 +713,14 @@ export async function cancelOrder(user: UserSnapshot, orderId: string) {
   }
 
   await prisma.$transaction(async (tx) => {
-    await tx.order.update({
-      where: { id: orderId },
+    const updated = await tx.order.updateMany({
+      where: { id: orderId, userId: user.id, status: 'pending' },
       data: { status: 'cancelled' },
     });
+
+    if (updated.count === 0) {
+      throw new ApiError('UNPROCESSABLE_ENTITY', 422, 'Only pending orders can be cancelled');
+    }
 
     if (order.payments.length > 0) {
       await tx.payment.updateMany({
@@ -726,10 +730,60 @@ export async function cancelOrder(user: UserSnapshot, orderId: string) {
     }
 
     if (order.packageUsedId) {
-      await tx.userPackage.update({
+      const currentPackage = await tx.userPackage.findUnique({
         where: { id: order.packageUsedId },
-        data: { remaining: { increment: 1 } },
+        select: { remaining: true, expiry: true },
       });
+
+      if (currentPackage) {
+        const now = new Date();
+        const newRemaining = currentPackage.remaining + 1;
+        const status = currentPackage.expiry < now ? 'expired' : newRemaining > 0 ? 'active' : 'depleted';
+
+        await tx.userPackage.update({
+          where: { id: order.packageUsedId },
+          data: { remaining: { increment: 1 }, status },
+        });
+      }
+    }
+
+    // Restore any vouchers that were marked as used during order creation.
+    await tx.userVoucher.updateMany({
+      where: { orderId, status: 'used' },
+      data: { status: 'active', usedAt: null, orderId: null },
+    });
+
+    // Release reserved inventory based on stock logs tied to this order.
+    const reservedLogs = await tx.stockLog.findMany({
+      where: { referenceId: orderId, change: { lt: 0 }, type: 'sale' },
+      select: { stringId: true, change: true },
+    });
+
+    const restoreByStringId = new Map<string, number>();
+    for (const log of reservedLogs) {
+      const amount = -Number(log.change);
+      if (!Number.isFinite(amount) || amount <= 0) continue;
+      restoreByStringId.set(log.stringId, (restoreByStringId.get(log.stringId) ?? 0) + amount);
+    }
+
+    for (const [stringId, amount] of restoreByStringId.entries()) {
+      await tx.stringInventory.update({
+        where: { id: stringId },
+        data: { stock: { increment: amount } },
+      });
+    }
+
+    const restoreLogs = Array.from(restoreByStringId.entries()).map(([stringId, amount]) => ({
+      stringId,
+      change: amount,
+      type: 'return',
+      referenceId: orderId,
+      notes: '订单取消返还',
+      createdBy: user.id,
+    }));
+
+    if (restoreLogs.length > 0) {
+      await tx.stockLog.createMany({ data: restoreLogs });
     }
 
     await tx.notification.create({

@@ -6,6 +6,8 @@ import { isApiError } from '@/lib/api-errors';
 import { createCashPayment } from '@/server/services/payment.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 const bodySchema = z.object({
   orderId: z.string().uuid(),
   amount: z.preprocess((value) => Number(value), z.number().positive()),

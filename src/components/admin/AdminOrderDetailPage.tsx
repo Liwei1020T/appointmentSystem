@@ -144,7 +144,7 @@ export default function AdminOrderDetailPage() {
         setError(completeError);
       } else if (data) {
         toast.success(
-          `订单已完成！\n• 扣减库存: ${data.stock_deducted}m\n• 利润: RM${data.profit.toFixed(2)}\n• 积分奖励: ${data.points_granted}`
+          `订单已完成！\n• 扣减库存: ${data.stockDeducted}m\n• 利润: RM${data.profit.toFixed(2)}\n• 积分奖励: ${data.pointsGranted}`
         );
         setShowCompleteModal(false);
         setAdminNotes('');

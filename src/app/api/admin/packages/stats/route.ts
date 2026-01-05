@@ -5,6 +5,8 @@ import { errorResponse, successResponse } from '@/lib/api-response';
 import type { Prisma } from '@prisma/client';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/packages/stats
  *

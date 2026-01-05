@@ -10,6 +10,8 @@ import { errorResponse, successResponse } from '@/lib/api-response';
 import { isValidUUID } from '@/lib/utils';
 import { handleApiError } from '@/lib/api/handleApiError';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireAdmin();
@@ -50,4 +52,3 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     return handleApiError(error);
   }
 }
-
