@@ -17,6 +17,7 @@ import Toast from '@/components/Toast';
 import ImageUploader from '@/components/ImageUploader';
 import { UploadResult } from '@/services/imageUploadService';
 import { useSession } from 'next-auth/react';
+import { Star, Check, PartyPopper, Sparkles, PenLine, Camera } from 'lucide-react';
 
 interface ReviewFormProps {
   orderId: string;
@@ -217,7 +218,9 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
   if (showSuccess) {
     return (
       <Card className="p-8 text-center bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
-        <div className="animate-bounce text-6xl mb-4">🎉</div>
+        <div className="flex justify-center mb-4">
+          <PartyPopper className="w-16 h-16 text-green-500 animate-bounce" />
+        </div>
         <h3 className="text-xl font-bold text-green-700 mb-2">评价成功！</h3>
         <p className="text-green-600">感谢您的评价，已获得 10 积分奖励</p>
       </Card>
@@ -233,7 +236,7 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
         {/* 标题 */}
         <div className="flex items-center gap-3 mb-5">
           <div className="w-10 h-10 bg-gradient-to-br from-orange-100 to-orange-50 rounded-xl flex items-center justify-center">
-            <span className="text-xl">⭐</span>
+            <Star className="w-5 h-5 text-orange-500" />
           </div>
           <div>
             <h2 className="text-lg font-bold text-gray-900">分享您的体验</h2>
@@ -281,7 +284,7 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
                           : 'bg-gray-100 text-gray-600 hover:bg-orange-50 hover:text-orange-600'
                           }`}
                       >
-                        {selectedTags.includes(tag) && '✓ '}
+                        {selectedTags.includes(tag) && <Check className="w-3 h-3 inline-block mr-1" />}
                         {tag}
                       </button>
                     ))}
@@ -295,7 +298,7 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
           <details className="bg-white rounded-xl shadow-sm border border-gray-100 group">
             <summary className="p-4 cursor-pointer flex items-center justify-between hover:bg-gray-50/50 transition-colors rounded-xl">
               <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                ✍️ 评价内容 <span className="text-gray-400 font-normal">(至少10字)</span>
+                <PenLine className="w-4 h-4" /> 评价内容 <span className="text-gray-400 font-normal">(至少10字)</span>
                 {comment.length > 0 && (
                   <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full">已填写</span>
                 )}
@@ -328,7 +331,7 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
           <details className="bg-white rounded-xl shadow-sm border border-gray-100 group">
             <summary className="p-4 cursor-pointer flex items-center justify-between hover:bg-gray-50/50 transition-colors rounded-xl">
               <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                📷 上传照片 <span className="text-gray-400 font-normal">(可选)</span>
+                <Camera className="w-4 h-4" /> 上传照片 <span className="text-gray-400 font-normal">(可选)</span>
                 {imageUrls.length > 0 && (
                   <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full">{imageUrls.length}张</span>
                 )}
@@ -402,9 +405,9 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
               fullWidth
               loading={submitting}
               disabled={submitting || !isCommentValid}
-              className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 shadow-lg shadow-orange-200"
+              className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 shadow-lg shadow-orange-200 flex items-center justify-center gap-1.5"
             >
-              {submitting ? '提交中...' : '✨ 提交评价'}
+              {submitting ? '提交中...' : <><Sparkles className="w-4 h-4" /> 提交评价</>}
             </Button>
           </div>
         </form>

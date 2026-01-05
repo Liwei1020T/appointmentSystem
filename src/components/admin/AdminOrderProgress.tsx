@@ -302,7 +302,7 @@ export default function AdminOrderProgress({
                           flex items-center gap-2
                         `}
                       >
-                        {step.action.nextStatus === 'completed' ? '✓' : '▶'}
+                        {step.action.nextStatus === 'completed' ? <CheckCircle className="w-4 h-4" /> : <PlayCircle className="w-4 h-4" />}
                         {step.action.label}
                       </button>
                     )}
@@ -353,8 +353,8 @@ export default function AdminOrderProgress({
             {/* Header */}
             <div className="p-6 pb-4">
               <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${confirmModal.confirmStyle === 'danger' ? 'bg-danger/15' :
-                  confirmModal.confirmStyle === 'success' ? 'bg-success/15' :
-                    'bg-accent/15'
+                confirmModal.confirmStyle === 'success' ? 'bg-success/15' :
+                  'bg-accent/15'
                 }`}>
                 {confirmModal.confirmStyle === 'danger' ? (
                   <AlertCircle className="w-7 h-7 text-danger" />
@@ -386,10 +386,10 @@ export default function AdminOrderProgress({
                   closeConfirmModal();
                 }}
                 className={`flex-1 px-4 py-3 text-sm font-medium rounded-xl transition-colors ${confirmModal.confirmStyle === 'danger'
-                    ? 'bg-danger text-white hover:bg-danger/90'
-                    : confirmModal.confirmStyle === 'success'
-                      ? 'bg-success text-text-primary hover:bg-success/90'
-                      : 'bg-accent text-text-onAccent hover:shadow-glow'
+                  ? 'bg-danger text-white hover:bg-danger/90'
+                  : confirmModal.confirmStyle === 'success'
+                    ? 'bg-success text-text-primary hover:bg-success/90'
+                    : 'bg-accent text-text-onAccent hover:shadow-glow'
                   }`}
               >
                 {confirmModal.confirmLabel}

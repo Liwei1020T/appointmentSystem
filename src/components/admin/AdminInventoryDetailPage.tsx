@@ -23,6 +23,7 @@ import {
 } from '@/services/inventoryService';
 import { Badge, Button, Card, Input, StatsCard } from '@/components';
 import PageLoading from '@/components/loading/PageLoading';
+import { AlertTriangle } from 'lucide-react';
 
 interface AdminInventoryDetailPageProps {
   stringId: string;
@@ -450,8 +451,8 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
                             type="button"
                             onClick={() => handleFieldChange('elasticity', formData.elasticity === level ? '' : level)}
                             className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${formData.elasticity === level
-                                ? 'bg-accent text-white'
-                                : 'bg-ink-surface border border-border-subtle text-text-secondary hover:border-accent/50'
+                              ? 'bg-accent text-white'
+                              : 'bg-ink-surface border border-border-subtle text-text-secondary hover:border-accent/50'
                               }`}
                           >
                             {level === 'low' ? '低' : level === 'medium' ? '中' : '高'}
@@ -470,8 +471,8 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
                             type="button"
                             onClick={() => handleFieldChange('durability', formData.durability === level ? '' : level)}
                             className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${formData.durability === level
-                                ? 'bg-accent text-white'
-                                : 'bg-ink-surface border border-border-subtle text-text-secondary hover:border-accent/50'
+                              ? 'bg-accent text-white'
+                              : 'bg-ink-surface border border-border-subtle text-text-secondary hover:border-accent/50'
                               }`}
                           >
                             {level === 'low' ? '低' : level === 'medium' ? '中' : '高'}
@@ -490,8 +491,8 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
                             type="button"
                             onClick={() => handleFieldChange('control', formData.control === level ? '' : level)}
                             className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${formData.control === level
-                                ? 'bg-accent text-white'
-                                : 'bg-ink-surface border border-border-subtle text-text-secondary hover:border-accent/50'
+                              ? 'bg-accent text-white'
+                              : 'bg-ink-surface border border-border-subtle text-text-secondary hover:border-accent/50'
                               }`}
                           >
                             {level === 'low' ? '低' : level === 'medium' ? '中' : '高'}
@@ -586,8 +587,8 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
                 </div>
                 {string && string.stock < string.minimumStock && (
                   <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 mt-3">
-                    <p className="text-xs text-warning">
-                      ⚠️ 库存不足 {string.minimumStock - string.stock} 条
+                    <p className="text-xs text-warning flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" /> 库存不足 {string.minimumStock - string.stock} 条
                     </p>
                   </div>
                 )}

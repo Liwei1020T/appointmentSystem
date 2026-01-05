@@ -26,6 +26,7 @@ import AdminOrderProgress from '@/components/admin/AdminOrderProgress';
 import { confirmCashPayment, confirmPayment, verifyPaymentReceipt } from '@/services/paymentService';
 import { completeOrder } from '@/services/completeOrderService';
 import { toast } from 'sonner';
+import { CreditCard, Banknote, CheckCircle, X, FileText } from 'lucide-react';
 
 export default function AdminOrderDetailPage() {
   const router = useRouter();
@@ -143,7 +144,7 @@ export default function AdminOrderDetailPage() {
         setError(completeError);
       } else if (data) {
         toast.success(
-          `订单已完成！\n✓ 扣减库存: ${data.stock_deducted}m\n✓ 利润: RM${data.profit.toFixed(2)}\n✓ 积分奖励: ${data.points_granted}`
+          `订单已完成！\n• 扣减库存: ${data.stock_deducted}m\n• 利润: RM${data.profit.toFixed(2)}\n• 积分奖励: ${data.points_granted}`
         );
         setShowCompleteModal(false);
         setAdminNotes('');
@@ -332,8 +333,8 @@ export default function AdminOrderDetailPage() {
                           </div>
                           {/* 备注 */}
                           {item.notes && (
-                            <div className="mt-2 text-xs text-text-tertiary">
-                              📝 {item.notes}
+                            <div className="mt-2 text-xs text-text-tertiary flex items-center gap-1">
+                              <FileText className="w-3 h-3" /> {item.notes}
                             </div>
                           )}
                         </div>
@@ -429,9 +430,9 @@ export default function AdminOrderDetailPage() {
                     <span className="text-text-secondary">支付方式</span>
                     <span className="font-medium text-text-primary">
                       {payment.provider === 'cash'
-                        ? '💵 现金支付'
+                        ? <span className="flex items-center gap-1"><Banknote className="w-4 h-4" /> 现金支付</span>
                         : payment.provider === 'tng'
-                          ? '💳 TNG'
+                          ? <span className="flex items-center gap-1"><CreditCard className="w-4 h-4" /> TNG</span>
                           : payment.payment_method || payment.method || payment.provider || '-'}
                     </span>
                   </div>
@@ -621,7 +622,7 @@ export default function AdminOrderDetailPage() {
           <div className="bg-ink-surface rounded-2xl p-6 max-w-md w-full shadow-xl">
             <div className="text-center mb-4">
               <div className="w-16 h-16 bg-success/15 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">✓</span>
+                <CheckCircle className="w-8 h-8 text-success" />
               </div>
               <h3 className="text-lg font-semibold text-text-primary">完成订单</h3>
               <p className="text-sm text-text-secondary mt-2">
@@ -631,15 +632,15 @@ export default function AdminOrderDetailPage() {
 
             <div className="bg-info-soft rounded-lg p-4 mb-6 space-y-2 text-sm">
               <div className="flex items-start gap-2">
-                <span className="text-info mt-0.5">✓</span>
+                <CheckCircle className="w-4 h-4 text-info mt-0.5" />
                 <span className="text-text-primary">计算并记录利润</span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="text-info mt-0.5">✓</span>
+                <CheckCircle className="w-4 h-4 text-info mt-0.5" />
                 <span className="text-text-primary">发放积分给用户 (订单金额 × 10%)</span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="text-info mt-0.5">✓</span>
+                <CheckCircle className="w-4 h-4 text-info mt-0.5" />
                 <span className="text-text-primary">发送完成通知</span>
               </div>
             </div>
@@ -680,7 +681,7 @@ export default function AdminOrderDetailPage() {
                   </>
                 ) : (
                   <>
-                    <span>✓</span>
+                    <CheckCircle className="w-4 h-4" />
                     确认完成
                   </>
                 )}
@@ -699,9 +700,9 @@ export default function AdminOrderDetailPage() {
           <div className="relative max-w-4xl max-h-[90vh] w-full">
             <button
               onClick={() => setPreviewPhoto(null)}
-              className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors text-xl font-bold"
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors text-xl font-bold flex items-center gap-1"
             >
-              ✕ 关闭
+              <X className="w-5 h-5" /> 关闭
             </button>
             <img
               src={previewPhoto}

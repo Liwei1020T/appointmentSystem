@@ -35,6 +35,7 @@ import {
   type UserRole,
 } from '@/services/adminUserService';
 import PageLoading from '@/components/loading/PageLoading';
+import { CheckCircle } from 'lucide-react';
 
 interface AdminUserDetailPageProps {
   userId: string;
@@ -49,7 +50,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
   const [pointsLog, setPointsLog] = useState<PointsLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [showPointsModal, setShowPointsModal] = useState(false);
   const [pointsAmount, setPointsAmount] = useState(0);
   const [pointsReason, setPointsReason] = useState('');
@@ -63,7 +64,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
     setError(null);
 
     const { user: userData, error: userError } = await getUserById(userId);
-    
+
     if (userError) {
       setError(userError);
       setLoading(false);
@@ -101,7 +102,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
 
     setLoading(true);
     const { success, newBalance, error } = await updateUserPoints(userId, pointsAmount, pointsReason, pointsAmount > 0 ? 'add' : 'subtract');
-    
+
     if (error) {
       alert(`调整失败: ${error}`);
     } else {
@@ -110,7 +111,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
       setPointsReason('');
       await loadData();
     }
-    
+
     setLoading(false);
   }
 
@@ -133,13 +134,13 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
 
     setLoading(true);
     const { success, error } = await updateUserRole(userId, newRole as UserRole);
-    
+
     if (error) {
       alert(`更新角色失败: ${error}`);
     } else {
       await loadData();
     }
-    
+
     setLoading(false);
   }
 
@@ -153,13 +154,13 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
 
     setLoading(true);
     const { success, error } = await blockUser(userId, !user.is_blocked);
-    
+
     if (error) {
       alert(`操作失败: ${error}`);
     } else {
       await loadData();
     }
-    
+
     setLoading(false);
   }
 
@@ -182,7 +183,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
       completed: 'bg-success/15 text-success',
       cancelled: 'bg-danger/15 text-danger',
     };
-    
+
     const labels = {
       pending: '待处理',
       in_progress: '处理中',
@@ -245,7 +246,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
       used: 'bg-ink-elevated text-text-secondary',
       expired: 'bg-danger/15 text-danger',
     };
-    
+
     const labels = {
       available: '可用',
       used: '已使用',
@@ -265,7 +266,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
       admin: 'bg-accent/15 text-accent',
       super_admin: 'bg-danger/15 text-danger',
     };
-    
+
     const labels = {
       user: '用户',
       admin: '管理员',
@@ -316,11 +317,10 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
           <h1 className="text-3xl font-bold text-text-primary">{user.full_name}</h1>
           {getRoleBadge(user.role)}
           <span
-            className={`px-3 py-1 rounded-full text-sm font-semibold ${
-              user.is_blocked
+            className={`px-3 py-1 rounded-full text-sm font-semibold ${user.is_blocked
                 ? 'bg-danger/15 text-danger'
                 : 'bg-success/15 text-success'
-            }`}
+              }`}
           >
             {user.is_blocked ? '已封禁' : '正常'}
           </span>
@@ -341,11 +341,10 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
           </button>
           <button
             onClick={handleBlockUser}
-            className={`px-4 py-2 rounded-lg ${
-              user.is_blocked
+            className={`px-4 py-2 rounded-lg ${user.is_blocked
                 ? 'bg-success text-text-primary hover:bg-success/90'
                 : 'bg-danger text-text-primary hover:bg-danger/90'
-            }`}
+              }`}
           >
             {user.is_blocked ? '解除封禁' : '封禁用户'}
           </button>
@@ -445,7 +444,9 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
                           <td className="px-4 py-3">{getStatusBadge(order.status)}</td>
                           <td className="px-4 py-3 text-center">
                             {order.use_package ? (
-                              <span className="inline-flex items-center gap-1 text-success text-xs font-semibold">✓</span>
+                              <span className="inline-flex items-center gap-1 text-success text-xs font-semibold">
+                                <CheckCircle className="w-3 h-3" />
+                              </span>
                             ) : (
                               <span className="text-text-tertiary text-xs">—</span>
                             )}
@@ -572,7 +573,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-ink-surface rounded-lg max-w-md w-full p-6">
             <h2 className="text-xl font-bold mb-4">调整积分</h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">

@@ -25,6 +25,7 @@ import {
   Clock,
   Tag,
   History,
+  X,
 } from 'lucide-react';
 import PageHeader from '@/components/layout/PageHeader';
 import PageLoading from '@/components/loading/PageLoading';
@@ -609,7 +610,7 @@ function PointsCenterContent() {
             }`}>
             {toast.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
             <p className="font-medium">{toast.message}</p>
-            <button onClick={() => setToast({ ...toast, show: false })} className="ml-2 hover:opacity-80">✕</button>
+            <button onClick={() => setToast({ ...toast, show: false })} className="ml-2 hover:opacity-80"><X className="w-4 h-4" /></button>
           </div>
         </div>
       )}

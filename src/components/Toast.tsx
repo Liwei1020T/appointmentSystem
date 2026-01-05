@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 
 interface ToastProps {
   message: string;
@@ -16,11 +17,11 @@ interface ToastProps {
  * @param onClose - Close handler
  * @param duration - Auto-dismiss duration in ms (default: 3000)
  */
-export const Toast: React.FC<ToastProps> = ({ 
-  message, 
-  type = 'info', 
+export const Toast: React.FC<ToastProps> = ({
+  message,
+  type = 'info',
   onClose,
-  duration = 3000 
+  duration = 3000
 }) => {
   const styles = {
     success: 'border-l-success',
@@ -28,22 +29,25 @@ export const Toast: React.FC<ToastProps> = ({
     warning: 'border-l-warning',
     info: 'border-l-info'
   };
-  
-  const icons = {
-    success: '✓',
-    error: '✕',
-    warning: '⚠',
-    info: 'ℹ'
+
+  // Icon components for each type
+  const IconComponents = {
+    success: CheckCircle,
+    error: XCircle,
+    warning: AlertTriangle,
+    info: Info
   };
-  
+
+  const IconComponent = IconComponents[type];
+
   useEffect(() => {
     const timer = setTimeout(onClose, duration);
     return () => clearTimeout(timer);
   }, [onClose, duration]);
-  
+
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4">
-      <div 
+      <div
         className={`
           ${styles[type]} 
           text-text-primary px-4 py-3 rounded-lg shadow-lg 
@@ -52,14 +56,14 @@ export const Toast: React.FC<ToastProps> = ({
         `}
         role="alert"
       >
-        <span className="text-lg font-bold text-text-secondary">{icons[type]}</span>
+        <IconComponent className="w-5 h-5 text-text-secondary flex-shrink-0" />
         <span className="flex-1">{message}</span>
-        <button 
-          onClick={onClose} 
+        <button
+          onClick={onClose}
           className="text-text-tertiary hover:text-text-primary transition-colors"
           aria-label="Close"
         >
-          ✕
+          <X className="w-4 h-4" />
         </button>
       </div>
     </div>

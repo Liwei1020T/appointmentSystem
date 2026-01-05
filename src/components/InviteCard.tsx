@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Copy, Share2, Check } from 'lucide-react';
+import { Copy, Share2, Check, Gift } from 'lucide-react';
 import { getMyReferralCode, generateShareLink, generateShareMessage } from '@/services/referralService';
 import toast from 'react-hot-toast';
 
@@ -139,7 +139,9 @@ export default function InviteCard() {
 
       {/* 奖励说明 */}
       <div className="bg-ink-elevated rounded-lg p-4 mb-4 border border-border-subtle">
-        <p className="text-sm font-medium mb-2">🎁 邀请奖励</p>
+        <p className="text-sm font-medium mb-2 flex items-center gap-1.5">
+          <Gift className="w-4 h-4 text-accent" /> 邀请奖励
+        </p>
         <div className="space-y-1 text-sm text-text-secondary">
           <p>• 好友注册：你获得 <span className="font-bold">50 积分</span></p>
           <p>• 好友奖励：获得 <span className="font-bold">20 积分</span></p>

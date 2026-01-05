@@ -20,7 +20,7 @@ import type { AdminOrder, OrderStatus, OrderStats } from '@/services/adminOrderS
 import { generateShortCode, formatDate } from '@/lib/utils';
 import { Button, Input, Tabs } from '@/components';
 import SectionLoading from '@/components/loading/SectionLoading';
-import { Search } from 'lucide-react';
+import { Search, Inbox, Disc, Settings, CheckCircle } from 'lucide-react';
 
 type FilterStatus = 'all' | OrderStatus;
 
@@ -258,7 +258,9 @@ export default function AdminOrderListPage() {
           </div>
         ) : orders.length === 0 ? (
           <div className="bg-ink-surface rounded-lg p-12 text-center">
-            <div className="text-6xl mb-4">📭</div>
+            <div className="flex justify-center mb-4">
+              <Inbox className="w-16 h-16 text-text-tertiary" />
+            </div>
             <p className="text-text-secondary mb-2">暂无订单</p>
             <p className="text-sm text-text-tertiary">没有找到符合条件的订单</p>
           </div>
@@ -314,8 +316,8 @@ export default function AdminOrderListPage() {
                           {/* 多球拍订单显示 */}
                           {(order as any).items?.length > 0 ? (
                             <>
-                              <div className="text-sm text-accent font-medium">
-                                🎾 多球拍订单
+                              <div className="text-sm text-accent font-medium flex items-center gap-1">
+                                <Disc className="w-4 h-4" /> 多球拍订单
                               </div>
                               <div className="text-xs text-text-tertiary">
                                 {(order as any).items.length} 支球拍
@@ -388,10 +390,10 @@ export default function AdminOrderListPage() {
                                     loadOrders();
                                   }
                                 }}
-                                className="px-2.5 py-1 text-xs bg-info-soft text-info rounded-md hover:bg-info/20 transition-colors"
+                                className="px-2.5 py-1 text-xs bg-info-soft text-info rounded-md hover:bg-info/20 transition-colors flex items-center gap-1"
                                 title="开始穿线"
                               >
-                                ⚙️ 开始
+                                <Settings className="w-3 h-3" /> 开始
                               </button>
                             )}
                             {(order.status === 'in_progress' || order.status === 'processing') && (
@@ -408,10 +410,10 @@ export default function AdminOrderListPage() {
                                     loadOrders();
                                   }
                                 }}
-                                className="px-2.5 py-1 text-xs bg-success/15 text-success rounded-md hover:bg-success/25 transition-colors"
+                                className="px-2.5 py-1 text-xs bg-success/15 text-success rounded-md hover:bg-success/25 transition-colors flex items-center gap-1"
                                 title="完成订单"
                               >
-                                ✓ 完成
+                                <CheckCircle className="w-3 h-3" /> 完成
                               </button>
                             )}
                             <button
@@ -463,8 +465,8 @@ export default function AdminOrderListPage() {
                           key={pageNum}
                           onClick={() => setCurrentPage(pageNum)}
                           className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${currentPage === pageNum
-                              ? 'bg-accent text-text-onAccent'
-                              : 'text-text-secondary hover:bg-ink-elevated'
+                            ? 'bg-accent text-text-onAccent'
+                            : 'text-text-secondary hover:bg-ink-elevated'
                             }`}
                         >
                           {pageNum}

@@ -318,7 +318,7 @@ export default function PaymentVerificationPage() {
             setSelectedPayment(null);
           }
         }}
-        title="💰 确认收款"
+        title="确认收款"
         className="!bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl"
       >
         {selectedPayment && (
@@ -383,7 +383,7 @@ export default function PaymentVerificationPage() {
             setRejectReason('');
           }
         }}
-        title="⚠️ 拒绝支付"
+        title="拒绝支付"
         className="!bg-white/95 backdrop-blur-xl border border-danger/10 shadow-2xl"
       >
         {selectedPayment && (

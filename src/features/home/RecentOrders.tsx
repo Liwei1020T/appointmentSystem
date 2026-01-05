@@ -14,17 +14,16 @@ import SectionLoading from '@/components/loading/SectionLoading';
 import { getRecentOrders } from '@/services/homeService';
 import { Order } from '@/types';
 import { formatDate } from '@/lib/utils';
+import { DollarSign, RefreshCw, CheckCircle, XCircle, LucideIcon } from 'lucide-react';
 
-// 订单状态配置
-const statusConfig: Record<string, { label: string; variant: 'warning' | 'info' | 'success' | 'neutral'; icon: string }> = {
-
-  pending: { label: '待付款', variant: 'warning', icon: '$' },
-
-  in_progress: { label: '穿线中', variant: 'info', icon: '↻' },
-  stringing: { label: '穿线中', variant: 'info', icon: '↻' },
-  completed: { label: '已完成', variant: 'success', icon: '✓' },
-  ready: { label: '待取拍', variant: 'success', icon: '✓' },
-  cancelled: { label: '已取消', variant: 'neutral', icon: '✕' },
+// 订单状态配置 - 使用 Lucide 图标
+const statusConfig: Record<string, { label: string; variant: 'warning' | 'info' | 'success' | 'neutral'; icon: LucideIcon }> = {
+  pending: { label: '待付款', variant: 'warning', icon: DollarSign },
+  in_progress: { label: '穿线中', variant: 'info', icon: RefreshCw },
+  stringing: { label: '穿线中', variant: 'info', icon: RefreshCw },
+  completed: { label: '已完成', variant: 'success', icon: CheckCircle },
+  ready: { label: '待取拍', variant: 'success', icon: CheckCircle },
+  cancelled: { label: '已取消', variant: 'neutral', icon: XCircle },
 };
 
 // 根据状态获取动作按钮配置
@@ -157,7 +156,10 @@ export default function RecentOrders() {
                 className="flex items-center gap-3 p-3 rounded-xl bg-ink-elevated/50 hover:bg-ink-elevated border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
               >
                 {/* 状态图标 */}
-                <span className="text-lg flex-shrink-0">{status.icon}</span>
+                {(() => {
+                  const IconComponent = status.icon;
+                  return <IconComponent className="w-5 h-5 text-text-tertiary flex-shrink-0" />;
+                })()}
 
                 {/* 订单信息 */}
                 <div className="flex-1 min-w-0">

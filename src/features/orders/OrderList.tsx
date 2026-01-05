@@ -26,6 +26,7 @@ import Button from '@/components/Button';
 import Toast from '@/components/Toast';
 import { OrderListSkeleton } from '@/components/skeletons';
 import { formatDate } from '@/lib/utils';
+import { Clock, CheckCircle, RefreshCw, XCircle, LucideIcon } from 'lucide-react';
 
 interface OrderListProps {
   initialStatus?: OrderStatus;
@@ -219,44 +220,44 @@ export default function OrderList({ initialStatus }: OrderListProps) {
       {!loading && !error && orders.length > 0 && (
         <div className="space-y-4">
           {orders.map((order) => {
-            // Status-based styling
+            // Status-based styling with Lucide icons
             const statusConfig: Record<string, {
-              icon: string;
+              icon: LucideIcon;
               bgColor: string;
               borderColor: string;
               iconBg: string;
               textColor: string;
             }> = {
               pending: {
-                icon: '…',
+                icon: Clock,
                 bgColor: 'bg-warning/5',
                 borderColor: 'border-l-warning',
                 iconBg: 'bg-warning/15',
                 textColor: 'text-warning'
               },
               confirmed: {
-                icon: '✓',
+                icon: CheckCircle,
                 bgColor: 'bg-info/5',
                 borderColor: 'border-l-info',
                 iconBg: 'bg-info/15',
                 textColor: 'text-info'
               },
               in_progress: {
-                icon: '↻',
+                icon: RefreshCw,
                 bgColor: 'bg-info/5',
                 borderColor: 'border-l-info',
                 iconBg: 'bg-info/15',
                 textColor: 'text-info'
               },
               completed: {
-                icon: '✓',
+                icon: CheckCircle,
                 bgColor: 'bg-success/5',
                 borderColor: 'border-l-success',
                 iconBg: 'bg-success/15',
                 textColor: 'text-success'
               },
               cancelled: {
-                icon: '✕',
+                icon: XCircle,
                 bgColor: 'bg-danger/5',
                 borderColor: 'border-l-danger',
                 iconBg: 'bg-danger/15',
@@ -286,13 +287,18 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     {/* Status Icon */}
-                    <div className={`
-                      w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
-                      ${config.iconBg} ${config.textColor}
-                      transition-transform duration-300 group-hover:scale-110
-                    `}>
-                      <span className="text-lg">{config.icon}</span>
-                    </div>
+                    {(() => {
+                      const IconComponent = config.icon;
+                      return (
+                        <div className={`
+                          w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+                          ${config.iconBg} ${config.textColor}
+                          transition-transform duration-300 group-hover:scale-110
+                        `}>
+                          <IconComponent className="w-5 h-5" />
+                        </div>
+                      );
+                    })()}
 
                     {/* Order Info */}
                     <div className="flex-1 min-w-0">

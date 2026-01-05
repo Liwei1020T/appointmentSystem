@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Bell, BellOff, Send, CheckCircle, Bell as BellIcon, BellOff as BellOffIcon, Info, AlertTriangle } from 'lucide-react';
 import {
   isWebPushSupported,
   getNotificationPermission,
@@ -58,7 +59,7 @@ export default function WebPushSubscription() {
       if (subscription) {
         setSubscribed(true);
         setPermission('granted');
-        alert('✅ Web Push 通知已启用！');
+        alert('Web Push 通知已启用！');
       } else {
         throw new Error('订阅失败');
       }
@@ -78,7 +79,7 @@ export default function WebPushSubscription() {
       const success = await unsubscribeFromPush();
       if (success) {
         setSubscribed(false);
-        alert('✅ 已取消 Web Push 通知');
+        alert('已取消 Web Push 通知');
       } else {
         throw new Error('取消订阅失败');
       }
@@ -97,7 +98,7 @@ export default function WebPushSubscription() {
     try {
       const success = await sendTestNotification();
       if (success) {
-        alert('✅ 测试通知已发送！请查看系统通知。');
+        alert('测试通知已发送！请查看系统通知。');
       } else {
         throw new Error('发送测试通知失败');
       }
@@ -113,7 +114,9 @@ export default function WebPushSubscription() {
     return (
       <div className="p-4 bg-ink-elevated rounded-lg border border-border-subtle">
         <div className="flex items-start gap-3">
-          <span className="text-2xl">⚠️</span>
+          <div className="w-10 h-10 bg-warning/15 rounded-xl flex items-center justify-center flex-shrink-0">
+            <AlertTriangle className="w-6 h-6 text-warning" />
+          </div>
           <div>
             <h3 className="font-semibold text-text-primary mb-1">不支持 Web Push</h3>
             <p className="text-sm text-text-secondary">
@@ -131,7 +134,9 @@ export default function WebPushSubscription() {
     return (
       <div className="p-4 bg-danger/15 rounded-lg border border-danger/40">
         <div className="flex items-start gap-3">
-          <span className="text-2xl">🔕</span>
+          <div className="w-10 h-10 bg-danger/15 rounded-xl flex items-center justify-center flex-shrink-0">
+            <BellOff className="w-6 h-6 text-danger" />
+          </div>
           <div>
             <h3 className="font-semibold text-danger mb-1">通知权限被拒绝</h3>
             <p className="text-sm text-danger">
@@ -155,12 +160,14 @@ export default function WebPushSubscription() {
     <div className="p-4 bg-ink-surface rounded-lg border border-border-subtle">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🔔</span>
+          <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Bell className="w-6 h-6 text-accent" />
+          </div>
           <div>
             <h3 className="font-semibold text-text-primary">浏览器推送通知</h3>
             <p className="text-sm text-text-secondary">
-              {subscribed 
-                ? '已启用 - 即使关闭页面也能收到通知' 
+              {subscribed
+                ? '已启用 - 即使关闭页面也能收到通知'
                 : '启用后可在订单状态更新时收到实时通知'}
             </p>
           </div>
@@ -235,12 +242,12 @@ export default function WebPushSubscription() {
 
       <div className="mt-4 pt-4 border-t border-border-subtle">
         <h4 className="text-sm font-medium text-text-primary mb-2">通知类型：</h4>
-        <ul className="text-sm text-text-secondary space-y-1">
-          <li>✅ 订单状态更新（创建、确认、完成、取消）</li>
-          <li>✅ 支付确认（成功、失败、退款）</li>
-          <li>✅ 积分获得提醒</li>
-          <li>✅ 优惠券到账通知</li>
-          <li>✅ 系统公告</li>
+        <ul className="text-sm text-text-secondary space-y-2">
+          <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-success" /> 订单状态更新（创建、确认、完成、取消）</li>
+          <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-success" /> 支付确认（成功、失败、退款）</li>
+          <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-success" /> 积分获得提醒</li>
+          <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-success" /> 优惠券到账通知</li>
+          <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-success" /> 系统公告</li>
         </ul>
       </div>
 

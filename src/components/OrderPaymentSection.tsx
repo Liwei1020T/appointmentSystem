@@ -11,7 +11,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CreditCard, X } from 'lucide-react';
+import { CreditCard, X, Smartphone, Banknote, CheckCircle } from 'lucide-react';
 import TngQRCodeDisplay from '@/components/TngQRCodeDisplay';
 import PaymentReceiptUploader from '@/components/PaymentReceiptUploader';
 import { createCashPayment, createPayment, uploadPaymentReceipt } from '@/services/paymentService';
@@ -164,7 +164,7 @@ export default function OrderPaymentSection({
               onClick={() => setPaymentMethod('tng')}
               className="flex flex-col items-center justify-center rounded-lg border-2 border-border-subtle p-4 transition-all hover:border-accent-border hover:bg-ink-elevated"
             >
-              <div className="mb-2 text-2xl">📱</div>
+              <Smartphone className="w-6 h-6 text-info mb-2" />
               <div className="font-medium text-text-primary">TNG 线上支付</div>
               <div className="mt-1 text-xs text-text-tertiary">扫码支付</div>
             </button>
@@ -172,7 +172,7 @@ export default function OrderPaymentSection({
               onClick={() => setPaymentMethod('cash')}
               className="flex flex-col items-center justify-center rounded-lg border-2 border-border-subtle p-4 transition-all hover:border-success hover:bg-success/10"
             >
-              <div className="mb-2 text-2xl">💵</div>
+              <Banknote className="w-6 h-6 text-success mb-2" />
               <div className="font-medium text-text-primary">现金支付</div>
               <div className="mt-1 text-xs text-text-tertiary">到店支付</div>
             </button>
@@ -232,7 +232,9 @@ export default function OrderPaymentSection({
           {/* Status Message */}
           {receiptUploaded && (
             <div className="rounded-lg border border-border-subtle bg-success/10 p-4 text-center">
-              <p className="font-semibold text-success">✓ 支付收据已提交</p>
+              <p className="font-semibold text-success flex items-center justify-center gap-1">
+                <CheckCircle className="w-4 h-4" /> 支付收据已提交
+              </p>
               <p className="mt-1 text-sm text-success">
                 管理员将在 1-2 个工作日内审核您的支付收据，审核通过后订单将开始处理
               </p>
@@ -256,7 +258,7 @@ export default function OrderPaymentSection({
 
           <div className="rounded-lg border border-border-subtle bg-ink-elevated p-6">
             <div className="mb-4 text-center">
-              <div className="mb-2 text-4xl">💵</div>
+              <Banknote className="w-10 h-10 text-success mb-2" />
               <h3 className="text-lg font-semibold text-text-primary">现金支付</h3>
               <p className="mt-2 text-sm text-text-secondary">
                 请到店支付现金，确认后订单等待处理

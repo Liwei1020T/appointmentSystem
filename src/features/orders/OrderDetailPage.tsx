@@ -46,7 +46,8 @@ import {
   Star,
   X,
   Store,
-  Truck
+  Truck,
+  CheckCircle
 } from 'lucide-react';
 
 interface OrderDetailPageProps {
@@ -729,8 +730,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                 {formatDate(createdAt, 'yyyy-MM-dd HH:mm:ss')}
               </div>
               {order.completed_at && (
-                <div className="text-xs text-success mt-1">
-                  ✓ 完成于 {formatDate(order.completed_at, 'yyyy-MM-dd HH:mm')}
+                <div className="text-xs text-success mt-1 flex items-center justify-center gap-1">
+                  <CheckCircle className="w-3 h-3" /> 完成于 {formatDate(order.completed_at, 'yyyy-MM-dd HH:mm')}
                 </div>
               )}
             </div>
