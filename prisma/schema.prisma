@@ -24,8 +24,8 @@ model User {
   fullName     String?  @map("full_name")
   address      String?
   avatarUrl    String?  @map("avatar_url")
-  // Password is optional when using OTP-based auth; legacy accounts may still have a password hash.
-  password     String? // bcrypt hashed password (legacy)
+  // Password is required for authentication
+  password     String // bcrypt hashed password
   referralCode String   @unique @default(cuid()) @map("referral_code")
   referredBy   String?  @map("referred_by")
   points       Int      @default(0)

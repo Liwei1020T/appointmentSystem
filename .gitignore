@@ -42,3 +42,8 @@ next-env.d.ts
 *.swp
 *.swo
 *~
+# macOS
+.DS_Store
+._*
+.AppleDouble
+.LSOverride

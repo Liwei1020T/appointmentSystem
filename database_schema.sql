@@ -14,9 +14,11 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE,
     phone VARCHAR(50) UNIQUE,
     full_name VARCHAR(255),
+    address TEXT,
+    avatar_url TEXT,
     password VARCHAR(255) NOT NULL,
     referral_code VARCHAR(255) UNIQUE NOT NULL,
     referred_by VARCHAR(255),
@@ -65,6 +67,26 @@ CREATE TABLE verification_tokens (
     CONSTRAINT unique_identifier_token UNIQUE (identifier, token)
 );
 
+-- OTP Codes for phone-based authentication
+CREATE TABLE otp_codes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    phone VARCHAR(50) NOT NULL,
+    purpose VARCHAR(50) NOT NULL,
+    code_hash VARCHAR(255) NOT NULL,
+    attempts INTEGER DEFAULT 0,
+    max_attempts INTEGER DEFAULT 5,
+    expires_at TIMESTAMPTZ(6) NOT NULL,
+    ip TEXT,
+    user_agent TEXT,
+    payload JSONB,
+    created_at TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_phone_purpose UNIQUE (phone, purpose)
+);
+
+CREATE INDEX idx_otp_codes_expires_at ON otp_codes(expires_at);
+CREATE INDEX idx_otp_codes_created_at ON otp_codes(created_at);
+
 -- ============================================
 -- INVENTORY MANAGEMENT
 -- ============================================
@@ -81,7 +103,12 @@ CREATE TABLE string_inventory (
     color VARCHAR(100),
     gauge VARCHAR(50),
     image_url TEXT,
+    is_recommended BOOLEAN DEFAULT false,
+    elasticity VARCHAR(50), -- low, medium, high
+    durability VARCHAR(50), -- low, medium, high
+    control VARCHAR(50), -- low, medium, high
     active BOOLEAN DEFAULT true,
+    version INTEGER DEFAULT 1, -- Optimistic locking for concurrency control
     created_at TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP
 );
@@ -158,6 +185,7 @@ CREATE TABLE vouchers (
     max_uses INTEGER,
     used_count INTEGER DEFAULT 0,
     points_cost INTEGER DEFAULT 0,
+    max_redemptions_per_user INTEGER DEFAULT 1, -- 每用户最大兑换次数
     valid_from TIMESTAMPTZ(6) NOT NULL,
     valid_until TIMESTAMPTZ(6) NOT NULL,
     active BOOLEAN DEFAULT true,
@@ -190,6 +218,8 @@ CREATE INDEX idx_user_vouchers_status ON user_vouchers(status);
 CREATE TABLE orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL,
+    service_type VARCHAR(50) DEFAULT 'in_store', -- 'in_store' or 'pickup_delivery'
+    pickup_address TEXT, -- 上门取送地址（仅 pickup_delivery 时使用）
     string_id UUID,
     tension INTEGER,
     price DECIMAL(10, 2) NOT NULL,
@@ -214,6 +244,29 @@ CREATE TABLE orders (
 CREATE INDEX idx_orders_user_id ON orders(user_id);
 CREATE INDEX idx_orders_status ON orders(status);
 CREATE INDEX idx_orders_created_at ON orders(created_at);
+
+-- ============================================
+-- ORDER ITEMS (多球拍支持)
+-- ============================================
+
+CREATE TABLE order_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id UUID NOT NULL,
+    string_id UUID NOT NULL,
+    tension_vertical INTEGER NOT NULL,
+    tension_horizontal INTEGER NOT NULL,
+    racket_brand VARCHAR(255),
+    racket_model VARCHAR(255),
+    racket_photo TEXT NOT NULL,
+    notes TEXT,
+    price DECIMAL(10, 2) NOT NULL,
+    created_at TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_order_items_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    CONSTRAINT fk_order_items_string FOREIGN KEY (string_id) REFERENCES string_inventory(id)
+);
+
+CREATE INDEX idx_order_items_order_id ON order_items(order_id);
 
 -- ============================================
 -- ORDER PHOTOS
@@ -403,13 +456,13 @@ CREATE TRIGGER update_system_settings_updated_at BEFORE UPDATE ON system_setting
 -- SAMPLE DATA (Optional - for testing)
 -- ============================================
 
--- Create admin user (password: admin123)
+-- Create admin user (password: admin)
 INSERT INTO users (email, phone, full_name, password, referral_code, role, points)
 VALUES (
     'admin@string.com',
     '+60123456789',
     'System Admin',
-    '$2b$10$NwZg0a0gw68vcCowPezfh.SpPVB15zNH2FRtkBfBkew60A5wX7vmG', -- Replace with actual bcrypt hash of 'admin'
+    '$2b$10$TrdwZppN5K3yTbRq9wJwr.TTX.KhW8dxthn8kaKZvy0ZEFwte2eb.', -- Replace with actual bcrypt hash of 'admin'
     'ADMIN001',
     'admin',
     0
