@@ -1,24 +1,25 @@
-version: '3.8'
+
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: string_service_db
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: string_service_app
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "3000:3000"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: string_service
+      # 使用 host.docker.internal 连接宿主机的 PostgreSQL
+      DATABASE_URL: "postgresql://lwt:system@host.docker.internal:5432/stringSystem"
+      NEXTAUTH_URL: "${NEXTAUTH_URL:-http://localhost:3000}"
+      NEXTAUTH_SECRET: "${NEXTAUTH_SECRET}"
+      NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
+      NODE_ENV: production
+    extra_hosts:
+      # macOS/Windows Docker Desktop 自动支持 host.docker.internal
+      # Linux 需要这行配置
+      - "host.docker.internal:host-gateway"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  postgres_data:
-    driver: local
+      # 持久化上传文件
+      - ./uploads:/app/uploads

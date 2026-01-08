@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone', // Docker 部署必需
   reactStrictMode: true,
   eslint: {
     // Allow production builds even if ESLint reports warnings/errors.
