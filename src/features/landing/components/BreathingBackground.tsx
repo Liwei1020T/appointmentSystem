@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -9,16 +9,18 @@ interface Props {
 }
 
 export default function BreathingBackground({ className }: Props) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <div className={cn("absolute inset-0 overflow-hidden pointer-events-none select-none z-0", className)}>
       {/* Primary Blob (Accent) - Increased to 20% */}
       <motion.div
-        animate={{
+        animate={reduceMotion ? undefined : {
           x: [0, 100, -50, 0],
           y: [0, -50, 50, 0],
           scale: [1, 1.2, 0.9, 1],
         }}
-        transition={{
+        transition={reduceMotion ? undefined : {
           duration: 20,
           repeat: Infinity,
           ease: "easeInOut",
@@ -28,12 +30,12 @@ export default function BreathingBackground({ className }: Props) {
 
       {/* Secondary Blob (Info) */}
       <motion.div
-        animate={{
+        animate={reduceMotion ? undefined : {
           x: [0, -70, 30, 0],
           y: [0, 60, -40, 0],
           scale: [1, 1.1, 0.8, 1],
         }}
-        transition={{
+        transition={reduceMotion ? undefined : {
           duration: 25,
           repeat: Infinity,
           ease: "easeInOut",
@@ -44,12 +46,12 @@ export default function BreathingBackground({ className }: Props) {
 
       {/* Tertiary Blob (Accent Alt) */}
       <motion.div
-        animate={{
+        animate={reduceMotion ? undefined : {
           x: [0, 50, -50, 0],
           y: [0, -30, 30, 0],
           scale: [1, 1.3, 0.9, 1],
         }}
-        transition={{
+        transition={reduceMotion ? undefined : {
           duration: 22,
           repeat: Infinity,
           ease: "easeInOut",

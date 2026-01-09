@@ -198,6 +198,17 @@ const variants = {
 - 订单详情页顶部摘要组件
 - 包含状态图标、球拍数量、实付金额、状态驱动的主行动按钮
 
+### 11. Order Status Capsule
+
+- 首页“当前订单状态”胶囊卡片
+- 展示最新订单状态 + 主行动按钮 + 一键复单入口
+- 与 Paper Court 卡片体系一致
+
+```tsx
+// File: src/features/home/OrderStatusCapsule.tsx
+<OrderStatusCapsule order={latestOrder} loading={loading} />
+```
+
 ### 11. Receipt Card (Transactional)
 
 - 拟物化收据风格

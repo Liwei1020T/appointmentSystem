@@ -11,6 +11,9 @@ System-wide Paper Court (breathing light) refinement with refreshed auth flows, 
 - Updated loading/spinner tones, skeleton cards, and points center accents for consistent neutral hierarchy.
 - Adjusted string attribute chips and voucher maintenance page to align with Paper Court tokens.
 - Minor admin modal hover color alignment.
+- Added Home “current order” capsule with CTA + quick reorder entry, and reused recent orders data.
+- Added repeat booking prefill via `repeatOrderId` and a bottom summary stripe for multi-racket flow.
+- Added reduced-motion support for landing background and lazy-loading for review images.
 
 ## Tests
 - Not run (UI changes only).

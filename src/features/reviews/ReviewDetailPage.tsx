@@ -119,10 +119,13 @@ export default function ReviewDetailPage() {
                         setShowPreview(true);
                       }}
                       className="group w-full h-24 overflow-hidden rounded-lg border border-border-subtle"
+                      aria-label={`查看评价图片 ${index + 1}`}
                     >
                       <img
                         src={url}
                         alt={`review-${index}`}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
                       />
                     </button>

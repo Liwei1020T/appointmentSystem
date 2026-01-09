@@ -8,7 +8,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Plus, ShoppingCart, ArrowRight, ArrowLeft, Check, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { StringInventory, UserVoucher } from '@/types';
@@ -16,7 +16,7 @@ import PageLoading from '@/components/loading/PageLoading';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
 import { formatCurrency } from '@/lib/utils';
 import { hasAvailablePackage, getUserPackages } from '@/services/packageService';
-import { createMultiRacketOrder } from '@/services/orderService';
+import { createMultiRacketOrder, getOrderById } from '@/services/orderService';
 import { getUserStats, getUserProfile, type MembershipTierInfo } from '@/services/profileService';
 import StringSelector from './StringSelector';
 import RacketItemCard, { RacketItemData } from './RacketItemCard';
@@ -29,6 +29,7 @@ const generateTempId = () => `temp_${Date.now()}_${Math.random().toString(36).sl
 
 export default function MultiRacketBookingFlow() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { data: session, status } = useSession();
     const user = session?.user;
     const isAuthenticated = !!session;
@@ -50,6 +51,11 @@ export default function MultiRacketBookingFlow() {
     const [serviceType, setServiceType] = useState<ServiceType>('in_store');
     const [pickupAddress, setPickupAddress] = useState('');
     const [userDefaultAddress, setUserDefaultAddress] = useState('');
+
+    // 复单状态
+    const repeatOrderId = searchParams.get('repeatOrderId');
+    const [repeatLoaded, setRepeatLoaded] = useState(false);
+    const [repeatSourceLabel, setRepeatSourceLabel] = useState<string | null>(null);
 
     // UI 状态
     const [step, setStep] = useState(1); // 1: 选择球线添加, 2: 配置球拍, 3: 优惠/套餐, 4: 确认
@@ -90,6 +96,13 @@ export default function MultiRacketBookingFlow() {
         }
     }, [user]);
 
+    useEffect(() => {
+        if (repeatOrderId) {
+            setRepeatLoaded(false);
+            setRepeatSourceLabel(null);
+        }
+    }, [repeatOrderId]);
+
     const loadUserAddress = async () => {
         try {
             const { profile } = await getUserProfile();
@@ -124,6 +137,91 @@ export default function MultiRacketBookingFlow() {
             console.error('Failed to load membership info:', error);
         }
     };
+
+    const buildItemsFromOrder = useCallback((order: any): RacketItemData[] => {
+        const orderItems = Array.isArray(order.items) ? order.items : [];
+        if (orderItems.length > 0) {
+            return orderItems.map((item: any) => ({
+                id: generateTempId(),
+                stringId: item.stringId || item.string_id || item.string?.id || order.stringId || order.string_id || '',
+                string: {
+                    id: item.string?.id || item.stringId || item.string_id || order.stringId || order.string_id || '',
+                    brand: item.string?.brand || order.string?.brand || '',
+                    model: item.string?.model || order.string?.model || '',
+                    sellingPrice: item.string?.sellingPrice || order.string?.sellingPrice || order.finalPrice || order.final_price || order.price || 0,
+                },
+                tensionVertical: item.tensionVertical ?? item.tension_vertical ?? order.tension ?? 24,
+                tensionHorizontal: item.tensionHorizontal ?? item.tension_horizontal ?? order.tension ?? 24,
+                racketBrand: item.racketBrand ?? item.racket_brand ?? '',
+                racketModel: item.racketModel ?? item.racket_model ?? '',
+                racketPhoto: item.racketPhoto ?? item.racket_photo ?? '',
+                notes: item.notes ?? '',
+            }));
+        }
+
+        const fallbackStringId = order.stringId || order.string_id || order.string?.id || '';
+        if (!fallbackStringId) return [];
+
+        const fallbackTension = Number(order.tension) || 24;
+        return [
+            {
+                id: generateTempId(),
+                stringId: fallbackStringId,
+                string: {
+                    id: fallbackStringId,
+                    brand: order.string?.brand || order.stringBrand || order.string_brand || '',
+                    model: order.string?.model || order.stringName || order.string_name || '',
+                    sellingPrice: order.string?.sellingPrice || order.finalPrice || order.final_price || order.price || 0,
+                },
+                tensionVertical: fallbackTension,
+                tensionHorizontal: fallbackTension,
+                racketPhoto: '',
+                notes: order.notes ?? '',
+            },
+        ];
+    }, []);
+
+    useEffect(() => {
+        if (!user || !repeatOrderId || repeatLoaded) return;
+
+        let active = true;
+        (async () => {
+            try {
+                const order = await getOrderById(repeatOrderId);
+                if (!active) return;
+
+                const nextItems = buildItemsFromOrder(order);
+                if (nextItems.length === 0) {
+                    throw new Error('Missing order items');
+                }
+
+                setCartItems(nextItems);
+                setSelectedStringForAdd(null);
+                setIsCartExpanded(true);
+                setStep(2);
+                setNotes(order.notes || '');
+                setUsePackage(false);
+                setSelectedPackageId(null);
+                setSelectedVoucher(null);
+                setServiceType(order.serviceType || order.service_type || 'in_store');
+                setPickupAddress(order.pickupAddress || order.pickup_address || '');
+                setRepeatSourceLabel(`订单 #${order.id.slice(0, 6).toUpperCase()}`);
+                toast.success('已载入上次配置');
+            } catch (error) {
+                if (active) {
+                    toast.error('未能载入上次配置');
+                }
+            } finally {
+                if (active) {
+                    setRepeatLoaded(true);
+                }
+            }
+        })();
+
+        return () => {
+            active = false;
+        };
+    }, [user, repeatOrderId, repeatLoaded, buildItemsFromOrder]);
 
     // 添加球拍到购物车
     const handleAddToCart = useCallback(() => {
@@ -336,6 +434,18 @@ export default function MultiRacketBookingFlow() {
                     </div>
                 </div>
             </div>
+
+            {repeatSourceLabel && (
+                <div className="max-w-2xl mx-auto px-4 pt-4">
+                    <div className="flex items-start gap-3 rounded-xl bg-accent/10 border border-accent/20 p-3">
+                        <span className="mt-1 w-2.5 h-2.5 rounded-full bg-accent" />
+                        <div>
+                            <p className="text-sm font-semibold text-accent">已载入上次配置</p>
+                            <p className="text-xs text-text-secondary mt-1">来源 {repeatSourceLabel}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* 动画包装容器 */}
             <div className={`
@@ -736,42 +846,50 @@ export default function MultiRacketBookingFlow() {
             {/* 底部操作栏 - Step 2-4 */}
             {step > 1 && (
                 <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-subtle p-4 shadow-lg z-50">
-                    <div className="max-w-2xl mx-auto flex gap-3">
-                        <button
-                            onClick={handleBack}
-                            disabled={loading}
-                            className="px-6 py-3 rounded-xl border border-border-subtle text-text-secondary font-medium hover:bg-ink transition-colors disabled:opacity-50"
-                        >
-                            返回
-                        </button>
-                        {step < 4 ? (
+                    <div className="max-w-2xl mx-auto flex flex-col gap-3">
+                        <div className="flex items-center justify-between text-xs text-text-tertiary">
+                            <span>{cartItems.length} 支球拍 · 预计实付</span>
+                            <span className="font-semibold text-text-primary">
+                                {formatCurrency(finalTotal)}
+                            </span>
+                        </div>
+                        <div className="flex gap-3">
                             <button
-                                onClick={handleNext}
-                                disabled={loading || (step === 2 && !allItemsComplete)}
-                                className="flex-1 py-3 bg-accent text-text-onAccent rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-accent/90 transition-all disabled:opacity-50"
-                            >
-                                下一步
-                                <ArrowRight className="w-5 h-5" />
-                            </button>
-                        ) : (
-                            <button
-                                onClick={handleSubmit}
+                                onClick={handleBack}
                                 disabled={loading}
-                                className="flex-1 py-3 bg-accent text-text-onAccent rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-accent/90 transition-all disabled:opacity-50"
+                                className="px-6 py-3 rounded-xl border border-border-subtle text-text-secondary font-medium hover:bg-ink transition-colors disabled:opacity-50"
                             >
-                                {loading ? (
-                                    <>
-                                        <LoadingSpinner size="sm" tone="inverse" />
-                                        提交中...
-                                    </>
-                                ) : (
-                                    <>
-                                        确认预约
-                                        <Check className="w-5 h-5" />
-                                    </>
-                                )}
+                                返回
                             </button>
-                        )}
+                            {step < 4 ? (
+                                <button
+                                    onClick={handleNext}
+                                    disabled={loading || (step === 2 && !allItemsComplete)}
+                                    className="flex-1 py-3 bg-accent text-text-onAccent rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-accent/90 transition-all disabled:opacity-50"
+                                >
+                                    下一步
+                                    <ArrowRight className="w-5 h-5" />
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={loading}
+                                    className="flex-1 py-3 bg-accent text-text-onAccent rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-accent/90 transition-all disabled:opacity-50"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <LoadingSpinner size="sm" tone="inverse" />
+                                            提交中...
+                                        </>
+                                    ) : (
+                                        <>
+                                            确认预约
+                                            <Check className="w-5 h-5" />
+                                        </>
+                                    )}
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

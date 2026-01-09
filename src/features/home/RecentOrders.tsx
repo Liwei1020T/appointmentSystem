@@ -7,12 +7,11 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, Badge } from '@/components';
 import SectionLoading from '@/components/loading/SectionLoading';
-import { getRecentOrders } from '@/services/homeService';
-import { Order } from '@/types';
+import { getRecentOrders, type RecentOrder } from '@/services/homeService';
 import { formatDate } from '@/lib/utils';
 import { DollarSign, RefreshCw, CheckCircle, XCircle, LucideIcon } from 'lucide-react';
 
@@ -42,21 +41,41 @@ const getActionConfig = (status: string) => {
   }
 };
 
-export default function RecentOrders() {
+type RecentOrderWithItems = RecentOrder & { items?: Array<{ id: string }> };
+
+interface RecentOrdersProps {
+  orders?: RecentOrderWithItems[];
+  maxItems?: number;
+  hideLatest?: boolean;
+  loading?: boolean;
+}
+
+export default function RecentOrders({
+  orders: externalOrders,
+  maxItems = 3,
+  hideLatest = false,
+  loading: loadingOverride,
+}: RecentOrdersProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(!Array.isArray(externalOrders));
+  const [orders, setOrders] = useState<RecentOrderWithItems[]>([]);
+  const hasExternalOrders = Array.isArray(externalOrders);
 
   useEffect(() => {
+    if (hasExternalOrders) {
+      setLoading(false);
+      return;
+    }
     loadRecentOrders();
-  }, []);
+  }, [hasExternalOrders, maxItems, hideLatest]);
 
   const loadRecentOrders = async () => {
     setLoading(true);
     try {
-      const data = await getRecentOrders(3); // 只获取3条
+      const limit = maxItems ? (hideLatest ? maxItems + 1 : maxItems) : 3;
+      const data = await getRecentOrders(limit);
       if (data) {
-        setOrders(data as any);
+        setOrders(data as RecentOrderWithItems[]);
       }
     } catch (error) {
       console.error('Error loading recent orders:', error);
@@ -69,7 +88,7 @@ export default function RecentOrders() {
     router.push(`/orders/${orderId}`);
   };
 
-  const handleAction = (e: React.MouseEvent, order: Order) => {
+  const handleAction = (e: React.MouseEvent, order: RecentOrderWithItems) => {
     e.stopPropagation();
     const status = order.status;
 
@@ -83,7 +102,7 @@ export default function RecentOrders() {
   };
 
   // 获取订单显示名称
-  const getOrderName = (order: Order) => {
+  const getOrderName = (order: RecentOrderWithItems) => {
     const items = (order as any).items;
     if (items && items.length > 1) {
       return `多球拍订单 (${items.length}支)`;
@@ -94,7 +113,15 @@ export default function RecentOrders() {
     return `订单 #${order.id.slice(0, 6)}`;
   };
 
-  if (loading) {
+  const resolvedOrders = hasExternalOrders ? externalOrders : orders;
+  const displayOrders = useMemo(() => {
+    const safeOrders = resolvedOrders || [];
+    const trimmed = hideLatest ? safeOrders.slice(1) : safeOrders;
+    return maxItems ? trimmed.slice(0, maxItems) : trimmed;
+  }, [resolvedOrders, hideLatest, maxItems]);
+  const effectiveLoading = typeof loadingOverride === 'boolean' ? loadingOverride : loading;
+
+  if (effectiveLoading) {
     return (
       <Card>
         <SectionLoading label="加载最近订单..." minHeightClassName="min-h-[180px]" />
@@ -102,7 +129,7 @@ export default function RecentOrders() {
     );
   }
 
-  if (orders.length === 0) {
+  if (displayOrders.length === 0) {
     return (
       <Card>
         <div className="p-6">
@@ -145,7 +172,7 @@ export default function RecentOrders() {
 
         {/* 紧凑的订单列表 */}
         <div className="space-y-2">
-          {orders.map((order) => {
+          {displayOrders.map((order) => {
             const status = statusConfig[order.status] || statusConfig.pending;
             const action = getActionConfig(order.status);
 

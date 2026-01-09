@@ -14,11 +14,11 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Card, Button, Badge, SkeletonCard } from '@/components';
 import FeaturedReviews from '@/components/FeaturedReviews';
 import QuickActions from './QuickActions';
 import RecentOrders from './RecentOrders';
 import PackageSummary from './PackageSummary';
+import OrderStatusCapsule from './OrderStatusCapsule';
 import { useSession } from 'next-auth/react';
 import { getUserStats, getRecentOrders, getFeaturedPackages, UserStats, RecentOrder, FeaturedPackage } from '@/services/homeService';
 import PageLoading from '@/components/loading/PageLoading';
@@ -69,7 +69,7 @@ export default function HomePage() {
     try {
       const [statsResult, ordersResult, packagesResult] = await Promise.all([
         getUserStats(),
-        getRecentOrders(3),
+        getRecentOrders(4),
         getFeaturedPackages(3),
       ]);
 
@@ -81,28 +81,6 @@ export default function HomePage() {
     } finally {
       setDataLoading(false);
     }
-  };
-
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'success';
-      case 'in_progress':
-        return 'info';
-      case 'pending':
-        return 'warning';
-      case 'cancelled':
-        return 'neutral';
-      default:
-        return 'neutral';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      pending: '待处理', in_progress: '处理中', completed: '已完成', cancelled: '已取消',
-    };
-    return labels[status] || status;
   };
 
   if (loading) {
@@ -145,11 +123,19 @@ export default function HomePage() {
         {/* 快捷操作按钮 */}
         <QuickActions />
 
+        {/* 当前订单状态 */}
+        <OrderStatusCapsule order={recentOrders[0] || null} loading={dataLoading} />
+
         {/* 我的权益摘要 */}
         <PackageSummary />
 
         {/* 最近订单 */}
-        <RecentOrders />
+        <RecentOrders
+          orders={recentOrders}
+          hideLatest
+          maxItems={3}
+          loading={dataLoading}
+        />
 
         {/* 精选评价 */}
         <FeaturedReviews />
