@@ -9,41 +9,42 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Breathing Light - Warm Orange
+        // Courtline Studio - Athletic Calm
         ink: {
-          DEFAULT: '#F9FAFB',      // 页面背景 - gray-50
-          elevated: '#FFFFFF',     // 卡片背景 - white
-          surface: '#FFFFFF',      // 表面/微调 - white
+          DEFAULT: '#F6F4F1',      // 页面背景 - warm off-white
+          elevated: '#FFFFFF',     // 卡片背景
+          surface: '#FFFFFF',      // 表面/微调
         },
         border: {
-          subtle: '#F3F4F6',       // gray-100
+          subtle: '#E7E5E4',       // stone-200
         },
         text: {
-          primary: '#111827',      // gray-900
-          secondary: '#6B7280',    // gray-500
-          tertiary: '#9CA3AF',     // gray-400
+          primary: '#111827',      // slate-900
+          secondary: '#4B5563',    // slate-600
+          tertiary: '#9CA3AF',     // slate-400
           onAccent: '#FFFFFF',
         },
         accent: {
-          DEFAULT: '#F97316',
-          soft: 'rgba(249,115,22,0.10)',
-          border: 'rgba(249,115,22,0.30)',
+          DEFAULT: '#16A34A',      // rally green
+          soft: 'rgba(22,163,74,0.12)',
+          border: 'rgba(22,163,74,0.30)',
         },
         info: {
-          DEFAULT: '#3B82F6',
-          soft: 'rgba(59,130,246,0.12)',
+          DEFAULT: '#2563EB',
+          soft: 'rgba(37,99,235,0.12)',
         },
-        success: '#10B981',
+        success: '#0D9488',
         warning: '#F59E0B',
         danger: '#EF4444',
-        // NEW: Gradient colors
+        // Gradient accents
         gradient: {
-          start: '#F97316',
-          end: '#FDBA74',
+          start: '#16A34A',
+          end: '#84CC16',
         },
       },
       fontFamily: {
-        sans: ['Poppins', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-body)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       borderRadius: {
@@ -54,12 +55,12 @@ module.exports = {
       },
       boxShadow: {
         sm: '0 1px 2px rgba(15,23,42,0.08)',
-        md: '0 8px 20px rgba(15,23,42,0.12)',
-        lg: '0 12px 32px rgba(15,23,42,0.14)',
-        glow: '0 0 0 1px rgba(249,115,22,0.18), 0 8px 18px rgba(249,115,22,0.18)',
-        'glow-lg': '0 0 0 2px rgba(249,115,22,0.22), 0 12px 28px rgba(249,115,22,0.2)',
-        card: '0 1px 2px rgba(15,23,42,0.06), 0 1px 1px rgba(15,23,42,0.04)',
-        'card-hover': '0 8px 22px rgba(15,23,42,0.12), 0 2px 4px rgba(15,23,42,0.04)',
+        md: '0 10px 24px rgba(15,23,42,0.12)',
+        lg: '0 18px 36px rgba(15,23,42,0.14)',
+        glow: '0 0 0 1px rgba(22,163,74,0.2), 0 10px 26px rgba(22,163,74,0.18)',
+        'glow-lg': '0 0 0 2px rgba(22,163,74,0.24), 0 18px 36px rgba(22,163,74,0.2)',
+        card: '0 1px 3px rgba(15,23,42,0.08)',
+        'card-hover': '0 12px 28px rgba(15,23,42,0.16)',
       },
       scale: {
         97: '0.97',
@@ -86,8 +87,8 @@ module.exports = {
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 0 0 rgba(249, 115, 22, 0.4)' },
-          '50%': { boxShadow: '0 0 0 8px rgba(249, 115, 22, 0)' },
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(22, 163, 74, 0.4)' },
+          '50%': { boxShadow: '0 0 0 8px rgba(22, 163, 74, 0)' },
         },
       },
     },

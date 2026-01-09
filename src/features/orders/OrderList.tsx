@@ -186,15 +186,15 @@ export default function OrderList({ initialStatus }: OrderListProps) {
       ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
     `}>
       {/* 分段式状态筛选 - 统一设计 */}
-      <div className="bg-white rounded-xl p-1.5 shadow-sm border border-gray-100">
+      <div className="bg-ink-surface rounded-xl p-1.5 shadow-sm border border-border-subtle">
         <div className="flex gap-1">
           {statusFilters.map((filter) => (
             <button
               key={filter.value}
               onClick={() => handleStatusChange(filter.value)}
               className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${activeStatus === filter.value
-                ? 'bg-orange-50 text-orange-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                ? 'bg-accent-soft text-accent shadow-sm'
+                : 'text-text-tertiary hover:text-text-secondary hover:bg-ink'
                 }`}
             >
               {filter.label}
@@ -330,26 +330,26 @@ export default function OrderList({ initialStatus }: OrderListProps) {
 
                 {/* Info Grid */}
                 <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="bg-gray-50 rounded-lg p-3 text-center">
-                    <p className="text-xs text-gray-500 mb-1">
+                  <div className="bg-ink rounded-lg p-3 text-center">
+                    <p className="text-xs text-text-tertiary mb-1">
                       {isMultiRacket ? '球拍' : '拉力'}
                     </p>
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold text-text-primary">
                       {isMultiRacket
                         ? `${(order as any).items.length} 支`
                         : `${order.tension || '-'} 磅`
                       }
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-center">
-                    <p className="text-xs text-gray-500 mb-1">价格</p>
-                    <p className="font-bold text-orange-500" style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}>
+                  <div className="bg-ink rounded-lg p-3 text-center">
+                    <p className="text-xs text-text-tertiary mb-1">价格</p>
+                    <p className="font-bold text-accent font-mono">
                       RM {Number(order.finalPrice ?? order.price ?? 0).toFixed(2)}
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-center">
-                    <p className="text-xs text-gray-500 mb-1">日期</p>
-                    <p className="font-medium text-gray-900 text-xs">
+                  <div className="bg-ink rounded-lg p-3 text-center">
+                    <p className="text-xs text-text-tertiary mb-1">日期</p>
+                    <p className="font-medium text-text-primary text-xs">
                       {formatDate(order.createdAt, 'MM/dd')}
                     </p>
                   </div>

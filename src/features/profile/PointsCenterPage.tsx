@@ -269,7 +269,7 @@ function PointsCenterContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-ink pb-24">
       <PageHeader
         title="积分中心"
         subtitle="查看积分余额、明细和兑换优惠"
@@ -284,38 +284,38 @@ function PointsCenterContent() {
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-gradient-to-br from-accent/20 to-accent/5 rounded-xl border border-accent/20 p-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">当前积分</span>
+              <span className="text-sm text-text-secondary">当前积分</span>
               <Coins className="w-5 h-5 text-accent" />
             </div>
-            <p className="text-4xl font-bold text-gray-900">{currentPoints}</p>
-            <p className="text-xs text-gray-500 mt-1">可用于兑换优惠券</p>
+            <p className="text-4xl font-bold text-text-primary font-mono">{currentPoints}</p>
+            <p className="text-xs text-text-tertiary mt-1">可用于兑换优惠券</p>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-xl border border-border-subtle shadow-sm p-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-500">累计获得</span>
+              <span className="text-sm text-text-tertiary">累计获得</span>
               <div className="p-1.5 bg-green-50 rounded-lg">
                 <TrendingUp className="w-4 h-4 text-green-600" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{totalEarned}</p>
-            <p className="text-xs text-gray-400 mt-1">总获得积分</p>
+            <p className="text-3xl font-bold text-text-primary font-mono">{totalEarned}</p>
+            <p className="text-xs text-text-tertiary mt-1">总获得积分</p>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-xl border border-border-subtle shadow-sm p-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-500">累计消费</span>
-              <div className="p-1.5 bg-orange-50 rounded-lg">
-                <TrendingDown className="w-4 h-4 text-orange-500" />
+              <span className="text-sm text-text-tertiary">累计消费</span>
+              <div className="p-1.5 bg-warning/15 rounded-lg">
+                <TrendingDown className="w-4 h-4 text-warning" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{totalSpent}</p>
-            <p className="text-xs text-gray-400 mt-1">已兑换积分</p>
+            <p className="text-3xl font-bold text-text-primary font-mono">{totalSpent}</p>
+            <p className="text-xs text-text-tertiary mt-1">已兑换积分</p>
           </div>
         </div>
 
         {/* Tab Navigation - 分段式设计 */}
-        <div className="bg-white rounded-xl p-1.5 shadow-sm border border-gray-100">
+        <div className="bg-ink-surface rounded-xl p-1.5 shadow-sm border border-border-subtle">
           <div className="flex gap-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -325,8 +325,8 @@ function PointsCenterContent() {
                   key={tab.key}
                   onClick={() => setTab(tab.key)}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
-                    ? 'bg-orange-50 text-orange-600 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    ? 'bg-accent-soft text-accent shadow-sm'
+                    : 'text-text-tertiary hover:text-text-secondary hover:bg-ink'
                     }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -338,19 +338,19 @@ function PointsCenterContent() {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div className="bg-white rounded-2xl border border-border-subtle shadow-sm p-5">
           {/* Tab: 积分兑换 */}
           {activeTab === 'exchange' && (
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="w-5 h-5 text-accent" />
-                <h2 className="text-lg font-semibold text-gray-900">使用积分兑换优惠券</h2>
+                <h2 className="text-lg font-semibold text-text-primary">使用积分兑换优惠券</h2>
               </div>
 
               {availableVouchers.length === 0 ? (
                 <div className="text-center py-12">
-                  <Gift className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">暂无可兑换优惠券</p>
+                  <Gift className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
+                  <p className="text-text-tertiary">暂无可兑换优惠券</p>
                 </div>
               ) : (
                 <div className="grid md:grid-cols-2 gap-4">
@@ -366,8 +366,8 @@ function PointsCenterContent() {
                         className={`relative border rounded-xl p-5 transition-all ${canRedeem
                           ? 'border-accent/40 bg-gradient-to-br from-accent/5 to-white hover:shadow-lg'
                           : isMaxedOut
-                            ? 'border-gray-200 bg-gray-50 opacity-60'
-                            : 'border-gray-200 bg-gray-50 opacity-80'
+                            ? 'border-border-subtle bg-ink opacity-60'
+                            : 'border-border-subtle bg-ink opacity-80'
                           }`}
                       >
                         {voucher.owned_count > 0 && (
@@ -378,16 +378,16 @@ function PointsCenterContent() {
 
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
-                            <h3 className="font-bold text-lg text-gray-900 mb-1">
+                            <h3 className="font-bold text-lg text-text-primary mb-1">
                               {voucher.discount_type === 'percentage' || voucher.type === 'percentage'
                                 ? `${voucher.discount_value || voucher.value}% OFF`
                                 : `RM ${voucher.discount_value || voucher.value} OFF`}
                             </h3>
                             {voucher.name && (
-                              <p className="text-sm text-gray-600 font-medium">{voucher.name}</p>
+                              <p className="text-sm text-text-secondary font-medium">{voucher.name}</p>
                             )}
                             {(voucher.min_purchase || (voucher as any).minPurchase > 0) && (
-                              <p className="text-xs text-gray-400 mt-1">满 RM {voucher.min_purchase || (voucher as any).minPurchase} 可用</p>
+                              <p className="text-xs text-text-tertiary mt-1">满 RM {voucher.min_purchase || (voucher as any).minPurchase} 可用</p>
                             )}
                           </div>
                           <div className="p-2 bg-accent/10 rounded-lg">
@@ -397,7 +397,7 @@ function PointsCenterContent() {
 
                         <div className="flex items-center gap-2 mb-3 text-xs">
                           {voucher.max_per_user > 1 && (
-                            <span className={`px-2 py-0.5 rounded-full ${voucher.can_redeem ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                            <span className={`px-2 py-0.5 rounded-full ${voucher.can_redeem ? 'bg-success/15 text-success' : 'bg-danger/10 text-danger'
                               }`}>
                               {voucher.can_redeem
                                 ? `还可兑换 ${voucher.remaining_redemptions} 张`
@@ -405,7 +405,7 @@ function PointsCenterContent() {
                             </span>
                           )}
                           {voucher.max_per_user === 1 && voucher.owned_count > 0 && (
-                            <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-600">已兑换</span>
+                            <span className="px-2 py-0.5 rounded-full bg-danger/10 text-danger">已兑换</span>
                           )}
                         </div>
 
@@ -426,7 +426,7 @@ function PointsCenterContent() {
                               disabled={!canRedeem || redeeming === voucher.id}
                               className={`px-5 py-2.5 rounded-lg font-semibold transition-all ${canRedeem
                                 ? 'bg-accent text-white hover:shadow-glow hover:scale-105'
-                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                : 'bg-border-subtle text-text-tertiary cursor-not-allowed'
                                 } ${redeeming === voucher.id ? 'opacity-50' : ''}`}
                             >
                               {redeeming === voucher.id
@@ -463,7 +463,7 @@ function PointsCenterContent() {
                     onClick={() => setVoucherFilter(f.key as any)}
                     className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all ${voucherFilter === f.key
                       ? 'bg-accent text-white shadow-sm'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-ink text-text-secondary hover:bg-ink/80'
                       }`}
                   >
                     {f.label}
@@ -474,8 +474,8 @@ function PointsCenterContent() {
               {/* Voucher list */}
               {getFilteredVouchers().length === 0 ? (
                 <div className="text-center py-12">
-                  <Gift className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 mb-4">暂无优惠券</p>
+                  <Gift className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
+                  <p className="text-text-tertiary mb-4">暂无优惠券</p>
                   <button
                     onClick={() => setTab('exchange')}
                     className="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:shadow-glow"
@@ -500,43 +500,43 @@ function PointsCenterContent() {
                         key={voucher.id}
                         className={`flex rounded-xl overflow-hidden border transition-all ${isActive
                           ? 'border-accent/30 bg-white hover:shadow-md'
-                          : 'border-gray-200 bg-gray-50 opacity-70'
+                          : 'border-border-subtle bg-ink opacity-70'
                           }`}
                       >
                         {/* Left: Amount */}
-                        <div className={`w-28 flex-shrink-0 flex flex-col items-center justify-center p-4 ${isActive ? 'bg-accent/5' : 'bg-gray-100'
+                        <div className={`w-28 flex-shrink-0 flex flex-col items-center justify-center p-4 ${isActive ? 'bg-accent/5' : 'bg-ink'
                           }`}>
                           <div className="text-center">
                             {discountType === 'fixed' && (
-                              <span className={`text-sm font-medium ${isActive ? 'text-accent' : 'text-gray-400'}`}>RM</span>
+                              <span className={`text-sm font-medium ${isActive ? 'text-accent' : 'text-text-tertiary'}`}>RM</span>
                             )}
-                            <span className={`text-3xl font-bold font-mono ${isActive ? 'text-accent' : 'text-gray-400'}`}>
+                            <span className={`text-3xl font-bold font-mono ${isActive ? 'text-accent' : 'text-text-tertiary'}`}>
                               {' '}{discountValue}
                             </span>
                             {discountType === 'percentage' && (
-                              <span className={`text-lg font-medium ${isActive ? 'text-accent' : 'text-gray-400'}`}>%</span>
+                              <span className={`text-lg font-medium ${isActive ? 'text-accent' : 'text-text-tertiary'}`}>%</span>
                             )}
                           </div>
-                          <p className={`text-xs mt-1 ${isActive ? 'text-accent/70' : 'text-gray-400'}`}>
+                          <p className={`text-xs mt-1 ${isActive ? 'text-accent/70' : 'text-text-tertiary'}`}>
                             {discountType === 'percentage' ? '折扣' : '立减'}
                           </p>
                         </div>
 
                         {/* Right: Info */}
-                        <div className="flex-1 p-4 border-l border-dashed border-gray-200">
+                        <div className="flex-1 p-4 border-l border-dashed border-border-subtle">
                           <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-base font-bold text-gray-900">{v.name || v.code}</h3>
-                            <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${used ? 'bg-gray-100 text-gray-500' : isExpired ? 'bg-red-50 text-red-600' : 'bg-accent/10 text-accent'
+                            <h3 className="text-base font-bold text-text-primary">{v.name || v.code}</h3>
+                            <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${used ? 'bg-ink text-text-tertiary' : isExpired ? 'bg-danger/10 text-danger' : 'bg-accent/10 text-accent'
                               }`}>
                               {used ? '已使用' : isExpired ? '已过期' : '可用'}
                             </span>
                           </div>
 
                           {v.min_purchase && v.min_purchase > 0 && (
-                            <p className="text-sm text-gray-500 mb-2">满 RM {v.min_purchase} 可用</p>
+                            <p className="text-sm text-text-tertiary mb-2">满 RM {v.min_purchase} 可用</p>
                           )}
 
-                          <div className="flex items-center gap-4 text-xs text-gray-400">
+                          <div className="flex items-center gap-4 text-xs text-text-tertiary">
                             {expiresAt && (
                               <div className="flex items-center gap-1">
                                 <Calendar className="w-3 h-3" />
@@ -567,30 +567,30 @@ function PointsCenterContent() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Calendar className="w-5 h-5 text-accent" />
-                <h2 className="text-lg font-semibold text-gray-900">积分明细</h2>
+                <h2 className="text-lg font-semibold text-text-primary">积分明细</h2>
               </div>
 
               {pointsLogs.length === 0 ? (
                 <div className="text-center py-12">
-                  <Coins className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">暂无积分记录</p>
+                  <Coins className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
+                  <p className="text-text-tertiary">暂无积分记录</p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 pr-2">
+                <div className="divide-y divide-border-subtle max-h-[500px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 pr-2">
                   {pointsLogs.map((log) => (
-                    <div key={log.id} className="py-4 flex items-center justify-between hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors">
+                    <div key={log.id} className="py-4 flex items-center justify-between hover:bg-ink -mx-2 px-2 rounded-lg transition-colors">
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${log.type === 'earned' ? 'bg-green-50' : log.type === 'spent' ? 'bg-orange-50' : 'bg-gray-100'
+                        <div className={`p-2 rounded-lg ${log.type === 'earned' ? 'bg-success/15' : log.type === 'spent' ? 'bg-warning/15' : 'bg-ink'
                           }`}>
                           {getSourceIcon(log.source)}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{getSourceLabel(log.source)}</p>
-                          <p className="text-sm text-gray-500">{log.description}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{formatDateStr(log.created_at)}</p>
+                          <p className="font-medium text-text-primary">{getSourceLabel(log.source)}</p>
+                          <p className="text-sm text-text-secondary">{log.description}</p>
+                          <p className="text-xs text-text-tertiary mt-0.5">{formatDateStr(log.created_at)}</p>
                         </div>
                       </div>
-                      <p className={`text-xl font-bold ${log.type === 'earned' ? 'text-green-600' : log.type === 'spent' ? 'text-orange-500' : 'text-gray-400'
+                      <p className={`text-xl font-bold ${log.type === 'earned' ? 'text-success' : log.type === 'spent' ? 'text-warning' : 'text-text-tertiary'
                         }`}>
                         {log.type === 'earned' ? '+' : '-'}{log.points}
                       </p>
@@ -606,7 +606,7 @@ function PointsCenterContent() {
       {/* Toast */}
       {toast.show && (
         <div className="fixed bottom-4 right-4 z-50 animate-slide-up">
-          <div className={`flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+          <div className={`flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg ${toast.type === 'success' ? 'bg-success text-text-onAccent' : 'bg-danger text-text-onAccent'
             }`}>
             {toast.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
             <p className="font-medium">{toast.message}</p>

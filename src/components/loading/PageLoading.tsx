@@ -4,7 +4,7 @@ import LoadingSpinner, { type LoadingTone } from './LoadingSpinner';
 type LoadingSurface = 'light' | 'dark' | 'transparent';
 
 const surfaceClasses: Record<LoadingSurface, string> = {
-  light: 'bg-gray-50',
+  light: 'bg-ink',
   dark: 'bg-ink',
   transparent: 'bg-transparent',
 };
@@ -31,7 +31,7 @@ export function PageLoading({
       <div className="flex flex-col items-center gap-3">
         <LoadingSpinner size="lg" tone={tone} />
         {label ? (
-          <p className="text-sm text-gray-500">{label}</p>
+          <p className="text-sm text-text-tertiary">{label}</p>
         ) : null}
       </div>
     </div>

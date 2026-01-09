@@ -33,12 +33,12 @@ const TAG_GROUPS = {
 };
 
 // 评分表情映射
-const RATING_EMOJIS: Record<number, { emoji: string; label: string; color: string }> = {
-  1: { emoji: '😞', label: '很差', color: 'text-red-500' },
-  2: { emoji: '😕', label: '较差', color: 'text-orange-500' },
-  3: { emoji: '😐', label: '一般', color: 'text-yellow-500' },
-  4: { emoji: '😊', label: '满意', color: 'text-lime-500' },
-  5: { emoji: '🤩', label: '非常满意', color: 'text-green-500' },
+const RATING_LABELS: Record<number, { label: string; tone: string; dot: string }> = {
+  1: { label: '很差', tone: 'text-danger', dot: 'bg-danger' },
+  2: { label: '较差', tone: 'text-warning', dot: 'bg-warning' },
+  3: { label: '一般', tone: 'text-text-secondary', dot: 'bg-border-subtle' },
+  4: { label: '满意', tone: 'text-success', dot: 'bg-success' },
+  5: { label: '非常满意', tone: 'text-accent', dot: 'bg-accent' },
 };
 
 // 动态星级组件
@@ -55,7 +55,7 @@ function AnimatedStarRating({
 }) {
   const [hoverValue, setHoverValue] = useState<number | null>(null);
   const displayValue = hoverValue ?? value;
-  const ratingInfo = RATING_EMOJIS[displayValue] || RATING_EMOJIS[5];
+  const ratingInfo = RATING_LABELS[displayValue] || RATING_LABELS[5];
 
   const sizeClasses = {
     sm: 'w-5 h-5',
@@ -77,10 +77,10 @@ function AnimatedStarRating({
           >
             <svg
               viewBox="0 0 24 24"
-              fill={star <= displayValue ? '#F59E0B' : 'none'}
-              stroke={star <= displayValue ? '#F59E0B' : '#D1D5DB'}
+              fill={star <= displayValue ? 'currentColor' : 'none'}
+              stroke="currentColor"
               strokeWidth="1.5"
-              className={`w-full h-full transition-all duration-200 ${star <= displayValue ? 'drop-shadow-[0_2px_4px_rgba(245,158,11,0.4)]' : ''
+              className={`w-full h-full transition-all duration-200 ${star <= displayValue ? 'text-warning drop-shadow-[0_2px_4px_rgba(245,158,11,0.4)]' : 'text-border-subtle'
                 }`}
             >
               <path
@@ -93,8 +93,8 @@ function AnimatedStarRating({
         ))}
       </div>
       {showEmoji && (
-        <div className={`flex items-center gap-2 transition-all duration-300 ${ratingInfo.color}`}>
-          <span className="text-2xl animate-bounce">{ratingInfo.emoji}</span>
+        <div className={`flex items-center gap-2 transition-all duration-300 ${ratingInfo.tone}`}>
+          <span className={`w-2.5 h-2.5 rounded-full ${ratingInfo.dot}`} />
           <span className="text-sm font-medium">{ratingInfo.label}</span>
         </div>
       )}
@@ -113,8 +113,8 @@ function CompactRatingRow({
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-      <span className="text-sm text-gray-600">{label}</span>
+    <div className="flex items-center justify-between py-2 border-b border-border-subtle last:border-0">
+      <span className="text-sm text-text-secondary">{label}</span>
       <AnimatedStarRating value={value} onChange={onChange} size="sm" />
     </div>
   );
@@ -217,38 +217,38 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
   // 成功动画
   if (showSuccess) {
     return (
-      <Card className="p-8 text-center bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
+      <Card className="p-8 text-center bg-gradient-to-br from-accent/10 to-emerald-50 border-2 border-accent-border">
         <div className="flex justify-center mb-4">
-          <PartyPopper className="w-16 h-16 text-green-500 animate-bounce" />
+          <PartyPopper className="w-16 h-16 text-success animate-bounce" />
         </div>
-        <h3 className="text-xl font-bold text-green-700 mb-2">评价成功！</h3>
-        <p className="text-green-600">感谢您的评价，已获得 10 积分奖励</p>
+        <h3 className="text-xl font-bold text-text-primary mb-2">评价成功！</h3>
+        <p className="text-text-secondary">感谢您的评价，已获得 10 积分奖励</p>
       </Card>
     );
   }
 
   return (
-    <Card className="overflow-hidden shadow-lg border-0 bg-gradient-to-br from-white to-orange-50/30">
+    <Card className="overflow-hidden shadow-lg border-0 bg-gradient-to-br from-white to-accent/10">
       {/* 顶部装饰条 */}
-      <div className="h-1.5 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-400" />
+      <div className="h-1.5 bg-gradient-to-r from-gradient-start via-accent to-gradient-end" />
 
       <div className="p-5">
         {/* 标题 */}
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 bg-gradient-to-br from-orange-100 to-orange-50 rounded-xl flex items-center justify-center">
-            <Star className="w-5 h-5 text-orange-500" />
+          <div className="w-10 h-10 bg-accent-soft rounded-xl flex items-center justify-center">
+            <Star className="w-5 h-5 text-accent" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">分享您的体验</h2>
-            <p className="text-xs text-gray-500">评价后可获得 10 积分奖励</p>
+            <h2 className="text-lg font-bold text-text-primary font-display">分享您的体验</h2>
+            <p className="text-xs text-text-secondary">评价后可获得 10 积分奖励</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* 总体评分 - 突出显示 */}
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-orange-100">
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              总体评分 <span className="text-orange-500">*</span>
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-border-subtle">
+            <label className="block text-sm font-semibold text-text-secondary mb-3">
+              总体评分 <span className="text-accent">*</span>
             </label>
             <AnimatedStarRating
               value={rating}
@@ -259,20 +259,20 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
           </div>
 
           {/* 详细评分 - 紧凑卡片 */}
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">详细评分</h3>
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-border-subtle">
+            <h3 className="text-sm font-semibold text-text-secondary mb-2">详细评分</h3>
             <CompactRatingRow label="服务态度" value={serviceRating} onChange={setServiceRating} />
             <CompactRatingRow label="穿线质量" value={qualityRating} onChange={setQualityRating} />
             <CompactRatingRow label="服务速度" value={speedRating} onChange={setSpeedRating} />
           </div>
 
           {/* 标签选择 - 分组显示 */}
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">选择标签</h3>
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-border-subtle">
+            <h3 className="text-sm font-semibold text-text-secondary mb-3">选择标签</h3>
             <div className="space-y-3">
               {Object.entries(TAG_GROUPS).map(([group, tags]) => (
                 <div key={group}>
-                  <p className="text-xs text-gray-400 mb-1.5">{group}</p>
+                  <p className="text-xs text-text-tertiary mb-1.5">{group}</p>
                   <div className="flex flex-wrap gap-2">
                     {tags.map((tag) => (
                       <button
@@ -280,8 +280,8 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
                         type="button"
                         onClick={() => handleTagToggle(tag)}
                         className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${selectedTags.includes(tag)
-                          ? 'bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-md scale-105'
-                          : 'bg-gray-100 text-gray-600 hover:bg-orange-50 hover:text-orange-600'
+                          ? 'bg-accent text-text-onAccent shadow-sm'
+                          : 'bg-ink text-text-secondary hover:bg-accent-soft hover:text-accent'
                           }`}
                       >
                         {selectedTags.includes(tag) && <Check className="w-3 h-3 inline-block mr-1" />}
@@ -295,15 +295,15 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
           </div>
 
           {/* 评价内容 - 可折叠 */}
-          <details className="bg-white rounded-xl shadow-sm border border-gray-100 group">
-            <summary className="p-4 cursor-pointer flex items-center justify-between hover:bg-gray-50/50 transition-colors rounded-xl">
-              <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <PenLine className="w-4 h-4" /> 评价内容 <span className="text-gray-400 font-normal">(至少10字)</span>
+          <details className="bg-white rounded-xl shadow-sm border border-border-subtle group">
+            <summary className="p-4 cursor-pointer flex items-center justify-between hover:bg-ink/70 transition-colors rounded-xl">
+              <span className="text-sm font-semibold text-text-secondary flex items-center gap-2">
+                <PenLine className="w-4 h-4" /> 评价内容 <span className="text-text-tertiary font-normal">(至少10字)</span>
                 {comment.length > 0 && (
-                  <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full">已填写</span>
+                  <span className="text-xs bg-success/15 text-success px-2 py-0.5 rounded-full">已填写</span>
                 )}
               </span>
-              <svg className="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-text-tertiary transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </summary>
@@ -315,28 +315,28 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
                   placeholder="分享您的使用体验，帮助其他用户做出选择..."
                   rows={3}
                   maxLength={500}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-200 focus:border-orange-400 resize-none transition-all duration-200 text-sm"
+                  className="w-full px-4 py-3 border border-border-subtle rounded-xl focus:ring-2 focus:ring-accent-border focus:border-accent resize-none transition-all duration-200 text-sm"
                 />
-                <div className="absolute bottom-3 right-3 text-xs text-gray-400">
+                <div className="absolute bottom-3 right-3 text-xs text-text-tertiary">
                   {comment.length}/500
                 </div>
               </div>
               {comment.length > 0 && comment.length < 10 && (
-                <p className="mt-1 text-xs text-gray-400">评价内容需要至少 10 个字</p>
+                <p className="mt-1 text-xs text-text-tertiary">评价内容需要至少 10 个字</p>
               )}
             </div>
           </details>
 
           {/* 图片上传 - 可折叠 */}
-          <details className="bg-white rounded-xl shadow-sm border border-gray-100 group">
-            <summary className="p-4 cursor-pointer flex items-center justify-between hover:bg-gray-50/50 transition-colors rounded-xl">
-              <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <Camera className="w-4 h-4" /> 上传照片 <span className="text-gray-400 font-normal">(可选)</span>
+          <details className="bg-white rounded-xl shadow-sm border border-border-subtle group">
+            <summary className="p-4 cursor-pointer flex items-center justify-between hover:bg-ink/70 transition-colors rounded-xl">
+              <span className="text-sm font-semibold text-text-secondary flex items-center gap-2">
+                <Camera className="w-4 h-4" /> 上传照片 <span className="text-text-tertiary font-normal">(可选)</span>
                 {imageUrls.length > 0 && (
-                  <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full">{imageUrls.length}张</span>
+                  <span className="text-xs bg-success/15 text-success px-2 py-0.5 rounded-full">{imageUrls.length}张</span>
                 )}
               </span>
-              <svg className="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-text-tertiary transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </summary>
@@ -375,14 +375,14 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
 
 
           {/* 匿名选项 */}
-          <label className="flex items-center gap-2 cursor-pointer p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors w-fit">
+          <label className="flex items-center gap-2 cursor-pointer p-3 bg-ink rounded-xl hover:bg-ink/80 transition-colors w-fit">
             <input
               type="checkbox"
               checked={isAnonymous}
               onChange={(e) => setIsAnonymous(e.target.checked)}
-              className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-400"
+              className="w-4 h-4 text-accent border-border-subtle rounded focus:ring-accent-border"
             />
-            <span className="text-sm text-gray-600">匿名评价</span>
+            <span className="text-sm text-text-secondary">匿名评价</span>
           </label>
 
           {/* 操作按钮 */}
@@ -405,7 +405,8 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
               fullWidth
               loading={submitting}
               disabled={submitting || !isCommentValid}
-              className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 shadow-lg shadow-orange-200 flex items-center justify-center gap-1.5"
+              glow
+              className="rounded-xl flex items-center justify-center gap-1.5"
             >
               {submitting ? '提交中...' : <><Sparkles className="w-4 h-4" /> 提交评价</>}
             </Button>

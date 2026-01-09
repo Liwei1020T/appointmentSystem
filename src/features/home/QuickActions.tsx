@@ -3,7 +3,7 @@
  * 
  * 视觉设计原则：
  * - 统一使用浅灰描边/阴影，保持克制
- * - 只有主行动（立即预约）用橙色强调
+ * - 只有主行动（立即预约）用主强调色
  * - 其他用灰度为主，hover时轻微上色
  * - 固定icon区域大小，避免视觉抖动
  */
@@ -48,10 +48,10 @@ function QuickActionButton({ icon, title, description, onClick, isPrimary = fals
   return (
     <button
       onClick={onClick}
-      className="w-full rounded-xl bg-white border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all p-4 text-left group"
+      className="w-full rounded-xl bg-white border border-border-subtle shadow-sm hover:shadow-md hover:border-border-subtle transition-all p-4 text-left group"
     >
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 rounded-xl bg-gray-50 text-gray-500 group-hover:bg-gray-100 group-hover:text-gray-700 transition-colors">
+        <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 rounded-xl bg-ink text-text-tertiary group-hover:bg-ink/80 group-hover:text-text-secondary transition-colors">
           {icon}
         </div>
         <div className="flex-1 min-w-0">
@@ -127,4 +127,3 @@ export default function QuickActions() {
     </div>
   );
 }
-

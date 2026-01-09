@@ -138,7 +138,7 @@ export default function StringCard({ string, isSelected, onSelect }: StringCardP
                                 </span>
                             )}
                             {string.control && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-500/20 text-violet-600 border border-violet-500/30">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-600 border border-sky-500/30">
                                     控球 {string.control === 'low' ? '低' : string.control === 'medium' ? '中' : '高'}
                                 </span>
                             )}

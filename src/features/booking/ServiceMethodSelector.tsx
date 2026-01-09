@@ -64,7 +64,7 @@ export default function ServiceMethodSelector({
 
     return (
         <div className="space-y-4">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-text-secondary">
                 服务方式
             </label>
 
@@ -83,15 +83,15 @@ export default function ServiceMethodSelector({
                             className={`
                 relative p-4 rounded-xl border-2 transition-all text-left
                 ${isSelected
-                                    ? 'border-orange-500 bg-orange-50 shadow-md'
-                                    : 'border-gray-200 bg-white hover:border-orange-300 hover:shadow-sm'
+                                    ? 'border-accent-border bg-accent-soft shadow-md'
+                                    : 'border-border-subtle bg-ink-surface hover:border-accent-border hover:shadow-sm'
                                 }
                 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               `}
                         >
                             {/* 选中标记 */}
                             {isSelected && (
-                                <div className="absolute top-2 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                                <div className="absolute top-2 right-2 w-5 h-5 bg-accent rounded-full flex items-center justify-center">
                                     <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                     </svg>
@@ -101,16 +101,16 @@ export default function ServiceMethodSelector({
                             {/* 图标 */}
                             <div className={`
                 w-10 h-10 rounded-lg flex items-center justify-center mb-3
-                ${isSelected ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-500'}
+                ${isSelected ? 'bg-accent text-text-onAccent' : 'bg-ink text-text-tertiary'}
               `}>
                                 <Icon className="w-5 h-5" />
                             </div>
 
                             {/* 标题和描述 */}
-                            <p className={`font-medium ${isSelected ? 'text-orange-700' : 'text-gray-900'}`}>
+                            <p className={`font-medium ${isSelected ? 'text-text-primary' : 'text-text-primary'}`}>
                                 {option.title}
                             </p>
-                            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                            <p className="text-xs text-text-secondary mt-1 leading-relaxed">
                                 {option.description}
                             </p>
                         </button>
@@ -120,8 +120,8 @@ export default function ServiceMethodSelector({
 
             {/* 地址输入区域 - 仅在选择上门取送时显示 */}
             {showAddressInput && (
-                <div className="p-4 bg-orange-50 rounded-xl border border-orange-200 space-y-3 animate-in slide-in-from-top-2 duration-200">
-                    <div className="flex items-center gap-2 text-orange-700">
+                <div className="p-4 bg-accent-soft rounded-xl border border-accent-border space-y-3 animate-in slide-in-from-top-2 duration-200">
+                    <div className="flex items-center gap-2 text-accent">
                         <MapPin className="w-4 h-4" />
                         <span className="text-sm font-medium">取拍地址</span>
                     </div>
@@ -132,14 +132,14 @@ export default function ServiceMethodSelector({
                         placeholder="请输入完整地址，例如：XX花园 1号楼 2单元 301室"
                         disabled={disabled}
                         rows={2}
-                        className="w-full px-3 py-2.5 rounded-lg border border-orange-200 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 resize-none text-sm"
+                        className="w-full px-3 py-2.5 rounded-lg border border-border-subtle bg-white text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent-border resize-none text-sm"
                     />
 
                     {defaultAddress && pickupAddress !== defaultAddress && (
                         <button
                             type="button"
                             onClick={() => onAddressChange(defaultAddress)}
-                            className="text-xs text-orange-600 hover:text-orange-700 flex items-center gap-1"
+                            className="text-xs text-accent hover:text-accent/80 flex items-center gap-1"
                         >
                             <span>使用个人资料地址</span>
                         </button>

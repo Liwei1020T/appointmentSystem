@@ -308,13 +308,13 @@ export default function MultiRacketBookingFlow() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-ink">
             {/* 顶部导航栏 - 与 PageHeader 统一 */}
             <div className="bg-white/80 backdrop-blur-md sticky top-[64px] z-30 border-b border-gray-100 shadow-sm">
                 <div className="max-w-2xl mx-auto px-4 py-5 flex items-center gap-4">
                     <button
                         onClick={() => step === 1 ? router.push('/') : handleBack()}
-                        className="w-10 h-10 flex items-center justify-center bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors shrink-0"
+                        className="w-10 h-10 flex items-center justify-center bg-ink hover:bg-ink/80 rounded-xl transition-colors shrink-0"
                         aria-label="返回"
                     >
                         <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -740,7 +740,7 @@ export default function MultiRacketBookingFlow() {
                         <button
                             onClick={handleBack}
                             disabled={loading}
-                            className="px-6 py-3 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            className="px-6 py-3 rounded-xl border border-border-subtle text-text-secondary font-medium hover:bg-ink transition-colors disabled:opacity-50"
                         >
                             返回
                         </button>

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Poppins } from 'next/font/google'
+import { Outfit, Noto_Sans_SC } from 'next/font/google'
 import './globals.css'
 import SessionProvider from '@/components/providers/SessionProvider'
 import Navbar from '@/components/layout/Navbar'
@@ -7,10 +7,18 @@ import RealtimeOrderProvider from '@/components/RealtimeOrderProvider'
 import ClientLayout from './ClientLayout'
 import { LocalBusinessJsonLd, WebSiteJsonLd } from '@/components/seo/JsonLd'
 
-const poppins = Poppins({
+const outfit = Outfit({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-display',
+})
+
+const notoSans = Noto_Sans_SC({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
+  variable: '--font-body',
 })
 
 /**
@@ -85,7 +93,7 @@ export default function RootLayout({
         <LocalBusinessJsonLd />
         <WebSiteJsonLd />
       </head>
-      <body className={poppins.className}>
+      <body className={`${notoSans.variable} ${outfit.variable} font-sans`}>
         <SessionProvider>
           <RealtimeOrderProvider>
             <ClientLayout>
@@ -100,4 +108,3 @@ export default function RootLayout({
     </html>
   )
 }
-

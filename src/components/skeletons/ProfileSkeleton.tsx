@@ -3,9 +3,9 @@ import { Skeleton } from '../Skeleton';
 
 export const ProfileSkeleton: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50 pb-24 animate-fade-in">
+    <div className="min-h-screen bg-ink pb-24 animate-fade-in">
       {/* Header Skeleton - Using gradient classes to match real profile but lighter */}
-      <div className="bg-gradient-to-br from-orange-100 via-orange-50 to-white pt-8 pb-12 relative border-b border-gray-100">
+      <div className="bg-gradient-to-br from-accent/15 via-emerald-50 to-white pt-8 pb-12 relative border-b border-border-subtle">
         <div className="max-w-2xl mx-auto px-4">
           <div className="flex items-center gap-4">
             <Skeleton variant="circular" className="w-20 h-20 shadow-md ring-4 ring-white/50" />
@@ -21,7 +21,7 @@ export const ProfileSkeleton: React.FC = () => {
       <div className="max-w-2xl mx-auto px-4 -mt-6 space-y-4 relative z-10">
         
         {/* Membership Card Skeleton */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-5 space-y-4">
+        <div className="bg-white rounded-2xl shadow-lg border border-border-subtle p-5 space-y-4">
            {/* Header Row */}
            <div className="flex justify-between items-center">
              <div className="flex gap-3 items-center">
@@ -52,7 +52,7 @@ export const ProfileSkeleton: React.FC = () => {
         </div>
 
         {/* Quick Access Grid */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-border-subtle p-4">
           <div className="grid grid-cols-3 gap-3">
              <div className="flex flex-col items-center gap-2">
                 <Skeleton variant="rectangular" className="w-10 h-10 rounded-xl" />
@@ -73,7 +73,7 @@ export const ProfileSkeleton: React.FC = () => {
         </div>
 
         {/* Menu Items Group 1 */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden p-4 space-y-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-border-subtle overflow-hidden p-4 space-y-4">
            <Skeleton className="h-5 w-24 mb-2" />
            <div className="space-y-4">
              <div className="flex justify-between items-center">

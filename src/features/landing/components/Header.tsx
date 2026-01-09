@@ -41,19 +41,25 @@ export default function Header() {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className={cn(
         "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ease-in-out",
-        isScrolled
-          ? "py-3 bg-white/90 backdrop-blur-md border-b border-border-subtle shadow-sm"
-          : "py-5 bg-transparent border-transparent"
+        isScrolled ? "py-3" : "py-5"
       )}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div
+          className={cn(
+            "flex items-center justify-between rounded-full border border-border-subtle px-4 h-14 transition-all duration-300",
+            isScrolled
+              ? "bg-white/90 backdrop-blur-md shadow-sm"
+              : "bg-white/70 backdrop-blur"
+          )}
+        >
 
         {/* Logo Section */}
         <div
           className="flex items-center cursor-pointer group"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <BrandLogo size="sm" showName className="group-hover:opacity-90 transition-opacity" />
+          <BrandLogo size="sm" showName className="group-hover:opacity-90 transition-opacity" nameClassName="font-display" />
         </div>
 
         {/* Links (Inserted directly into the header layout) */}
@@ -82,10 +88,11 @@ export default function Header() {
             onClick={() => router.push('/signup')}
             variant="primary"
             size="sm"
-            className="shadow-glow text-sm px-5"
+            className="shadow-sm text-sm px-5"
           >
             注册
           </Button>
+        </div>
         </div>
       </div>
     </motion.header>

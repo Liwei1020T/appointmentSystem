@@ -78,7 +78,7 @@ export default function Reviews() {
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-bold text-text-primary mb-4"
+            className="text-3xl md:text-4xl font-bold text-text-primary mb-4 font-display"
           >
             球友心声
           </motion.h2>

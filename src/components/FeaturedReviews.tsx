@@ -85,8 +85,8 @@ export default function FeaturedReviews() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+      <div className="bg-white rounded-xl border border-border-subtle shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
               <Skeleton variant="circular" className="w-4 h-4" />
@@ -99,7 +99,7 @@ export default function FeaturedReviews() {
         <div className="flex gap-3 px-5 py-4 overflow-x-hidden">
           {[1, 2, 3].map((item) => (
             <div key={item} className="flex-shrink-0 w-[280px]">
-              <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 space-y-3">
+              <div className="p-4 rounded-xl bg-ink border border-border-subtle space-y-3">
                 <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Skeleton key={star} className="w-3.5 h-3.5" />
@@ -124,18 +124,18 @@ export default function FeaturedReviews() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl border border-border-subtle shadow-sm overflow-hidden">
       {/* 标题行 */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
             <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
           </div>
-          <h3 className="font-semibold text-[15px] text-gray-900">用户评价</h3>
+          <h3 className="font-semibold text-[15px] text-text-primary font-display">用户评价</h3>
         </div>
         <Link
           href="/reviews/all"
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          className="flex items-center gap-1 text-sm text-text-tertiary hover:text-text-secondary transition-colors"
         >
           查看全部
           <ChevronRight className="w-4 h-4" />
@@ -155,25 +155,25 @@ export default function FeaturedReviews() {
             className="flex-shrink-0 w-[280px]"
             style={{ scrollSnapAlign: 'start' }}
           >
-            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
+            <div className="p-4 rounded-xl bg-ink border border-border-subtle hover:border-border-subtle hover:shadow-sm transition-all">
               {/* 星级 */}
               <div className="flex items-center gap-1 mb-2">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`}
+                    className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-border-subtle'}`}
                   />
                 ))}
               </div>
 
               {/* 评论内容 */}
-              <p className="text-sm text-gray-600 line-clamp-2 mb-3 leading-relaxed">
+              <p className="text-sm text-text-secondary line-clamp-2 mb-3 leading-relaxed">
                 "{review.comment}"
               </p>
 
               {/* 用户信息 */}
-              <div className="flex items-center justify-between text-xs text-gray-400">
-                <span className="font-medium text-gray-500">
+              <div className="flex items-center justify-between text-xs text-text-tertiary">
+                <span className="font-medium text-text-secondary">
                   {review.is_anonymous ? '匿名用户' : review.user?.full_name}
                 </span>
                 {review.order?.string && (

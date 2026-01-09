@@ -47,8 +47,8 @@ export default function PackageCard({
         relative overflow-visible rounded-2xl bg-white
         transition-all duration-300 ease-out
         ${isHero
-          ? 'border-2 border-orange-400 shadow-[0_8px_30px_rgba(255,107,0,0.15)] scale-[1.02] md:scale-105 z-10'
-          : 'border border-gray-200 shadow-md hover:shadow-lg'
+          ? 'border-2 border-accent-border shadow-glow scale-[1.02] md:scale-105 z-10'
+          : 'border border-border-subtle shadow-md hover:shadow-lg'
         }
         ${disabled ? 'opacity-50 pointer-events-none' : ''}
       `}
@@ -56,32 +56,33 @@ export default function PackageCard({
       {/* Most Popular Badge - Centered at top */}
       {isHero && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-          <div className="bg-orange-500 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg whitespace-nowrap">
-            🔥 最受欢迎
+          <div className="flex items-center gap-2 bg-accent text-text-onAccent text-xs font-bold px-4 py-1.5 rounded-full shadow-lg whitespace-nowrap">
+            <Sparkles className="w-3.5 h-3.5" />
+            最受欢迎
           </div>
         </div>
       )}
 
       <div className="p-6 pt-8">
         {/* Package Name */}
-        <h3 className={`text-center text-lg font-semibold mb-2 ${isHero ? 'text-orange-600' : 'text-gray-800'}`}>
+        <h3 className={`text-center text-lg font-semibold mb-2 font-display ${isHero ? 'text-accent' : 'text-text-primary'}`}>
           {pkg.name}
         </h3>
 
         {/* Price Section */}
         <div className="text-center mb-4">
           <div className="flex items-center justify-center gap-2 mb-1">
-            <span className="text-4xl font-extrabold text-gray-900 tracking-tight" style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}>
+            <span className="text-4xl font-extrabold text-text-primary tracking-tight font-mono">
               RM {price.toFixed(0)}
             </span>
             {showSavings && savings > 0 && (
-              <span className="text-xs text-gray-400 line-through">
+              <span className="text-xs text-text-tertiary line-through">
                 RM {originalPrice.toFixed(0)}
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-500">
-            平均 <span className="font-semibold text-gray-700">RM {pricePerTime.toFixed(2)}</span>/次
+          <p className="text-sm text-text-secondary">
+            平均 <span className="font-semibold text-text-primary font-mono">RM {pricePerTime.toFixed(2)}</span>/次
           </p>
         </div>
 
@@ -91,8 +92,8 @@ export default function PackageCard({
             <span className={`
               inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold
               ${isHero
-                ? 'bg-orange-100 text-orange-700 border border-orange-200'
-                : 'bg-green-100 text-green-700 border border-green-200'
+                ? 'bg-accent-soft text-accent border border-accent-border'
+                : 'bg-success/15 text-success border border-success/20'
               }
             `}>
               <TrendingDown className="w-3 h-3" />
@@ -104,34 +105,29 @@ export default function PackageCard({
         {/* Feature List with Checkmarks */}
         <ul className="space-y-2.5 mb-6">
           {features.map((feature, idx) => (
-            <li key={idx} className="flex items-center gap-2.5 text-sm text-gray-600">
-              <CheckCircle2 className={`w-4 h-4 shrink-0 ${isHero ? 'text-orange-500' : 'text-orange-400'}`} />
+            <li key={idx} className="flex items-center gap-2.5 text-sm text-text-secondary">
+              <CheckCircle2 className={`w-4 h-4 shrink-0 ${isHero ? 'text-accent' : 'text-text-tertiary'}`} />
               <span>{feature}</span>
             </li>
           ))}
         </ul>
 
         {/* CTA Button - Full Width */}
-        <button
+        <Button
           onClick={(e) => {
             e.stopPropagation();
             if (!disabled && pkg.active) onPurchase(pkg);
           }}
           disabled={disabled || !pkg.active}
-          className={`
-            w-full py-3 rounded-xl text-sm font-bold transition-all duration-200
-            ${isHero
-              ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-md hover:shadow-lg active:scale-[0.98]'
-              : 'bg-white border-2 border-orange-400 text-orange-500 hover:bg-orange-50 active:scale-[0.98]'
-            }
-            disabled:opacity-50 disabled:cursor-not-allowed
-          `}
+          variant={isHero ? 'primary' : 'secondary'}
+          fullWidth
+          glow={isHero}
+          className="text-sm font-bold"
         >
           {!pkg.active ? '暂不可购买' : '立即购买'}
-        </button>
+        </Button>
       </div>
     </div>
   );
 }
-
 

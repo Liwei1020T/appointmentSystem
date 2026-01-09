@@ -287,7 +287,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
     order.status === 'pending' && !hasCompletedPayment && !hasActualPendingPayment && !hasPendingCashPayment && !hasPendingTngVerification && finalAmount > 0 && !order.use_package;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-ink">
       <PageHeader title="订单详情" />
 
       <div className="max-w-2xl mx-auto p-4 space-y-4 pb-24">
@@ -608,12 +608,12 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             {/* 上门取送地址 */}
             {((order as any).serviceType === 'pickup_delivery' || (order as any).service_type === 'pickup_delivery') &&
               ((order as any).pickupAddress || (order as any).pickup_address) && (
-                <div className="px-4 py-2 bg-orange-50 border-b border-dashed border-orange-200">
+                <div className="px-4 py-2 bg-accent-soft border-b border-dashed border-accent-border">
                   <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <MapPin className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <span className="text-xs text-orange-700 font-medium">取拍地址</span>
-                      <p className="text-sm text-orange-800 mt-0.5">
+                      <span className="text-xs text-accent font-medium">取拍地址</span>
+                      <p className="text-sm text-text-primary mt-0.5">
                         {(order as any).pickupAddress || (order as any).pickup_address}
                       </p>
                     </div>

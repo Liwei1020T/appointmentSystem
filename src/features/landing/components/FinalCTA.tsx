@@ -24,7 +24,7 @@ export default function FinalCTA() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6 font-display">
             还在等什么？
           </h2>
           <p className="text-xl text-text-secondary mb-10 max-w-2xl mx-auto">
@@ -37,7 +37,7 @@ export default function FinalCTA() {
             <Button
               onClick={() => router.push('/signup')}
               variant="primary"
-              className="w-full sm:w-auto px-10 py-4 text-lg font-semibold shadow-glow hover:shadow-glow-lg transition-all"
+              className="w-full sm:w-auto px-10 py-4 text-lg font-semibold shadow-sm hover:shadow-md transition-all"
             >
               立即注册
             </Button>

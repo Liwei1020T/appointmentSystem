@@ -36,7 +36,7 @@ export default function ReviewDetailPage() {
   }, [reviewId]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-ink">
       <PageHeader title="评价详情" subtitle="查看完整评价内容" onBack={() => router.push('/reviews/all')} />
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">

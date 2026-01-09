@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function OrdersPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-ink">
       <PageHeader
         title="我的订单"
         subtitle="查看您的订单状态和历史记录"

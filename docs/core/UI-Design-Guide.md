@@ -1,6 +1,6 @@
-# 🏸 String Service Platform — Breathing Light UI 设计规范
+# 🏸 String Service Platform — Athletic Calm UI 设计规范
 
-- 版本：v5.0（Breathing Light · 温暖橙色主强调）
+- 版本：v6.0（Breathing Light · 运动绿主强调）
 
 ---
 
@@ -22,23 +22,23 @@
 
 ## 🧠 1. 设计理念（Design Philosophy）
 
-关键词：**Breathing / Calm / Trust / Clean**
+关键词：**Breathing / Calm / Athletic / Trust / Clean**
 
-- 白色与浅灰为主，让信息“呼吸”，降低视觉疲劳
-- 主强调色仅用于关键动作与重要状态
-- 通过清晰层级和轻阴影强调重点而非复杂装饰
+- 白色与暖浅灰为主，让信息“呼吸”，降低视觉疲劳
+- 主强调色使用运动绿，仅用于关键动作与关键状态
+- 通过清晰层级与轻阴影强调重点，而非复杂装饰
 - 动效轻且可预期，优先保证信息读取效率
 
 ---
 
-## 🎨 2. 色彩系统（Breathing Light）
+## 🎨 2. 色彩系统（Athletic Calm）
 
 ### 2.1 主体色板（Token 建议）
 
 **Base / Surface**
-- `bg/primary`: Gray-50 `#F9FAFB`
+- `bg/primary`: Warm Off-White `#F6F4F1`
 - `bg/card`: White `#FFFFFF`
-- `border/subtle`: Gray-100 `#F3F4F6`
+- `border/subtle`: Stone-200 `#E7E5E4`
 
 **Text**
 - `text/primary`: Gray-900 `#111827`
@@ -46,16 +46,16 @@
 - `text/tertiary`: Gray-400 `#9CA3AF`
 - `text/onAccent`: `#FFFFFF`
 
-**Accent (Orange)**
-- `accent/solid`: `#F97316`
-- `accent/soft`: `rgba(249,115,22,0.10)`
-- `accent/border`: `rgba(249,115,22,0.30)`
+**Accent (Rally Green)**
+- `accent/solid`: `#16A34A`
+- `accent/soft`: `rgba(22,163,74,0.12)`
+- `accent/border`: `rgba(22,163,74,0.30)`
 
 **状态色**
-- `success`: `#10B981`
+- `success`: `#0D9488`
 - `warning`: `#F59E0B`
 - `danger`: `#EF4444`
-- `info`: `#3B82F6`
+- `info`: `#2563EB`
 
 ### 2.2 Light / Dark 策略
 
@@ -66,7 +66,8 @@
 
 ## 🔤 3. 字体系统（Typography）
 
-- 标题 / 正文：Poppins / system-ui
+- 标题：Outfit（Display）
+- 正文：Noto Sans SC（Body）
 - 数字 / 金额：JetBrains Mono / ui-monospace
 
 ### 3.1 字体规格
@@ -121,7 +122,7 @@
 **Primary CTA**
 - 背景：`accent/solid`
 - 文字：`text/onAccent`
-- Hover：`hover:shadow-sm` + `hover:opacity-90`
+- Hover：`hover:brightness-105` + `shadow-glow`
 
 **Secondary**
 - 白底 + `accent/border`
@@ -132,7 +133,7 @@
 
 ### 6.2 Card
 
-- `bg-white` + `border-gray-100` + `shadow-sm`
+- `bg-white` + `border-border-subtle` + `shadow-sm`
 - 可点击卡片使用 `hover:shadow-md`
 
 ### 6.3 表格 / 列表
@@ -150,15 +151,15 @@
 
 ## 📱 7. 用户端页面（App UI）
 
-- 页面背景：`bg-gray-50`
+- 页面背景：`bg-ink`
 - 卡片：白色 + 轻边框 + 轻阴影
-- 关键 CTA 使用橙色主强调
+- 关键 CTA 使用运动绿主强调
 
 ---
 
 ## 💼 8. 管理后台（Admin Dashboard）
 
-- 主背景保持 `bg-gray-50`
+- 主背景保持 `bg-ink`
 - 侧边栏使用白色卡片化
 - 数据表格默认紧凑排列 + 明确对齐
 

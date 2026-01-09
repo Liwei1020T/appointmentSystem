@@ -23,14 +23,14 @@
 
 ## Design Principles
 
-All components follow **Breathing Light**:
+All components follow **Athletic Calm (Breathing Light)**:
 
-- ✅ Light-first palette with calm whitespace
-- ✅ Orange accent only for key emphasis
+- ✅ Light-first palette with warm whitespace
+- ✅ Rally green accent only for key emphasis
 - ✅ Consistent 4pt spacing system
 - ✅ Clear layers (page / card / surface)
 - ✅ Subtle glass usage for navigation and overlays
-- ✅ Poppins + JetBrains Mono typography
+- ✅ Outfit + Noto Sans SC + JetBrains Mono typography
 
 ---
 
@@ -40,18 +40,18 @@ Use Tailwind utility classes mapped to design tokens:
 
 ```typescript
 const colors = {
-  ink: '#F9FAFB',
+  ink: '#F6F4F1',
   elevated: '#FFFFFF',
   surface: '#FFFFFF',
-  borderSubtle: '#F3F4F6',
+  borderSubtle: '#E7E5E4',
   textPrimary: '#111827',
-  textSecondary: '#6B7280',
+  textSecondary: '#4B5563',
   textTertiary: '#9CA3AF',
-  accent: '#F97316',
-  accentSoft: 'rgba(249,115,22,0.10)',
-  accentBorder: 'rgba(249,115,22,0.30)',
-  info: '#3B82F6',
-  success: '#10B981',
+  accent: '#16A34A',
+  accentSoft: 'rgba(22,163,74,0.12)',
+  accentBorder: 'rgba(22,163,74,0.30)',
+  info: '#2563EB',
+  success: '#0D9488',
   warning: '#F59E0B',
   danger: '#EF4444'
 }
@@ -85,7 +85,7 @@ export const Button: React.FC<ButtonProps> = ({
     primary: 'bg-accent text-text-onAccent hover:shadow-sm',
     secondary: 'bg-ink-surface text-accent border border-accent-border hover:bg-accent-soft',
     ghost: 'bg-transparent text-text-primary hover:bg-ink-surface/80',
-    danger: 'bg-danger text-text-primary hover:bg-danger/90'
+    danger: 'bg-danger text-white hover:bg-danger/90'
   };
 
   const sizes = {

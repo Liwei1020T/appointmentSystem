@@ -19,7 +19,7 @@ export default function VoucherRedeem() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-ink flex items-center justify-center p-4">
       <div className={`
         max-w-md w-full transition-all duration-700 ease-out
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}

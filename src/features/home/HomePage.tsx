@@ -114,7 +114,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-ink pb-24">
       {/* 顶部欢迎横幅 */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-xl mx-auto px-5 py-8">

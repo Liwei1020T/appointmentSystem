@@ -17,7 +17,7 @@ export default function Hero() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-ink pt-32 pb-20 md:pt-40 md:pb-32 lg:min-h-[800px] flex items-center">
+    <section className="relative overflow-hidden bg-ink pt-32 pb-20 md:pt-40 md:pb-32 lg:min-h-[780px] flex items-center">
       {/* Animated Background */}
       <BreathingBackground />
 
@@ -44,9 +44,9 @@ export default function Hero() {
               冠军级穿线手艺 · 亲民价格
             </motion.div>
 
-            <h1 className="text-4xl md:text-6xl font-bold text-text-primary mb-6 tracking-tight leading-[1.1]">
+            <h1 className="text-4xl md:text-6xl font-bold text-text-primary mb-6 tracking-tight leading-[1.1] font-display">
               用更低的价格，
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-accent to-orange-400 mt-2">
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-accent to-lime-400 mt-2">
                 享受顶级拉力手感
               </span>
             </h1>
@@ -60,14 +60,14 @@ export default function Hero() {
               <Button
                 onClick={() => router.push('/signup')}
                 variant="primary"
-                className="w-full sm:w-auto px-8 py-4 text-lg font-semibold shadow-glow hover:shadow-glow-lg transition-all hover:-translate-y-0.5"
+                className="w-full sm:w-auto px-8 py-4 text-lg font-semibold shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5"
               >
                 立即预约 (首单优惠)
               </Button>
               <Button
                 onClick={() => router.push('/login')}
                 variant="secondary"
-                className="w-full sm:w-auto px-8 py-4 text-lg font-semibold bg-white border border-border-subtle hover:bg-gray-50"
+                className="w-full sm:w-auto px-8 py-4 text-lg font-semibold bg-white border border-border-subtle hover:bg-ink"
               >
                 登录账户
               </Button>
@@ -98,9 +98,9 @@ export default function Hero() {
             className="hidden lg:block relative"
           >
             {/* Main Card: Simulate Order Status */}
-            <div className="relative z-20 bg-white rounded-2xl shadow-glow-lg border border-border-subtle p-6 max-w-sm mx-auto rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
+            <div className="relative z-20 bg-white rounded-2xl shadow-lg border border-border-subtle p-6 max-w-sm mx-auto rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center text-sm font-bold text-accent">YX</div>
+                <div className="w-12 h-12 bg-accent/15 rounded-full flex items-center justify-center text-sm font-bold text-accent">YX</div>
                 <div>
                   <div className="font-bold text-text-primary">我的球拍 - Yonex 100ZZ</div>
                   <div className="text-xs text-text-secondary">订单号 #20250101</div>
@@ -124,7 +124,7 @@ export default function Hero() {
               className="absolute -right-4 top-10 z-30 bg-white/90 backdrop-blur rounded-xl shadow-lg border border-border-subtle p-4 w-64"
             >
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
                   <TrendingDown size={16} />
                 </div>
                 <div>

@@ -70,7 +70,7 @@ export default function MyReviewsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-ink">
       <PageHeader
         title="我的评价"
         subtitle="查看您的服务评价记录"
@@ -83,22 +83,22 @@ export default function MyReviewsPage() {
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
       `}>
         {/* 现代分段式标签栏 - Segmented Control Tabs */}
-        <div className="bg-white rounded-xl p-1.5 shadow-sm border border-gray-100">
+        <div className="bg-ink-surface rounded-xl p-1.5 shadow-sm border border-border-subtle">
           <div className="flex gap-1">
             {tabFilters.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
                 className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 flex items-center justify-center gap-2 ${activeTab === tab.value
-                  ? 'bg-orange-50 text-orange-600 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  ? 'bg-accent-soft text-accent shadow-sm'
+                  : 'text-text-tertiary hover:text-text-secondary hover:bg-ink'
                   }`}
               >
                 {tab.icon}
                 <span>{tab.label}</span>
                 <span className={`px-1.5 py-0.5 rounded-full text-xs ${activeTab === tab.value
-                  ? 'bg-orange-100 text-orange-600'
-                  : 'bg-gray-100 text-gray-500'
+                  ? 'bg-accent/20 text-accent'
+                  : 'bg-ink text-text-tertiary'
                   }`}>
                   {tab.count}
                 </span>
@@ -114,8 +114,8 @@ export default function MyReviewsPage() {
 
         {/* 错误提示 */}
         {error && !loading && (
-          <Card className="p-6 text-center bg-white border border-gray-100 shadow-sm">
-            <p className="text-red-500 mb-4">{error}</p>
+          <Card className="p-6 text-center bg-white border border-border-subtle shadow-sm">
+            <p className="text-danger mb-4">{error}</p>
             <Button onClick={loadData}>重试</Button>
           </Card>
         )}
@@ -185,28 +185,28 @@ function PendingReviewTicket({ order, index }: { order: PendingReviewOrder; inde
   return (
     <Link href={`/orders/${order.id}?review=true`}>
       <div
-        className="relative bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 animate-fade-in group"
+        className="relative bg-white rounded-xl overflow-hidden shadow-sm border border-border-subtle hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 animate-fade-in group"
         style={{ animationDelay: `${index * 80}ms` }}
       >
         {/* 左侧缺口装饰 */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-6 bg-gray-50 rounded-r-full" />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-6 bg-ink rounded-r-full" />
         {/* 右侧缺口装饰 */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-6 bg-gray-50 rounded-l-full" />
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-6 bg-ink rounded-l-full" />
 
         <div className="flex">
           {/* 左侧主内容区 */}
           <div className="flex-1 p-4 pr-3">
             <div className="flex items-start gap-3">
               {/* 图标容器 */}
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shadow-sm flex-shrink-0">
-                <Sparkles className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shadow-sm flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-text-onAccent" />
               </div>
               {/* 订单信息 */}
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 truncate">
+                <h3 className="font-semibold text-text-primary truncate">
                   {order.string ? `${order.string.brand} ${order.string.model}` : '穿线订单'}
                 </h3>
-                <p className="text-sm text-gray-500 mt-0.5">
+                <p className="text-sm text-text-secondary mt-0.5">
                   {formatDate(order.created_at)} · 拉力 {order.tension}磅
                 </p>
               </div>
@@ -214,19 +214,19 @@ function PendingReviewTicket({ order, index }: { order: PendingReviewOrder; inde
           </div>
 
           {/* 虚线分隔 */}
-          <div className="w-px border-l border-dashed border-gray-200 my-3" />
+          <div className="w-px border-l border-dashed border-border-subtle my-3" />
 
           {/* 右侧操作区 */}
           <div className="flex flex-col items-center justify-center px-4 py-3 min-w-[90px]">
-            <span className="text-xs text-orange-500 font-medium mb-1">待评价</span>
-            <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
-              <ChevronRight className="w-5 h-5 text-orange-500" />
+            <span className="text-xs text-accent font-medium mb-1">待评价</span>
+            <div className="w-8 h-8 rounded-full bg-accent-soft flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+              <ChevronRight className="w-5 h-5 text-accent" />
             </div>
           </div>
         </div>
 
         {/* 底部渐变装饰条 */}
-        <div className="h-1 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-400" />
+        <div className="h-1 bg-gradient-to-r from-gradient-start via-accent to-gradient-end" />
       </div>
     </Link>
   );
@@ -251,19 +251,19 @@ function EmptyState({
   variant?: 'primary' | 'secondary';
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center animate-fade-in">
+    <div className="bg-white rounded-2xl border border-border-subtle shadow-sm p-10 text-center animate-fade-in">
       <div className={`mx-auto mb-5 w-20 h-20 rounded-2xl flex items-center justify-center ${variant === 'primary'
-        ? 'bg-gradient-to-br from-orange-50 to-orange-100 text-orange-400'
-        : 'bg-gray-50 text-gray-400'
+        ? 'bg-accent-soft text-accent'
+        : 'bg-ink text-text-tertiary'
         }`}>
         {icon}
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-500 mb-6 max-w-xs mx-auto">{description}</p>
+      <h3 className="text-lg font-semibold text-text-primary mb-2">{title}</h3>
+      <p className="text-text-secondary mb-6 max-w-xs mx-auto">{description}</p>
       <Button
         onClick={onAction}
         variant={variant === 'primary' ? 'primary' : 'secondary'}
-        className={variant === 'primary' ? 'bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white shadow-md' : ''}
+        glow={variant === 'primary'}
       >
         {actionLabel}
       </Button>

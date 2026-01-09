@@ -11,37 +11,37 @@ const features = [
     icon: <Smartphone className="w-8 h-8" />,
     title: '在线预约',
     description: '随时随地轻松预约，系统自动匹配空闲时段，告别繁琐沟通。',
-    bg: 'bg-blue-50/50', text: 'text-blue-600',
+    bg: 'bg-sky-50', text: 'text-sky-600',
   },
   {
     icon: <Target className="w-8 h-8" />,
     title: '大师级手艺',
     description: '每一根线都经过精准校调，杜绝掉磅，手感媲美专业队标准。',
-    bg: 'bg-orange-50/50', text: 'text-orange-600',
+    bg: 'bg-emerald-50', text: 'text-emerald-600',
   },
   {
     icon: <TrendingDown className="w-8 h-8" />,
     title: '价格碾压',
     description: '去除门店溢价，同等品质比传统店铺便宜 30% 以上。',
-    bg: 'bg-purple-50/50', text: 'text-purple-600',
+    bg: 'bg-amber-50', text: 'text-amber-600',
   },
   {
     icon: <Truck className="w-8 h-8" />,
     title: '上门取送',
     description: '忙碌没时间？我们提供专业上门取拍与送回服务，足不出户搞定一切。',
-    bg: 'bg-green-50/50', text: 'text-green-600',
+    bg: 'bg-lime-50', text: 'text-lime-700',
   },
   {
     icon: <QrCode className="w-8 h-8" />,
     title: '扫码支付',
     description: '支持 TnG eWallet 扫码支付，安全快捷。',
-    bg: 'bg-pink-50/50', text: 'text-pink-600',
+    bg: 'bg-teal-50', text: 'text-teal-600',
   },
   {
     icon: <Gift className="w-8 h-8" />,
     title: '积分当钱花',
     description: '消费自动累积积分，随时兑换超值优惠券，越用越省。',
-    bg: 'bg-yellow-50/50', text: 'text-yellow-600',
+    bg: 'bg-slate-50', text: 'text-slate-600',
   },
 ];
 
@@ -64,14 +64,14 @@ const itemVariants = {
 
 export default function Features() {
   return (
-    <section id="features" className="py-20 md:py-24 bg-ink-elevated">
+    <section id="features" className="py-20 md:py-24 bg-ink">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-bold text-text-primary mb-4"
+            className="text-3xl md:text-4xl font-bold text-text-primary mb-4 font-display"
           >
             为什么选择我们
           </motion.h2>
@@ -99,12 +99,12 @@ export default function Features() {
               variants={itemVariants}
               className="h-full"
             >
-              <SpotlightCard className="h-full p-6 md:p-8 flex flex-col hover:shadow-lg transition-shadow duration-300 bg-ink">
+              <SpotlightCard className="h-full p-6 md:p-8 flex flex-col hover:shadow-card-hover transition-shadow duration-300 bg-white">
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${feature.bg} ${feature.text}`}>
                   {feature.icon}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-text-primary mb-3">
+                  <h3 className="text-xl font-bold text-text-primary mb-3 font-display">
                     {feature.title}
                   </h3>
                   <p className="text-text-secondary text-sm leading-relaxed">

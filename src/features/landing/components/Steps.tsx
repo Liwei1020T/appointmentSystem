@@ -40,7 +40,7 @@ export default function Steps() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-bold text-text-primary mb-4"
+            className="text-3xl md:text-4xl font-bold text-text-primary mb-4 font-display"
           >
             简单四步，轻松搞定
           </motion.h2>
@@ -70,8 +70,8 @@ export default function Steps() {
                 ></motion.div>
               )}
 
-              <div className="bg-ink-surface/80 backdrop-blur-sm p-6 rounded-2xl border border-border-subtle text-center hover:shadow-card-hover hover:border-accent-border transition-all duration-300 h-full flex flex-col items-center">
-                <div className="w-16 h-16 bg-accent text-ink rounded-2xl flex items-center justify-center mb-5 shadow-glow transform group-hover:-translate-y-1 transition-transform duration-300">
+              <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-border-subtle text-center hover:shadow-card-hover hover:border-accent-border transition-all duration-300 h-full flex flex-col items-center">
+                <div className="w-16 h-16 bg-accent text-text-onAccent rounded-2xl flex items-center justify-center mb-5 shadow-sm transform group-hover:-translate-y-1 transition-transform duration-300">
                   {step.icon}
                 </div>
                 <div className="absolute top-4 right-4 text-xs font-mono text-text-tertiary opacity-30">

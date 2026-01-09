@@ -1,4 +1,5 @@
 import React from 'react';
+import BrandLogo from '@/components/BrandLogo';
 
 export interface SidebarItem {
   icon: React.ReactNode;
@@ -21,7 +22,11 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ items, className = '' }) => {
   return (
     <aside className={`w-64 h-screen bg-ink-surface border-r border-border-subtle p-4 ${className}`}>
-      <div className="space-y-1">
+      <div className="flex items-center gap-2 px-2 pb-4 border-b border-border-subtle">
+        <BrandLogo size="sm" showName nameClassName="text-base font-display" />
+        <span className="text-[10px] uppercase tracking-[0.2em] text-text-tertiary">Admin</span>
+      </div>
+      <div className="space-y-1 mt-4">
         {items.map((item, idx) => (
           <a
             key={idx}

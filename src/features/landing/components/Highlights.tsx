@@ -12,21 +12,21 @@ const slides = [
     title: "在线预约 & 选线",
     desc: "选择您心仪的球线型号、颜色，并指定精准拉力磅数。系统自动匹配可用时段。",
     icon: <Smartphone className="w-12 h-12 text-accent" />,
-    color: "bg-blue-50"
+    color: "bg-sky-50"
   },
   {
     id: 1,
     title: "TnG 扫码支付",
     desc: "订单确认后，使用 TnG eWallet 扫码即可完成支付，全程无现金接触，安全便捷。",
     icon: <QrCode className="w-12 h-12 text-accent" />,
-    color: "bg-purple-50"
+    color: "bg-emerald-50"
   },
   {
     id: 2,
     title: "上门取送服务",
     desc: "没空出门？选择上门取送服务，专人上门取拍，穿线完成后送回府上。",
     icon: <Truck className="w-12 h-12 text-accent" />,
-    color: "bg-green-50"
+    color: "bg-lime-50"
   }
 ];
 
@@ -61,7 +61,7 @@ export default function Highlights() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-6">
+            <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-6 font-display">
               不仅是便宜，<br />
               更是对专业的执着
             </h2>
@@ -81,7 +81,7 @@ export default function Highlights() {
             <Button
               onClick={() => router.push('/signup')}
               variant="primary"
-              className="px-8 py-3 text-lg font-semibold shadow-glow group"
+              className="px-8 py-3 text-lg font-semibold shadow-sm group"
             >
               立即体验超值服务 
               <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -93,7 +93,7 @@ export default function Highlights() {
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="relative bg-ink-elevated rounded-3xl border border-border-subtle p-8 md:p-12 shadow-glow-lg min-h-[400px] flex flex-col justify-between"
+            className="relative bg-white rounded-3xl border border-border-subtle p-8 md:p-12 shadow-lg min-h-[400px] flex flex-col justify-between"
           >
             <AnimatePresence mode="wait">
               <motion.div

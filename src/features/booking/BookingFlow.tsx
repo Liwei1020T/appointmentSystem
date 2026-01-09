@@ -258,7 +258,7 @@ export default function BookingFlow() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-ink">
       <PageHeader
         title="立即预约"
         subtitle={`步骤 ${step}/4`}

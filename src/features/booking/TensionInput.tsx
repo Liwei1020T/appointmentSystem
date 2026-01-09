@@ -96,10 +96,10 @@ export default function TensionInput({
 
   // 根据磅数返回颜色分级 (18 - 30)
   const getGaugeColor = (val: number) => {
-    if (val <= 22) return 'bg-emerald-500';
-    if (val <= 25) return 'bg-blue-500';
-    if (val <= 28) return 'bg-orange-500';
-    return 'bg-red-500';
+    if (val <= 22) return 'bg-success';
+    if (val <= 25) return 'bg-info';
+    if (val <= 28) return 'bg-warning';
+    return 'bg-danger';
   };
 
   const getTensionDescription = (val: number) => {

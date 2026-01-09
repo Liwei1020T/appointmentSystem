@@ -167,7 +167,7 @@ function getRankIcon(rank: number) {
   if (rank === 1) {
     return (
       <div className="bg-gradient-to-br from-accent to-accent/80 rounded-full w-10 h-10 flex items-center justify-center shadow-glow">
-        <Trophy className="w-5 h-5 text-ink" />
+        <Trophy className="w-5 h-5 text-text-onAccent" />
       </div>
     );
   } else if (rank === 2) {
@@ -179,7 +179,7 @@ function getRankIcon(rank: number) {
   } else if (rank === 3) {
     return (
       <div className="bg-gradient-to-br from-warning/60 to-warning/90 rounded-full w-10 h-10 flex items-center justify-center shadow-sm">
-        <Award className="w-5 h-5 text-ink" />
+        <Award className="w-5 h-5 text-text-onAccent" />
       </div>
     );
   } else {
