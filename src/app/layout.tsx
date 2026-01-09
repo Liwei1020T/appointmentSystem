@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Outfit, Noto_Sans_SC } from 'next/font/google'
+import { Space_Grotesk, Noto_Sans_SC } from 'next/font/google'
 import './globals.css'
 import SessionProvider from '@/components/providers/SessionProvider'
 import Navbar from '@/components/layout/Navbar'
@@ -7,7 +7,7 @@ import RealtimeOrderProvider from '@/components/RealtimeOrderProvider'
 import ClientLayout from './ClientLayout'
 import { LocalBusinessJsonLd, WebSiteJsonLd } from '@/components/seo/JsonLd'
 
-const outfit = Outfit({
+const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   display: 'swap',
@@ -93,12 +93,18 @@ export default function RootLayout({
         <LocalBusinessJsonLd />
         <WebSiteJsonLd />
       </head>
-      <body className={`${notoSans.variable} ${outfit.variable} font-sans`}>
+      <body className={`${notoSans.variable} ${spaceGrotesk.variable} font-sans`}>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-white focus:text-text-primary focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-md"
+        >
+          跳转到主要内容
+        </a>
         <SessionProvider>
           <RealtimeOrderProvider>
             <ClientLayout>
               <Navbar />
-              <main className="min-h-screen bg-ink">
+              <main id="main-content" className="min-h-screen bg-ink">
                 {children}
               </main>
             </ClientLayout>

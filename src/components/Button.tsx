@@ -33,7 +33,7 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseStyles = `
-    font-semibold rounded-lg transition-all duration-200 
+    font-semibold rounded-xl transition-all duration-200 
     active:scale-98 btn-press
     flex items-center justify-center gap-2 
     focus-visible:outline-none focus-visible:ring-2 
@@ -44,17 +44,17 @@ export const Button: React.FC<ButtonProps> = ({
   const variants = {
     primary: `
       bg-accent text-text-onAccent
-      hover:brightness-105
+      hover:bg-accent/90
       ${glow ? 'shadow-glow hover:shadow-glow' : 'shadow-sm hover:shadow-sm'}
     `.trim(),
     secondary: `
-      bg-ink-surface text-accent 
-      border border-accent-border 
-      hover:bg-accent-soft hover:shadow-sm
+      bg-white text-text-primary 
+      border border-border-subtle 
+      hover:bg-ink hover:border-accent/40
     `.trim(),
     ghost: `
-      bg-transparent text-text-primary 
-      hover:bg-ink
+      bg-transparent text-text-secondary 
+      hover:bg-ink hover:text-text-primary
     `.trim(),
     danger: `
       bg-danger text-white 

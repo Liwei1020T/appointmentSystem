@@ -18,7 +18,7 @@ export function InlineLoading({
     <span className={`inline-flex items-center gap-2 ${className}`.trim()}>
       <LoadingSpinner size={size} tone={tone} />
       {label ? (
-        <span className="text-xs text-gray-500">{label}</span>
+        <span className="text-xs text-text-secondary">{label}</span>
       ) : null}
     </span>
   );

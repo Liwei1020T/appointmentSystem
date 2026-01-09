@@ -41,8 +41,8 @@ export default function AllReviewsPage() {
             <Skeleton className="h-4 w-32" />
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <Star className="w-4 h-4 text-amber-400" />
+          <div className="flex items-center gap-2 text-xs text-text-secondary">
+            <Star className="w-4 h-4 text-warning" />
             <span>共 {reviews.length} 条公开评价</span>
           </div>
         )}
@@ -71,36 +71,36 @@ export default function AllReviewsPage() {
           </div>
         ) : reviews.length === 0 ? (
           <Card className="p-6">
-            <p className="text-sm text-gray-500">暂无公开评价</p>
+            <p className="text-sm text-text-secondary">暂无公开评价</p>
           </Card>
         ) : (
           <div className="space-y-4">
             {reviews.map((review) => (
               <Link key={review.id} href={`/reviews/all/${review.id}`} className="block">
-                <Card className="p-4 hover:shadow-md transition-all border border-gray-100">
+                <Card className="p-4 hover:shadow-md transition-all border border-border-subtle">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2">
                         <StarRating value={Number(review.rating) || 0} readonly size="sm" />
-                        <span className="text-xs text-gray-400">{formatDate(review.created_at || review.createdAt)}</span>
+                        <span className="text-xs text-text-tertiary">{formatDate(review.created_at || review.createdAt)}</span>
                       </div>
 
-                      <p className="text-sm text-gray-700 line-clamp-2">
+                      <p className="text-sm text-text-primary line-clamp-2">
                         {review.comment}
                       </p>
 
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <div className="flex items-center gap-2 text-xs text-text-secondary">
                         <span className="font-medium">
                           {review.is_anonymous ? '匿名用户' : review.user?.full_name || '用户'}
                         </span>
                         {review.order?.string?.brand && (
-                          <span className="text-gray-400">
+                          <span className="text-text-tertiary">
                             {review.order.string.brand} {review.order.string.model || ''}
                           </span>
                         )}
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-gray-400 mt-1" />
+                    <ChevronRight className="w-4 h-4 text-text-tertiary mt-1" />
                   </div>
                 </Card>
               </Link>

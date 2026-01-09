@@ -21,7 +21,7 @@ interface SidebarProps {
  */
 export const Sidebar: React.FC<SidebarProps> = ({ items, className = '' }) => {
   return (
-    <aside className={`w-64 h-screen bg-ink-surface border-r border-border-subtle p-4 ${className}`}>
+    <aside className={`w-64 h-screen bg-white/95 border-r border-border-subtle p-4 shadow-sm ${className}`}>
       <div className="flex items-center gap-2 px-2 pb-4 border-b border-border-subtle">
         <BrandLogo size="sm" showName nameClassName="text-base font-display" />
         <span className="text-[10px] uppercase tracking-[0.2em] text-text-tertiary">Admin</span>

@@ -152,10 +152,10 @@ export default function RestockModal({
 
   return (
     <div className="fixed inset-0 bg-ink/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-ink-surface rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border-subtle">
+      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border-subtle">
         {/* 标题栏 */}
-        <div className="sticky top-0 bg-ink-surface border-b border-border-subtle px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-text-primary">补货管理</h2>
+        <div className="sticky top-0 bg-white/95 border-b border-border-subtle px-6 py-4 flex items-center justify-between backdrop-blur">
+          <h2 className="text-xl font-semibold text-text-primary font-display">补货管理</h2>
           <button
             onClick={handleClose}
             className="p-1 hover:bg-ink rounded-lg transition-colors"
@@ -191,7 +191,7 @@ export default function RestockModal({
               value={selectedStringId}
               onChange={(e) => setSelectedStringId(e.target.value)}
               disabled={loading || success}
-              className="w-full px-4 py-2 border border-border-subtle bg-ink-elevated text-text-primary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent disabled:opacity-50 disabled:bg-ink-elevated"
+              className="w-full px-4 py-2 border border-border-subtle bg-white text-text-primary rounded-xl focus:ring-2 focus:ring-accent/30 focus:border-transparent disabled:opacity-50 disabled:bg-ink"
             >
               <option value="">-- 请选择球线 --</option>
               {strings.map((string) => (

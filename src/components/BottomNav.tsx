@@ -18,7 +18,7 @@ interface BottomNavProps {
  */
 export const BottomNav: React.FC<BottomNavProps> = ({ items }) => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 glass-surface border-t border-border-subtle safe-area-pb z-40">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-border-subtle safe-area-pb z-40">
       <div className="flex items-center justify-around h-16">
         {items.map((item, idx) => (
           <a

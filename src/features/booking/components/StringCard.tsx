@@ -128,17 +128,17 @@ export default function StringCard({ string, isSelected, onSelect }: StringCardP
                     {(string.elasticity || string.durability || string.control) && (
                         <div className="flex flex-wrap gap-1.5 mt-2">
                             {string.elasticity && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-600 border border-blue-500/30">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-info/10 text-info border border-info/30">
                                     弹性 {string.elasticity === 'low' ? '低' : string.elasticity === 'medium' ? '中' : '高'}
                                 </span>
                             )}
                             {string.durability && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-600 border border-emerald-500/30">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-success/10 text-success border border-success/30">
                                     耐久 {string.durability === 'low' ? '低' : string.durability === 'medium' ? '中' : '高'}
                                 </span>
                             )}
                             {string.control && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-600 border border-sky-500/30">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/30">
                                     控球 {string.control === 'low' ? '低' : string.control === 'medium' ? '中' : '高'}
                                 </span>
                             )}

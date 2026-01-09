@@ -23,14 +23,14 @@
 
 ## Design Principles
 
-All components follow **Athletic Calm (Breathing Light)**:
+All components follow **Paper Court (Breathing Light)**:
 
-- ✅ Light-first palette with warm whitespace
-- ✅ Rally green accent only for key emphasis
+- ✅ Paper-like palette with warm whitespace
+- ✅ Deep teal accent only for key emphasis
 - ✅ Consistent 4pt spacing system
 - ✅ Clear layers (page / card / surface)
 - ✅ Subtle glass usage for navigation and overlays
-- ✅ Outfit + Noto Sans SC + JetBrains Mono typography
+- ✅ Space Grotesk + Noto Sans SC + JetBrains Mono typography
 
 ---
 
@@ -40,18 +40,19 @@ Use Tailwind utility classes mapped to design tokens:
 
 ```typescript
 const colors = {
-  ink: '#F6F4F1',
+  ink: '#F7F3EE',
   elevated: '#FFFFFF',
   surface: '#FFFFFF',
-  borderSubtle: '#E7E5E4',
+  borderSubtle: '#E6E1DA',
   textPrimary: '#111827',
   textSecondary: '#4B5563',
   textTertiary: '#9CA3AF',
-  accent: '#16A34A',
-  accentSoft: 'rgba(22,163,74,0.12)',
-  accentBorder: 'rgba(22,163,74,0.30)',
+  accent: '#0F766E',
+  accentAlt: '#84CC16',
+  accentSoft: 'rgba(15,118,110,0.12)',
+  accentBorder: 'rgba(15,118,110,0.30)',
   info: '#2563EB',
-  success: '#0D9488',
+  success: '#16A34A',
   warning: '#F59E0B',
   danger: '#EF4444'
 }
@@ -82,9 +83,9 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = 'font-semibold rounded-lg transition-all duration-150 active:scale-97 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-border focus-visible:ring-offset-2 focus-visible:ring-offset-ink';
 
   const variants = {
-    primary: 'bg-accent text-text-onAccent hover:shadow-sm',
-    secondary: 'bg-ink-surface text-accent border border-accent-border hover:bg-accent-soft',
-    ghost: 'bg-transparent text-text-primary hover:bg-ink-surface/80',
+    primary: 'bg-accent text-text-onAccent hover:bg-accent/90',
+    secondary: 'bg-white text-text-primary border border-border-subtle hover:bg-ink',
+    ghost: 'bg-transparent text-text-secondary hover:bg-ink',
     danger: 'bg-danger text-white hover:bg-danger/90'
   };
 

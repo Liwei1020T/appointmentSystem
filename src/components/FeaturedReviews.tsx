@@ -88,7 +88,7 @@ export default function FeaturedReviews() {
       <div className="bg-white rounded-xl border border-border-subtle shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
               <Skeleton variant="circular" className="w-4 h-4" />
             </div>
             <Skeleton className="h-4 w-20" />
@@ -128,8 +128,8 @@ export default function FeaturedReviews() {
       {/* 标题行 */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-            <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+          <div className="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
+            <Star className="w-4 h-4 fill-warning text-warning" />
           </div>
           <h3 className="font-semibold text-[15px] text-text-primary font-display">用户评价</h3>
         </div>
@@ -161,7 +161,7 @@ export default function FeaturedReviews() {
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-border-subtle'}`}
+                    className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-warning text-warning' : 'text-border-subtle'}`}
                   />
                 ))}
               </div>

@@ -1,14 +1,16 @@
 # Change Log — 2026-01-09
 
 ## Summary
-System-wide UI/UX redesign to the Athletic Calm theme with rally green accents, updated typography, and refreshed layouts across booking, profile, orders, packages, and reviews.
+System-wide Paper Court (breathing light) refinement with refreshed auth flows, landing visuals, booking progress UI, review surfaces, and updated loading/skeleton components.
 
 ## Changes
-- Updated design tokens, gradients, and typography (Outfit + Noto Sans SC) to the Athletic Calm palette.
-- Refreshed core navigation (Navbar, Sidebar, PageHeader) and landing sections for the new visual system.
-- Reworked profile, points, packages, reviews, orders, and booking flows to align with the new layout and color hierarchy.
-- Regenerated PWA icons, OG image, and favicon to match the new brand accent.
-- Updated UI design and component docs to reflect the new system.
+- Rebuilt signup and forgot-password pages with split layouts to match the new brand panel styling.
+- Refined landing hero, features, highlights, FAQ, reviews, and footer to use Paper Court accent tokens and breathing background palette.
+- Updated multi-racket booking flow header, step indicator, and action bars to the new surface and border system.
+- Restyled review list/detail surfaces, featured reviews, and rating accents to the updated warning palette.
+- Updated loading/spinner tones, skeleton cards, and points center accents for consistent neutral hierarchy.
+- Adjusted string attribute chips and voucher maintenance page to align with Paper Court tokens.
+- Minor admin modal hover color alignment.
 
 ## Tests
 - Not run (UI changes only).

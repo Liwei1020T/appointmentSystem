@@ -41,8 +41,8 @@ export const Input: React.FC<InputProps> = ({
         )}
         <input
           className={`
-            w-full h-11 px-3 rounded-lg border bg-ink-surface text-text-primary
-            ${error ? 'border-danger focus:ring-danger/40' : 'border-border-subtle focus:ring-accent-border'}
+            w-full h-11 px-3 rounded-xl border bg-white text-text-primary
+            ${error ? 'border-danger focus:ring-danger/30' : 'border-border-subtle focus:ring-accent/30'}
             ${leftIcon ? 'pl-10' : ''}
             ${rightIcon ? 'pr-10' : ''}
             focus:outline-none focus:ring-2 focus:border-transparent focus:ring-offset-2 focus:ring-offset-ink

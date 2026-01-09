@@ -9,14 +9,14 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Courtline Studio - Athletic Calm
+        // Paper Court - Quiet Professional
         ink: {
-          DEFAULT: '#F6F4F1',      // 页面背景 - warm off-white
+          DEFAULT: '#F7F3EE',      // 页面背景 - paper
           elevated: '#FFFFFF',     // 卡片背景
           surface: '#FFFFFF',      // 表面/微调
         },
         border: {
-          subtle: '#E7E5E4',       // stone-200
+          subtle: '#E6E1DA',       // paper edge
         },
         text: {
           primary: '#111827',      // slate-900
@@ -25,20 +25,21 @@ module.exports = {
           onAccent: '#FFFFFF',
         },
         accent: {
-          DEFAULT: '#16A34A',      // rally green
-          soft: 'rgba(22,163,74,0.12)',
-          border: 'rgba(22,163,74,0.30)',
+          DEFAULT: '#0F766E',      // deep teal
+          soft: 'rgba(15,118,110,0.12)',
+          border: 'rgba(15,118,110,0.30)',
+          alt: '#84CC16',          // lime accent
         },
         info: {
           DEFAULT: '#2563EB',
           soft: 'rgba(37,99,235,0.12)',
         },
-        success: '#0D9488',
+        success: '#16A34A',
         warning: '#F59E0B',
         danger: '#EF4444',
         // Gradient accents
         gradient: {
-          start: '#16A34A',
+          start: '#0F766E',
           end: '#84CC16',
         },
       },
@@ -54,13 +55,13 @@ module.exports = {
         '2xl': '20px',
       },
       boxShadow: {
-        sm: '0 1px 2px rgba(15,23,42,0.08)',
-        md: '0 10px 24px rgba(15,23,42,0.12)',
-        lg: '0 18px 36px rgba(15,23,42,0.14)',
-        glow: '0 0 0 1px rgba(22,163,74,0.2), 0 10px 26px rgba(22,163,74,0.18)',
-        'glow-lg': '0 0 0 2px rgba(22,163,74,0.24), 0 18px 36px rgba(22,163,74,0.2)',
-        card: '0 1px 3px rgba(15,23,42,0.08)',
-        'card-hover': '0 12px 28px rgba(15,23,42,0.16)',
+        sm: '0 1px 2px rgba(17,24,39,0.06)',
+        md: '0 10px 24px rgba(17,24,39,0.12)',
+        lg: '0 18px 36px rgba(17,24,39,0.14)',
+        glow: '0 0 0 1px rgba(15,118,110,0.24), 0 10px 26px rgba(15,118,110,0.18)',
+        'glow-lg': '0 0 0 2px rgba(15,118,110,0.28), 0 18px 36px rgba(15,118,110,0.22)',
+        card: '0 1px 3px rgba(17,24,39,0.08)',
+        'card-hover': '0 12px 28px rgba(17,24,39,0.16)',
       },
       scale: {
         97: '0.97',
@@ -87,8 +88,8 @@ module.exports = {
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 0 0 rgba(22, 163, 74, 0.4)' },
-          '50%': { boxShadow: '0 0 0 8px rgba(22, 163, 74, 0)' },
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(15, 118, 110, 0.4)' },
+          '50%': { boxShadow: '0 0 0 8px rgba(15, 118, 110, 0)' },
         },
       },
     },

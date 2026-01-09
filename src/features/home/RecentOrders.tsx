@@ -107,7 +107,7 @@ export default function RecentOrders() {
       <Card>
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-text-primary">最近订单</h2>
+            <h2 className="text-lg font-bold text-text-primary font-display">最近订单</h2>
           </div>
           <div className="text-center py-4">
             <p className="text-sm text-text-secondary mb-3">暂无订单记录</p>
@@ -127,8 +127,8 @@ export default function RecentOrders() {
     <Card>
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-info/15 flex items-center justify-center">
+          <h2 className="text-lg font-bold text-text-primary flex items-center gap-2 font-display">
+            <span className="w-8 h-8 rounded-lg bg-ink border border-border-subtle flex items-center justify-center">
               <svg className="w-4 h-4 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
@@ -153,7 +153,7 @@ export default function RecentOrders() {
               <div
                 key={order.id}
                 onClick={() => handleOrderClick(order.id)}
-                className="flex items-center gap-3 p-3 rounded-xl bg-ink-elevated/50 hover:bg-ink border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
+                className="flex items-center gap-3 p-3 rounded-2xl bg-ink-elevated/70 hover:bg-ink border border-border-subtle transition-all cursor-pointer group"
               >
                 {/* 状态图标 */}
                 {(() => {
@@ -179,7 +179,7 @@ export default function RecentOrders() {
                 {/* 动作按钮 */}
                 <button
                   onClick={(e) => handleAction(e, order)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0 ${action.color} hover:opacity-90 shadow-sm`}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex-shrink-0 ${action.color} hover:opacity-90 shadow-sm`}
                 >
                   {action.label}
                 </button>
@@ -191,7 +191,7 @@ export default function RecentOrders() {
         {/* 快捷预约按钮 */}
         <button
           onClick={() => router.push('/booking')}
-          className="w-full mt-4 py-2.5 rounded-xl border border-dashed border-border-subtle text-text-secondary hover:border-accent hover:text-accent transition-colors text-sm font-medium flex items-center justify-center gap-1"
+          className="w-full mt-4 py-2.5 rounded-2xl border border-dashed border-border-subtle text-text-secondary hover:border-accent hover:text-accent transition-colors text-sm font-medium flex items-center justify-center gap-1"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

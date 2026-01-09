@@ -5,8 +5,8 @@ export type LoadingTone = 'accent' | 'muted' | 'neutral' | 'inverse';
 
 const toneClasses: Record<LoadingTone, string> = {
   accent: 'text-accent',
-  muted: 'text-gray-400',
-  neutral: 'text-gray-600',
+  muted: 'text-text-tertiary',
+  neutral: 'text-text-secondary',
   inverse: 'text-white',
 };
 

@@ -23,7 +23,7 @@ export function SectionLoading({
       <div className="flex items-center gap-3">
         <LoadingSpinner size="md" tone={tone} />
         {label ? (
-          <span className="text-sm text-gray-500">{label}</span>
+          <span className="text-sm text-text-secondary">{label}</span>
         ) : null}
       </div>
     </div>

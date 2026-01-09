@@ -141,100 +141,102 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-ink flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Decorative background gradients */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-
-      <Card
-        className="w-full max-w-md border border-border-subtle bg-ink-elevated/95 backdrop-blur-sm animate-slide-up relative z-10"
-        variant="elevated"
-        shadow
-      >
-        <div className="p-6">
-          {/* Logo & Title */}
-          <div className="text-center mb-8">
-            {/* Brand Logo */}
-            <div className="flex justify-center mb-4">
-              <BrandLogo size="xl" className="shadow-glow" />
+    <div className="min-h-screen bg-ink flex items-center justify-center p-6">
+      <div className="w-full max-w-4xl bg-white border border-border-subtle rounded-3xl shadow-lg overflow-hidden animate-slide-up">
+        <div className="grid md:grid-cols-[1.1fr_1fr]">
+          {/* Left: Brand Panel */}
+          <div className="p-8 bg-gradient-to-br from-accent to-accent-alt text-white">
+            <div className="flex items-center gap-3 mb-6">
+              <BrandLogo size="md" className="shadow-glow" />
+              <div className="text-sm uppercase tracking-[0.2em]">LW</div>
             </div>
-            <h1 className="text-2xl font-bold text-text-primary tracking-tight">
-              欢迎回来
-            </h1>
-            <p className="text-sm text-text-secondary mt-1">
-              登录 <span className="text-gradient font-semibold">LW String Studio</span>
+            <h1 className="text-3xl font-bold font-display mb-3">欢迎回来</h1>
+            <p className="text-sm text-white/85 leading-relaxed">
+              专注于每一磅拉力，保持稳定与控制。登录后继续您的预约与订单管理。
             </p>
+            <div className="mt-6 space-y-3 text-sm">
+              {['快速预约', '订单进度可视', '积分与优惠同步'].map((item) => (
+                <div key={item} className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/80" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* 表单 */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* 手机号 */}
-            <Input
-              label="手机号 Phone"
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleChange}
-              error={errors.phone}
-              placeholder="01131609008"
-              inputMode="numeric"
-              autoComplete="tel"
-              pattern="[0-9]*"
-              helperText="可直接输入 01 开头手机号，无需填写 +60"
-              required
-            />
+          {/* Right: Form */}
+          <div className="p-8">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-text-primary font-display">登录账户</h2>
+              <p className="text-sm text-text-secondary mt-1">
+                输入手机号与密码继续
+              </p>
+            </div>
 
-            {/* 密码 */}
-            <Input
-              label="密码 Password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              placeholder="输入您的密码"
-              autoComplete="current-password"
-              required
-            />
-
-            {/* 记住我 & 忘记密码 */}
-            <div className="flex items-center justify-between">
-              <Checkbox
-                label="记住我"
-                name="rememberMe"
-                checked={formData.rememberMe}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                label="手机号 Phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
                 onChange={handleChange}
+                error={errors.phone}
+                placeholder="01131609008"
+                inputMode="numeric"
+                autoComplete="tel"
+                pattern="[0-9]*"
+                helperText="可直接输入 01 开头手机号，无需填写 +60"
+                required
               />
-              <Link
-                href="/forgot-password"
-                className="text-sm text-accent hover:text-accent/80 font-medium transition-colors"
+
+              <Input
+                label="密码 Password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                error={errors.password}
+                placeholder="输入您的密码"
+                autoComplete="current-password"
+                required
+              />
+
+              <div className="flex items-center justify-between">
+                <Checkbox
+                  label="记住我"
+                  name="rememberMe"
+                  checked={formData.rememberMe}
+                  onChange={handleChange}
+                />
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-accent hover:text-accent/80 font-medium transition-colors"
+                >
+                  忘记密码？
+                </Link>
+              </div>
+
+              <Button
+                type="submit"
+                variant="primary"
+                fullWidth
+                loading={loading}
+                disabled={loading}
+                glow
               >
-                忘记密码？
+                {loading ? '登录中...' : '立即登录'}
+              </Button>
+            </form>
+
+            <div className="mt-6 pt-6 border-t border-border-subtle text-center text-sm text-text-secondary">
+              还没有账户？{' '}
+              <Link href="/signup" className="text-accent hover:text-accent/80 font-semibold transition-colors">
+                立即注册
               </Link>
             </div>
-
-            {/* 提交按钮 */}
-            <Button
-              type="submit"
-              variant="primary"
-              fullWidth
-              loading={loading}
-              disabled={loading}
-              glow
-            >
-              {loading ? '登录中...' : '立即登录'}
-            </Button>
-          </form>
-
-          {/* 注册链接 */}
-          <div className="mt-6 pt-6 border-t border-border-subtle text-center text-sm text-text-secondary">
-            还没有账户？{' '}
-            <Link href="/signup" className="text-accent hover:text-accent/80 font-semibold transition-colors">
-              立即注册
-            </Link>
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Toast 提示 */}
       {toast.show && (

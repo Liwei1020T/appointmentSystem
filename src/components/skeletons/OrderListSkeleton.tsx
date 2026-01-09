@@ -5,7 +5,7 @@ export const OrderListSkeleton: React.FC = () => {
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Filter Bar Skeleton */}
-      <div className="bg-white rounded-xl p-1.5 shadow-sm border border-gray-100 flex gap-1">
+      <div className="bg-ink-surface rounded-xl p-1.5 shadow-sm border border-border-subtle flex gap-1">
         {[1, 2, 3, 4, 5].map((i) => (
           <Skeleton key={i} className="h-9 flex-1 rounded-lg" />
         ))}
@@ -15,7 +15,7 @@ export const OrderListSkeleton: React.FC = () => {
       {[1, 2, 3, 4].map((i) => (
         <div 
           key={i}
-          className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+          className="bg-ink-surface rounded-xl border border-border-subtle shadow-sm p-5"
         >
           {/* Top Row */}
           <div className="flex items-start justify-between gap-3 mb-4">

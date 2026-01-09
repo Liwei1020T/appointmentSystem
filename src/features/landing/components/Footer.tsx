@@ -70,8 +70,8 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 text-sm text-text-secondary hover:text-accent transition-colors group"
               >
-                <div className="w-8 h-8 bg-green-500/10 rounded-lg flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
-                  <MessageCircle className="w-4 h-4 text-green-500" />
+                <div className="w-8 h-8 bg-success/10 rounded-lg flex items-center justify-center group-hover:bg-success/20 transition-colors">
+                  <MessageCircle className="w-4 h-4 text-success" />
                 </div>
                 <span>WhatsApp 咨询</span>
               </a>

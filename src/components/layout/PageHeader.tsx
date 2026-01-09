@@ -39,7 +39,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
     };
 
     return (
-        <div className="bg-white/80 backdrop-blur-md sticky top-[64px] z-30 border-b border-border-subtle shadow-sm">
+        <div className="bg-white/90 backdrop-blur-md sticky top-[64px] z-30 border-b border-border-subtle shadow-sm">
             <div className={`${maxWidth} mx-auto px-4 py-5 flex items-center gap-4`}>
                 {showBack && (
                     <button

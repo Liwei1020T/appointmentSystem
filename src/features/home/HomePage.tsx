@@ -115,18 +115,18 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-ink pb-24">
-      {/* 顶部欢迎横幅 */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-xl mx-auto px-5 py-8">
-          <div className="flex items-center justify-between">
+      {/* 顶部欢迎区 */}
+      <div className="bg-white/90 border-b border-border-subtle">
+        <div className="max-w-2xl mx-auto px-5 py-7">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="animate-fade-in">
-              <h1 className="text-2xl font-bold mb-1 text-gray-900 tracking-tight">
+              <h1 className="text-2xl font-bold mb-1 text-text-primary tracking-tight font-display">
                 欢迎回来，{user.full_name || '用户'}！
               </h1>
-              <p className="text-gray-500 text-sm">准备好为您的球拍穿线了吗？</p>
+              <p className="text-text-secondary text-sm">今天想安排哪一支球拍？</p>
             </div>
-            <Link href="/profile">
-              <div className="w-12 h-12 gradient-accent rounded-full flex items-center justify-center hover:shadow-glow transition-shadow">
+            <Link href="/profile" className="self-start sm:self-auto">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-accent-alt flex items-center justify-center hover:shadow-glow transition-shadow">
                 <span className="text-white font-bold text-xl">
                   {user.full_name?.charAt(0).toUpperCase() || 'U'}
                 </span>
@@ -138,7 +138,7 @@ export default function HomePage() {
 
       {/* 主内容区 - 更大的垂直间距 */}
       <div className={`
-        max-w-xl mx-auto px-5 py-8 space-y-8
+        max-w-2xl mx-auto px-5 py-8 space-y-8
         transition-all duration-700 ease-out
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
       `}>

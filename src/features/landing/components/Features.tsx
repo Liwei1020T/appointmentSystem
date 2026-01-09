@@ -11,37 +11,37 @@ const features = [
     icon: <Smartphone className="w-8 h-8" />,
     title: '在线预约',
     description: '随时随地轻松预约，系统自动匹配空闲时段，告别繁琐沟通。',
-    bg: 'bg-sky-50', text: 'text-sky-600',
+    bg: 'bg-accent/10', text: 'text-accent',
   },
   {
     icon: <Target className="w-8 h-8" />,
     title: '大师级手艺',
     description: '每一根线都经过精准校调，杜绝掉磅，手感媲美专业队标准。',
-    bg: 'bg-emerald-50', text: 'text-emerald-600',
+    bg: 'bg-info/10', text: 'text-info',
   },
   {
     icon: <TrendingDown className="w-8 h-8" />,
     title: '价格碾压',
     description: '去除门店溢价，同等品质比传统店铺便宜 30% 以上。',
-    bg: 'bg-amber-50', text: 'text-amber-600',
+    bg: 'bg-warning/10', text: 'text-warning',
   },
   {
     icon: <Truck className="w-8 h-8" />,
     title: '上门取送',
     description: '忙碌没时间？我们提供专业上门取拍与送回服务，足不出户搞定一切。',
-    bg: 'bg-lime-50', text: 'text-lime-700',
+    bg: 'bg-success/10', text: 'text-success',
   },
   {
     icon: <QrCode className="w-8 h-8" />,
     title: '扫码支付',
     description: '支持 TnG eWallet 扫码支付，安全快捷。',
-    bg: 'bg-teal-50', text: 'text-teal-600',
+    bg: 'bg-accent/10', text: 'text-accent',
   },
   {
     icon: <Gift className="w-8 h-8" />,
     title: '积分当钱花',
     description: '消费自动累积积分，随时兑换超值优惠券，越用越省。',
-    bg: 'bg-slate-50', text: 'text-slate-600',
+    bg: 'bg-accent-alt/20', text: 'text-accent-alt',
   },
 ];
 

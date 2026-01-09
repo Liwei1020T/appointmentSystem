@@ -1,6 +1,6 @@
-# 🏸 String Service Platform — Athletic Calm UI 设计规范
+# 🏸 String Service Platform — Paper Court UI 设计规范
 
-- 版本：v6.0（Breathing Light · 运动绿主强调）
+- 版本：v7.0（Paper Court · 深青绿主强调）
 
 ---
 
@@ -22,23 +22,23 @@
 
 ## 🧠 1. 设计理念（Design Philosophy）
 
-关键词：**Breathing / Calm / Athletic / Trust / Clean**
+关键词：**Paper / Calm / Structured / Trust / Clean**
 
-- 白色与暖浅灰为主，让信息“呼吸”，降低视觉疲劳
-- 主强调色使用运动绿，仅用于关键动作与关键状态
+- 白色与纸感暖灰为主，让信息“呼吸”，降低视觉疲劳
+- 主强调色使用深青绿，仅用于关键动作与关键状态
 - 通过清晰层级与轻阴影强调重点，而非复杂装饰
 - 动效轻且可预期，优先保证信息读取效率
 
 ---
 
-## 🎨 2. 色彩系统（Athletic Calm）
+## 🎨 2. 色彩系统（Paper Court）
 
 ### 2.1 主体色板（Token 建议）
 
 **Base / Surface**
-- `bg/primary`: Warm Off-White `#F6F4F1`
+- `bg/primary`: Paper `#F7F3EE`
 - `bg/card`: White `#FFFFFF`
-- `border/subtle`: Stone-200 `#E7E5E4`
+- `border/subtle`: Paper Edge `#E6E1DA`
 
 **Text**
 - `text/primary`: Gray-900 `#111827`
@@ -46,13 +46,14 @@
 - `text/tertiary`: Gray-400 `#9CA3AF`
 - `text/onAccent`: `#FFFFFF`
 
-**Accent (Rally Green)**
-- `accent/solid`: `#16A34A`
-- `accent/soft`: `rgba(22,163,74,0.12)`
-- `accent/border`: `rgba(22,163,74,0.30)`
+**Accent (Deep Teal)**
+- `accent/solid`: `#0F766E`
+- `accent/soft`: `rgba(15,118,110,0.12)`
+- `accent/border`: `rgba(15,118,110,0.30)`
+- `accent/alt`: `#84CC16`
 
 **状态色**
-- `success`: `#0D9488`
+- `success`: `#16A34A`
 - `warning`: `#F59E0B`
 - `danger`: `#EF4444`
 - `info`: `#2563EB`
@@ -66,7 +67,7 @@
 
 ## 🔤 3. 字体系统（Typography）
 
-- 标题：Outfit（Display）
+- 标题：Space Grotesk（Display）
 - 正文：Noto Sans SC（Body）
 - 数字 / 金额：JetBrains Mono / ui-monospace
 
@@ -122,7 +123,7 @@
 **Primary CTA**
 - 背景：`accent/solid`
 - 文字：`text/onAccent`
-- Hover：`hover:brightness-105` + `shadow-glow`
+- Hover：`hover:bg-accent/90` + `shadow-glow`
 
 **Secondary**
 - 白底 + `accent/border`
@@ -153,7 +154,7 @@
 
 - 页面背景：`bg-ink`
 - 卡片：白色 + 轻边框 + 轻阴影
-- 关键 CTA 使用运动绿主强调
+- 关键 CTA 使用深青绿主强调
 
 ---
 

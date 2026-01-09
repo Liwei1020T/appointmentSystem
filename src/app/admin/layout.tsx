@@ -6,20 +6,25 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ClipboardList, 
-  Users, 
-  Tag, 
+import BrandLogo from '@/components/BrandLogo';
+import {
+  LayoutDashboard,
+  Package,
+  ClipboardList,
+  Users,
+  Tag,
   BarChart3,
   CreditCard,
-  MessageSquare
+  MessageSquare,
+  Menu,
+  X
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const sidebarItems = [
     {
@@ -87,6 +92,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
+        {/* Mobile Header */}
+        <div className="lg:hidden sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-border-subtle">
+          <div className="flex items-center justify-between px-4 py-3">
+            <BrandLogo size="sm" showName nameClassName="text-base font-display" />
+            <button
+              onClick={() => setMobileOpen((open) => !open)}
+              className="w-10 h-10 rounded-xl bg-ink flex items-center justify-center text-text-secondary"
+              aria-label="打开管理后台菜单"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Sidebar Overlay */}
+        {mobileOpen && (
+          <div className="lg:hidden fixed inset-0 z-40">
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="absolute inset-0 bg-black/40"
+              aria-label="关闭管理后台菜单"
+            />
+            <div className="relative h-full w-72">
+              <Sidebar items={sidebarItems} className="w-72" />
+            </div>
+          </div>
+        )}
+
         {children}
       </div>
     </div>

@@ -294,8 +294,8 @@ function PointsCenterContent() {
           <div className="bg-white rounded-xl border border-border-subtle shadow-sm p-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-text-tertiary">累计获得</span>
-              <div className="p-1.5 bg-green-50 rounded-lg">
-                <TrendingUp className="w-4 h-4 text-green-600" />
+              <div className="p-1.5 bg-success/10 rounded-lg">
+                <TrendingUp className="w-4 h-4 text-success" />
               </div>
             </div>
             <p className="text-3xl font-bold text-text-primary font-mono">{totalEarned}</p>

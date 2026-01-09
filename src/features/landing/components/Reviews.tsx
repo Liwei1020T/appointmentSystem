@@ -91,7 +91,7 @@ export default function Reviews() {
             className="flex flex-wrap items-center justify-center gap-4 text-sm text-text-secondary bg-ink inline-flex px-6 py-3 rounded-full border border-border-subtle shadow-sm"
           >
             <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <Star className="w-4 h-4 fill-warning text-warning" />
               <span className="font-semibold text-text-primary">4.8</span> 平均评分
             </div>
             <span className="text-border-subtle">|</span>
@@ -124,15 +124,15 @@ export default function Reviews() {
               <SpotlightCard className="h-full p-6 flex flex-col shadow-sm hover:shadow-md transition-all duration-300">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex text-yellow-400">
+                <div className="flex text-warning">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-current' : 'text-gray-200'}`}
+                        className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-current' : 'text-border-subtle'}`}
                       />
                     ))}
                   </div>
-                  <div className="px-2 py-1 rounded bg-gray-100 text-[10px] font-medium text-text-secondary">
+                  <div className="px-2 py-1 rounded bg-accent/10 text-[10px] font-medium text-accent">
                     {review.tag}
                   </div>
                 </div>
@@ -151,7 +151,7 @@ export default function Reviews() {
                     <div className="font-medium text-text-primary text-sm">{review.name}</div>
                     <div className="text-xs text-text-tertiary">{review.role}</div>
                   </div>
-                  <Quote className="w-4 h-4 text-gray-200 ml-auto" />
+                  <Quote className="w-4 h-4 text-border-subtle ml-auto" />
                 </div>
               </SpotlightCard>
             </motion.div>

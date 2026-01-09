@@ -26,17 +26,17 @@ export const Tabs: React.FC<TabsProps> = ({
   className = '' 
 }) => {
   return (
-    <div className={`border-b border-border-subtle ${className}`}>
-      <div className="flex gap-6">
+    <div className={`p-1.5 rounded-full bg-ink border border-border-subtle ${className}`}>
+      <div className="flex gap-1">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => onChange(tab.id)}
             className={`
-              pb-3 px-1 font-medium text-sm border-b-2 transition-colors
-              ${activeTab === tab.id 
-                ? 'border-accent text-text-primary' 
-                : 'border-transparent text-text-tertiary hover:text-text-primary'}
+              flex-1 px-4 py-2 text-sm font-semibold rounded-full transition-all
+              ${activeTab === tab.id
+                ? 'bg-white text-text-primary shadow-sm'
+                : 'text-text-tertiary hover:text-text-secondary'}
             `}
             role="tab"
             aria-selected={activeTab === tab.id}

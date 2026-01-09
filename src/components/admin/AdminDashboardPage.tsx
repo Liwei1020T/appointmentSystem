@@ -172,15 +172,15 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-ink">
       {/* Top Navigation */}
-      <div className="bg-ink-surface border-b border-border-subtle sticky top-0 z-10">
+      <div className="bg-white/90 border-b border-border-subtle sticky top-0 z-10 backdrop-blur">
         <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-xl bg-accent-soft text-accent flex items-center justify-center">
+              <div className="h-11 w-11 rounded-xl bg-ink border border-border-subtle text-accent flex items-center justify-center">
                 <LayoutDashboard className="h-5 w-5" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-text-primary">管理员仪表板</h1>
+                <h1 className="text-xl font-bold text-text-primary font-display">管理员仪表板</h1>
                 <p className="text-sm text-text-secondary">欢迎回来, {admin?.name || admin?.email}</p>
                 <p className="text-xs text-text-tertiary mt-1">
                   {lastUpdated ? `数据更新时间：${lastUpdated.toLocaleString('zh-CN')}` : '数据尚未更新'}

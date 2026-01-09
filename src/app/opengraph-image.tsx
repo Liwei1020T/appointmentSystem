@@ -20,7 +20,7 @@ export default async function Image() {
         (
             <div
                 style={{
-                    background: 'linear-gradient(135deg, #F6F4F1 0%, #FFFFFF 100%)',
+                    background: 'linear-gradient(135deg, #F7F3EE 0%, #FFFFFF 100%)',
                     width: '100%',
                     height: '100%',
                     display: 'flex',
@@ -43,7 +43,7 @@ export default async function Image() {
                         style={{
                             width: 100,
                             height: 100,
-                            background: '#16A34A',
+                            background: '#0F766E',
                             borderRadius: 24,
                             display: 'flex',
                             alignItems: 'center',
@@ -51,7 +51,7 @@ export default async function Image() {
                             fontSize: 60,
                             color: '#FFFFFF',
                             fontWeight: 700,
-                            boxShadow: '0 0 60px rgba(22, 163, 74, 0.35)',
+                            boxShadow: '0 0 60px rgba(15, 118, 110, 0.35)',
                         }}
                     >
                         LW
@@ -94,12 +94,12 @@ export default async function Image() {
                         <div
                             key={tag}
                             style={{
-                                background: 'rgba(22, 163, 74, 0.12)',
-                                border: '1px solid rgba(22, 163, 74, 0.35)',
+                                background: 'rgba(15, 118, 110, 0.12)',
+                                border: '1px solid rgba(15, 118, 110, 0.35)',
                                 borderRadius: 12,
                                 padding: '12px 24px',
                                 fontSize: 20,
-                                color: '#16A34A',
+                                color: '#0F766E',
                             }}
                         >
                             {tag}

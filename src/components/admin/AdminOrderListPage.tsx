@@ -148,11 +148,11 @@ export default function AdminOrderListPage() {
   return (
     <div className="min-h-screen bg-ink">
       {/* Header */}
-      <div className="bg-ink-surface border-b border-border-subtle sticky top-0 z-10">
+      <div className="bg-white/90 border-b border-border-subtle sticky top-0 z-10 backdrop-blur">
         <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-text-primary">订单管理</h1>
+              <h1 className="text-2xl font-bold text-text-primary font-display">订单管理</h1>
               <p className="text-sm text-text-secondary mt-1">管理所有客户订单</p>
             </div>
             <div className="flex items-center gap-2">

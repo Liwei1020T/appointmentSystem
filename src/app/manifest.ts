@@ -14,8 +14,8 @@ export default function manifest(): MetadataRoute.Manifest {
         description: 'LW 穿线工作室 — 在线预约、即时通知、积分优惠',
         start_url: '/',
         display: 'standalone',
-        background_color: '#F6F4F1',
-        theme_color: '#16A34A',
+        background_color: '#F7F3EE',
+        theme_color: '#0F766E',
         orientation: 'portrait',
         icons: [
             {

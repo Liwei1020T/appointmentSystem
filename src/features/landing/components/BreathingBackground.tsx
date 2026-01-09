@@ -26,7 +26,7 @@ export default function BreathingBackground({ className }: Props) {
         className="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] bg-accent/20 rounded-full blur-[100px] opacity-80"
       />
 
-      {/* Secondary Blob (Blue) */}
+      {/* Secondary Blob (Info) */}
       <motion.div
         animate={{
           x: [0, -70, 30, 0],
@@ -39,10 +39,10 @@ export default function BreathingBackground({ className }: Props) {
           ease: "easeInOut",
           delay: 2,
         }}
-        className="absolute top-[40%] right-[0%] w-[500px] h-[500px] bg-sky-400/20 rounded-full blur-[90px] opacity-70"
+        className="absolute top-[40%] right-[0%] w-[500px] h-[500px] bg-info/15 rounded-full blur-[90px] opacity-70"
       />
 
-      {/* Tertiary Blob (Lime) */}
+      {/* Tertiary Blob (Accent Alt) */}
       <motion.div
         animate={{
           x: [0, 50, -50, 0],
@@ -55,7 +55,7 @@ export default function BreathingBackground({ className }: Props) {
           ease: "easeInOut",
           delay: 5,
         }}
-        className="absolute -bottom-[20%] left-[20%] w-[550px] h-[550px] bg-lime-400/20 rounded-full blur-[110px] opacity-60"
+        className="absolute -bottom-[20%] left-[20%] w-[550px] h-[550px] bg-accent-alt/15 rounded-full blur-[110px] opacity-60"
       />
     </div>
   );

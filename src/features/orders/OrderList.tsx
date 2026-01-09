@@ -274,10 +274,10 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                 onClick={() => handleOrderClick(order.id)}
                 className={`
                   relative overflow-hidden rounded-xl border-l-4 ${config.borderColor}
-                  bg-white border border-gray-100 shadow-sm
+                  bg-ink-surface border border-border-subtle shadow-card
                   p-5 cursor-pointer
                   transition-all duration-300 ease-out
-                  hover:shadow-lg hover:shadow-gray-200/50
+                  hover:shadow-card-hover
                   hover:-translate-y-0.5 hover:scale-[1.01]
                   active:scale-[0.99]
                   group

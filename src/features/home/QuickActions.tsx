@@ -28,17 +28,17 @@ function QuickActionButton({ icon, title, description, onClick, isPrimary = fals
     return (
       <button
         onClick={onClick}
-        className="w-full rounded-xl bg-accent/10 border border-accent/30 hover:bg-accent/15 hover:border-accent/50 transition-all p-4 text-left group"
+        className="w-full rounded-2xl bg-gradient-to-br from-accent to-accent-alt border border-accent/30 hover:shadow-glow transition-all p-4 text-left group"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 rounded-xl bg-accent text-white shadow-md">
+          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 rounded-xl bg-white/15 text-white shadow-md">
             {icon}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-[15px] text-accent">{title}</h3>
-            <p className="text-xs text-text-secondary mt-0.5 truncate">{description}</p>
+            <h3 className="font-semibold text-[15px] text-white">{title}</h3>
+            <p className="text-xs text-white/80 mt-0.5 truncate">{description}</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-accent opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+          <ChevronRight className="w-5 h-5 text-white/80 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
         </div>
       </button>
     );
@@ -48,7 +48,7 @@ function QuickActionButton({ icon, title, description, onClick, isPrimary = fals
   return (
     <button
       onClick={onClick}
-      className="w-full rounded-xl bg-white border border-border-subtle shadow-sm hover:shadow-md hover:border-border-subtle transition-all p-4 text-left group"
+      className="w-full rounded-2xl bg-white border border-border-subtle shadow-sm hover:shadow-md hover:border-border-subtle transition-all p-4 text-left group"
     >
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 rounded-xl bg-ink text-text-tertiary group-hover:bg-ink/80 group-hover:text-text-secondary transition-colors">
@@ -82,7 +82,7 @@ export default function QuickActions() {
       />
 
       {/* 次要行动 - 2列 */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <QuickActionButton
           icon={
             <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">

@@ -110,7 +110,7 @@ export default function FAQ() {
           className="bg-ink p-6 rounded-2xl border border-border-subtle flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left"
         >
           <div className="flex items-center gap-3">
-            <div className="bg-blue-50 p-2 rounded-full text-blue-500">
+            <div className="bg-info/10 p-2 rounded-full text-info">
               <HelpCircle className="w-6 h-6" />
             </div>
             <div>

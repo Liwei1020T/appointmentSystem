@@ -209,7 +209,7 @@ export default function AdminOrderDetailPage() {
             <p className="text-danger mb-4">{error || '订单不存在'}</p>
             <button
               onClick={() => router.push('/admin/orders')}
-              className="px-4 py-2 bg-danger text-text-primary rounded-lg hover:bg-danger/90 transition-colors"
+              className="px-4 py-2 bg-danger text-white rounded-lg hover:bg-danger/90 transition-colors"
             >
               返回订单列表
             </button>
@@ -224,7 +224,7 @@ export default function AdminOrderDetailPage() {
   return (
     <div className="min-h-screen bg-ink">
       {/* Header */}
-      <div className="glass-strong border-b border-border-subtle sticky top-0 z-10">
+      <div className="bg-white/90 border-b border-border-subtle sticky top-0 z-10 backdrop-blur">
         <div className="max-w-6xl mx-auto px-6 py-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -236,7 +236,7 @@ export default function AdminOrderDetailPage() {
                 ← 返回订单列表
               </Button>
               <div className="mt-2 flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-text-primary">订单详情</h1>
+                <h1 className="text-2xl font-bold text-text-primary font-display">订单详情</h1>
                 <Badge variant={getStatusVariant(order.status)} size="sm" className="px-3 py-1.5">
                   {getStatusLabel(order.status)}
                 </Badge>
@@ -700,7 +700,7 @@ export default function AdminOrderDetailPage() {
           <div className="relative max-w-4xl max-h-[90vh] w-full">
             <button
               onClick={() => setPreviewPhoto(null)}
-              className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors text-xl font-bold flex items-center gap-1"
+              className="absolute -top-10 right-0 text-white hover:text-white/80 transition-colors text-xl font-bold flex items-center gap-1"
             >
               <X className="w-5 h-5" /> 关闭
             </button>

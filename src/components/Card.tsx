@@ -52,7 +52,7 @@ export const Card: React.FC<CardProps> = ({
     <div
       className={`
         ${variants[variant]} 
-        rounded-xl 
+        rounded-2xl 
         border border-border-subtle 
         ${shadow ? 'shadow-card' : ''}
         ${paddings[padding]}
@@ -72,4 +72,3 @@ export const Card: React.FC<CardProps> = ({
 
 // Provide default export for legacy imports
 export default Card;
-

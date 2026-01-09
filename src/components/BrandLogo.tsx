@@ -58,8 +58,8 @@ export default function BrandLogo({
             <div
                 className={cn(
                     config.container,
-                    'rounded-xl bg-accent flex items-center justify-center',
-                    'font-bold text-text-onAccent shadow-sm',
+                    'rounded-xl bg-gradient-to-br from-accent to-accent-alt flex items-center justify-center',
+                    'font-bold text-text-onAccent shadow-sm ring-1 ring-white/50',
                     config.text
                 )}
             >
@@ -82,7 +82,7 @@ export default function BrandLogo({
             {/* 品牌名称 */}
             {showName && (
                 <span className={cn(
-                    'font-bold tracking-tight text-text-primary',
+                    'font-bold tracking-tight text-text-primary font-display',
                     config.name,
                     nameClassName
                 )}>

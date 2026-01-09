@@ -46,7 +46,7 @@ export default function Hero() {
 
             <h1 className="text-4xl md:text-6xl font-bold text-text-primary mb-6 tracking-tight leading-[1.1] font-display">
               用更低的价格，
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-accent to-lime-400 mt-2">
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent-alt mt-2">
                 享受顶级拉力手感
               </span>
             </h1>
@@ -107,7 +107,7 @@ export default function Hero() {
                 </div>
               </div>
               <div className="space-y-3">
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-2 bg-border-subtle rounded-full overflow-hidden">
                   <div className="h-full w-3/4 bg-accent"></div>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -124,11 +124,11 @@ export default function Hero() {
               className="absolute -right-4 top-10 z-30 bg-white/90 backdrop-blur rounded-xl shadow-lg border border-border-subtle p-4 w-64"
             >
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                <div className="w-8 h-8 rounded-full bg-accent/15 flex items-center justify-center text-accent">
                   <TrendingDown size={16} />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-gray-500 mb-1">超值提醒</div>
+                  <div className="text-xs font-semibold text-text-tertiary mb-1">超值提醒</div>
                   <div className="text-sm text-text-primary">恭喜！本次穿线比市面均价节省了 RM 15.00</div>
                 </div>
               </div>

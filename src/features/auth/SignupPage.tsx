@@ -14,7 +14,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Button, Input, Card, Toast } from '@/components';
+import { Button, Input, Toast } from '@/components';
 import { signIn, signUp } from '@/services/authService';
 import { normalizeMyPhone, validatePassword, validatePhone } from '@/lib/utils';
 import BrandLogo from '@/components/BrandLogo';
@@ -147,113 +147,123 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-ink flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Decorative background gradients (matching LoginPage) */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-
-      <Card className="w-full max-w-md border border-border-subtle bg-ink-elevated/95 backdrop-blur-sm relative z-10">
-        <div className="p-6">
-          {/* 标题 */}
-          <div className="text-center mb-6">
-            <div className="flex justify-center mb-4">
-              <BrandLogo size="xl" className="shadow-glow" />
+    <div className="min-h-screen bg-ink flex items-center justify-center p-6">
+      <div className="w-full max-w-4xl bg-white border border-border-subtle rounded-3xl shadow-lg overflow-hidden animate-slide-up">
+        <div className="grid md:grid-cols-[1.1fr_1fr]">
+          {/* Left: Brand Panel */}
+          <div className="p-8 bg-gradient-to-br from-accent to-accent-alt text-white">
+            <div className="flex items-center gap-3 mb-6">
+              <BrandLogo size="md" className="shadow-glow" />
+              <div className="text-sm uppercase tracking-[0.2em]">LW</div>
             </div>
-            <h1 className="text-2xl font-bold text-text-primary">创建账户</h1>
-            <p className="text-sm text-text-secondary mt-1">注册 <span className="text-gradient font-semibold">LW String Studio</span></p>
+            <h1 className="text-3xl font-bold font-display mb-3">加入我们</h1>
+            <p className="text-sm text-white/85 leading-relaxed">
+              预约流程更清晰、价格更透明、进度更可控。注册后开启专属会员权益。
+            </p>
+            <div className="mt-6 space-y-3 text-sm">
+              {['积分自动累积', '订单状态实时可视', '套餐优惠立减'].map((item) => (
+                <div key={item} className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/80" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* 表单 */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* 全名 */}
-            <Input
-              label="姓名 Full Name"
-              name="fullName"
-              type="text"
-              value={formData.fullName}
-              onChange={handleChange}
-              error={errors.fullName}
-              placeholder="请输入您的姓名"
-              autoComplete="name"
-              required
-            />
+          {/* Right: Form */}
+          <div className="p-8">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-text-primary font-display">创建账户</h2>
+              <p className="text-sm text-text-secondary mt-1">
+                填写信息即可开始预约
+              </p>
+            </div>
 
-            {/* 手机号 */}
-            <Input
-              label="手机号 Phone"
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleChange}
-              error={errors.phone}
-              placeholder="01131609008"
-              inputMode="numeric"
-              autoComplete="tel"
-              pattern="[0-9]*"
-              helperText="可直接输入 01 开头手机号（例如 01131609008），无需填写 +60"
-              required
-            />
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                label="姓名 Full Name"
+                name="fullName"
+                type="text"
+                value={formData.fullName}
+                onChange={handleChange}
+                error={errors.fullName}
+                placeholder="请输入您的姓名"
+                autoComplete="name"
+                required
+              />
 
-            {/* 密码 */}
-            <Input
-              label="密码 Password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              placeholder="至少8位，包含大小写字母和数字"
-              helperText="至少8位，包含大小写字母和数字"
-              autoComplete="new-password"
-              required
-            />
+              <Input
+                label="手机号 Phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleChange}
+                error={errors.phone}
+                placeholder="01131609008"
+                inputMode="numeric"
+                autoComplete="tel"
+                pattern="[0-9]*"
+                helperText="可直接输入 01 开头手机号，无需填写 +60"
+                required
+              />
 
-            {/* 确认密码 */}
-            <Input
-              label="确认密码 Confirm Password"
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              error={errors.confirmPassword}
-              placeholder="再次输入密码"
-              autoComplete="new-password"
-              required
-            />
+              <Input
+                label="密码 Password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                error={errors.password}
+                placeholder="至少8位，包含大小写字母和数字"
+                helperText="至少8位，包含大小写字母和数字"
+                autoComplete="new-password"
+                required
+              />
 
-            {/* 邀请码（可选） */}
-            <Input
-              label="邀请码 Referral Code (可选)"
-              name="referralCode"
-              type="text"
-              value={formData.referralCode}
-              onChange={handleChange}
-              placeholder="输入朋友的邀请码"
-              autoComplete="off"
-              helperText="使用邀请码双方可获得积分奖励（注册后自动发放）"
-            />
+              <Input
+                label="确认密码 Confirm Password"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                error={errors.confirmPassword}
+                placeholder="再次输入密码"
+                autoComplete="new-password"
+                required
+              />
 
-            {/* 提交按钮 */}
-            <Button
-              type="submit"
-              variant="primary"
-              fullWidth
-              loading={loading}
-              disabled={loading}
-            >
-              {loading ? '注册中...' : '立即注册'}
-            </Button>
-          </form>
+              <Input
+                label="邀请码 Referral Code (可选)"
+                name="referralCode"
+                type="text"
+                value={formData.referralCode}
+                onChange={handleChange}
+                placeholder="输入朋友的邀请码"
+                autoComplete="off"
+                helperText="使用邀请码双方可获得积分奖励（注册后自动发放）"
+              />
 
-          {/* 登录链接 */}
-          <div className="mt-6 text-center text-sm text-text-secondary">
-            已有账户？{' '}
-            <Link href="/login" className="text-accent hover:text-accent/80 font-medium">
-              立即登录
-            </Link>
+              <Button
+                type="submit"
+                variant="primary"
+                fullWidth
+                loading={loading}
+                disabled={loading}
+                glow
+              >
+                {loading ? '注册中...' : '立即注册'}
+              </Button>
+            </form>
+
+            <div className="mt-6 pt-6 border-t border-border-subtle text-center text-sm text-text-secondary">
+              已有账户？{' '}
+              <Link href="/login" className="text-accent hover:text-accent/80 font-semibold transition-colors">
+                立即登录
+              </Link>
+            </div>
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Toast 提示 */}
       {toast.show && (

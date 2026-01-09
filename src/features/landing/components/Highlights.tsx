@@ -12,21 +12,21 @@ const slides = [
     title: "在线预约 & 选线",
     desc: "选择您心仪的球线型号、颜色，并指定精准拉力磅数。系统自动匹配可用时段。",
     icon: <Smartphone className="w-12 h-12 text-accent" />,
-    color: "bg-sky-50"
+    color: "bg-accent/10"
   },
   {
     id: 1,
     title: "TnG 扫码支付",
     desc: "订单确认后，使用 TnG eWallet 扫码即可完成支付，全程无现金接触，安全便捷。",
     icon: <QrCode className="w-12 h-12 text-accent" />,
-    color: "bg-emerald-50"
+    color: "bg-info/10"
   },
   {
     id: 2,
     title: "上门取送服务",
     desc: "没空出门？选择上门取送服务，专人上门取拍，穿线完成后送回府上。",
     icon: <Truck className="w-12 h-12 text-accent" />,
-    color: "bg-lime-50"
+    color: "bg-accent-alt/20"
   }
 ];
 
@@ -123,7 +123,7 @@ export default function Highlights() {
                   key={idx}
                   onClick={() => setCurrentSlide(idx)}
                   className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                    currentSlide === idx ? 'bg-accent w-6' : 'bg-gray-200 hover:bg-gray-300'
+                    currentSlide === idx ? 'bg-accent w-6' : 'bg-border-subtle hover:bg-border-subtle/70'
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
