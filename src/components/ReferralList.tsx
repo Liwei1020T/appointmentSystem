@@ -43,7 +43,7 @@ export default function ReferralList({ referrals }: ReferralListProps) {
       {referrals.map((referral) => (
         <div
           key={referral.id}
-          className="p-4 hover:bg-ink-elevated transition-colors"
+          className="p-4 hover:bg-ink transition-colors"
         >
           <div className="flex items-start justify-between">
             {/* 左侧：用户信息 */}

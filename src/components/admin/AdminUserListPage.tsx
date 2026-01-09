@@ -314,7 +314,7 @@ export default function AdminUserListPage() {
                   </tr>
                 ) : (
                   users.map((user) => (
-                    <tr key={user.id} className="hover:bg-ink-elevated">
+                    <tr key={user.id} className="hover:bg-ink">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="font-medium text-text-primary">{user.full_name}</div>
                         <div className="text-sm text-text-tertiary">{user.phone || '-'}</div>
@@ -387,7 +387,7 @@ export default function AdminUserListPage() {
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 border border-border-subtle rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ink-surface"
+                  className="px-3 py-1 border border-border-subtle rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ink"
                 >
                   上一页
                 </button>
@@ -397,7 +397,7 @@ export default function AdminUserListPage() {
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 border border-border-subtle rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ink-surface"
+                  className="px-3 py-1 border border-border-subtle rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ink"
                 >
                   下一页
                 </button>

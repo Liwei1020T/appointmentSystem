@@ -60,7 +60,7 @@ export function Table<T>({
             data.map(item => (
               <tr 
                 key={keyExtractor(item)} 
-                className="border-b border-border-subtle hover:bg-ink-elevated/70 transition-colors"
+                className="border-b border-border-subtle hover:bg-ink transition-colors"
               >
                 {columns.map(col => (
                   <td 

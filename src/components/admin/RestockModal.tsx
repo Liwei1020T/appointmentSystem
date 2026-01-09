@@ -158,7 +158,7 @@ export default function RestockModal({
           <h2 className="text-xl font-semibold text-text-primary">补货管理</h2>
           <button
             onClick={handleClose}
-            className="p-1 hover:bg-ink-elevated rounded-lg transition-colors"
+            className="p-1 hover:bg-ink rounded-lg transition-colors"
           >
             <X className="w-5 h-5 text-text-secondary" />
           </button>
@@ -291,7 +291,7 @@ export default function RestockModal({
           <button
             onClick={handleClose}
             disabled={loading}
-            className="px-4 py-2 border border-border-subtle rounded-lg text-text-secondary hover:bg-ink-surface transition-colors disabled:opacity-50"
+            className="px-4 py-2 border border-border-subtle rounded-lg text-text-secondary hover:bg-ink transition-colors disabled:opacity-50"
           >
             取消
           </button>

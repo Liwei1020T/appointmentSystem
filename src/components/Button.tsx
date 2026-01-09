@@ -43,9 +43,9 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variants = {
     primary: `
-      bg-accent text-text-onAccent 
-      hover:shadow-glow hover:brightness-105
-      ${glow ? 'shadow-glow' : 'shadow-sm'}
+      bg-accent text-text-onAccent
+      hover:brightness-105
+      ${glow ? 'shadow-glow hover:shadow-glow' : 'shadow-sm hover:shadow-sm'}
     `.trim(),
     secondary: `
       bg-ink-surface text-accent 
@@ -54,7 +54,7 @@ export const Button: React.FC<ButtonProps> = ({
     `.trim(),
     ghost: `
       bg-transparent text-text-primary 
-      hover:bg-ink-surface/80
+      hover:bg-ink
     `.trim(),
     danger: `
       bg-danger text-white 

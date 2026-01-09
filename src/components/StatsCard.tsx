@@ -41,7 +41,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
           )}
         </div>
         {icon && (
-          <div className="p-2 bg-ink-elevated rounded-lg text-accent border border-border-subtle">
+          <div className="p-2 bg-ink rounded-lg text-accent border border-border-subtle">
             {icon}
           </div>
         )}

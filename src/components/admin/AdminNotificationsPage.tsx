@@ -233,7 +233,7 @@ export default function AdminNotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-ink-elevated p-6">
+    <div className="min-h-screen bg-ink p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -494,7 +494,7 @@ export default function AdminNotificationsPage() {
                                 </button>
                                 <button
                                   onClick={() => setEditingTemplate(null)}
-                                  className="bg-ink-elevated text-text-secondary px-4 py-2 rounded-lg hover:bg-ink-surface"
+                                  className="bg-ink-elevated text-text-secondary px-4 py-2 rounded-lg hover:bg-ink"
                                 >
                                   Cancel
                                 </button>

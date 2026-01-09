@@ -37,7 +37,7 @@ export const Select: React.FC<SelectProps> = ({
           w-full h-11 px-3 rounded-lg border bg-ink-surface text-text-primary
           ${error ? 'border-danger focus:ring-danger/40' : 'border-border-subtle focus:ring-accent-border'}
           focus:outline-none focus:ring-2 focus:border-transparent focus:ring-offset-2 focus:ring-offset-ink
-          disabled:bg-ink-elevated disabled:cursor-not-allowed
+          disabled:bg-ink disabled:cursor-not-allowed
           ${className}
         `.trim().replace(/\s+/g, ' ')}
         {...props}

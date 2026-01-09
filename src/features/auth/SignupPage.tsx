@@ -174,6 +174,7 @@ export default function SignupPage() {
               onChange={handleChange}
               error={errors.fullName}
               placeholder="请输入您的姓名"
+              autoComplete="name"
               required
             />
 
@@ -187,6 +188,7 @@ export default function SignupPage() {
               error={errors.phone}
               placeholder="01131609008"
               inputMode="numeric"
+              autoComplete="tel"
               pattern="[0-9]*"
               helperText="可直接输入 01 开头手机号（例如 01131609008），无需填写 +60"
               required
@@ -202,6 +204,7 @@ export default function SignupPage() {
               error={errors.password}
               placeholder="至少8位，包含大小写字母和数字"
               helperText="至少8位，包含大小写字母和数字"
+              autoComplete="new-password"
               required
             />
 
@@ -214,6 +217,7 @@ export default function SignupPage() {
               onChange={handleChange}
               error={errors.confirmPassword}
               placeholder="再次输入密码"
+              autoComplete="new-password"
               required
             />
 
@@ -225,6 +229,7 @@ export default function SignupPage() {
               value={formData.referralCode}
               onChange={handleChange}
               placeholder="输入朋友的邀请码"
+              autoComplete="off"
               helperText="使用邀请码双方可获得积分奖励（注册后自动发放）"
             />
 

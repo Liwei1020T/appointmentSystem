@@ -266,7 +266,7 @@ export default function AdminDashboardPage() {
                 key={action.href}
                 padding="sm"
                 onClick={() => router.push(action.href)}
-                className="flex items-center gap-3 hover:bg-ink-elevated/70"
+                className="flex items-center gap-3 hover:bg-ink/70"
               >
                 <div className="h-10 w-10 rounded-lg bg-accent-soft text-accent flex items-center justify-center">
                   {action.icon}
@@ -301,7 +301,7 @@ export default function AdminDashboardPage() {
               recentOrders.map((order) => (
                 <button
                   key={order.id}
-                  className="w-full text-left px-2 py-3 rounded-lg hover:bg-ink-elevated transition-colors"
+                  className="w-full text-left px-2 py-3 rounded-lg hover:bg-ink transition-colors"
                   onClick={() => router.push(`/admin/orders/${order.id}`)}
                 >
                   <div className="flex items-center justify-between gap-4">

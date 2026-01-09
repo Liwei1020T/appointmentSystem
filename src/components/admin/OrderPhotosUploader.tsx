@@ -172,7 +172,7 @@ export default function OrderPhotosUploader({
           aspect-square rounded-lg border-2 border-dashed border-border-subtle
           flex flex-col items-center justify-center
           cursor-pointer transition-all
-          hover:border-accent-border hover:bg-ink-elevated
+          hover:border-accent-border hover:bg-ink
           ${uploading ? 'opacity-50 pointer-events-none' : ''}
         `}
       >

@@ -90,7 +90,7 @@ function AddStringForm() {
     : '0';
 
   return (
-    <div className="min-h-screen bg-ink-elevated p-6">
+    <div className="min-h-screen bg-ink p-6">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -261,7 +261,7 @@ function AddStringForm() {
               <button
                 type="button"
                 onClick={() => router.push('/admin/inventory')}
-                className="px-6 py-2 border border-border-subtle rounded-lg hover:bg-ink-elevated transition-colors"
+                className="px-6 py-2 border border-border-subtle rounded-lg hover:bg-ink transition-colors"
               >
                 取消
               </button>

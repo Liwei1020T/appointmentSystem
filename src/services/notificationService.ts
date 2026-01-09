@@ -132,7 +132,7 @@ export function getNotificationColor(typeOrPriority: string): string {
     order: 'bg-info-soft text-info',
     package: 'bg-success/15 text-success',
     promo: 'bg-warning/15 text-warning',
-    system: 'bg-ink-elevated text-text-secondary',
+    system: 'bg-ink text-text-secondary',
     payment: 'bg-accent/15 text-accent',
     points: 'bg-warning/15 text-warning',
     referral: 'bg-success/15 text-success',
@@ -140,7 +140,7 @@ export function getNotificationColor(typeOrPriority: string): string {
     medium: 'bg-warning/15 text-warning',
     low: 'bg-info-soft text-info',
   };
-  return colors[typeOrPriority] || 'bg-ink-elevated text-text-secondary';
+  return colors[typeOrPriority] || 'bg-ink text-text-secondary';
 }
 
 /**

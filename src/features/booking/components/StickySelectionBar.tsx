@@ -41,10 +41,7 @@ export default function StickySelectionBar({
                                 <span className="text-sm font-semibold text-text-primary truncate">
                                     {selectedString.brand} {selectedString.model}
                                 </span>
-                                <span
-                                    className="flex-shrink-0 text-sm font-bold text-accent"
-                                    style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}
-                                >
+                                <span className="flex-shrink-0 text-sm font-bold text-accent font-mono">
                                     {formatCurrency(price)}
                                 </span>
                             </div>

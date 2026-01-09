@@ -161,7 +161,7 @@ export default function PaymentReceiptUploader({
             relative cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-all
             ${dragActive
               ? 'border-accent-border bg-ink-elevated'
-              : 'border-border-subtle bg-ink-elevated hover:border-accent-border hover:bg-ink-elevated'
+              : 'border-border-subtle bg-ink-elevated hover:border-accent-border hover:bg-ink'
             }
             ${uploading ? 'pointer-events-none opacity-50' : ''}
           `}
@@ -236,7 +236,7 @@ export default function PaymentReceiptUploader({
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-full rounded-lg border border-border-subtle px-4 py-2 text-sm font-medium text-text-secondary hover:bg-ink-elevated"
+            className="w-full rounded-lg border border-border-subtle px-4 py-2 text-sm font-medium text-text-secondary hover:bg-ink"
             disabled={uploading}
           >
             重新上传

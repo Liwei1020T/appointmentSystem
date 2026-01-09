@@ -203,7 +203,7 @@ export default function AdminOrderDetailPage() {
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-ink-elevated p-6">
+      <div className="min-h-screen bg-ink p-6">
         <div className="max-w-4xl mx-auto">
           <div className="bg-danger/15 border border-danger/40 rounded-lg p-6 text-center">
             <p className="text-danger mb-4">{error || '订单不存在'}</p>
@@ -222,7 +222,7 @@ export default function AdminOrderDetailPage() {
   const nextStatuses = getNextStatus(order.status);
 
   return (
-    <div className="min-h-screen bg-ink-elevated">
+    <div className="min-h-screen bg-ink">
       {/* Header */}
       <div className="glass-strong border-b border-border-subtle sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-5">
@@ -600,7 +600,7 @@ export default function AdminOrderDetailPage() {
               <button
                 onClick={() => setShowStatusModal(false)}
                 disabled={updating}
-                className="flex-1 px-4 py-3 rounded-lg font-medium text-text-secondary bg-ink-elevated hover:bg-ink-surface transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-3 rounded-lg font-medium text-text-secondary bg-ink-elevated hover:bg-ink transition-colors disabled:opacity-50"
               >
                 取消
               </button>
@@ -665,7 +665,7 @@ export default function AdminOrderDetailPage() {
                   setAdminNotes('');
                 }}
                 disabled={completing}
-                className="flex-1 px-4 py-3 rounded-lg font-medium text-text-secondary bg-ink-elevated hover:bg-ink-surface transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-3 rounded-lg font-medium text-text-secondary bg-ink-elevated hover:bg-ink transition-colors disabled:opacity-50"
               >
                 取消
               </button>

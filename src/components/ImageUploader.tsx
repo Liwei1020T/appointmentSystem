@@ -200,7 +200,7 @@ export default function ImageUploader({
             cursor-pointer transition-all
             ${isDragging 
               ? 'border-accent-border bg-ink-elevated' 
-              : 'border-border-subtle hover:border-accent-border hover:bg-ink-elevated'
+              : 'border-border-subtle hover:border-accent-border hover:bg-ink'
             }
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}

@@ -420,7 +420,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
                       return (
                         <tr
                           key={order.id}
-                          className="hover:bg-ink-elevated/80 transition-colors cursor-pointer"
+                          className="hover:bg-ink/80 transition-colors cursor-pointer"
                           onClick={() => router.push(`/admin/orders/${order.id}`)}
                         >
                           <td className="px-4 py-3">
@@ -619,7 +619,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
                   setPointsAmount(0);
                   setPointsReason('');
                 }}
-                className="px-4 py-2 border border-border-subtle rounded-lg text-text-secondary hover:bg-ink-elevated"
+                className="px-4 py-2 border border-border-subtle rounded-lg text-text-secondary hover:bg-ink"
               >
                 取消
               </button>

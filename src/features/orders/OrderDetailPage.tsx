@@ -338,7 +338,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
         {/* 球拍清单 - 可折叠带图片 */}
         <Card className="p-0 overflow-hidden">
           <details>
-            <summary className="px-5 py-4 cursor-pointer hover:bg-ink-surface/30 transition-colors flex items-center justify-between">
+            <summary className="px-5 py-4 cursor-pointer hover:bg-ink/30 transition-colors flex items-center justify-between">
               <h2 className="text-base font-semibold text-text-primary flex items-center gap-2">
                 <Disc className="w-5 h-5 text-accent" />
                 {(order as any).items?.length > 0
@@ -850,7 +850,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                 variant="secondary"
                 onClick={() => setShowCancelModal(true)}
                 fullWidth
-                className="bg-ink-surface hover:bg-ink-elevated"
+                className="bg-ink-surface hover:bg-ink"
               >
                 <X className="w-4 h-4 mr-1" />
                 取消订单
@@ -876,7 +876,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                 variant="secondary"
                 onClick={() => setShowCancelModal(true)}
                 fullWidth
-                className="bg-ink-surface hover:bg-ink-elevated"
+                className="bg-ink-surface hover:bg-ink"
               >
                 <X className="w-4 h-4 mr-1" />
                 取消订单
@@ -902,7 +902,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                 variant="secondary"
                 onClick={() => setShowCancelModal(true)}
                 fullWidth
-                className="bg-ink-surface hover:bg-ink-elevated"
+                className="bg-ink-surface hover:bg-ink"
               >
                 <X className="w-4 h-4 mr-1" />
                 取消订单

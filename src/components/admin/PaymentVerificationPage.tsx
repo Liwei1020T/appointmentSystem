@@ -291,7 +291,7 @@ export default function PaymentVerificationPage() {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="rounded-lg border border-border-subtle bg-ink-surface px-4 py-2 text-text-secondary hover:bg-ink-elevated disabled:opacity-50"
+            className="rounded-lg border border-border-subtle bg-ink-surface px-4 py-2 text-text-secondary hover:bg-ink disabled:opacity-50"
           >
             上一页
           </button>
@@ -301,7 +301,7 @@ export default function PaymentVerificationPage() {
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="rounded-lg border border-border-subtle bg-ink-surface px-4 py-2 text-text-secondary hover:bg-ink-elevated disabled:opacity-50"
+            className="rounded-lg border border-border-subtle bg-ink-surface px-4 py-2 text-text-secondary hover:bg-ink disabled:opacity-50"
           >
             下一页
           </button>

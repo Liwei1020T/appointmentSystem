@@ -239,7 +239,7 @@ export default function TensionInput({
                 onClick={() => handleMainChange(value)}
                 className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${mainTension === value
                   ? 'bg-accent text-white shadow-glow ring-2 ring-accent/20 scale-105'
-                  : 'bg-ink-elevated text-text-secondary hover:bg-ink-surface'
+                  : 'bg-ink-elevated text-text-secondary hover:bg-ink'
                   }`}
               >
                 {value}

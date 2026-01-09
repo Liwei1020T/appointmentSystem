@@ -329,7 +329,7 @@ export default function MultiRacketBookingFlow() {
                     <div className="relative">
                         <ShoppingCart className="w-6 h-6 text-gray-500" />
                         {cartItems.length > 0 && (
-                            <span className="absolute -top-2 -right-2 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                            <span className="absolute -top-2 -right-2 w-5 h-5 bg-accent text-text-onAccent text-xs font-bold rounded-full flex items-center justify-center">
                                 {cartItems.length}
                             </span>
                         )}
@@ -356,21 +356,21 @@ export default function MultiRacketBookingFlow() {
                                     <div className="flex flex-col items-center">
                                         <div
                                             className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xs md:text-sm font-bold transition-all ${num < step
-                                                ? 'bg-orange-500 text-white'
-                                                : num === step
-                                                    ? 'bg-orange-500 text-white shadow-lg ring-4 ring-orange-100 scale-110'
+                                                ? 'bg-accent text-text-onAccent'
+                                            : num === step
+                                                    ? 'bg-accent text-text-onAccent shadow-lg ring-4 ring-accent/20 scale-110'
                                                     : 'bg-gray-100 text-gray-400'
                                                 }`}
                                         >
                                             {num < step ? <Check className="w-4 h-4 md:w-5 md:h-5" /> : num}
                                         </div>
-                                        <span className={`text-[10px] md:text-xs mt-1.5 ${num === step ? 'text-orange-600 font-medium' : 'text-gray-400'}`}>
+                                        <span className={`text-[10px] md:text-xs mt-1.5 ${num === step ? 'text-accent font-medium' : 'text-gray-400'}`}>
                                             {label}
                                         </span>
                                     </div>
                                     {num < 4 && (
                                         <div
-                                            className={`flex-1 h-0.5 md:h-1 mx-2 md:mx-3 rounded-full transition-all ${num < step ? 'bg-orange-500' : 'bg-gray-200'
+                                            className={`flex-1 h-0.5 md:h-1 mx-2 md:mx-3 rounded-full transition-all ${num < step ? 'bg-accent' : 'bg-gray-200'
                                                 }`}
                                         />
                                     )}
@@ -390,7 +390,7 @@ export default function MultiRacketBookingFlow() {
                                 {cartItems.length > 0 && (
                                     <button
                                         onClick={handleNext}
-                                        className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-all"
+                                        className="flex items-center gap-2 px-4 py-2 bg-accent text-text-onAccent rounded-lg font-medium hover:bg-accent/90 transition-all"
                                     >
                                         继续配置
                                         <ArrowRight className="w-4 h-4" />
@@ -400,28 +400,28 @@ export default function MultiRacketBookingFlow() {
 
                             {/* 已添加的球拍预览 - 浅橙色卡片 */}
                             {cartItems.length > 0 && (
-                                <div className="bg-orange-50 rounded-xl border border-orange-200 overflow-hidden">
+                                <div className="bg-accent/10 rounded-xl border border-accent/20 overflow-hidden">
                                     {/* 折叠头部 */}
                                     <button
                                         onClick={() => setIsCartExpanded(!isCartExpanded)}
-                                        className="w-full flex items-center justify-between p-3 hover:bg-orange-100/50 transition-colors"
+                                        className="w-full flex items-center justify-between p-3 hover:bg-accent/15 transition-colors"
                                     >
                                         <div className="flex items-center gap-2">
-                                            <span className="w-6 h-6 bg-orange-500 text-white rounded-full text-xs flex items-center justify-center font-bold">
+                                            <span className="w-6 h-6 bg-accent text-text-onAccent rounded-full text-xs flex items-center justify-center font-bold">
                                                 {cartItems.length}
                                             </span>
-                                            <span className="text-sm font-medium text-orange-700">
+                                            <span className="text-sm font-medium text-accent">
                                                 已添加 {cartItems.length} 支球拍
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm font-bold text-orange-600" style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}>
+                                            <span className="text-sm font-bold text-accent font-mono">
                                                 {formatCurrency(baseTotal)}
                                             </span>
                                             {isCartExpanded ? (
-                                                <ChevronUp className="w-4 h-4 text-orange-500" />
+                                                <ChevronUp className="w-4 h-4 text-accent" />
                                             ) : (
-                                                <ChevronDown className="w-4 h-4 text-orange-500" />
+                                                <ChevronDown className="w-4 h-4 text-accent" />
                                             )}
                                         </div>
                                     </button>
@@ -748,7 +748,7 @@ export default function MultiRacketBookingFlow() {
                             <button
                                 onClick={handleNext}
                                 disabled={loading || (step === 2 && !allItemsComplete)}
-                                className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-orange-600 transition-all disabled:opacity-50"
+                                className="flex-1 py-3 bg-accent text-text-onAccent rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-accent/90 transition-all disabled:opacity-50"
                             >
                                 下一步
                                 <ArrowRight className="w-5 h-5" />
@@ -757,7 +757,7 @@ export default function MultiRacketBookingFlow() {
                             <button
                                 onClick={handleSubmit}
                                 disabled={loading}
-                                className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-orange-600 transition-all disabled:opacity-50"
+                                className="flex-1 py-3 bg-accent text-text-onAccent rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-accent/90 transition-all disabled:opacity-50"
                             >
                                 {loading ? (
                                     <>

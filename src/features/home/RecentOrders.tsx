@@ -38,7 +38,7 @@ const getActionConfig = (status: string) => {
     case 'ready':
       return { label: '查看详情', color: 'bg-success text-white' };
     default:
-      return { label: '查看', color: 'bg-ink-elevated text-text-primary' };
+      return { label: '查看', color: 'bg-ink text-text-primary border border-border-subtle' };
   }
 };
 
@@ -153,7 +153,7 @@ export default function RecentOrders() {
               <div
                 key={order.id}
                 onClick={() => handleOrderClick(order.id)}
-                className="flex items-center gap-3 p-3 rounded-xl bg-ink-elevated/50 hover:bg-ink-elevated border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
+                className="flex items-center gap-3 p-3 rounded-xl bg-ink-elevated/50 hover:bg-ink border border-border-subtle hover:border-border-default transition-all cursor-pointer group"
               >
                 {/* 状态图标 */}
                 {(() => {

@@ -47,7 +47,7 @@ export default function NotificationBell({ onClick, userId, refreshTrigger = 0 }
   return (
     <button
       onClick={onClick}
-      className="relative p-2 hover:bg-ink-elevated rounded-lg transition-colors"
+      className="relative p-2 hover:bg-ink rounded-lg transition-colors"
       title="通知"
     >
       <Bell className="w-5 h-5 text-text-secondary" />

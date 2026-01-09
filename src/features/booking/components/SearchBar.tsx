@@ -97,7 +97,7 @@ export default function SearchBar({
                 <button
                     type="button"
                     onClick={handleClear}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-ink-surface transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-ink transition-colors"
                     aria-label="清除搜索"
                 >
                     <svg

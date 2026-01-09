@@ -152,7 +152,7 @@ export default function InviteCard() {
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={handleCopyLink}
-          className="bg-ink-elevated hover:bg-ink-surface rounded-lg px-4 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-border-subtle"
+          className="bg-ink-elevated hover:bg-ink rounded-lg px-4 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-border-subtle"
         >
           <Copy className="w-4 h-4" />
           复制链接

@@ -93,7 +93,7 @@ export default function StockHistory({ stringId, limit = 50 }: StockHistoryProps
         <button
           onClick={loadHistory}
           disabled={loading}
-          className="p-2 hover:bg-ink-elevated rounded-lg transition-colors disabled:opacity-50"
+          className="p-2 hover:bg-ink rounded-lg transition-colors disabled:opacity-50"
           title="刷新"
         >
           <RefreshCw className={`w-4 h-4 text-text-secondary ${loading ? 'animate-spin' : ''}`} />
@@ -128,7 +128,7 @@ export default function StockHistory({ stringId, limit = 50 }: StockHistoryProps
             const quantityBefore = log.quantity_before ?? 0;
             const quantityAfter = log.quantity_after ?? 0;
             return (
-            <div key={log.id} className="px-6 py-4 hover:bg-ink-elevated transition-colors">
+            <div key={log.id} className="px-6 py-4 hover:bg-ink transition-colors">
               <div className="flex items-start gap-4">
                 {/* 变动图标 */}
                 <div className="mt-1">

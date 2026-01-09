@@ -162,7 +162,7 @@ export default function OrderPaymentSection({
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setPaymentMethod('tng')}
-              className="flex flex-col items-center justify-center rounded-lg border-2 border-border-subtle p-4 transition-all hover:border-accent-border hover:bg-ink-elevated"
+              className="flex flex-col items-center justify-center rounded-lg border-2 border-border-subtle p-4 transition-all hover:border-accent-border hover:bg-ink"
             >
               <Smartphone className="w-6 h-6 text-info mb-2" />
               <div className="font-medium text-text-primary">TNG 线上支付</div>

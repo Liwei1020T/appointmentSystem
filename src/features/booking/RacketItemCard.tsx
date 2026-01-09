@@ -130,7 +130,7 @@ export default function RacketItemCard({
     `}>
             {/* 卡片头部 */}
             <div
-                className="flex items-center justify-between p-4 cursor-pointer hover:bg-ink-elevated/50 transition-colors"
+                className="flex items-center justify-between p-4 cursor-pointer hover:bg-ink/50 transition-colors"
                 onClick={() => setExpanded(!expanded)}
             >
                 <div className="flex items-center gap-3">
@@ -201,7 +201,7 @@ export default function RacketItemCard({
                                         type="button"
                                         onClick={() => handleTensionChange('vertical', Math.max(MIN_TENSION, item.tensionVertical - 1))}
                                         disabled={disabled}
-                                        className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink-elevated disabled:opacity-50 ${item.tensionVertical <= MIN_TENSION ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                        className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink disabled:opacity-50 ${item.tensionVertical <= MIN_TENSION ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
                                         -
                                     </button>
@@ -213,7 +213,7 @@ export default function RacketItemCard({
                                         type="button"
                                         onClick={() => handleTensionChange('vertical', Math.min(MAX_TENSION, item.tensionVertical + 1))}
                                         disabled={disabled}
-                                        className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink-elevated disabled:opacity-50 ${item.tensionVertical >= MAX_TENSION - MIN_DIFF ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                        className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink disabled:opacity-50 ${item.tensionVertical >= MAX_TENSION - MIN_DIFF ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
                                         +
                                     </button>
@@ -226,7 +226,7 @@ export default function RacketItemCard({
                                         type="button"
                                         onClick={() => handleTensionChange('horizontal', Math.max(MIN_TENSION, item.tensionHorizontal - 1))}
                                         disabled={disabled}
-                                        className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink-elevated disabled:opacity-50 ${item.tensionHorizontal <= MIN_TENSION ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                        className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink disabled:opacity-50 ${item.tensionHorizontal <= MIN_TENSION ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
                                         -
                                     </button>
@@ -238,7 +238,7 @@ export default function RacketItemCard({
                                         type="button"
                                         onClick={() => handleTensionChange('horizontal', Math.min(MAX_TENSION, item.tensionHorizontal + 1))}
                                         disabled={disabled}
-                                        className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink-elevated disabled:opacity-50 ${item.tensionHorizontal >= Math.min(MAX_TENSION, item.tensionVertical + MAX_DIFF) ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                        className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink disabled:opacity-50 ${item.tensionHorizontal >= Math.min(MAX_TENSION, item.tensionVertical + MAX_DIFF) ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
                                         +
                                     </button>

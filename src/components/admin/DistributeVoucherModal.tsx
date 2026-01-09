@@ -157,7 +157,7 @@ export default function DistributeVoucherModal({
             </label>
             <div className="space-y-2">
               {/* All Users */}
-              <label className="flex items-center p-3 border border-border-subtle rounded-lg cursor-pointer hover:bg-ink-elevated/70 transition-colors">
+              <label className="flex items-center p-3 border border-border-subtle rounded-lg cursor-pointer hover:bg-ink/70 transition-colors">
                 <input
                   type="radio"
                   name="distributionType"
@@ -175,7 +175,7 @@ export default function DistributeVoucherModal({
               </label>
 
               {/* Specific Users */}
-              <label className="flex items-center p-3 border border-border-subtle rounded-lg cursor-pointer hover:bg-ink-elevated/70 transition-colors">
+              <label className="flex items-center p-3 border border-border-subtle rounded-lg cursor-pointer hover:bg-ink/70 transition-colors">
                 <input
                   type="radio"
                   name="distributionType"
@@ -193,7 +193,7 @@ export default function DistributeVoucherModal({
               </label>
 
               {/* By Tier */}
-              <label className="flex items-center p-3 border border-border-subtle rounded-lg cursor-pointer hover:bg-ink-elevated/70 transition-colors">
+              <label className="flex items-center p-3 border border-border-subtle rounded-lg cursor-pointer hover:bg-ink/70 transition-colors">
                 <input
                   type="radio"
                   name="distributionType"
@@ -250,7 +250,7 @@ export default function DistributeVoucherModal({
                     {filteredUsers.map((user) => (
                       <label
                         key={user.id}
-                        className="flex items-center p-3 hover:bg-ink-elevated/70 cursor-pointer transition-colors"
+                        className="flex items-center p-3 hover:bg-ink/70 cursor-pointer transition-colors"
                       >
                         <input
                           type="checkbox"

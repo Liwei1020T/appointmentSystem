@@ -23,14 +23,14 @@
 
 ## Design Principles
 
-All components follow **Kinetic Precision 2.0**:
+All components follow **Breathing Light**:
 
-- ✅ Dark-first palette with high contrast
-- ✅ Volt Green only for key emphasis
+- ✅ Light-first palette with calm whitespace
+- ✅ Orange accent only for key emphasis
 - ✅ Consistent 4pt spacing system
-- ✅ Clear layers (ink / elevated / surface)
+- ✅ Clear layers (page / card / surface)
 - ✅ Subtle glass usage for navigation and overlays
-- ✅ Inter + JetBrains Mono typography
+- ✅ Poppins + JetBrains Mono typography
 
 ---
 
@@ -40,18 +40,18 @@ Use Tailwind utility classes mapped to design tokens:
 
 ```typescript
 const colors = {
-  ink: '#0F172A',
-  elevated: '#111C33',
-  surface: '#1E293B',
-  borderSubtle: 'rgba(148,163,184,0.18)',
-  textPrimary: '#E2E8F0',
-  textSecondary: '#94A3B8',
-  textTertiary: 'rgba(148,163,184,0.70)',
-  accent: '#D4FF00',
-  accentSoft: 'rgba(212,255,0,0.14)',
-  accentBorder: 'rgba(212,255,0,0.38)',
+  ink: '#F9FAFB',
+  elevated: '#FFFFFF',
+  surface: '#FFFFFF',
+  borderSubtle: '#F3F4F6',
+  textPrimary: '#111827',
+  textSecondary: '#6B7280',
+  textTertiary: '#9CA3AF',
+  accent: '#F97316',
+  accentSoft: 'rgba(249,115,22,0.10)',
+  accentBorder: 'rgba(249,115,22,0.30)',
   info: '#3B82F6',
-  success: '#14B8A6',
+  success: '#10B981',
   warning: '#F59E0B',
   danger: '#EF4444'
 }
@@ -82,7 +82,7 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = 'font-semibold rounded-lg transition-all duration-150 active:scale-97 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-border focus-visible:ring-offset-2 focus-visible:ring-offset-ink';
 
   const variants = {
-    primary: 'bg-accent text-text-onAccent hover:shadow-glow',
+    primary: 'bg-accent text-text-onAccent hover:shadow-sm',
     secondary: 'bg-ink-surface text-accent border border-accent-border hover:bg-accent-soft',
     ghost: 'bg-transparent text-text-primary hover:bg-ink-surface/80',
     danger: 'bg-danger text-text-primary hover:bg-danger/90'
@@ -228,8 +228,8 @@ const variants = {
 
 ### 13. Admin Sidebar
 
-- 背景：`bg-ink-elevated`
-- Active：`bg-accent-soft` + 左侧 `border-accent`
+- 背景：`bg-ink-surface`
+- Active：`bg-accent/10` + 左侧 `border-accent`
 
 ---
 

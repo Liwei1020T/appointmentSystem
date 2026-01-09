@@ -9,24 +9,24 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Light Theme - Warm Orange
+        // Breathing Light - Warm Orange
         ink: {
-          DEFAULT: '#FFFFFF',      // 全局主背景 - 纯白
-          elevated: '#FFFFFF',     // 卡片背景 - 纯白
-          surface: '#FFFFFF',      // 表面/微调 - 纯白 (全系统去灰)
+          DEFAULT: '#F9FAFB',      // 页面背景 - gray-50
+          elevated: '#FFFFFF',     // 卡片背景 - white
+          surface: '#FFFFFF',      // 表面/微调 - white
         },
         border: {
-          subtle: 'rgba(15,23,42,0.10)',
+          subtle: '#F3F4F6',       // gray-100
         },
         text: {
-          primary: '#0F172A',      // 主文字 - 深蓝灰
-          secondary: '#475569',    // 次要文字 - 中灰
-          tertiary: 'rgba(71,85,105,0.70)',
+          primary: '#111827',      // gray-900
+          secondary: '#6B7280',    // gray-500
+          tertiary: '#9CA3AF',     // gray-400
           onAccent: '#FFFFFF',
         },
         accent: {
           DEFAULT: '#F97316',
-          soft: 'rgba(249,115,22,0.12)',
+          soft: 'rgba(249,115,22,0.10)',
           border: 'rgba(249,115,22,0.30)',
         },
         info: {
@@ -39,7 +39,7 @@ module.exports = {
         // NEW: Gradient colors
         gradient: {
           start: '#F97316',
-          end: '#FB923C',
+          end: '#FDBA74',
         },
       },
       fontFamily: {
@@ -53,13 +53,13 @@ module.exports = {
         '2xl': '20px',
       },
       boxShadow: {
-        sm: '0 1px 2px rgba(15,23,42,0.24)',
-        md: '0 8px 20px rgba(15,23,42,0.28)',
-        lg: '0 12px 32px rgba(15,23,42,0.16)',
-        glow: '0 0 0 1px rgba(249,115,22,0.2), 0 8px 24px rgba(249,115,22,0.16)',
-        'glow-lg': '0 0 0 2px rgba(249,115,22,0.3), 0 12px 32px rgba(249,115,22,0.24)',
-        card: '0 2px 8px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)',
-        'card-hover': '0 8px 24px rgba(249,115,22,0.12), 0 2px 4px rgba(15,23,42,0.04)',
+        sm: '0 1px 2px rgba(15,23,42,0.08)',
+        md: '0 8px 20px rgba(15,23,42,0.12)',
+        lg: '0 12px 32px rgba(15,23,42,0.14)',
+        glow: '0 0 0 1px rgba(249,115,22,0.18), 0 8px 18px rgba(249,115,22,0.18)',
+        'glow-lg': '0 0 0 2px rgba(249,115,22,0.22), 0 12px 28px rgba(249,115,22,0.2)',
+        card: '0 1px 2px rgba(15,23,42,0.06), 0 1px 1px rgba(15,23,42,0.04)',
+        'card-hover': '0 8px 22px rgba(15,23,42,0.12), 0 2px 4px rgba(15,23,42,0.04)',
       },
       scale: {
         97: '0.97',
@@ -94,4 +94,3 @@ module.exports = {
   },
   plugins: [],
 }
-

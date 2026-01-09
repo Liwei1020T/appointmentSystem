@@ -24,18 +24,18 @@
   }
 
   .glass-surface {
-    background: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(17, 24, 39, 0.08);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
   }
 
   .glass-strong {
-    background: rgba(255, 255, 255, 0.65);
+    background: rgba(255, 255, 255, 0.78);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    border: 1px solid rgba(17, 24, 39, 0.08);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
   }
 
   /* ========== NEW: Animation Utilities ========== */
@@ -62,7 +62,7 @@
 
   .card-hover:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(249, 115, 22, 0.12);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
   }
 
   /* Button press effect */
@@ -74,9 +74,9 @@
   /* Skeleton loading shimmer */
   .skeleton {
     background: linear-gradient(90deg,
-        rgba(0, 0, 0, 0.03) 0%,
-        rgba(0, 0, 0, 0.08) 50%,
-        rgba(0, 0, 0, 0.03) 100%);
+        rgba(15, 23, 42, 0.04) 0%,
+        rgba(15, 23, 42, 0.08) 50%,
+        rgba(15, 23, 42, 0.04) 100%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
     border-radius: 6px;
@@ -84,11 +84,11 @@
 
   /* Gradient accent decorations */
   .gradient-accent {
-    background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
+    background: linear-gradient(135deg, #F97316 0%, #FDBA74 100%);
   }
 
   .gradient-accent-soft {
-    background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(251, 146, 60, 0.08) 100%);
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(253, 186, 116, 0.08) 100%);
   }
 
   /* Gradient text */
@@ -117,7 +117,7 @@
     inset: -1px;
     border-radius: 13px;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(249, 115, 22, 0.3) 0%, rgba(251, 146, 60, 0.1) 100%);
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.25) 0%, rgba(253, 186, 116, 0.12) 100%);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: exclude;

@@ -59,7 +59,7 @@ export default function BrandLogo({
                 className={cn(
                     config.container,
                     'rounded-xl bg-accent flex items-center justify-center',
-                    'font-bold text-ink shadow-sm',
+                    'font-bold text-text-onAccent shadow-sm',
                     config.text
                 )}
             >

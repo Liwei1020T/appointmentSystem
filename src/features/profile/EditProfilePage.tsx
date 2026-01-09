@@ -179,7 +179,7 @@ export default function EditProfilePage() {
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
+            className="p-2 hover:bg-ink rounded-lg transition-colors"
           >
             <svg
               className="w-5 h-5 text-text-secondary"

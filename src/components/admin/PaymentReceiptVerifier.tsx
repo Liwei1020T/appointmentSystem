@@ -209,7 +209,7 @@ export default function PaymentReceiptVerifier({
             />
             <button
               onClick={() => setShowImageModal(false)}
-              className="absolute right-2 top-2 rounded-full bg-ink-surface p-2 shadow-lg hover:bg-ink-elevated"
+              className="absolute right-2 top-2 rounded-full bg-ink-surface p-2 shadow-lg hover:bg-ink"
             >
               <X className="h-5 w-5 text-text-secondary" />
             </button>

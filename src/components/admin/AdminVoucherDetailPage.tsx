@@ -193,7 +193,7 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
 
   if (error || !voucher) {
     return (
-      <div className="min-h-screen bg-ink-elevated p-6">
+      <div className="min-h-screen bg-ink p-6">
         <div className="max-w-4xl mx-auto">
           <Card padding="sm" className="border-danger/30 bg-danger/10">
             <p className="text-danger">{error || '优惠券不存在'}</p>
@@ -220,7 +220,7 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
   const isActive = voucher.active ?? voucher.isActive ?? false;
 
   return (
-    <div className="min-h-screen bg-ink-elevated p-6">
+    <div className="min-h-screen bg-ink p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         <Button
           variant="ghost"
@@ -483,7 +483,7 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
                     </thead>
                     <tbody className="bg-ink-surface divide-y divide-border-subtle">
                       {userVouchers.map((uv) => (
-                        <tr key={uv.id} className="hover:bg-ink-elevated">
+                        <tr key={uv.id} className="hover:bg-ink">
                           <td className="px-4 py-3">
                             <div className="font-medium text-text-primary">{uv.user?.full_name}</div>
                             <div className="text-sm text-text-tertiary">{uv.user?.email}</div>

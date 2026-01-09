@@ -151,7 +151,7 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
           {/* 关闭按钮 */}
           <button
             onClick={() => setShowLightbox(false)}
-            className="absolute top-4 right-4 p-2 bg-ink-elevated/40 hover:bg-ink-elevated/70 rounded-full transition-colors z-10"
+            className="absolute top-4 right-4 p-2 bg-ink-elevated/40 hover:bg-ink/70 rounded-full transition-colors z-10"
           >
             <X className="w-6 h-6 text-text-primary" />
           </button>
@@ -160,7 +160,7 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
           {photos.length > 1 && (
             <button
               onClick={prevPhoto}
-              className="absolute left-4 p-3 bg-ink-elevated/40 hover:bg-ink-elevated/70 rounded-full transition-colors z-10"
+              className="absolute left-4 p-3 bg-ink-elevated/40 hover:bg-ink/70 rounded-full transition-colors z-10"
             >
               <ChevronLeft className="w-8 h-8 text-text-primary" />
             </button>
@@ -192,7 +192,7 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
           {photos.length > 1 && (
             <button
               onClick={nextPhoto}
-              className="absolute right-4 p-3 bg-ink-elevated/40 hover:bg-ink-elevated/70 rounded-full transition-colors z-10"
+              className="absolute right-4 p-3 bg-ink-elevated/40 hover:bg-ink/70 rounded-full transition-colors z-10"
             >
               <ChevronRight className="w-8 h-8 text-text-primary" />
             </button>

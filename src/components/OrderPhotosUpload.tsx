@@ -198,7 +198,7 @@ export default function OrderPhotosUpload({
                 onClick={() => setSelectedType(type.value)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedType === type.value
                   ? type.color
-                  : 'bg-ink-elevated text-text-secondary hover:bg-ink-elevated'
+                  : 'bg-ink-elevated text-text-secondary hover:bg-ink'
                   }`}
               >
                 {type.label}
@@ -280,7 +280,7 @@ export default function OrderPhotosUpload({
                     {index > 0 && (
                       <button
                         onClick={() => handleMovePhoto(photo.id, 'up')}
-                        className="p-1.5 bg-ink-surface rounded-lg shadow hover:bg-ink-elevated"
+                        className="p-1.5 bg-ink-surface rounded-lg shadow hover:bg-ink"
                         title="上移"
                       >
                         <MoveUp className="w-4 h-4 text-text-secondary" />
@@ -289,7 +289,7 @@ export default function OrderPhotosUpload({
                     {index < photos.length - 1 && (
                       <button
                         onClick={() => handleMovePhoto(photo.id, 'down')}
-                        className="p-1.5 bg-ink-surface rounded-lg shadow hover:bg-ink-elevated"
+                        className="p-1.5 bg-ink-surface rounded-lg shadow hover:bg-ink"
                         title="下移"
                       >
                         <MoveDown className="w-4 h-4 text-text-secondary" />

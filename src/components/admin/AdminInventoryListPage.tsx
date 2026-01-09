@@ -152,7 +152,7 @@ export default function AdminInventoryListPage() {
   );
 
   return (
-    <div className="min-h-screen bg-ink-elevated p-6">
+    <div className="min-h-screen bg-ink p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -321,7 +321,7 @@ export default function AdminInventoryListPage() {
                           <tr
                             key={string.id}
                             onClick={() => handleViewDetail(string.id)}
-                            className="hover:bg-ink-elevated cursor-pointer transition-colors"
+                            className="hover:bg-ink cursor-pointer transition-colors"
                           >
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">
                               {string.brand}

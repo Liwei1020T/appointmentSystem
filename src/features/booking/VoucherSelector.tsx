@@ -182,7 +182,7 @@ export default function VoucherSelector({ orderAmount, selectedVoucher, onSelect
                 onClick={() => setTempSelectedVoucher(null)}
                 className={`text-xs font-semibold px-4 py-1.5 rounded-full transition-all ${!tempSelectedVoucher
                   ? 'text-accent bg-accent/10'
-                  : 'text-text-tertiary hover:text-text-primary hover:bg-ink-surface'
+                  : 'text-text-tertiary hover:text-text-primary hover:bg-ink'
                   }`}
               >
                 暂不使用

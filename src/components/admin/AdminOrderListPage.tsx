@@ -146,7 +146,7 @@ export default function AdminOrderListPage() {
   );
 
   return (
-    <div className="min-h-screen bg-ink-elevated">
+    <div className="min-h-screen bg-ink">
       {/* Header */}
       <div className="bg-ink-surface border-b border-border-subtle sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-5">
@@ -295,7 +295,7 @@ export default function AdminOrderListPage() {
                     {orders.map((order) => (
                       <tr
                         key={order.id}
-                        className="hover:bg-ink-elevated transition-colors cursor-pointer"
+                        className="hover:bg-ink transition-colors cursor-pointer"
                         onClick={() => router.push(`/admin/orders/${order.id}`)}
                       >
                         <td className="px-6 py-4">
@@ -444,7 +444,7 @@ export default function AdminOrderListPage() {
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="px-4 py-2 border border-border-subtle rounded-lg text-sm font-medium text-text-secondary hover:bg-ink-elevated disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 border border-border-subtle rounded-lg text-sm font-medium text-text-secondary hover:bg-ink disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     上一页
                   </button>
@@ -466,7 +466,7 @@ export default function AdminOrderListPage() {
                           onClick={() => setCurrentPage(pageNum)}
                           className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${currentPage === pageNum
                             ? 'bg-accent text-text-onAccent'
-                            : 'text-text-secondary hover:bg-ink-elevated'
+                            : 'text-text-secondary hover:bg-ink'
                             }`}
                         >
                           {pageNum}
@@ -477,7 +477,7 @@ export default function AdminOrderListPage() {
                   <button
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-4 py-2 border border-border-subtle rounded-lg text-sm font-medium text-text-secondary hover:bg-ink-elevated disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 border border-border-subtle rounded-lg text-sm font-medium text-text-secondary hover:bg-ink disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     下一页
                   </button>

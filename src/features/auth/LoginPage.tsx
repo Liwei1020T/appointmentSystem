@@ -178,6 +178,7 @@ export default function LoginPage() {
               error={errors.phone}
               placeholder="01131609008"
               inputMode="numeric"
+              autoComplete="tel"
               pattern="[0-9]*"
               helperText="可直接输入 01 开头手机号，无需填写 +60"
               required
@@ -192,6 +193,7 @@ export default function LoginPage() {
               onChange={handleChange}
               error={errors.password}
               placeholder="输入您的密码"
+              autoComplete="current-password"
               required
             />
 

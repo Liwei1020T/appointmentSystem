@@ -53,7 +53,7 @@ export default function NotificationItem({
 
   return (
     <div
-      className={`relative p-4 bg-ink-elevated hover:bg-ink-surface transition-colors border-b border-border-subtle ${isUnread ? 'border-l-4 border-l-accent' : 'opacity-90'}`}
+      className={`relative p-4 bg-ink-elevated hover:bg-ink transition-colors border-b border-border-subtle ${isUnread ? 'border-l-4 border-l-accent' : 'opacity-90'}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
@@ -94,7 +94,7 @@ export default function NotificationItem({
           {isUnread && (
             <button
               onClick={() => onMarkAsRead(notification.id)}
-              className="p-1.5 hover:bg-ink-elevated rounded transition-colors"
+              className="p-1.5 hover:bg-ink rounded transition-colors"
               title="标记为已读"
             >
               <CheckCircle2 className="w-4 h-4 text-success" />
@@ -103,7 +103,7 @@ export default function NotificationItem({
 
           <button
             onClick={() => onDelete(notification.id)}
-            className="p-1.5 hover:bg-ink-elevated rounded transition-colors"
+            className="p-1.5 hover:bg-ink rounded transition-colors"
             title="删除"
           >
             <Trash2 className="w-4 h-4 text-danger" />

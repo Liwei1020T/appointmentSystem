@@ -131,7 +131,7 @@ export default function NotificationPanel({ userId, isOpen, onClose, onUnreadCou
             <span className="hidden sm:inline text-xs text-text-tertiary">点击空白或按 Esc 关闭</span>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-ink-surface/20 rounded-lg transition-colors"
+              className="p-1 hover:bg-ink/20 rounded-lg transition-colors"
               aria-label="关闭通知面板"
             >
               <X className="w-5 h-5 text-text-primary" />
@@ -147,7 +147,7 @@ export default function NotificationPanel({ userId, isOpen, onClose, onUnreadCou
               onClick={() => setFilter('all')}
               className={`px-3 py-1 text-sm rounded-lg transition-colors ${filter === 'all'
                 ? 'bg-accent text-text-onAccent'
-                : 'bg-ink-surface text-text-secondary hover:bg-ink-elevated'
+                : 'bg-ink-surface text-text-secondary hover:bg-ink'
                 }`}
               aria-pressed={filter === 'all'}
             >
@@ -157,7 +157,7 @@ export default function NotificationPanel({ userId, isOpen, onClose, onUnreadCou
               onClick={() => setFilter('unread')}
               className={`px-3 py-1 text-sm rounded-lg transition-colors ${filter === 'unread'
                 ? 'bg-accent text-text-onAccent'
-                : 'bg-ink-surface text-text-secondary hover:bg-ink-elevated'
+                : 'bg-ink-surface text-text-secondary hover:bg-ink'
                 }`}
               aria-pressed={filter === 'unread'}
             >
@@ -170,7 +170,7 @@ export default function NotificationPanel({ userId, isOpen, onClose, onUnreadCou
             <button
               onClick={loadNotifications}
               disabled={loading}
-              className="p-1.5 hover:bg-ink-elevated rounded-lg transition-colors disabled:opacity-50"
+              className="p-1.5 hover:bg-ink rounded-lg transition-colors disabled:opacity-50"
               title="刷新"
             >
               <RefreshCw className={`w-4 h-4 text-text-secondary ${loading ? 'animate-spin' : ''}`} />
@@ -179,7 +179,7 @@ export default function NotificationPanel({ userId, isOpen, onClose, onUnreadCou
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="p-1.5 hover:bg-ink-elevated rounded-lg transition-colors"
+                className="p-1.5 hover:bg-ink rounded-lg transition-colors"
                 title="全部标记为已读"
               >
                 <CheckCheck className="w-4 h-4 text-text-secondary" />

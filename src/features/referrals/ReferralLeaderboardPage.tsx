@@ -74,7 +74,7 @@ export default function ReferralLeaderboardPage() {
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-ink-elevated rounded-lg transition-colors"
+            className="p-2 hover:bg-ink rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-text-secondary" />
           </button>
@@ -112,7 +112,7 @@ export default function ReferralLeaderboardPage() {
             {leaderboard.map((entry) => (
               <div
                 key={entry.userId}
-                className="p-4 hover:bg-ink-elevated transition-colors"
+                className="p-4 hover:bg-ink transition-colors"
               >
                 <div className="flex items-center gap-4">
                   {/* 排名图标 */}

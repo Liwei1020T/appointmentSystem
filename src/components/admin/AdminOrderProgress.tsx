@@ -376,7 +376,7 @@ export default function AdminOrderProgress({
             <div className="p-4 pt-0 flex gap-3">
               <button
                 onClick={closeConfirmModal}
-                className="flex-1 px-4 py-3 text-sm font-medium text-text-secondary bg-ink-elevated rounded-xl hover:bg-ink-surface-hover transition-colors"
+                className="flex-1 px-4 py-3 text-sm font-medium text-text-secondary bg-ink-elevated rounded-xl hover:bg-ink transition-colors"
               >
                 取消
               </button>

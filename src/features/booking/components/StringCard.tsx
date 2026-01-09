@@ -55,7 +55,7 @@ export default function StringCard({ string, isSelected, onSelect }: StringCardP
         ${isDisabled
                     ? 'opacity-50 cursor-not-allowed border-border-subtle bg-white'
                     : isSelected
-                        ? 'border-accent bg-accent/[0.02] shadow-glow'
+                        ? 'border-accent bg-accent/10 shadow-glow'
                         : 'border-border-subtle bg-white hover:border-accent/40 hover:shadow-card'
                 }
       `}
@@ -83,9 +83,9 @@ export default function StringCard({ string, isSelected, onSelect }: StringCardP
                             loading="lazy"
                         />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
+                        <div className="w-full h-full flex items-center justify-center bg-ink">
                             {/* String cross-section icon */}
-                            <svg className="w-8 h-8 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                            <svg className="w-8 h-8 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
                                 <circle cx="12" cy="12" r="9" />
                                 <line x1="12" y1="3" x2="12" y2="21" strokeWidth={1} />
                                 <line x1="3" y1="12" x2="21" y2="12" strokeWidth={1} />
@@ -104,8 +104,7 @@ export default function StringCard({ string, isSelected, onSelect }: StringCardP
                             {string.brand} {string.model}
                         </h3>
                         <span
-                            className="flex-shrink-0 text-lg font-bold text-accent"
-                            style={{ fontFamily: 'Inter, Roboto, system-ui, sans-serif' }}
+                            className="flex-shrink-0 text-lg font-bold text-accent font-mono"
                         >
                             {formatCurrency(price)}
                         </span>

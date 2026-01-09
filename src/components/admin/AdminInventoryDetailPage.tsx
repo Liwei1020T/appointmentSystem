@@ -257,7 +257,7 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
 
   if (error && !string) {
     return (
-      <div className="min-h-screen bg-ink-elevated p-6">
+      <div className="min-h-screen bg-ink p-6">
         <div className="max-w-4xl mx-auto">
           <div className="bg-danger/10 border border-danger/40 rounded-lg p-4">
             <p className="text-danger">{error}</p>
@@ -281,7 +281,7 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
   const profitMargin = sellingPrice > 0 ? ((profit / sellingPrice) * 100).toFixed(1) : '0';
 
   return (
-    <div className="min-h-screen bg-ink-elevated p-6">
+    <div className="min-h-screen bg-ink p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

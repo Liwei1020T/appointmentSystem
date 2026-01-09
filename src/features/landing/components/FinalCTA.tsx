@@ -44,7 +44,7 @@ export default function FinalCTA() {
             <Button
               onClick={() => router.push('/login')}
               variant="secondary"
-              className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border border-border-subtle hover:bg-ink-surface bg-white/80 backdrop-blur-sm"
+              className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border border-border-subtle hover:bg-ink bg-white/80 backdrop-blur-sm"
             >
               登录账户
             </Button>

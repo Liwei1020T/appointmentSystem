@@ -225,7 +225,7 @@ export default function WebPushSubscription() {
             <button
               onClick={handleUnsubscribe}
               disabled={loading}
-              className="px-4 py-2 bg-ink-elevated text-text-secondary font-medium rounded-lg hover:bg-ink-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-ink-elevated text-text-secondary font-medium rounded-lg hover:bg-ink transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">

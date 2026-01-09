@@ -72,7 +72,7 @@ export default function Navbar() {
                   href="/booking"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/booking')
                     ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
-                    : 'text-text-secondary hover:bg-ink-surface/80'
+                    : 'text-text-secondary hover:bg-ink'
                     }`}
                 >
                   预约穿线
@@ -82,7 +82,7 @@ export default function Navbar() {
                   href="/orders"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/orders')
                     ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
-                    : 'text-text-secondary hover:bg-ink-surface/80'
+                    : 'text-text-secondary hover:bg-ink'
                     }`}
                 >
                   我的订单
@@ -92,7 +92,7 @@ export default function Navbar() {
                   href="/profile/packages"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${isPackagesActive
                     ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
-                    : 'text-text-secondary hover:bg-ink-surface/80'
+                    : 'text-text-secondary hover:bg-ink'
                     }`}
                 >
                   套餐
@@ -102,7 +102,7 @@ export default function Navbar() {
                   href="/profile/points"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${pathname?.startsWith('/profile/vouchers') || pathname?.startsWith('/profile/points')
                     ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
-                    : 'text-text-secondary hover:bg-ink-surface/80'
+                    : 'text-text-secondary hover:bg-ink'
                     }`}
                 >
                   优惠券
@@ -112,7 +112,7 @@ export default function Navbar() {
                   href="/reviews"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${pathname === '/reviews' || pathname?.startsWith('/reviews')
                     ? 'bg-accent-soft text-text-primary ring-1 ring-accent-border'
-                    : 'text-text-secondary hover:bg-ink-surface/80'
+                    : 'text-text-secondary hover:bg-ink'
                     }`}
                 >
                   评价
@@ -140,7 +140,7 @@ export default function Navbar() {
 
                 {/* User Menu */}
                 <div className="relative group">
-                  <button className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-ink-surface/80">
+                  <button className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-ink">
                     <span>{session.user.name || session.user.phone || session.user.email || '用户'}</span>
                     <svg
                       className="w-4 h-4"
@@ -161,13 +161,13 @@ export default function Navbar() {
                     <div className="w-48 glass-strong rounded-md py-1">
                       <Link
                         href="/profile"
-                        className="block px-4 py-2 text-sm text-text-secondary hover:bg-ink-surface/80"
+                        className="block px-4 py-2 text-sm text-text-secondary hover:bg-ink"
                       >
                         个人中心
                       </Link>
                       <button
                         onClick={handleSignOut}
-                        className="block w-full text-left px-4 py-2 text-sm text-text-secondary hover:bg-ink-surface/80"
+                        className="block w-full text-left px-4 py-2 text-sm text-text-secondary hover:bg-ink"
                       >
                         退出登录
                       </button>
@@ -179,7 +179,7 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-ink-surface/80"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-ink"
                 >
                   登录
                 </Link>
@@ -221,35 +221,35 @@ export default function Navbar() {
               <>
                 <Link
                   href="/booking"
-                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive('/booking') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink-surface'
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive('/booking') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink'
                     }`}
                 >
                   预约穿线
                 </Link>
                 <Link
                   href="/orders"
-                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive('/orders') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink-surface'
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive('/orders') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink'
                     }`}
                 >
                   我的订单
                 </Link>
                 <Link
                   href="/packages"
-                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${isPackagesActive ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink-surface'
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${isPackagesActive ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink'
                     }`}
                 >
                   套餐
                 </Link>
                 <Link
                   href="/profile/vouchers"
-                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${pathname?.startsWith('/profile/vouchers') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink-surface'
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${pathname?.startsWith('/profile/vouchers') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink'
                     }`}
                 >
                   优惠券
                 </Link>
                 <Link
                   href="/reviews"
-                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${pathname?.startsWith('/reviews') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink-surface'
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${pathname?.startsWith('/reviews') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink'
                     }`}
                 >
                   评价
@@ -257,7 +257,7 @@ export default function Navbar() {
                 <div className="border-t border-border-subtle my-2" />
                 <Link
                   href="/profile"
-                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive('/profile') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink-surface'
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive('/profile') ? 'bg-accent-soft text-accent' : 'text-text-secondary hover:bg-ink'
                     }`}
                 >
                   个人中心
@@ -273,7 +273,7 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="block px-4 py-3 rounded-lg text-sm font-medium text-text-secondary hover:bg-ink-surface"
+                  className="block px-4 py-3 rounded-lg text-sm font-medium text-text-secondary hover:bg-ink"
                 >
                   登录
                 </Link>

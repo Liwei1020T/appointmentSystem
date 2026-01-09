@@ -422,7 +422,7 @@ export default function PackagePurchaseFlow() {
                       w-full p-5 rounded-xl border-2 text-left transition-all duration-200
                       ${paymentMethod === method.value
                         ? 'border-accent bg-accent/5 shadow-lg shadow-accent/10'
-                        : 'border-border-subtle hover:border-accent/50 hover:bg-ink-elevated'
+                        : 'border-border-subtle hover:border-accent/50 hover:bg-ink'
                       }
                     `}
                   >

@@ -73,7 +73,7 @@ export default function AdminPackageDetailPage({ packageId }: AdminPackageDetail
 
   if (error || !pkg) {
     return (
-      <div className="min-h-screen bg-ink-elevated p-6">
+      <div className="min-h-screen bg-ink p-6">
         <div className="max-w-4xl mx-auto">
           <Card padding="sm" className="border-danger/30 bg-danger/10">
             <p className="text-danger">{error}</p>
@@ -98,7 +98,7 @@ export default function AdminPackageDetailPage({ packageId }: AdminPackageDetail
   const activePurchases = purchases.filter(p => p.remaining > 0 && new Date(p.expiry) > new Date());
 
   return (
-    <div className="min-h-screen bg-ink-elevated p-6">
+    <div className="min-h-screen bg-ink p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         <Button
           variant="ghost"
@@ -170,7 +170,7 @@ export default function AdminPackageDetailPage({ packageId }: AdminPackageDetail
                         const isActive = purchase.remaining > 0 && !isExpired;
                         
                         return (
-                          <tr key={purchase.id} className="hover:bg-ink-elevated">
+                          <tr key={purchase.id} className="hover:bg-ink">
                             <td className="px-4 py-3">
                               <div>
                                 <p className="text-sm font-medium text-text-primary">{purchase.user?.full_name}</p>

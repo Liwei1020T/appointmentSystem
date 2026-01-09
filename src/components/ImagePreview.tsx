@@ -88,7 +88,7 @@ export default function ImagePreview({
       {/* 关闭按钮 */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 text-text-primary hover:bg-ink-elevated/70 p-2 rounded-full transition-colors z-10"
+        className="absolute top-4 right-4 text-text-primary hover:bg-ink/70 p-2 rounded-full transition-colors z-10"
       >
         <X className="w-6 h-6" />
       </button>
@@ -107,7 +107,7 @@ export default function ImagePreview({
       {images.length > 1 && (
         <button
           onClick={handlePrevious}
-          className="absolute left-4 text-text-primary hover:bg-ink-elevated/70 p-3 rounded-full transition-colors"
+          className="absolute left-4 text-text-primary hover:bg-ink/70 p-3 rounded-full transition-colors"
         >
           <ChevronLeft className="w-8 h-8" />
         </button>
@@ -126,7 +126,7 @@ export default function ImagePreview({
       {images.length > 1 && (
         <button
           onClick={handleNext}
-          className="absolute right-4 text-text-primary hover:bg-ink-elevated/70 p-3 rounded-full transition-colors"
+          className="absolute right-4 text-text-primary hover:bg-ink/70 p-3 rounded-full transition-colors"
         >
           <ChevronRight className="w-8 h-8" />
         </button>

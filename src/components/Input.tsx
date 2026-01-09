@@ -47,7 +47,7 @@ export const Input: React.FC<InputProps> = ({
             ${rightIcon ? 'pr-10' : ''}
             focus:outline-none focus:ring-2 focus:border-transparent focus:ring-offset-2 focus:ring-offset-ink
             placeholder:text-text-tertiary
-            disabled:bg-ink-elevated disabled:cursor-not-allowed
+            disabled:bg-ink disabled:cursor-not-allowed
             ${className}
           `.trim().replace(/\s+/g, ' ')}
           {...props}

@@ -132,7 +132,7 @@ export default function TngQRCodeDisplay({ amount, orderId }: TngQRCodeDisplayPr
           </code>
           <button
             onClick={handleCopyPhone}
-            className="rounded-lg p-1.5 hover:bg-ink-elevated"
+            className="rounded-lg p-1.5 hover:bg-ink"
             title="复制电话号码"
           >
             {copied ? (
