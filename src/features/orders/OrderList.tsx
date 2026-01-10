@@ -26,7 +26,7 @@ import Button from '@/components/Button';
 import Toast from '@/components/Toast';
 import { OrderListSkeleton } from '@/components/skeletons';
 import { formatDate } from '@/lib/utils';
-import { Clock, CheckCircle, RefreshCw, XCircle, LucideIcon } from 'lucide-react';
+import { Clock, CheckCircle, RefreshCw, XCircle, Disc, LucideIcon } from 'lucide-react';
 
 interface OrderListProps {
   initialStatus?: OrderStatus;
@@ -177,6 +177,14 @@ export default function OrderList({ initialStatus }: OrderListProps) {
   // 跳转到订单详情
   const handleOrderClick = (orderId: string) => {
     router.push(`/orders/${orderId}`);
+  };
+
+  /**
+   * Repeat an order by preloading it into the booking flow.
+   */
+  const handleRepeatOrder = (event: React.MouseEvent, orderId: string) => {
+    event.stopPropagation();
+    router.push(`/booking?repeatOrderId=${encodeURIComponent(orderId)}`);
   };
 
   return (
@@ -367,6 +375,17 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-warning/15 text-warning">
                       优惠 RM {Number(order.discountAmount ?? 0).toFixed(0)}
                     </span>
+                  )}
+
+                  {order.status === 'completed' && (
+                    <button
+                      type="button"
+                      onClick={(event) => handleRepeatOrder(event, order.id)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
+                    >
+                      <Disc className="w-3.5 h-3.5" />
+                      再来一单
+                    </button>
                   )}
 
                   {/* Arrow indicator */}

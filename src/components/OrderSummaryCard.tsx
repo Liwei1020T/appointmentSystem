@@ -93,9 +93,11 @@ export default function OrderSummaryCard({
     const paymentStatus = getPaymentStatus();
     const providerLabel = paymentProvider === 'cash' ? '现金' : paymentProvider === 'tng' ? 'TnG' : '';
 
-    // 再来一单
+    /**
+     * Route to booking flow with a repeatOrderId to prefill the last configuration.
+     */
     const handleReorder = () => {
-        router.push('/booking');
+        router.push(`/booking?repeatOrderId=${encodeURIComponent(order.id)}`);
     };
 
     return (

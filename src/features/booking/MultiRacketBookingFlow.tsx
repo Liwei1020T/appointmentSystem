@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Plus, ShoppingCart, ArrowRight, ArrowLeft, Check, ChevronDown, ChevronUp, X } from 'lucide-react';
@@ -65,11 +65,16 @@ export default function MultiRacketBookingFlow() {
     const [packageAvailable, setPackageAvailable] = useState(false);
     const [userPackages, setUserPackages] = useState<any[]>([]);
     const [membershipInfo, setMembershipInfo] = useState<MembershipTierInfo | null>(null);
+    const [templateId, setTemplateId] = useState<string | null>(null);
+    const [syncTension, setSyncTension] = useState(true);
+    const [syncNotes, setSyncNotes] = useState(false);
+    const [overwriteNotes, setOverwriteNotes] = useState(false);
     const [toastState, setToastState] = useState<{
         show: boolean;
         message: string;
         type: 'success' | 'error' | 'info' | 'warning';
     }>({ show: false, message: '', type: 'info' });
+    const racketCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
     // 页面进入动画
     useEffect(() => {
@@ -102,6 +107,18 @@ export default function MultiRacketBookingFlow() {
             setRepeatSourceLabel(null);
         }
     }, [repeatOrderId]);
+
+    useEffect(() => {
+        if (cartItems.length === 0) {
+            if (templateId !== null) {
+                setTemplateId(null);
+            }
+            return;
+        }
+        if (!templateId || !cartItems.some((item) => item.id === templateId)) {
+            setTemplateId(cartItems[0].id);
+        }
+    }, [cartItems, templateId]);
 
     const loadUserAddress = async () => {
         try {
@@ -137,6 +154,69 @@ export default function MultiRacketBookingFlow() {
             console.error('Failed to load membership info:', error);
         }
     };
+
+    /**
+     * Scroll to a specific racket card to help users resolve validation issues.
+     * @param racketId - The rackets's temporary ID.
+     */
+    const scrollToRacketCard = useCallback((racketId: string) => {
+        const target = racketCardRefs.current[racketId];
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, []);
+
+    /**
+     * Determine whether a racket item is fully configured.
+     * @param item - Racket item data for validation.
+     * @returns True when required data is complete and tension diff is valid.
+     */
+    const isRacketComplete = useCallback((item: RacketItemData) => {
+        const diff = item.tensionHorizontal - item.tensionVertical;
+        return Boolean(item.racketPhoto) && diff >= MIN_TENSION_DIFF && diff <= MAX_TENSION_DIFF;
+    }, [MIN_TENSION_DIFF, MAX_TENSION_DIFF]);
+
+    /**
+     * Summary stats for the Step 2 checklist panel.
+     * @returns Counts for completed and outstanding items, plus the first incomplete ID.
+     */
+    const completionStats = useMemo(() => {
+        const total = cartItems.length;
+        let completeCount = 0;
+        let missingPhotoCount = 0;
+        let invalidDiffCount = 0;
+        let firstIncompleteId: string | null = null;
+
+        cartItems.forEach((item) => {
+            const hasPhoto = Boolean(item.racketPhoto);
+            const diff = item.tensionHorizontal - item.tensionVertical;
+            const diffValid = diff >= MIN_TENSION_DIFF && diff <= MAX_TENSION_DIFF;
+            const complete = hasPhoto && diffValid;
+
+            if (complete) {
+                completeCount += 1;
+                return;
+            }
+
+            if (!firstIncompleteId) {
+                firstIncompleteId = item.id;
+            }
+            if (!hasPhoto) {
+                missingPhotoCount += 1;
+            }
+            if (!diffValid) {
+                invalidDiffCount += 1;
+            }
+        });
+
+        return {
+            total,
+            completeCount,
+            missingPhotoCount,
+            invalidDiffCount,
+            firstIncompleteId,
+        };
+    }, [cartItems, MIN_TENSION_DIFF, MAX_TENSION_DIFF]);
 
     const buildItemsFromOrder = useCallback((order: any): RacketItemData[] => {
         const orderItems = Array.isArray(order.items) ? order.items : [];
@@ -261,6 +341,53 @@ export default function MultiRacketBookingFlow() {
         setCartItems(prev => prev.filter(item => item.id !== id));
     }, []);
 
+    /**
+     * Apply the first racket's tension/notes to the rest of the cart items.
+     */
+    const handleQuickApply = useCallback(() => {
+        if (cartItems.length < 2) {
+            toast.error('至少需要两支球拍才能快速配置');
+            return;
+        }
+        if (!syncTension && !syncNotes) {
+            toast.error('请选择要同步的内容');
+            return;
+        }
+
+        const source = cartItems.find((item) => item.id === templateId) || cartItems[0];
+        if (!source) {
+            toast.error('未找到模板球拍');
+            return;
+        }
+        const sourceNotes = (source.notes || '').trim();
+        const shouldApplyNotes = syncNotes && sourceNotes.length > 0;
+
+        if (syncNotes && !sourceNotes) {
+            toast.error('第 1 支备注为空，已跳过同步备注');
+            if (!syncTension) {
+                return;
+            }
+        }
+
+        setCartItems(prev => prev.map((item, index) => {
+            if (index === 0) return item;
+            const updates: Partial<RacketItemData> = {};
+            if (syncTension) {
+                updates.tensionVertical = source.tensionVertical;
+                updates.tensionHorizontal = source.tensionHorizontal;
+            }
+            if (shouldApplyNotes) {
+                if (!overwriteNotes && item.notes) {
+                    return item;
+                }
+                updates.notes = sourceNotes;
+            }
+            return Object.keys(updates).length > 0 ? { ...item, ...updates } : item;
+        }));
+
+        toast.success('已同步配置到其余球拍');
+    }, [cartItems, overwriteNotes, syncNotes, syncTension, templateId]);
+
     // 计算价格
     const calculatePrices = useCallback(() => {
         const baseTotal = cartItems.reduce((sum, item) => {
@@ -316,17 +443,19 @@ export default function MultiRacketBookingFlow() {
             const item = cartItems[i];
             if (!item.racketPhoto) {
                 toast.error(`第 ${i + 1} 支球拍未上传照片`);
+                scrollToRacketCard(item.id);
                 return false;
             }
             const diff = item.tensionHorizontal - item.tensionVertical;
             if (diff < MIN_TENSION_DIFF || diff > MAX_TENSION_DIFF) {
                 toast.error(`第 ${i + 1} 支球拍差磅需在 ${MIN_TENSION_DIFF}-${MAX_TENSION_DIFF} 磅之间`);
+                scrollToRacketCard(item.id);
                 return false;
             }
         }
 
         return true;
-    }, [cartItems, MAX_TENSION_DIFF, MIN_TENSION_DIFF]);
+    }, [cartItems, MAX_TENSION_DIFF, MIN_TENSION_DIFF, scrollToRacketCard]);
 
     // 验证套餐次数
     const validatePackage = useCallback(() => {
@@ -395,7 +524,12 @@ export default function MultiRacketBookingFlow() {
     };
 
     // 检查所有球拍是否配置完成
-    const allItemsComplete = cartItems.every(item => item.racketPhoto);
+    const allItemsComplete = cartItems.every(item => isRacketComplete(item));
+    const quickApplySource = cartItems.find((item) => item.id === templateId) || cartItems[0];
+    const templateIndex = quickApplySource
+        ? Math.max(1, cartItems.findIndex((item) => item.id === quickApplySource.id) + 1)
+        : 0;
+    const incompleteCount = Math.max(0, completionStats.total - completionStats.completeCount);
 
     if (authLoading) {
         return <PageLoading />;
@@ -584,20 +718,163 @@ export default function MultiRacketBookingFlow() {
                             <div className="flex items-center justify-between">
                                 <h2 className="text-xl font-bold text-text-primary">配置球拍</h2>
                                 <span className="text-sm text-text-tertiary">
-                                    {cartItems.filter(i => i.racketPhoto).length}/{cartItems.length} 已完成
+                                    {completionStats.completeCount}/{completionStats.total} 已完成
                                 </span>
                             </div>
 
+                            {cartItems.length > 0 && (
+                                <div className="rounded-xl border border-border-subtle bg-ink-surface shadow-sm p-4">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div>
+                                            <p className="text-xs text-text-tertiary">配置进度</p>
+                                            <p className="text-base font-semibold text-text-primary">
+                                                {completionStats.completeCount}/{completionStats.total} 已完成
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (completionStats.firstIncompleteId) {
+                                                    scrollToRacketCard(completionStats.firstIncompleteId);
+                                                }
+                                            }}
+                                            disabled={!completionStats.firstIncompleteId}
+                                            className="px-3 py-2 text-xs font-medium rounded-lg border border-border-subtle text-text-secondary hover:bg-ink transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            定位未完成
+                                        </button>
+                                    </div>
+                                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                                        {completionStats.completeCount === completionStats.total && (
+                                            <span className="px-2.5 py-1 rounded-full bg-success/15 text-success">
+                                                全部完成
+                                            </span>
+                                        )}
+                                        {completionStats.missingPhotoCount > 0 && (
+                                            <span className="px-2.5 py-1 rounded-full bg-warning/15 text-warning">
+                                                缺少照片 {completionStats.missingPhotoCount}
+                                            </span>
+                                        )}
+                                        {completionStats.invalidDiffCount > 0 && (
+                                            <span className="px-2.5 py-1 rounded-full bg-danger/10 text-danger">
+                                                差磅异常 {completionStats.invalidDiffCount}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {cartItems.length > 1 && quickApplySource && (
+                                <div className="rounded-xl border border-border-subtle bg-white shadow-sm p-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p className="text-sm font-semibold text-text-primary">快速配置</p>
+                                            <p className="text-xs text-text-tertiary mt-1">
+                                                选择模板后同步到其余 {cartItems.length - 1} 支
+                                            </p>
+                                        </div>
+                                        <span className="text-xs font-medium bg-ink px-2 py-1 rounded-full text-text-secondary">
+                                            模板 #{templateIndex}
+                                        </span>
+                                    </div>
+                                    <div className="mt-3 grid gap-3 text-xs text-text-secondary">
+                                        <div>
+                                            <label className="block text-[11px] text-text-tertiary mb-1">模板球拍</label>
+                                            <select
+                                                value={templateId || quickApplySource.id}
+                                                onChange={(event) => setTemplateId(event.target.value)}
+                                                className="w-full h-9 rounded-lg border border-border-subtle bg-ink-surface text-text-primary text-xs px-2.5 focus:outline-none focus:ring-2 focus:ring-accent-border"
+                                            >
+                                                {cartItems.map((item, index) => (
+                                                    <option key={item.id} value={item.id}>
+                                                        第 {index + 1} 支 · {item.string.brand} {item.string.model}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="flex items-center justify-between bg-ink rounded-lg px-3 py-2 border border-border-subtle">
+                                            <span>拉力</span>
+                                            <span className="font-mono text-text-primary">
+                                                {quickApplySource.tensionVertical}/{quickApplySource.tensionHorizontal} 磅
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between bg-ink rounded-lg px-3 py-2 border border-border-subtle">
+                                            <span>备注</span>
+                                            <span className="text-text-primary truncate max-w-[180px]">
+                                                {quickApplySource.notes?.trim() ? quickApplySource.notes : '无'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 flex flex-wrap gap-3 text-xs text-text-secondary">
+                                        <label className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={syncTension}
+                                                onChange={(event) => setSyncTension(event.target.checked)}
+                                                className="w-4 h-4 rounded border-border-subtle text-accent focus:ring-2 focus:ring-accent-border"
+                                            />
+                                            <span>同步拉力</span>
+                                        </label>
+                                        <label className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={syncNotes}
+                                                onChange={(event) => {
+                                                    const nextValue = event.target.checked;
+                                                    setSyncNotes(nextValue);
+                                                    if (!nextValue) {
+                                                        setOverwriteNotes(false);
+                                                    }
+                                                }}
+                                                className="w-4 h-4 rounded border-border-subtle text-accent focus:ring-2 focus:ring-accent-border"
+                                            />
+                                            <span>同步备注</span>
+                                        </label>
+                                        {syncNotes && (
+                                            <label className="flex items-center gap-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={overwriteNotes}
+                                                    onChange={(event) => setOverwriteNotes(event.target.checked)}
+                                                    className="w-4 h-4 rounded border-border-subtle text-accent focus:ring-2 focus:ring-accent-border"
+                                                />
+                                                <span>覆盖已有备注</span>
+                                            </label>
+                                        )}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleQuickApply}
+                                        disabled={!syncTension && !syncNotes}
+                                        className="mt-4 w-full px-4 py-3 rounded-xl bg-accent text-text-onAccent font-semibold hover:bg-accent/90 transition-all disabled:opacity-50"
+                                    >
+                                        应用到其余 {cartItems.length - 1} 支
+                                    </button>
+                                </div>
+                            )}
+
                             <div className="space-y-4">
                                 {cartItems.map((item, index) => (
-                                    <RacketItemCard
+                                    <div
                                         key={item.id}
-                                        item={item}
-                                        index={index}
-                                        onUpdate={handleUpdateItem}
-                                        onRemove={handleRemoveItem}
-                                        disabled={loading}
-                                    />
+                                        ref={(node) => {
+                                            racketCardRefs.current[item.id] = node;
+                                        }}
+                                        className="scroll-mt-28"
+                                    >
+                                        {templateId === item.id && (
+                                            <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-accent/10 text-accent text-xs font-medium px-2.5 py-1">
+                                                模板
+                                            </div>
+                                        )}
+                                        <RacketItemCard
+                                            item={item}
+                                            index={index}
+                                            onUpdate={handleUpdateItem}
+                                            onRemove={handleRemoveItem}
+                                            disabled={loading}
+                                        />
+                                    </div>
                                 ))}
                             </div>
 
@@ -847,8 +1124,27 @@ export default function MultiRacketBookingFlow() {
             {step > 1 && (
                 <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-subtle p-4 shadow-lg z-50">
                     <div className="max-w-2xl mx-auto flex flex-col gap-3">
-                        <div className="flex items-center justify-between text-xs text-text-tertiary">
-                            <span>{cartItems.length} 支球拍 · 预计实付</span>
+                        <div className="flex items-start justify-between text-xs">
+                            <div className="flex flex-col gap-1 text-text-tertiary">
+                                <span>{cartItems.length} 支球拍 · 预计实付</span>
+                                {step === 2 && !allItemsComplete && (
+                                    <div className="flex items-center gap-2 text-warning">
+                                        <span>还有 {incompleteCount} 支未完成</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (completionStats.firstIncompleteId) {
+                                                    scrollToRacketCard(completionStats.firstIncompleteId);
+                                                }
+                                            }}
+                                            disabled={!completionStats.firstIncompleteId}
+                                            className="px-2 py-0.5 rounded-md border border-warning/30 text-warning hover:bg-warning/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            定位
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                             <span className="font-semibold text-text-primary">
                                 {formatCurrency(finalTotal)}
                             </span>
