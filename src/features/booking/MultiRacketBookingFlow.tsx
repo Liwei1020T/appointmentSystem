@@ -389,9 +389,20 @@ export default function MultiRacketBookingFlow() {
 
     // 更新购物车项
     const handleUpdateItem = useCallback((id: string, data: Partial<RacketItemData>) => {
-        setCartItems(prev => prev.map(item =>
-            item.id === id ? { ...item, ...data } : item
-        ));
+        setCartItems(prev => prev.map(item => {
+            if (item.id !== id) return item;
+            const next: RacketItemData = { ...item, ...data };
+            if ('racketPhoto' in data) {
+                if (data.racketPhoto) {
+                    next.photoStatus = 'success';
+                    next.photoError = undefined;
+                } else {
+                    next.photoStatus = undefined;
+                    next.photoError = undefined;
+                }
+            }
+            return next;
+        }));
     }, []);
 
     // 移除购物车项
@@ -461,6 +472,7 @@ export default function MultiRacketBookingFlow() {
             const file = selectedFiles[i];
             const target = availableTargets[i];
             let url: string | null = null;
+            let failureMessage: string | null = null;
 
             if (!file.type.startsWith('image/')) {
                 failed += 1;
@@ -469,14 +481,20 @@ export default function MultiRacketBookingFlow() {
             } else {
                 try {
                     url = await uploadRacketPhoto(file, `racket_${batchId}_${i}.jpg`);
-                } catch (error) {
+                } catch (error: any) {
                     failed += 1;
+                    failureMessage = error.message || '上传失败';
                 }
             }
 
             if (url) {
                 setCartItems(prev => prev.map(item => (
-                    item.id === target.id ? { ...item, racketPhoto: url as string } : item
+                    item.id === target.id ? { ...item, racketPhoto: url as string, photoStatus: 'success', photoError: undefined } : item
+                )));
+            }
+            if (!url && failureMessage) {
+                setCartItems(prev => prev.map(item => (
+                    item.id === target.id ? { ...item, photoStatus: 'failed', photoError: failureMessage } : item
                 )));
             }
 
@@ -497,7 +515,7 @@ export default function MultiRacketBookingFlow() {
         if (failed > 0) {
             toast.error(`有 ${failed} 张照片上传失败`);
         }
-    }, [bulkReplaceAll, cartItems, uploadRacketPhoto]);
+        }, [bulkReplaceAll, cartItems, uploadRacketPhoto]);
 
     /**
      * Apply template values to all other rackets in the cart.
@@ -1080,6 +1098,24 @@ export default function MultiRacketBookingFlow() {
                                         <Upload className="w-4 h-4" />
                                         {bulkReplaceAll ? '替换照片' : '选择多张照片'}
                                     </button>
+                                    {(cartItems.some(item => item.photoStatus)) && (
+                                        <div className="mt-3 space-y-1 text-xs">
+                                            {cartItems.map((item, index) => {
+                                                if (!item.photoStatus) return null;
+                                                const statusLabel = item.photoStatus === 'success' ? '成功' : '失败';
+                                                return (
+                                                    <div key={`${item.id}-status`} className="flex items-center gap-2 text-[11px]">
+                                                        <span className={`px-2 py-0.5 rounded-full ${item.photoStatus === 'success' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
+                                                            第 {index + 1} 支 · {statusLabel}
+                                                        </span>
+                                                        {item.photoStatus === 'failed' && item.photoError && (
+                                                            <span className="text-text-secondary truncate max-w-[200px]">原因：{item.photoError}</span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             )}
 

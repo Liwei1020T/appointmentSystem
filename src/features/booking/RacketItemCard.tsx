@@ -30,6 +30,8 @@ export interface RacketItemData {
     racketModel?: string;
     racketPhoto: string;
     notes?: string;
+    photoStatus?: 'success' | 'failed';
+    photoError?: string;
 }
 
 interface RacketItemCardProps {
@@ -157,12 +159,12 @@ export default function RacketItemCard({
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    {!isComplete && (
-                        <span className="text-xs bg-warning/20 text-warning px-2 py-1 rounded-full font-medium">
-                            未完成
-                        </span>
-                    )}
+            <div className="flex items-center gap-2">
+                {!isComplete && (
+                    <span className="text-xs bg-warning/20 text-warning px-2 py-1 rounded-full font-medium">
+                        未完成
+                    </span>
+                )}
                     {isComplete && (
                         <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-medium">
                             已配置
@@ -194,15 +196,20 @@ export default function RacketItemCard({
                                 : 'bg-ink text-text-secondary hover:text-accent'
                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
-                            {isTemplate ? '模板' : '设为模板'}
-                        </button>
-                    )}
-                    {expanded ? (
-                        <ChevronUp className="w-5 h-5 text-text-tertiary" />
-                    ) : (
-                        <ChevronDown className="w-5 h-5 text-text-tertiary" />
-                    )}
-                </div>
+                    {isTemplate ? '模板' : '设为模板'}
+                </button>
+            )}
+            {expanded ? (
+                <ChevronUp className="w-5 h-5 text-text-tertiary" />
+            ) : (
+                <ChevronDown className="w-5 h-5 text-text-tertiary" />
+            )}
+        </div>
+        {item.photoStatus === 'failed' && item.photoError && (
+            <div className="px-4 pb-3 text-xs text-danger">
+                批量上传失败：{item.photoError}
+            </div>
+        )}
             </div>
 
             {/* 展开内容 */}

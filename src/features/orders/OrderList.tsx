@@ -26,11 +26,34 @@ import Button from '@/components/Button';
 import Toast from '@/components/Toast';
 import { OrderListSkeleton } from '@/components/skeletons';
 import { formatDate } from '@/lib/utils';
-import { Clock, CheckCircle, RefreshCw, XCircle, Disc, LucideIcon } from 'lucide-react';
+import { Clock, CheckCircle, RefreshCw, XCircle, Disc, Banknote, LucideIcon } from 'lucide-react';
 
 interface OrderListProps {
   initialStatus?: OrderStatus;
 }
+
+const getOrderNextAction = (order: OrderWithDetails) => {
+  const hasCompletedPayment = order.payments?.some((p: any) => p.status === 'completed' || p.status === 'success');
+  const needsPayment = order.status === 'pending' && !hasCompletedPayment;
+  const isPickup = (order as any).serviceType === 'pickup_delivery' || (order as any).service_type === 'pickup_delivery';
+
+  if (order.status === 'cancelled') {
+    return { label: '已取消', tone: 'danger' as const };
+  }
+  if (needsPayment) {
+    return { label: '待付款', tone: 'warning' as const };
+  }
+  if (order.status === 'pending') {
+    return { label: '等待处理', tone: 'info' as const };
+  }
+  if (order.status === 'in_progress') {
+    return { label: isPickup ? '取送中' : '穿线中', tone: 'info' as const };
+  }
+  if (order.status === 'completed') {
+    return { label: isPickup ? '配送中' : '可取拍', tone: 'success' as const };
+  }
+  return { label: '处理中', tone: 'neutral' as const };
+};
 
 export default function OrderList({ initialStatus }: OrderListProps) {
   const router = useRouter();
@@ -227,7 +250,7 @@ export default function OrderList({ initialStatus }: OrderListProps) {
       {/* 订单列表 */}
       {!loading && !error && orders.length > 0 && (
         <div className="space-y-4">
-          {orders.map((order) => {
+        {orders.map((order) => {
             // Status-based styling with Lucide icons
             const statusConfig: Record<string, {
               icon: LucideIcon;
@@ -275,6 +298,14 @@ export default function OrderList({ initialStatus }: OrderListProps) {
 
             const config = statusConfig[order.status] || statusConfig.pending;
             const isMultiRacket = (order as any).items?.length > 0;
+            const nextAction = getOrderNextAction(order);
+            const actionToneMap = {
+              success: 'bg-success/10 text-success border border-success/40',
+              warning: 'bg-warning/10 text-warning border border-warning/40',
+              info: 'bg-info/10 text-info border border-info/40',
+              neutral: 'bg-ink/70 text-text-secondary border border-border-subtle',
+              danger: 'bg-danger/10 text-danger border border-danger/40',
+            };
 
             return (
               <div
@@ -387,6 +418,10 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                       再来一单
                     </button>
                   )}
+
+                  <span className={`text-[11px] px-2 py-1 rounded-full font-medium border ${actionToneMap[nextAction.tone] || actionToneMap.neutral}`}>
+                    {nextAction.label}
+                  </span>
 
                   {/* Arrow indicator */}
                   <div className="ml-auto flex items-center gap-1 text-text-tertiary text-xs group-hover:text-accent transition-colors">
