@@ -10,7 +10,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Plus, ShoppingCart, ArrowRight, ArrowLeft, Check, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Plus, ShoppingCart, ArrowRight, ArrowLeft, Check, ChevronDown, ChevronUp, X, Upload } from 'lucide-react';
 import { StringInventory, UserVoucher } from '@/types';
 import PageLoading from '@/components/loading/PageLoading';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
@@ -18,6 +18,7 @@ import { formatCurrency } from '@/lib/utils';
 import { hasAvailablePackage, getUserPackages } from '@/services/packageService';
 import { createMultiRacketOrder, getOrderById } from '@/services/orderService';
 import { getUserStats, getUserProfile, type MembershipTierInfo } from '@/services/profileService';
+import { uploadImage } from '@/services/imageUploadService';
 import StringSelector from './StringSelector';
 import RacketItemCard, { RacketItemData } from './RacketItemCard';
 import VoucherSelector from './VoucherSelector';
@@ -26,6 +27,7 @@ import { toast } from 'sonner';
 
 // 生成临时 ID
 const generateTempId = () => `temp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 
 export default function MultiRacketBookingFlow() {
     const router = useRouter();
@@ -74,7 +76,14 @@ export default function MultiRacketBookingFlow() {
         message: string;
         type: 'success' | 'error' | 'info' | 'warning';
     }>({ show: false, message: '', type: 'info' });
+    const [bulkUploadState, setBulkUploadState] = useState({
+        uploading: false,
+        total: 0,
+        completed: 0,
+        failed: 0,
+    });
     const racketCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+    const bulkInputRef = useRef<HTMLInputElement>(null);
 
     // 页面进入动画
     useEffect(() => {
@@ -342,6 +351,100 @@ export default function MultiRacketBookingFlow() {
     }, []);
 
     /**
+     * Upload a racket photo to storage and return its URL.
+     * @param file - The image file to upload.
+     * @param fileName - The file name for storage.
+     * @returns The uploaded image URL.
+     */
+    const uploadRacketPhoto = useCallback(async (file: File, fileName: string) => {
+        const { url, error } = await uploadImage(file, {
+            bucket: 'rackets',
+            folder: 'orders',
+            fileName,
+            compress: true,
+            maxWidth: 1920,
+            maxHeight: 1920,
+        });
+
+        if (error || !url) {
+            throw new Error(error || '上传失败');
+        }
+
+        return url;
+    }, []);
+
+    /**
+     * Bulk upload photos to fill the next available racket slots.
+     * @param files - The selected image files.
+     */
+    const handleBulkPhotoUpload = useCallback(async (files: FileList | null) => {
+        if (!files || files.length === 0) return;
+
+        const availableTargets = cartItems.filter(item => !item.racketPhoto);
+        if (availableTargets.length === 0) {
+            toast.error('所有球拍已有照片');
+            return;
+        }
+
+        const selectedFiles = Array.from(files);
+        const assignCount = Math.min(selectedFiles.length, availableTargets.length);
+        if (selectedFiles.length > availableTargets.length) {
+            toast.message('照片数量超过未上传球拍，超出部分将被忽略');
+        }
+
+        setBulkUploadState({
+            uploading: true,
+            total: assignCount,
+            completed: 0,
+            failed: 0,
+        });
+
+        const batchId = Date.now();
+        let completed = 0;
+        let failed = 0;
+
+        for (let i = 0; i < assignCount; i += 1) {
+            const file = selectedFiles[i];
+            const target = availableTargets[i];
+            let url: string | null = null;
+
+            if (!file.type.startsWith('image/')) {
+                failed += 1;
+            } else if (file.size > MAX_PHOTO_SIZE) {
+                failed += 1;
+            } else {
+                try {
+                    url = await uploadRacketPhoto(file, `racket_${batchId}_${i}.jpg`);
+                } catch (error) {
+                    failed += 1;
+                }
+            }
+
+            if (url) {
+                setCartItems(prev => prev.map(item => (
+                    item.id === target.id ? { ...item, racketPhoto: url as string } : item
+                )));
+            }
+
+            completed += 1;
+            setBulkUploadState(prev => ({
+                ...prev,
+                completed,
+                failed,
+            }));
+        }
+
+        setBulkUploadState(prev => ({ ...prev, uploading: false }));
+
+        if (completed - failed > 0) {
+            toast.success(`已上传 ${completed - failed} 张照片`);
+        }
+        if (failed > 0) {
+            toast.error(`有 ${failed} 张照片上传失败`);
+        }
+    }, [cartItems, uploadRacketPhoto]);
+
+    /**
      * Apply template values to all other rackets in the cart.
      * @param options - Flags for which fields to apply.
      * @returns True when updates were applied.
@@ -575,6 +678,10 @@ export default function MultiRacketBookingFlow() {
         ? Math.max(1, cartItems.findIndex((item) => item.id === quickApplySource.id) + 1)
         : 0;
     const incompleteCount = Math.max(0, completionStats.total - completionStats.completeCount);
+    const pendingPhotoCount = cartItems.filter(item => !item.racketPhoto).length;
+    const bulkProgressPercent = bulkUploadState.total > 0
+        ? Math.round((bulkUploadState.completed / bulkUploadState.total) * 100)
+        : 0;
 
     if (authLoading) {
         return <PageLoading />;
@@ -818,6 +925,73 @@ export default function MultiRacketBookingFlow() {
                                             </span>
                                         )}
                                     </div>
+                                </div>
+                            )}
+
+                            {cartItems.length > 0 && (
+                                <div className="rounded-xl border border-border-subtle bg-white shadow-sm p-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p className="text-sm font-semibold text-text-primary">批量上传照片</p>
+                                            <p className="text-xs text-text-tertiary mt-1">
+                                                按顺序填充未上传照片的球拍
+                                            </p>
+                                        </div>
+                                        <span className="text-xs font-medium bg-ink px-2 py-1 rounded-full text-text-secondary">
+                                            待上传 {pendingPhotoCount}
+                                        </span>
+                                    </div>
+
+                                    <div className="mt-3 flex items-center justify-between rounded-lg border border-border-subtle bg-ink px-3 py-2 text-xs">
+                                        <span className="text-text-tertiary">支持多选，单张 ≤ 5MB</span>
+                                        <span className="text-text-secondary">
+                                            {pendingPhotoCount > 0 ? `可填充 ${pendingPhotoCount} 支` : '全部已上传'}
+                                        </span>
+                                    </div>
+
+                                    {bulkUploadState.uploading && (
+                                        <div className="mt-3">
+                                            <div className="flex items-center justify-between text-xs text-text-secondary mb-1">
+                                                <span>上传中 {bulkUploadState.completed}/{bulkUploadState.total}</span>
+                                                <span>{bulkProgressPercent}%</span>
+                                            </div>
+                                            <div className="h-2 rounded-full bg-ink overflow-hidden">
+                                                <div
+                                                    className="h-full bg-accent transition-all duration-300"
+                                                    style={{ width: `${bulkProgressPercent}%` }}
+                                                />
+                                            </div>
+                                            {bulkUploadState.failed > 0 && (
+                                                <p className="text-xs text-danger mt-2">
+                                                    失败 {bulkUploadState.failed} 张
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <input
+                                        ref={bulkInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={(event) => {
+                                            handleBulkPhotoUpload(event.target.files);
+                                            if (bulkInputRef.current) {
+                                                bulkInputRef.current.value = '';
+                                            }
+                                        }}
+                                        className="hidden"
+                                        disabled={bulkUploadState.uploading}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => bulkInputRef.current?.click()}
+                                        disabled={pendingPhotoCount === 0 || bulkUploadState.uploading}
+                                        className="mt-3 w-full px-4 py-3 rounded-xl border border-border-subtle bg-ink text-text-secondary font-semibold flex items-center justify-center gap-2 hover:text-accent hover:border-accent/40 hover:bg-ink/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <Upload className="w-4 h-4" />
+                                        选择多张照片
+                                    </button>
                                 </div>
                             )}
 
