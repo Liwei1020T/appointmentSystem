@@ -342,42 +342,48 @@ export default function MultiRacketBookingFlow() {
     }, []);
 
     /**
-     * Apply the first racket's tension/notes to the rest of the cart items.
+     * Apply template values to all other rackets in the cart.
+     * @param options - Flags for which fields to apply.
+     * @returns True when updates were applied.
      */
-    const handleQuickApply = useCallback(() => {
+    const applyTemplateToItems = useCallback((options: {
+        applyTension: boolean;
+        applyNotes: boolean;
+        overwriteNotes?: boolean;
+    }) => {
         if (cartItems.length < 2) {
             toast.error('至少需要两支球拍才能快速配置');
-            return;
+            return false;
         }
-        if (!syncTension && !syncNotes) {
+        if (!options.applyTension && !options.applyNotes) {
             toast.error('请选择要同步的内容');
-            return;
+            return false;
         }
 
         const source = cartItems.find((item) => item.id === templateId) || cartItems[0];
         if (!source) {
             toast.error('未找到模板球拍');
-            return;
+            return false;
         }
         const sourceNotes = (source.notes || '').trim();
-        const shouldApplyNotes = syncNotes && sourceNotes.length > 0;
+        const shouldApplyNotes = options.applyNotes && sourceNotes.length > 0;
 
-        if (syncNotes && !sourceNotes) {
-            toast.error('第 1 支备注为空，已跳过同步备注');
-            if (!syncTension) {
-                return;
+        if (options.applyNotes && !sourceNotes) {
+            toast.error('模板备注为空，已跳过同步备注');
+            if (!options.applyTension) {
+                return false;
             }
         }
 
-        setCartItems(prev => prev.map((item, index) => {
-            if (index === 0) return item;
+        setCartItems(prev => prev.map((item) => {
+            if (item.id === source.id) return item;
             const updates: Partial<RacketItemData> = {};
-            if (syncTension) {
+            if (options.applyTension) {
                 updates.tensionVertical = source.tensionVertical;
                 updates.tensionHorizontal = source.tensionHorizontal;
             }
             if (shouldApplyNotes) {
-                if (!overwriteNotes && item.notes) {
+                if (!options.overwriteNotes && item.notes) {
                     return item;
                 }
                 updates.notes = sourceNotes;
@@ -385,8 +391,47 @@ export default function MultiRacketBookingFlow() {
             return Object.keys(updates).length > 0 ? { ...item, ...updates } : item;
         }));
 
-        toast.success('已同步配置到其余球拍');
-    }, [cartItems, overwriteNotes, syncNotes, syncTension, templateId]);
+        return true;
+    }, [cartItems, templateId]);
+
+    /**
+     * Apply selected template settings based on the current sync options.
+     */
+    const handleQuickApply = useCallback(() => {
+        const applied = applyTemplateToItems({
+            applyTension: syncTension,
+            applyNotes: syncNotes,
+            overwriteNotes,
+        });
+        if (applied) {
+            toast.success('已同步配置到其余球拍');
+        }
+    }, [applyTemplateToItems, overwriteNotes, syncNotes, syncTension]);
+
+    /**
+     * Apply only tension values from the template to all other rackets.
+     */
+    const handleApplyTensionOnly = useCallback(() => {
+        const applied = applyTemplateToItems({
+            applyTension: true,
+            applyNotes: false,
+        });
+        if (applied) {
+            toast.success('已同步拉力到其余球拍');
+        }
+    }, [applyTemplateToItems]);
+
+    /**
+     * Clear notes for every racket in the cart.
+     */
+    const handleClearNotes = useCallback(() => {
+        if (cartItems.length === 0) {
+            toast.error('暂无备注可清空');
+            return;
+        }
+        setCartItems(prev => prev.map(item => ({ ...item, notes: '' })));
+        toast.success('已清空全部备注');
+    }, [cartItems.length]);
 
     // 计算价格
     const calculatePrices = useCallback(() => {
@@ -842,6 +887,22 @@ export default function MultiRacketBookingFlow() {
                                             </label>
                                         )}
                                     </div>
+                                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                                        <button
+                                            type="button"
+                                            onClick={handleApplyTensionOnly}
+                                            className="px-3 py-2 rounded-lg border border-border-subtle bg-ink text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+                                        >
+                                            仅同步拉力
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleClearNotes}
+                                            className="px-3 py-2 rounded-lg border border-danger/30 text-danger bg-danger/10 hover:bg-danger/15 transition-colors"
+                                        >
+                                            清空全部备注
+                                        </button>
+                                    </div>
                                     <button
                                         type="button"
                                         onClick={handleQuickApply}
@@ -860,19 +921,16 @@ export default function MultiRacketBookingFlow() {
                                         ref={(node) => {
                                             racketCardRefs.current[item.id] = node;
                                         }}
-                                        className="scroll-mt-28"
+                                        className={`scroll-mt-28 rounded-xl transition-shadow ${templateId === item.id ? 'ring-1 ring-accent/30' : ''}`}
                                     >
-                                        {templateId === item.id && (
-                                            <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-accent/10 text-accent text-xs font-medium px-2.5 py-1">
-                                                模板
-                                            </div>
-                                        )}
                                         <RacketItemCard
                                             item={item}
                                             index={index}
                                             onUpdate={handleUpdateItem}
                                             onRemove={handleRemoveItem}
                                             disabled={loading}
+                                            isTemplate={templateId === item.id}
+                                            onSetTemplate={() => setTemplateId(item.id)}
                                         />
                                     </div>
                                 ))}

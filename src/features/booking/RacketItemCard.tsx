@@ -38,6 +38,8 @@ interface RacketItemCardProps {
     onUpdate: (id: string, data: Partial<RacketItemData>) => void;
     onRemove: (id: string) => void;
     disabled?: boolean;
+    isTemplate?: boolean;
+    onSetTemplate?: () => void;
 }
 
 export default function RacketItemCard({
@@ -46,6 +48,8 @@ export default function RacketItemCard({
     onUpdate,
     onRemove,
     disabled = false,
+    isTemplate = false,
+    onSetTemplate,
 }: RacketItemCardProps) {
     const [expanded, setExpanded] = useState(true);
     const MIN_TENSION = 18;
@@ -159,6 +163,23 @@ export default function RacketItemCard({
                         <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-medium">
                             已配置
                         </span>
+                    )}
+                    {onSetTemplate && (
+                        <button
+                            type="button"
+                            onClick={(event) => {
+                                // Keep template toggle from collapsing the card.
+                                event.stopPropagation();
+                                onSetTemplate();
+                            }}
+                            disabled={disabled}
+                            className={`text-xs px-2 py-1 rounded-full font-medium transition-colors ${isTemplate
+                                ? 'bg-accent/15 text-accent'
+                                : 'bg-ink text-text-secondary hover:text-accent'
+                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                            {isTemplate ? '模板' : '设为模板'}
+                        </button>
                     )}
                     {expanded ? (
                         <ChevronUp className="w-5 h-5 text-text-tertiary" />
