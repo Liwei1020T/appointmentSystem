@@ -265,6 +265,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   const packageName = order.packageUsed?.package?.name || '配套服务';
   const packageRemainingCount = order.packageUsed?.remaining;
   const packageExpiry = order.packageUsed?.expiry ?? order.packageUsed?.expires_at;
+  const serviceType = (order as any).serviceType || (order as any).service_type || 'in_store';
 
   // 判断支付状态：检查是否有已完成的支付记录（'success' 是确认后的状态，'completed' 是兼容状态）
   const hasCompletedPayment =
@@ -285,6 +286,95 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   // provider='pending' 的支付记录表示用户还没选择支付方式，应该显示支付选择界面
   const needsPayment =
     order.status === 'pending' && !hasCompletedPayment && !hasActualPendingPayment && !hasPendingCashPayment && !hasPendingTngVerification && finalAmount > 0 && !order.use_package;
+
+  /**
+   * Determine the next-step hint for the order timeline.
+   * @returns Next-step metadata for the tracking card.
+   */
+  const nextStepInfo = (() => {
+    if (order.status === 'cancelled') {
+      return {
+        title: '订单已取消',
+        description: '可重新下单以继续预约',
+        icon: X,
+        iconBg: 'bg-ink',
+        iconColor: 'text-text-tertiary',
+      };
+    }
+    if (order.status === 'completed') {
+      return {
+        title: '可取拍',
+        description: serviceType === 'pickup_delivery'
+          ? '已完成穿线，将安排送回，请保持通讯畅通'
+          : '穿线完成，可到店取拍',
+        icon: CheckCircle,
+        iconBg: 'bg-success/15',
+        iconColor: 'text-success',
+      };
+    }
+    if (order.status === 'in_progress') {
+      return {
+        title: '正在穿线',
+        description: '预计 1-2 天完成（参考）',
+        icon: Clock,
+        iconBg: 'bg-info/15',
+        iconColor: 'text-info',
+      };
+    }
+    if (needsPayment) {
+      return {
+        title: '请完成支付',
+        description: '支付完成后将进入排队处理',
+        icon: Banknote,
+        iconBg: 'bg-warning/15',
+        iconColor: 'text-warning',
+      };
+    }
+    if (hasPendingTngVerification) {
+      return {
+        title: '等待审核',
+        description: '收据审核通过后开始处理',
+        icon: Smartphone,
+        iconBg: 'bg-info/15',
+        iconColor: 'text-info',
+      };
+    }
+    if (hasPendingCashPayment) {
+      return {
+        title: '等待确认',
+        description: '到店付款确认后将开始处理',
+        icon: Banknote,
+        iconBg: 'bg-warning/15',
+        iconColor: 'text-warning',
+      };
+    }
+    if (hasActualPendingPayment) {
+      return {
+        title: '等待确认',
+        description: '支付处理中，请稍候',
+        icon: Clock,
+        iconBg: 'bg-info/15',
+        iconColor: 'text-info',
+      };
+    }
+    if (hasCompletedPayment) {
+      return {
+        title: '等待接单',
+        description: '已付款，等待开始穿线',
+        icon: Clock,
+        iconBg: 'bg-info/15',
+        iconColor: 'text-info',
+      };
+    }
+    return {
+      title: '等待处理',
+      description: '订单已提交，请稍候',
+      icon: Clock,
+      iconBg: 'bg-ink',
+      iconColor: 'text-text-tertiary',
+    };
+  })();
+  const NextStepIcon = nextStepInfo.icon;
 
   return (
     <div className="min-h-screen bg-ink">
@@ -334,6 +424,23 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
           }}
           onCancelClick={() => setShowCancelModal(true)}
         />
+
+        {/* 下一步提示 */}
+        <Card className="p-5">
+          <div className="flex items-start gap-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${nextStepInfo.iconBg}`}>
+              <NextStepIcon className={`w-5 h-5 ${nextStepInfo.iconColor}`} />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs text-text-tertiary">下一步</p>
+              <p className="text-base font-semibold text-text-primary">{nextStepInfo.title}</p>
+              <p className="text-sm text-text-secondary mt-1">{nextStepInfo.description}</p>
+              <p className="text-xs text-text-tertiary mt-2">
+                最近更新: {formatDate(updatedAt, 'yyyy/MM/dd HH:mm')}
+              </p>
+            </div>
+          </div>
+        </Card>
 
         {/* 球拍清单 - 可折叠带图片 */}
         <Card className="p-0 overflow-hidden">

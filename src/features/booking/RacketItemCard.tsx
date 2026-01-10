@@ -123,14 +123,18 @@ export default function RacketItemCard({
     const tensionDiff = item.tensionHorizontal - item.tensionVertical;
     const diffValid = tensionDiff >= MIN_DIFF && tensionDiff <= MAX_DIFF;
     const isComplete = item.racketPhoto && item.tensionVertical && item.tensionHorizontal && diffValid;
+    const missingPhoto = !item.racketPhoto;
+    const diffInvalid = !diffValid;
+    const containerTone = diffInvalid
+        ? 'border-danger/30 bg-danger/5'
+        : isComplete
+            ? 'border-success/30 bg-success/5'
+            : 'border-warning/30 bg-warning/5';
 
     return (
         <div className={`
       rounded-xl border-2 transition-all overflow-hidden
-      ${isComplete
-                ? 'border-success/30 bg-success/5'
-                : 'border-warning/30 bg-warning/5'
-            }
+      ${containerTone}
     `}>
             {/* 卡片头部 */}
             <div
@@ -162,6 +166,16 @@ export default function RacketItemCard({
                     {isComplete && (
                         <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full font-medium">
                             已配置
+                        </span>
+                    )}
+                    {missingPhoto && (
+                        <span className="text-xs bg-warning/15 text-warning px-2 py-1 rounded-full font-medium">
+                            缺照片
+                        </span>
+                    )}
+                    {diffInvalid && (
+                        <span className="text-xs bg-danger/15 text-danger px-2 py-1 rounded-full font-medium">
+                            差磅异常
                         </span>
                     )}
                     {onSetTemplate && (

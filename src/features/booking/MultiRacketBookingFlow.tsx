@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 // 生成临时 ID
 const generateTempId = () => `temp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+const SAVED_ADDRESS_KEY = 'string_service_saved_pickup_addresses';
 
 export default function MultiRacketBookingFlow() {
     const router = useRouter();
@@ -53,6 +54,8 @@ export default function MultiRacketBookingFlow() {
     const [serviceType, setServiceType] = useState<ServiceType>('in_store');
     const [pickupAddress, setPickupAddress] = useState('');
     const [userDefaultAddress, setUserDefaultAddress] = useState('');
+    const [savedPickupAddresses, setSavedPickupAddresses] = useState<string[]>([]);
+    const [addressError, setAddressError] = useState<string | null>(null);
 
     // 复单状态
     const repeatOrderId = searchParams.get('repeatOrderId');
@@ -119,6 +122,20 @@ export default function MultiRacketBookingFlow() {
     }, [repeatOrderId]);
 
     useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const stored = window.localStorage.getItem(SAVED_ADDRESS_KEY);
+        if (!stored) return;
+        try {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+                setSavedPickupAddresses(parsed.filter((item) => typeof item === 'string'));
+            }
+        } catch (error) {
+            console.error('Failed to parse saved addresses:', error);
+        }
+    }, []);
+
+    useEffect(() => {
         if (cartItems.length === 0) {
             if (templateId !== null) {
                 setTemplateId(null);
@@ -164,6 +181,37 @@ export default function MultiRacketBookingFlow() {
             console.error('Failed to load membership info:', error);
         }
     };
+
+    /**
+     * Validate pickup address length for delivery service.
+     * @param address - Input address string.
+     * @returns Validation result with message when invalid.
+     */
+    const validatePickupAddress = useCallback((address: string) => {
+        const trimmed = address.trim();
+        if (trimmed.length === 0) {
+            return { ok: false, message: '请填写上门取送地址' };
+        }
+        if (trimmed.length < 8) {
+            return { ok: false, message: '地址信息过短，请补充门牌/楼层' };
+        }
+        return { ok: true, message: '' };
+    }, []);
+
+    /**
+     * Persist a pickup address locally for quick reuse.
+     * @param address - The confirmed pickup address.
+     */
+    const persistPickupAddress = useCallback((address: string) => {
+        const trimmed = address.trim();
+        if (!trimmed || typeof window === 'undefined') return;
+
+        setSavedPickupAddresses((prev) => {
+            const next = [trimmed, ...prev.filter((item) => item !== trimmed)].slice(0, 5);
+            window.localStorage.setItem(SAVED_ADDRESS_KEY, JSON.stringify(next));
+            return next;
+        });
+    }, []);
 
     /**
      * Scroll to a specific racket card to help users resolve validation issues.
@@ -385,14 +433,17 @@ export default function MultiRacketBookingFlow() {
             ? cartItems
             : cartItems.filter(item => !item.racketPhoto);
         if (availableTargets.length === 0) {
-            toast.error('所有球拍已有照片');
+            toast.error(bulkReplaceAll ? '请先添加球拍' : '所有球拍已有照片，可开启替换全部');
             return;
         }
 
         const selectedFiles = Array.from(files);
         const assignCount = Math.min(selectedFiles.length, availableTargets.length);
         if (selectedFiles.length > availableTargets.length) {
-            toast.message('照片数量超过未上传球拍，超出部分将被忽略');
+            const message = bulkReplaceAll
+                ? '照片数量超过球拍数量，超出部分将被忽略'
+                : '照片数量超过未上传球拍，超出部分将被忽略';
+            toast.message(message);
         }
 
         setBulkUploadState({
@@ -609,6 +660,18 @@ export default function MultiRacketBookingFlow() {
         return true;
     }, [cartItems, MAX_TENSION_DIFF, MIN_TENSION_DIFF, scrollToRacketCard]);
 
+    useEffect(() => {
+        if (serviceType !== 'pickup_delivery') {
+            if (addressError) {
+                setAddressError(null);
+            }
+            return;
+        }
+
+        const validation = validatePickupAddress(pickupAddress);
+        setAddressError(validation.ok ? null : validation.message);
+    }, [addressError, pickupAddress, serviceType, validatePickupAddress]);
+
     // 验证套餐次数
     const validatePackage = useCallback(() => {
         if (!usePackage || !selectedPackageId) return true;
@@ -626,6 +689,14 @@ export default function MultiRacketBookingFlow() {
     const handleSubmit = async () => {
         if (!validateCart() || !validatePackage()) return;
         if (!user) return;
+        if (serviceType === 'pickup_delivery') {
+            const validation = validatePickupAddress(pickupAddress);
+            if (!validation.ok) {
+                setAddressError(validation.message);
+                toast.error(validation.message);
+                return;
+            }
+        }
 
         setLoading(true);
 
@@ -647,6 +718,10 @@ export default function MultiRacketBookingFlow() {
                 serviceType,
                 pickupAddress: serviceType === 'pickup_delivery' ? pickupAddress : undefined,
             });
+
+            if (serviceType === 'pickup_delivery') {
+                persistPickupAddress(pickupAddress);
+            }
 
             toast.success(`预约成功！共 ${result.racketCount} 支球拍`);
 
@@ -942,7 +1017,7 @@ export default function MultiRacketBookingFlow() {
                                             </p>
                                         </div>
                                         <span className="text-xs font-medium bg-ink px-2 py-1 rounded-full text-text-secondary">
-                                            待上传 {pendingPhotoCount}
+                                            {bulkReplaceAll ? `将替换 ${cartItems.length}` : `待上传 ${pendingPhotoCount}`}
                                         </span>
                                     </div>
 
@@ -1248,6 +1323,12 @@ export default function MultiRacketBookingFlow() {
                                     pickupAddress={pickupAddress}
                                     onAddressChange={setPickupAddress}
                                     defaultAddress={userDefaultAddress}
+                                    savedAddresses={savedPickupAddresses}
+                                    onSelectSaved={(address) => {
+                                        setPickupAddress(address);
+                                        setAddressError(null);
+                                    }}
+                                    addressError={addressError}
                                     disabled={loading}
                                 />
                             </div>
@@ -1289,32 +1370,38 @@ export default function MultiRacketBookingFlow() {
 
                             {/* 价格汇总 */}
                             <div className="p-4 rounded-xl bg-ink-surface border border-border-subtle space-y-3">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-text-secondary">球线费用</span>
-                                    <span className="text-text-primary">{formatCurrency(baseTotal)}</span>
-                                </div>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-text-secondary">球线费用</span>
+                                        <div className="flex-1 border-b border-dotted border-border-subtle" />
+                                        <span className="text-text-primary font-mono">{formatCurrency(baseTotal)}</span>
+                                    </div>
                                 {voucherDiscount > 0 && (
-                                    <div className="flex justify-between text-sm">
+                                    <div className="flex items-center gap-3 text-sm">
                                         <span className="text-success">优惠券折扣</span>
-                                        <span className="text-success">-{formatCurrency(voucherDiscount)}</span>
+                                        <div className="flex-1 border-b border-dotted border-success/30" />
+                                        <span className="text-success font-mono">-{formatCurrency(voucherDiscount)}</span>
                                     </div>
                                 )}
                                 {membershipDiscount > 0 && (
-                                    <div className="flex justify-between text-sm">
+                                    <div className="flex items-center gap-3 text-sm">
                                         <span className="text-accent">会员折扣 ({membershipInfo?.discountRate}%)</span>
-                                        <span className="text-accent">-{formatCurrency(membershipDiscount)}</span>
+                                        <div className="flex-1 border-b border-dotted border-accent/30" />
+                                        <span className="text-accent font-mono">-{formatCurrency(membershipDiscount)}</span>
                                     </div>
                                 )}
 
                                 {usePackage && (
-                                    <div className="flex justify-between text-sm">
+                                    <div className="flex items-center gap-3 text-sm">
                                         <span className="text-success">套餐抵扣 ({cartItems.length} 次)</span>
-                                        <span className="text-success">-{formatCurrency(baseTotal)}</span>
+                                        <div className="flex-1 border-b border-dotted border-success/30" />
+                                        <span className="text-success font-mono">-{formatCurrency(baseTotal)}</span>
                                     </div>
                                 )}
-                                <div className="pt-3 border-t border-border-subtle flex justify-between">
+                                </div>
+                                <div className="pt-3 mt-3 border-t border-double border-border-subtle flex items-center justify-between">
                                     <span className="font-bold text-text-primary">实付金额</span>
-                                    <span className="text-2xl font-black text-accent">
+                                    <span className="text-2xl font-black text-accent font-mono">
                                         {formatCurrency(finalTotal)}
                                     </span>
                                 </div>

@@ -21,6 +21,9 @@ interface ServiceMethodSelectorProps {
     pickupAddress: string;
     onAddressChange: (address: string) => void;
     defaultAddress?: string; // 用户个人资料中的地址
+    savedAddresses?: string[]; // 常用地址（本地缓存）
+    onSelectSaved?: (address: string) => void;
+    addressError?: string | null;
     disabled?: boolean;
 }
 
@@ -45,6 +48,9 @@ export default function ServiceMethodSelector({
     pickupAddress,
     onAddressChange,
     defaultAddress = '',
+    savedAddresses = [],
+    onSelectSaved,
+    addressError = null,
     disabled = false,
 }: ServiceMethodSelectorProps) {
     const [showAddressInput, setShowAddressInput] = useState(value === 'pickup_delivery');
@@ -134,6 +140,11 @@ export default function ServiceMethodSelector({
                         rows={2}
                         className="w-full px-3 py-2.5 rounded-lg border border-border-subtle bg-white text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent-border resize-none text-sm"
                     />
+                    {addressError && (
+                        <p className="text-xs text-danger">
+                            {addressError}
+                        </p>
+                    )}
 
                     {defaultAddress && pickupAddress !== defaultAddress && (
                         <button
@@ -143,6 +154,27 @@ export default function ServiceMethodSelector({
                         >
                             <span>使用个人资料地址</span>
                         </button>
+                    )}
+
+                    {savedAddresses.length > 0 && (
+                        <div className="space-y-2">
+                            <p className="text-xs text-text-tertiary">常用地址</p>
+                            <div className="flex flex-wrap gap-2">
+                                {savedAddresses.map((address) => (
+                                    <button
+                                        key={address}
+                                        type="button"
+                                        onClick={() => onSelectSaved?.(address)}
+                                        className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${pickupAddress === address
+                                            ? 'border-accent bg-accent/10 text-accent'
+                                            : 'border-border-subtle text-text-secondary hover:text-accent'
+                                            }`}
+                                    >
+                                        {address}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     )}
                 </div>
             )}

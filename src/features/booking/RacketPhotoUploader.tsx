@@ -7,7 +7,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Camera, X, Upload } from 'lucide-react';
+import { Camera, X } from 'lucide-react';
 import { uploadImage } from '@/services/imageUploadService';
 import { toast } from 'sonner';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
@@ -29,21 +29,25 @@ export default function RacketPhotoUploader({
 }: RacketPhotoUploaderProps) {
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(value || null);
+    const [uploadError, setUploadError] = useState<string | null>(null);
     const [dragActive, setDragActive] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileSelect = async (file: File) => {
         if (disabled) return;
+        setUploadError(null);
 
         // 验证文件类型
         if (!file.type.startsWith('image/')) {
             toast.error('请上传图片文件');
+            setUploadError('请选择图片格式文件');
             return;
         }
 
         // 验证文件大小（最大 5MB）
         if (file.size > 5 * 1024 * 1024) {
             toast.error('图片大小不能超过 5MB');
+            setUploadError('图片大小超过 5MB，请重新选择');
             return;
         }
 
@@ -70,15 +74,18 @@ export default function RacketPhotoUploader({
             if (error) {
                 toast.error('上传失败：' + error);
                 setPreviewUrl(null);
+                setUploadError(error || '上传失败，请重试');
             } else if (url) {
                 setPreviewUrl(url);
                 onChange(url);
+                setUploadError(null);
                 toast.success('球拍照片上传成功');
             }
         } catch (error: any) {
             console.error('Failed to upload racket photo:', error);
             toast.error('上传失败');
             setPreviewUrl(null);
+            setUploadError('上传失败，请重试');
         } finally {
             setUploading(false);
         }
@@ -118,11 +125,21 @@ export default function RacketPhotoUploader({
 
     const handleRemove = () => {
         setPreviewUrl(null);
+        setUploadError(null);
         onRemove?.();
     };
 
     return (
         <div className="relative">
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileChange}
+                className="hidden"
+                disabled={uploading || disabled}
+            />
             {!previewUrl ? (
                 <div
                     className={`
@@ -140,16 +157,6 @@ export default function RacketPhotoUploader({
                     onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
                 >
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        onChange={handleFileChange}
-                        className="hidden"
-                        disabled={uploading || disabled}
-                    />
-
                     {uploading ? (
                         <div className="flex flex-col items-center gap-2 py-4">
                             <LoadingSpinner size="md" className="w-8 h-8" />
@@ -179,13 +186,24 @@ export default function RacketPhotoUploader({
                         className="w-full h-40 object-cover"
                     />
                     {!disabled && (
-                        <button
-                            onClick={handleRemove}
-                            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-danger text-white flex items-center justify-center shadow-lg hover:bg-danger/90"
-                            title="移除照片"
-                        >
-                            <X className="h-4 w-4" />
-                        </button>
+                        <div className="absolute top-2 right-2 flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="px-2 py-1 rounded-full bg-white/90 text-xs font-medium text-text-primary shadow-sm hover:bg-white"
+                                title="替换照片"
+                            >
+                                替换
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleRemove}
+                                className="w-8 h-8 rounded-full bg-danger text-white flex items-center justify-center shadow-lg hover:bg-danger/90"
+                                title="移除照片"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
                     )}
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
                         <p className="text-xs text-white font-medium flex items-center gap-1">
@@ -193,6 +211,20 @@ export default function RacketPhotoUploader({
                             球拍照片已上传
                         </p>
                     </div>
+                </div>
+            )}
+            {uploadError && (
+                <div className="mt-2 flex items-center justify-between text-xs text-danger">
+                    <span>{uploadError}</span>
+                    {!disabled && !uploading && (
+                        <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="text-danger/90 hover:text-danger font-medium"
+                        >
+                            重试
+                        </button>
+                    )}
                 </div>
             )}
         </div>
