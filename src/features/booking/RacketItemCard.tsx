@@ -187,6 +187,8 @@ export default function RacketItemCard({
                                 onSetTemplate();
                             }}
                             disabled={disabled}
+                            aria-pressed={isTemplate}
+                            aria-label={isTemplate ? '当前模板球拍' : '设为模板球拍'}
                             className={`text-xs px-2 py-1 rounded-full font-medium transition-colors ${isTemplate
                                 ? 'bg-accent/15 text-accent'
                                 : 'bg-ink text-text-secondary hover:text-accent'
@@ -236,6 +238,7 @@ export default function RacketItemCard({
                                         type="button"
                                         onClick={() => handleTensionChange('vertical', Math.max(MIN_TENSION, item.tensionVertical - 1))}
                                         disabled={disabled}
+                                        aria-label="减少竖线拉力"
                                         className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink disabled:opacity-50 ${item.tensionVertical <= MIN_TENSION ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
                                         -
@@ -248,6 +251,7 @@ export default function RacketItemCard({
                                         type="button"
                                         onClick={() => handleTensionChange('vertical', Math.min(MAX_TENSION, item.tensionVertical + 1))}
                                         disabled={disabled}
+                                        aria-label="增加竖线拉力"
                                         className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink disabled:opacity-50 ${item.tensionVertical >= MAX_TENSION - MIN_DIFF ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
                                         +
@@ -261,6 +265,7 @@ export default function RacketItemCard({
                                         type="button"
                                         onClick={() => handleTensionChange('horizontal', Math.max(MIN_TENSION, item.tensionHorizontal - 1))}
                                         disabled={disabled}
+                                        aria-label="减少横线拉力"
                                         className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink disabled:opacity-50 ${item.tensionHorizontal <= MIN_TENSION ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
                                         -
@@ -273,6 +278,7 @@ export default function RacketItemCard({
                                         type="button"
                                         onClick={() => handleTensionChange('horizontal', Math.min(MAX_TENSION, item.tensionHorizontal + 1))}
                                         disabled={disabled}
+                                        aria-label="增加横线拉力"
                                         className={`w-10 h-10 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center text-lg font-bold text-text-secondary hover:bg-ink disabled:opacity-50 ${item.tensionHorizontal >= Math.min(MAX_TENSION, item.tensionVertical + MAX_DIFF) ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
                                         +

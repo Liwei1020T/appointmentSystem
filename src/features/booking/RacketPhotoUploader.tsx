@@ -130,7 +130,7 @@ export default function RacketPhotoUploader({
     };
 
     return (
-        <div className="relative">
+        <div className="relative" aria-busy={uploading}>
             <input
                 ref={fileInputRef}
                 type="file"
@@ -184,6 +184,7 @@ export default function RacketPhotoUploader({
                         src={previewUrl}
                         alt="球拍照片"
                         className="w-full h-40 object-cover"
+                        decoding="async"
                     />
                     {!disabled && (
                         <div className="absolute top-2 right-2 flex items-center gap-2">
@@ -192,6 +193,7 @@ export default function RacketPhotoUploader({
                                 onClick={() => fileInputRef.current?.click()}
                                 className="px-2 py-1 rounded-full bg-white/90 text-xs font-medium text-text-primary shadow-sm hover:bg-white"
                                 title="替换照片"
+                                aria-label="替换球拍照片"
                             >
                                 替换
                             </button>
@@ -200,6 +202,7 @@ export default function RacketPhotoUploader({
                                 onClick={handleRemove}
                                 className="w-8 h-8 rounded-full bg-danger text-white flex items-center justify-center shadow-lg hover:bg-danger/90"
                                 title="移除照片"
+                                aria-label="移除球拍照片"
                             >
                                 <X className="h-4 w-4" />
                             </button>
@@ -214,7 +217,7 @@ export default function RacketPhotoUploader({
                 </div>
             )}
             {uploadError && (
-                <div className="mt-2 flex items-center justify-between text-xs text-danger">
+                <div className="mt-2 flex items-center justify-between text-xs text-danger" role="alert" aria-live="assertive">
                     <span>{uploadError}</span>
                     {!disabled && !uploading && (
                         <button

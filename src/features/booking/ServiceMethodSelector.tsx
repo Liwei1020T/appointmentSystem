@@ -10,7 +10,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { Store, Truck, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 
 export type ServiceType = 'in_store' | 'pickup_delivery';
@@ -54,6 +54,7 @@ export default function ServiceMethodSelector({
     disabled = false,
 }: ServiceMethodSelectorProps) {
     const [showAddressInput, setShowAddressInput] = useState(value === 'pickup_delivery');
+    const addressErrorId = useId();
 
     // 当选择上门取送时，如果地址为空，填充默认地址
     useEffect(() => {
@@ -138,10 +139,12 @@ export default function ServiceMethodSelector({
                         placeholder="请输入完整地址，例如：XX花园 1号楼 2单元 301室"
                         disabled={disabled}
                         rows={2}
+                        aria-invalid={!!addressError}
+                        aria-describedby={addressError ? addressErrorId : undefined}
                         className="w-full px-3 py-2.5 rounded-lg border border-border-subtle bg-white text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent-border resize-none text-sm"
                     />
                     {addressError && (
-                        <p className="text-xs text-danger">
+                        <p id={addressErrorId} className="text-xs text-danger">
                             {addressError}
                         </p>
                     )}

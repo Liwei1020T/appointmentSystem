@@ -16,6 +16,7 @@ Improved booking Step 2 guidance with quick sync tools, completion feedback, and
 - Added pickup address validation plus saved address chips for faster selection.
 - Refined Step 4 price breakdown with dotted leaders and stronger totals.
 - Added an order detail “next step” tracking card with update timestamp.
+- Added accessibility labels/state for booking controls and lazy-loaded order images.
 - Tightened Step 2 validation to require valid tension differences before enabling the next step.
 - Auto-scroll to the first invalid racket card when validation fails.
 

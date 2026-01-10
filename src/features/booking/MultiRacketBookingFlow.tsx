@@ -1008,7 +1008,7 @@ export default function MultiRacketBookingFlow() {
                             )}
 
                             {cartItems.length > 0 && (
-                                <div className="rounded-xl border border-border-subtle bg-white shadow-sm p-4">
+                                <div className="rounded-xl border border-border-subtle bg-white shadow-sm p-4" aria-busy={bulkUploadState.uploading}>
                                     <div className="flex items-start justify-between gap-3">
                                         <div>
                                             <p className="text-sm font-semibold text-text-primary">批量上传照片</p>
@@ -1038,7 +1038,7 @@ export default function MultiRacketBookingFlow() {
                                     </label>
 
                                     {bulkUploadState.uploading && (
-                                        <div className="mt-3">
+                                        <div className="mt-3" role="status" aria-live="polite">
                                             <div className="flex items-center justify-between text-xs text-text-secondary mb-1">
                                                 <span>上传中 {bulkUploadState.completed}/{bulkUploadState.total}</span>
                                                 <span>{bulkProgressPercent}%</span>
@@ -1345,6 +1345,8 @@ export default function MultiRacketBookingFlow() {
                                                 src={item.racketPhoto}
                                                 alt="球拍"
                                                 className="w-16 h-16 rounded-lg object-cover"
+                                                loading="lazy"
+                                                decoding="async"
                                             />
                                         )}
                                         <div className="flex-1">

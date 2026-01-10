@@ -472,6 +472,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                         src={item.racketPhoto || item.racket_photo}
                         alt={`球拍 ${index + 1}`}
                         className="w-12 h-12 rounded-lg object-cover border border-border-subtle flex-shrink-0"
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <div className="w-12 h-12 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center flex-shrink-0">
