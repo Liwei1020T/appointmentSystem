@@ -82,6 +82,7 @@ export default function MultiRacketBookingFlow() {
         completed: 0,
         failed: 0,
     });
+    const [bulkReplaceAll, setBulkReplaceAll] = useState(false);
     const racketCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const bulkInputRef = useRef<HTMLInputElement>(null);
 
@@ -380,7 +381,9 @@ export default function MultiRacketBookingFlow() {
     const handleBulkPhotoUpload = useCallback(async (files: FileList | null) => {
         if (!files || files.length === 0) return;
 
-        const availableTargets = cartItems.filter(item => !item.racketPhoto);
+        const availableTargets = bulkReplaceAll
+            ? cartItems
+            : cartItems.filter(item => !item.racketPhoto);
         if (availableTargets.length === 0) {
             toast.error('所有球拍已有照片');
             return;
@@ -437,12 +440,13 @@ export default function MultiRacketBookingFlow() {
         setBulkUploadState(prev => ({ ...prev, uploading: false }));
 
         if (completed - failed > 0) {
-            toast.success(`已上传 ${completed - failed} 张照片`);
+            const suffix = bulkReplaceAll ? '已替换' : '已上传';
+            toast.success(`${suffix} ${completed - failed} 张照片`);
         }
         if (failed > 0) {
             toast.error(`有 ${failed} 张照片上传失败`);
         }
-    }, [cartItems, uploadRacketPhoto]);
+    }, [bulkReplaceAll, cartItems, uploadRacketPhoto]);
 
     /**
      * Apply template values to all other rackets in the cart.
@@ -942,12 +946,21 @@ export default function MultiRacketBookingFlow() {
                                         </span>
                                     </div>
 
-                                    <div className="mt-3 flex items-center justify-between rounded-lg border border-border-subtle bg-ink px-3 py-2 text-xs">
+                                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border-subtle bg-ink px-3 py-2 text-xs">
                                         <span className="text-text-tertiary">支持多选，单张 ≤ 5MB</span>
                                         <span className="text-text-secondary">
-                                            {pendingPhotoCount > 0 ? `可填充 ${pendingPhotoCount} 支` : '全部已上传'}
+                                            {bulkReplaceAll ? `将替换 ${cartItems.length} 支` : pendingPhotoCount > 0 ? `可填充 ${pendingPhotoCount} 支` : '全部已上传'}
                                         </span>
                                     </div>
+                                    <label className="mt-3 flex items-center gap-2 text-xs text-text-secondary">
+                                        <input
+                                            type="checkbox"
+                                            checked={bulkReplaceAll}
+                                            onChange={(event) => setBulkReplaceAll(event.target.checked)}
+                                            className="w-4 h-4 rounded border-border-subtle text-accent focus:ring-2 focus:ring-accent-border"
+                                        />
+                                        <span>替换全部照片</span>
+                                    </label>
 
                                     {bulkUploadState.uploading && (
                                         <div className="mt-3">
@@ -986,11 +999,11 @@ export default function MultiRacketBookingFlow() {
                                     <button
                                         type="button"
                                         onClick={() => bulkInputRef.current?.click()}
-                                        disabled={pendingPhotoCount === 0 || bulkUploadState.uploading}
+                                        disabled={(pendingPhotoCount === 0 && !bulkReplaceAll) || bulkUploadState.uploading}
                                         className="mt-3 w-full px-4 py-3 rounded-xl border border-border-subtle bg-ink text-text-secondary font-semibold flex items-center justify-center gap-2 hover:text-accent hover:border-accent/40 hover:bg-ink/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Upload className="w-4 h-4" />
-                                        选择多张照片
+                                        {bulkReplaceAll ? '替换照片' : '选择多张照片'}
                                     </button>
                                 </div>
                             )}
