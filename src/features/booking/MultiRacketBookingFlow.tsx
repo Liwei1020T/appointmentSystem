@@ -598,9 +598,21 @@ export default function MultiRacketBookingFlow() {
                     </button>
                     <div className="flex-1 min-w-0">
                         <h1 className="text-xl font-bold text-text-primary truncate">预约穿线</h1>
-                        <p className="text-sm text-text-secondary mt-0.5 truncate">
-                            步骤 {step}/4 · {cartItems.length} 支球拍
-                        </p>
+                        <div className="flex flex-wrap items-center gap-2 mt-0.5 min-w-0">
+                            <p className="text-sm text-text-secondary truncate">
+                                步骤 {step}/4 · {cartItems.length} 支球拍
+                            </p>
+                            {step === 2 && completionStats.total > 0 && (
+                                <span
+                                    className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${completionStats.completeCount === completionStats.total
+                                        ? 'bg-success/15 text-success'
+                                        : 'bg-warning/15 text-warning'
+                                        }`}
+                                >
+                                    完成 {completionStats.completeCount}/{completionStats.total}
+                                </span>
+                            )}
+                        </div>
                     </div>
                     {/* 购物车徽章 */}
                     <div className="relative">
