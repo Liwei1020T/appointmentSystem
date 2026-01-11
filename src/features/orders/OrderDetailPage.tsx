@@ -292,7 +292,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
    * @returns Next-step metadata for the tracking card.
    */
   const nextStepInfo = (() => {
-    if (order.status === 'cancelled') {
+    if ((order as any).status === 'cancelled') {
       return {
         title: '订单已取消',
         description: '可重新下单以继续预约',

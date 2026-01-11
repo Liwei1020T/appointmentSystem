@@ -32,6 +32,7 @@ export interface RacketItemData {
     notes?: string;
     photoStatus?: 'success' | 'failed';
     photoError?: string;
+    photoFileName?: string;
 }
 
 interface RacketItemCardProps {
@@ -105,12 +106,18 @@ export default function RacketItemCard({
         onUpdate(item.id, { tensionVertical: normalized.vertical, tensionHorizontal: normalized.horizontal });
     };
 
-    const handlePhotoChange = (url: string) => {
-        onUpdate(item.id, { racketPhoto: url });
+    const handlePhotoChange = (url: string, meta?: { fileName?: string }) => {
+        onUpdate(item.id, {
+            racketPhoto: url,
+            photoFileName: meta?.fileName,
+        });
     };
 
     const handlePhotoRemove = () => {
-        onUpdate(item.id, { racketPhoto: '' });
+        onUpdate(item.id, {
+            racketPhoto: '',
+            photoFileName: undefined,
+        });
     };
 
     const handleRacketInfoChange = (field: 'racketBrand' | 'racketModel', value: string) => {

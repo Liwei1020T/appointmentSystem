@@ -18,7 +18,6 @@ import {
   playNotificationSound,
   OrderStatus as OrderStatusType
 } from '@/lib/orderNotificationHelper';
-import { Order } from '@/types';
 import { OrderStatus } from '@/components/OrderStatusBadge';
 import OrderStatusBadge from '@/components/OrderStatusBadge';
 import Card from '@/components/Card';
@@ -26,15 +25,59 @@ import Button from '@/components/Button';
 import Toast from '@/components/Toast';
 import { OrderListSkeleton } from '@/components/skeletons';
 import { formatDate } from '@/lib/utils';
-import { Clock, CheckCircle, RefreshCw, XCircle, Disc, Banknote, LucideIcon } from 'lucide-react';
+import { getOrderEtaEstimate } from '@/lib/orderEta';
+import { Clock, CheckCircle, RefreshCw, XCircle, Disc, Banknote, MapPin, Smartphone, LucideIcon } from 'lucide-react';
 
 interface OrderListProps {
   initialStatus?: OrderStatus;
 }
 
+const resolvePaymentFlags = (order: OrderWithDetails) => {
+  const payments = order.payments ?? [];
+  const hasCompletedPayment = payments.some(
+    (p: any) => p.status === 'completed' || p.status === 'success'
+  );
+  const hasActualPendingPayment = payments.some(
+    (p: any) =>
+      p.status === 'pending' &&
+      p.provider !== 'pending' &&
+      p.provider !== 'manual'
+  );
+  const hasPendingCashPayment = payments.some(
+    (p: any) => p.status === 'pending' && p.provider === 'cash'
+  );
+  const hasPendingTngVerification = payments.some(
+    (p: any) =>
+      p.status === 'pending_verification' && p.provider === 'tng'
+  );
+  const finalAmount = Number(order.finalPrice ?? order.price ?? 0);
+  const usePackage =
+    !!(order.usePackage || (order as any).use_package);
+  const needsPayment =
+    order.status === 'pending' &&
+    !hasCompletedPayment &&
+    !hasActualPendingPayment &&
+    !hasPendingCashPayment &&
+    !hasPendingTngVerification &&
+    finalAmount > 0 &&
+    !usePackage;
+
+  return {
+    hasCompletedPayment,
+    hasActualPendingPayment,
+    hasPendingCashPayment,
+    hasPendingTngVerification,
+    needsPayment,
+  };
+};
+
 const getOrderNextAction = (order: OrderWithDetails) => {
-  const hasCompletedPayment = order.payments?.some((p: any) => p.status === 'completed' || p.status === 'success');
-  const needsPayment = order.status === 'pending' && !hasCompletedPayment;
+  const {
+    needsPayment,
+    hasPendingCashPayment,
+    hasPendingTngVerification,
+    hasActualPendingPayment,
+  } = resolvePaymentFlags(order);
   const isPickup = (order as any).serviceType === 'pickup_delivery' || (order as any).service_type === 'pickup_delivery';
 
   if (order.status === 'cancelled') {
@@ -46,13 +89,70 @@ const getOrderNextAction = (order: OrderWithDetails) => {
   if (order.status === 'pending') {
     return { label: '等待处理', tone: 'info' as const };
   }
+  if (hasPendingTngVerification) {
+    return { label: '等待审核', tone: 'info' as const };
+  }
+  if (hasPendingCashPayment) {
+    return { label: '待到店付款', tone: 'warning' as const };
+  }
   if (order.status === 'in_progress') {
     return { label: isPickup ? '取送中' : '穿线中', tone: 'info' as const };
   }
   if (order.status === 'completed') {
     return { label: isPickup ? '配送中' : '可取拍', tone: 'success' as const };
   }
+  if (hasActualPendingPayment) {
+    return { label: '付款处理中', tone: 'info' as const };
+  }
   return { label: '处理中', tone: 'neutral' as const };
+};
+
+const chipToneStyles: Record<'success' | 'warning' | 'info' | 'neutral', string> = {
+  success: 'bg-success/10 text-success border border-success/40',
+  warning: 'bg-warning/10 text-warning border border-warning/40',
+  info: 'bg-info/10 text-info border border-info/40',
+  neutral: 'bg-ink-surface text-text-secondary border border-border-subtle',
+};
+
+const getEtaIcon = (tone: 'success' | 'warning' | 'info' | 'neutral') => {
+  if (tone === 'success') return MapPin;
+  return Clock;
+};
+
+const getOrderNextActionChips = (order: OrderWithDetails) => {
+  const {
+    needsPayment,
+    hasPendingCashPayment,
+    hasPendingTngVerification,
+    hasActualPendingPayment,
+  } = resolvePaymentFlags(order);
+  const eta = getOrderEtaEstimate(order);
+  const chips: Array<{
+    label: string;
+    tone: 'success' | 'warning' | 'info' | 'neutral';
+    icon?: LucideIcon;
+  }> = [
+    {
+      label: eta.label,
+      tone: eta.tone,
+      icon: getEtaIcon(eta.tone),
+    },
+  ];
+
+  if (needsPayment) {
+    chips.push({ label: '待付款', tone: 'warning', icon: Banknote });
+  }
+  if (hasPendingTngVerification) {
+    chips.push({ label: '等待审核', tone: 'info', icon: Smartphone });
+  }
+  if (hasPendingCashPayment) {
+    chips.push({ label: '待到店付款', tone: 'warning', icon: Banknote });
+  }
+  if (hasActualPendingPayment && !needsPayment) {
+    chips.push({ label: '付款处理中', tone: 'info', icon: Clock });
+  }
+
+  return chips;
 };
 
 export default function OrderList({ initialStatus }: OrderListProps) {
@@ -299,6 +399,7 @@ export default function OrderList({ initialStatus }: OrderListProps) {
             const config = statusConfig[order.status] || statusConfig.pending;
             const isMultiRacket = (order as any).items?.length > 0;
             const nextAction = getOrderNextAction(order);
+            const nextActionChips = getOrderNextActionChips(order);
             const actionToneMap = {
               success: 'bg-success/10 text-success border border-success/40',
               warning: 'bg-warning/10 text-warning border border-warning/40',
@@ -422,7 +523,6 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                   <span className={`text-[11px] px-2 py-1 rounded-full font-medium border ${actionToneMap[nextAction.tone] || actionToneMap.neutral}`}>
                     {nextAction.label}
                   </span>
-
                   {/* Arrow indicator */}
                   <div className="ml-auto flex items-center gap-1 text-text-tertiary text-xs group-hover:text-accent transition-colors">
                     <span>查看详情</span>
@@ -436,6 +536,25 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                     </svg>
                   </div>
                 </div>
+
+                {/* Next action chips */}
+                {nextActionChips.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {nextActionChips.map((chip, chipIndex) => {
+                      const ChipIcon = chip.icon;
+                      return (
+                        <div
+                          key={`${order.id}-chip-${chipIndex}`}
+                          className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-medium ${chipToneStyles[chip.tone]}`}
+                        >
+                          {ChipIcon && <ChipIcon className="w-3 h-3" />}
+                          <span>{chip.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
               </div>
             );
           })}

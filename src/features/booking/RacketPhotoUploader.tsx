@@ -14,7 +14,7 @@ import LoadingSpinner from '@/components/loading/LoadingSpinner';
 
 interface RacketPhotoUploaderProps {
     value?: string;
-    onChange: (url: string) => void;
+    onChange: (url: string, meta?: { fileName?: string }) => void;
     onRemove?: () => void;
     disabled?: boolean;
     index?: number;
@@ -44,13 +44,6 @@ export default function RacketPhotoUploader({
             return;
         }
 
-        // 验证文件大小（最大 5MB）
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error('图片大小不能超过 5MB');
-            setUploadError('图片大小超过 5MB，请重新选择');
-            return;
-        }
-
         setUploading(true);
 
         try {
@@ -77,7 +70,7 @@ export default function RacketPhotoUploader({
                 setUploadError(error || '上传失败，请重试');
             } else if (url) {
                 setPreviewUrl(url);
-                onChange(url);
+                onChange(url, { fileName: file.name });
                 setUploadError(null);
                 toast.success('球拍照片上传成功');
             }

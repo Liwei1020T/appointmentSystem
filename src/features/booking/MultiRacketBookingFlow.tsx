@@ -10,12 +10,13 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Plus, ShoppingCart, ArrowRight, ArrowLeft, Check, ChevronDown, ChevronUp, X, Upload } from 'lucide-react';
+import { Plus, ShoppingCart, ArrowRight, ArrowLeft, Check, ChevronDown, ChevronUp, X, Upload, Clock } from 'lucide-react';
 import { StringInventory, UserVoucher } from '@/types';
 import PageLoading from '@/components/loading/PageLoading';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
 import { formatCurrency } from '@/lib/utils';
 import { hasAvailablePackage, getUserPackages } from '@/services/packageService';
+import type { OrderWithDetails } from '@/services/orderService';
 import { createMultiRacketOrder, getOrderById } from '@/services/orderService';
 import { getUserStats, getUserProfile, type MembershipTierInfo } from '@/services/profileService';
 import { uploadImage } from '@/services/imageUploadService';
@@ -23,11 +24,17 @@ import StringSelector from './StringSelector';
 import RacketItemCard, { RacketItemData } from './RacketItemCard';
 import VoucherSelector from './VoucherSelector';
 import ServiceMethodSelector, { ServiceType } from './ServiceMethodSelector';
+import { getOrderEtaEstimate } from '@/lib/orderEta';
 import { toast } from 'sonner';
+
+type RetryQueueEntry = {
+    reason: string;
+    fileName?: string;
+    readyToReplace: boolean;
+};
 
 // 生成临时 ID
 const generateTempId = () => `temp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 const SAVED_ADDRESS_KEY = 'string_service_saved_pickup_addresses';
 
 export default function MultiRacketBookingFlow() {
@@ -86,8 +93,20 @@ export default function MultiRacketBookingFlow() {
         failed: 0,
     });
     const [bulkReplaceAll, setBulkReplaceAll] = useState(false);
+    const [retryQueue, setRetryQueue] = useState<Record<string, RetryQueueEntry>>({});
+    const [repeatSnapshot, setRepeatSnapshot] = useState<RacketItemData[] | null>(null);
+    const [repeatSourceOrder, setRepeatSourceOrder] = useState<OrderWithDetails | null>(null);
+    const [autoFilledPhotos, setAutoFilledPhotos] = useState(false);
     const racketCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const bulkInputRef = useRef<HTMLInputElement>(null);
+    const [slotUploadingId, setSlotUploadingId] = useState<string | null>(null);
+    const [slotRetryTarget, setSlotRetryTarget] = useState<string | null>(null);
+    const slotInputRef = useRef<HTMLInputElement>(null);
+    const sendHapticFeedback = useCallback(() => {
+        if (typeof window === 'undefined') return;
+        const navigatorWithVibrate = navigator as Navigator & { vibrate?: (pattern: number | number[]) => boolean };
+        navigatorWithVibrate.vibrate?.(20);
+    }, []);
 
     // 页面进入动画
     useEffect(() => {
@@ -276,31 +295,38 @@ export default function MultiRacketBookingFlow() {
         };
     }, [cartItems, MIN_TENSION_DIFF, MAX_TENSION_DIFF]);
 
-    const buildItemsFromOrder = useCallback((order: any): RacketItemData[] => {
+    const buildItemsFromOrder = useCallback((order: any, includePhotos = false): RacketItemData[] => {
         const orderItems = Array.isArray(order.items) ? order.items : [];
         if (orderItems.length > 0) {
-            return orderItems.map((item: any) => ({
-                id: generateTempId(),
-                stringId: item.stringId || item.string_id || item.string?.id || order.stringId || order.string_id || '',
-                string: {
-                    id: item.string?.id || item.stringId || item.string_id || order.stringId || order.string_id || '',
-                    brand: item.string?.brand || order.string?.brand || '',
-                    model: item.string?.model || order.string?.model || '',
-                    sellingPrice: item.string?.sellingPrice || order.string?.sellingPrice || order.finalPrice || order.final_price || order.price || 0,
-                },
-                tensionVertical: item.tensionVertical ?? item.tension_vertical ?? order.tension ?? 24,
-                tensionHorizontal: item.tensionHorizontal ?? item.tension_horizontal ?? order.tension ?? 24,
-                racketBrand: item.racketBrand ?? item.racket_brand ?? '',
-                racketModel: item.racketModel ?? item.racket_model ?? '',
-                racketPhoto: item.racketPhoto ?? item.racket_photo ?? '',
-                notes: item.notes ?? '',
-            }));
+            return orderItems.map((item: any) => {
+                const photo = includePhotos ? (item.racketPhoto || item.racket_photo || '') : '';
+                const hasPhoto = Boolean(photo);
+                return {
+                    id: generateTempId(),
+                    stringId: item.stringId || item.string_id || item.string?.id || order.stringId || order.string_id || '',
+                    string: {
+                        id: item.string?.id || item.stringId || item.string_id || order.stringId || order.string_id || '',
+                        brand: item.string?.brand || order.string?.brand || '',
+                        model: item.string?.model || order.string?.model || '',
+                        sellingPrice: item.string?.sellingPrice || order.string?.sellingPrice || order.finalPrice || order.final_price || order.price || 0,
+                    },
+                    tensionVertical: item.tensionVertical ?? item.tension_vertical ?? order.tension ?? 24,
+                    tensionHorizontal: item.tensionHorizontal ?? item.tension_horizontal ?? order.tension ?? 24,
+                    racketBrand: item.racketBrand ?? item.racket_brand ?? '',
+                    racketModel: item.racketModel ?? item.racket_model ?? '',
+                    racketPhoto: photo,
+                    notes: item.notes ?? '',
+                    photoStatus: hasPhoto ? 'success' : undefined,
+                };
+            });
         }
 
         const fallbackStringId = order.stringId || order.string_id || order.string?.id || '';
         if (!fallbackStringId) return [];
 
         const fallbackTension = Number(order.tension) || 24;
+        const photo = includePhotos ? (order.racketPhoto || order.racket_photo || '') : '';
+        const hasPhoto = Boolean(photo);
         return [
             {
                 id: generateTempId(),
@@ -313,8 +339,9 @@ export default function MultiRacketBookingFlow() {
                 },
                 tensionVertical: fallbackTension,
                 tensionHorizontal: fallbackTension,
-                racketPhoto: '',
+                racketPhoto: photo,
                 notes: order.notes ?? '',
+                photoStatus: hasPhoto ? 'success' : undefined,
             },
         ];
     }, []);
@@ -328,12 +355,16 @@ export default function MultiRacketBookingFlow() {
                 const order = await getOrderById(repeatOrderId);
                 if (!active) return;
 
-                const nextItems = buildItemsFromOrder(order);
-                if (nextItems.length === 0) {
+                const baseItems = buildItemsFromOrder(order, false);
+                const snapshotWithPhotos = buildItemsFromOrder(order, true);
+                if (baseItems.length === 0) {
                     throw new Error('Missing order items');
                 }
+                const orderAny = order as any;
 
-                setCartItems(nextItems);
+                setRepeatSnapshot(snapshotWithPhotos);
+                setRepeatSourceOrder(order);
+                setCartItems(baseItems);
                 setSelectedStringForAdd(null);
                 setIsCartExpanded(true);
                 setStep(2);
@@ -341,10 +372,11 @@ export default function MultiRacketBookingFlow() {
                 setUsePackage(false);
                 setSelectedPackageId(null);
                 setSelectedVoucher(null);
-                setServiceType(order.serviceType || order.service_type || 'in_store');
-                setPickupAddress(order.pickupAddress || order.pickup_address || '');
+                setServiceType(orderAny.serviceType || orderAny.service_type || 'in_store');
+                setPickupAddress(orderAny.pickupAddress || orderAny.pickup_address || '');
                 setRepeatSourceLabel(`订单 #${order.id.slice(0, 6).toUpperCase()}`);
                 toast.success('已载入上次配置');
+                setAutoFilledPhotos(false);
             } catch (error) {
                 if (active) {
                     toast.error('未能载入上次配置');
@@ -360,6 +392,23 @@ export default function MultiRacketBookingFlow() {
             active = false;
         };
     }, [user, repeatOrderId, repeatLoaded, buildItemsFromOrder]);
+
+    const applyRepeatPhotos = useCallback(() => {
+        if (!repeatSnapshot || cartItems.length === 0) return;
+        setCartItems(prev => prev.map((item, index) => {
+            const source = repeatSnapshot[index] || repeatSnapshot.find((snap) => snap.stringId === item.stringId);
+            if (!source?.racketPhoto) return item;
+            return {
+                ...item,
+                racketPhoto: source.racketPhoto,
+                photoStatus: 'success',
+                photoError: undefined,
+                photoFileName: source.photoFileName,
+            };
+        }));
+        setAutoFilledPhotos(true);
+        toast.success('已快速填充上次照片');
+    }, [repeatSnapshot, cartItems.length]);
 
     // 添加球拍到购物车
     const handleAddToCart = useCallback(() => {
@@ -433,6 +482,109 @@ export default function MultiRacketBookingFlow() {
         return url;
     }, []);
 
+    const updateItemPhotoState = useCallback((itemId: string, updates: Partial<RacketItemData>) => {
+        setCartItems(prev =>
+            prev.map(item => (item.id === itemId ? { ...item, ...updates } : item))
+        );
+    }, []);
+     89
+    const addRetryEntry = useCallback((itemId: string, reason: string, fileName?: string) => {
+        setRetryQueue(prev => ({
+            ...prev,
+            [itemId]: {
+                reason,
+                fileName,
+                readyToReplace: false,
+            },
+        }));
+        sendHapticFeedback();
+    }, [sendHapticFeedback]);
+
+    const removeRetryEntry = useCallback((itemId: string) => {
+        setRetryQueue(prev => {
+            const next = { ...prev };
+            delete next[itemId];
+            return next;
+        });
+    }, []);
+
+    const confirmRetrySlot = useCallback((itemId: string) => {
+        setRetryQueue(prev => {
+            const entry = prev[itemId];
+            if (!entry) return prev;
+            return {
+                ...prev,
+                [itemId]: {
+                    ...entry,
+                    readyToReplace: true,
+                },
+            };
+        });
+    }, []);
+
+    const dismissRetrySlot = useCallback((itemId: string) => {
+        removeRetryEntry(itemId);
+    }, [removeRetryEntry]);
+
+    const handleSlotUpload = useCallback(async (file: File, itemId: string) => {
+        setSlotUploadingId(itemId);
+        let url: string | null = null;
+        let failureMessage: string | null = null;
+
+        if (!file.type.startsWith('image/')) {
+            failureMessage = '请选择图片文件';
+        } else {
+            try {
+                url = await uploadRacketPhoto(file, `racket_retry_${itemId}_${Date.now()}.jpg`);
+            } catch (error: any) {
+                failureMessage = error?.message || '上传失败';
+            }
+        }
+
+        if (url) {
+            updateItemPhotoState(itemId, {
+                racketPhoto: url,
+                photoStatus: 'success',
+                photoError: undefined,
+                photoFileName: file.name,
+            });
+            toast.success('球拍照片已更新');
+            removeRetryEntry(itemId);
+        } else {
+            updateItemPhotoState(itemId, {
+                photoStatus: 'failed',
+                photoError: failureMessage || '上传失败，请重试',
+                photoFileName: file.name,
+            });
+            toast.error(failureMessage || '上传失败，请重试');
+            addRetryEntry(itemId, failureMessage || '上传失败', file.name);
+        }
+
+        setSlotUploadingId(null);
+    }, [uploadRacketPhoto, updateItemPhotoState, addRetryEntry, removeRetryEntry]);
+
+    const triggerSlotRetry = useCallback((itemId: string) => {
+        confirmRetrySlot(itemId);
+        setSlotRetryTarget(itemId);
+        slotInputRef.current?.click();
+    }, [confirmRetrySlot]);
+
+    const handleSlotFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        const targetId = slotRetryTarget;
+        setSlotRetryTarget(null);
+        if (!file || !targetId) {
+            if (slotInputRef.current) {
+                slotInputRef.current.value = '';
+            }
+            return;
+        }
+        await handleSlotUpload(file, targetId);
+        if (slotInputRef.current) {
+            slotInputRef.current.value = '';
+        }
+    }, [slotRetryTarget, handleSlotUpload]);
+
     /**
      * Bulk upload photos to fill the next available racket slots.
      * @param files - The selected image files.
@@ -440,11 +592,20 @@ export default function MultiRacketBookingFlow() {
     const handleBulkPhotoUpload = useCallback(async (files: FileList | null) => {
         if (!files || files.length === 0) return;
 
-        const availableTargets = bulkReplaceAll
+        const queueFilter = (item: RacketItemData) => {
+            const entry = retryQueue[item.id];
+            return !entry || entry.readyToReplace;
+        };
+        const candidateTargets = bulkReplaceAll
             ? cartItems
-            : cartItems.filter(item => !item.racketPhoto);
+            : cartItems.filter(item => !item.racketPhoto || item.photoStatus === 'failed');
+        const availableTargets = candidateTargets.filter(queueFilter);
         if (availableTargets.length === 0) {
-            toast.error(bulkReplaceAll ? '请先添加球拍' : '所有球拍已有照片，可开启替换全部');
+            if (candidateTargets.length > 0) {
+                toast.info('存在待替换的失败照片，请先确认替换或清理队列');
+            } else {
+                toast.error(bulkReplaceAll ? '请先添加球拍' : '所有球拍已有照片，可开启替换全部');
+            }
             return;
         }
 
@@ -454,7 +615,7 @@ export default function MultiRacketBookingFlow() {
             const message = bulkReplaceAll
                 ? '照片数量超过球拍数量，超出部分将被忽略'
                 : '照片数量超过未上传球拍，超出部分将被忽略';
-            toast.message(message);
+            toast.info(message);
         }
 
         setBulkUploadState({
@@ -475,27 +636,32 @@ export default function MultiRacketBookingFlow() {
             let failureMessage: string | null = null;
 
             if (!file.type.startsWith('image/')) {
-                failed += 1;
-            } else if (file.size > MAX_PHOTO_SIZE) {
+                failureMessage = '请选择图片文件';
                 failed += 1;
             } else {
                 try {
                     url = await uploadRacketPhoto(file, `racket_${batchId}_${i}.jpg`);
                 } catch (error: any) {
+                    failureMessage = error?.message || '上传失败';
                     failed += 1;
-                    failureMessage = error.message || '上传失败';
                 }
             }
 
             if (url) {
-                setCartItems(prev => prev.map(item => (
-                    item.id === target.id ? { ...item, racketPhoto: url as string, photoStatus: 'success', photoError: undefined } : item
-                )));
-            }
-            if (!url && failureMessage) {
-                setCartItems(prev => prev.map(item => (
-                    item.id === target.id ? { ...item, photoStatus: 'failed', photoError: failureMessage } : item
-                )));
+                updateItemPhotoState(target.id, {
+                    racketPhoto: url,
+                    photoStatus: 'success',
+                    photoError: undefined,
+                    photoFileName: file.name,
+                });
+                removeRetryEntry(target.id);
+            } else {
+                updateItemPhotoState(target.id, {
+                    photoStatus: 'failed',
+                    photoError: failureMessage || '上传失败，请重试',
+                    photoFileName: file.name,
+                });
+                addRetryEntry(target.id, failureMessage || '上传失败', file.name);
             }
 
             completed += 1;
@@ -515,7 +681,7 @@ export default function MultiRacketBookingFlow() {
         if (failed > 0) {
             toast.error(`有 ${failed} 张照片上传失败`);
         }
-        }, [bulkReplaceAll, cartItems, uploadRacketPhoto]);
+    }, [bulkReplaceAll, cartItems, uploadRacketPhoto, retryQueue, updateItemPhotoState, addRetryEntry, removeRetryEntry]);
 
     /**
      * Apply template values to all other rackets in the cart.
@@ -775,7 +941,14 @@ export default function MultiRacketBookingFlow() {
         ? Math.max(1, cartItems.findIndex((item) => item.id === quickApplySource.id) + 1)
         : 0;
     const incompleteCount = Math.max(0, completionStats.total - completionStats.completeCount);
-    const pendingPhotoCount = cartItems.filter(item => !item.racketPhoto).length;
+    const pendingPhotoCount = cartItems.filter(item => !item.racketPhoto || item.photoStatus === 'failed').length;
+    const retryQueueEntries = Object.entries(retryQueue);
+    const liveEtaSource = repeatSourceOrder ?? ({
+        id: 'live-eta',
+        status: allItemsComplete ? 'in_progress' : 'pending',
+        finalPrice: finalTotal,
+    } as OrderWithDetails);
+    const liveEta = getOrderEtaEstimate(liveEtaSource);
     const bulkProgressPercent = bulkUploadState.total > 0
         ? Math.round((bulkUploadState.completed / bulkUploadState.total) * 100)
         : 0;
@@ -789,10 +962,13 @@ export default function MultiRacketBookingFlow() {
     }
 
     return (
-        <div className="min-h-screen bg-ink">
+        <div
+            className="min-h-screen bg-ink"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 160px)' }}
+        >
             {/* 顶部导航栏 - 与 PageHeader 统一 */}
-            <div className="bg-white/90 backdrop-blur-md sticky top-[64px] z-30 border-b border-border-subtle shadow-sm">
-                <div className="max-w-2xl mx-auto px-4 py-5 flex items-center gap-4">
+            <div className="bg-white/95 backdrop-blur sticky top-[64px] z-30 border-b border-border-subtle shadow-sm touch-none">
+                <div className="max-w-2xl mx-auto px-4 py-5 flex items-center gap-4 min-h-[64px]">
                     <button
                         onClick={() => step === 1 ? router.push('/') : handleBack()}
                         className="w-10 h-10 flex items-center justify-center bg-ink hover:bg-ink/80 rounded-xl transition-colors shrink-0"
@@ -837,6 +1013,21 @@ export default function MultiRacketBookingFlow() {
                         <div>
                             <p className="text-sm font-semibold text-accent">已载入上次配置</p>
                             <p className="text-xs text-text-secondary mt-1">来源 {repeatSourceLabel}</p>
+                            {repeatSnapshot && (
+                                <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-text-secondary">
+                                    <button
+                                        type="button"
+                                        onClick={applyRepeatPhotos}
+                                        disabled={autoFilledPhotos}
+                                        className="px-3 py-1 rounded-full border border-accent text-accent hover:bg-accent/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {autoFilledPhotos ? '照片已填充' : '自动填充照片'}
+                                    </button>
+                                    <span className="text-text-secondary">
+                                        {autoFilledPhotos ? '照片已复用上次上传' : '可复制上次球拍照片以加速重复预约'}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -886,7 +1077,7 @@ export default function MultiRacketBookingFlow() {
                 </div>
 
                 {/* 主内容区 */}
-                <div className={`max-w-2xl mx-auto px-4 py-4 space-y-4 ${step === 1 ? 'pb-28' : 'pb-24'}`}>
+                <div className={`max-w-2xl mx-auto px-4 py-4 space-y-5 ${step === 1 ? 'pb-30' : 'pb-28'}`}>
                     {/* Step 1: 选择球线添加到购物车 */}
                     {step === 1 && (
                         <div className="space-y-4">
@@ -975,12 +1166,19 @@ export default function MultiRacketBookingFlow() {
 
                     {/* Step 2: 配置每支球拍 */}
                     {step === 2 && (
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-xl font-bold text-text-primary">配置球拍</h2>
                                 <span className="text-sm text-text-tertiary">
                                     {completionStats.completeCount}/{completionStats.total} 已完成
                                 </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-info">
+                                <Clock className="w-4 h-4" />
+                                <span className="font-medium text-info">{liveEta.label}</span>
+                                {liveEta.detail && (
+                                    <span className="text-[11px] text-text-tertiary">{liveEta.detail}</span>
+                                )}
                             </div>
 
                             {cartItems.length > 0 && (
@@ -1000,7 +1198,7 @@ export default function MultiRacketBookingFlow() {
                                                 }
                                             }}
                                             disabled={!completionStats.firstIncompleteId}
-                                            className="px-3 py-2 text-xs font-medium rounded-lg border border-border-subtle text-text-secondary hover:bg-ink transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="px-3 py-3 min-h-[44px] text-xs font-medium rounded-lg border border-border-subtle text-text-secondary hover:bg-ink transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             定位未完成
                                         </button>
@@ -1040,7 +1238,7 @@ export default function MultiRacketBookingFlow() {
                                     </div>
 
                                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border-subtle bg-ink px-3 py-2 text-xs">
-                                        <span className="text-text-tertiary">支持多选，单张 ≤ 5MB</span>
+                                        <span className="text-text-tertiary">支持多选</span>
                                         <span className="text-text-secondary">
                                             {bulkReplaceAll ? `将替换 ${cartItems.length} 支` : pendingPhotoCount > 0 ? `可填充 ${pendingPhotoCount} 支` : '全部已上传'}
                                         </span>
@@ -1098,22 +1296,116 @@ export default function MultiRacketBookingFlow() {
                                         <Upload className="w-4 h-4" />
                                         {bulkReplaceAll ? '替换照片' : '选择多张照片'}
                                     </button>
-                                    {(cartItems.some(item => item.photoStatus)) && (
-                                        <div className="mt-3 space-y-1 text-xs">
+                                    {(cartItems.some(item => item.photoStatus) || retryQueueEntries.length > 0) && (
+                                        <div
+                                            className="mt-3 space-y-3 text-xs"
+                                            role="status"
+                                            aria-live="polite"
+                                        >
+                                            <input
+                                                ref={slotInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={handleSlotFileChange}
+                                                disabled={bulkUploadState.uploading}
+                                            />
                                             {cartItems.map((item, index) => {
                                                 if (!item.photoStatus) return null;
-                                                const statusLabel = item.photoStatus === 'success' ? '成功' : '失败';
+                                                const isFailed = item.photoStatus === 'failed';
+                                                const chipClass = isFailed
+                                                    ? 'bg-danger/10 text-danger border border-danger/40'
+                                                    : 'bg-success/10 text-success border border-success/40';
                                                 return (
-                                                    <div key={`${item.id}-status`} className="flex items-center gap-2 text-[11px]">
-                                                        <span className={`px-2 py-0.5 rounded-full ${item.photoStatus === 'success' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
-                                                            第 {index + 1} 支 · {statusLabel}
-                                                        </span>
-                                                        {item.photoStatus === 'failed' && item.photoError && (
-                                                            <span className="text-text-secondary truncate max-w-[200px]">原因：{item.photoError}</span>
-                                                        )}
+                                                    <div
+                                                        key={`${item.id}-status`}
+                                                        className="rounded-xl border border-border-subtle bg-ink-surface px-3 py-2"
+                                                        aria-label={`第 ${index + 1} 支 - ${isFailed ? '上传失败' : '上传成功'}`}
+                                                    >
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <span
+                                                                className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${chipClass} ${isFailed ? 'animate-pulse' : 'pulse-glow'}`}
+                                                            >
+                                                                第 {index + 1} 支 · {isFailed ? '失败' : '成功'}
+                                                            </span>
+                                                            {isFailed && (
+                                                                slotUploadingId === item.id ? (
+                                                                    <div className="flex items-center gap-1 text-[11px] text-text-secondary">
+                                                                        <LoadingSpinner size="sm" tone="muted" className="w-3 h-3" />
+                                                                        上传中
+                                                                    </div>
+                                                                ) : (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => triggerSlotRetry(item.id)}
+                                                                        disabled={bulkUploadState.uploading || !!slotUploadingId}
+                                                                        className="px-2 py-1 rounded-full border border-border-subtle text-[11px] font-medium text-text-secondary hover:bg-ink transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                    >
+                                                                        重试
+                                                                    </button>
+                                                                )
+                                                            )}
+                                                        </div>
+                                                        <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-text-secondary">
+                                                            <span>照片：{item.photoFileName || '未记录'}</span>
+                                                            {item.photoError && (
+                                                                <span className="text-danger">原因：{item.photoError}</span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 );
                                             })}
+                                            {retryQueueEntries.length > 0 && (
+                                                <div className="space-y-2 rounded-xl border border-dashed border-border-subtle bg-white/60 px-3 py-2">
+                                                    <div className="flex items-center gap-2 text-[11px] font-semibold text-text-secondary">
+                                                        <Clock className="w-4 h-4 text-info" />
+                                                        <span>待替换队列 · {retryQueueEntries.length} 个</span>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        {retryQueueEntries.map(([itemId, entry], queueIndex) => {
+                                                            const itemIndex = cartItems.findIndex((item) => item.id === itemId);
+                                                            const label = itemIndex >= 0 ? `第 ${itemIndex + 1} 支` : `条目 ${queueIndex + 1}`;
+                                                            return (
+                                                                <div
+                                                                    key={`retry-${itemId}`}
+                                                                    className="rounded-lg bg-ink-surface px-3 py-2 border border-border-subtle flex flex-col gap-2"
+                                                                    aria-live="polite"
+                                                                >
+                                                                    <div className="flex items-center justify-between gap-2 text-[11px] text-text-secondary">
+                                                                        <span className="font-medium text-text-primary">{label}</span>
+                                                                        <span className="text-[11px] text-text-secondary">
+                                                                            {entry.readyToReplace ? '已确认替换' : '等待确认'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <p className="text-[11px] text-text-secondary">
+                                                                        原因：{entry.reason}
+                                                                        {entry.fileName && ` · ${entry.fileName}`}
+                                                                    </p>
+                                                                    <div className="flex flex-wrap gap-2 text-[11px]">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => confirmRetrySlot(itemId)}
+                                                                            disabled={entry.readyToReplace}
+                                                                            className="px-3 py-1 rounded-xl border border-accent text-accent text-[11px] font-medium hover:bg-accent/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                            aria-label={`${label} 确认替换照片`}
+                                                                        >
+                                                                            确认替换
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => dismissRetrySlot(itemId)}
+                                                                            className="px-3 py-1 rounded-xl border border-border-subtle text-text-secondary text-[11px] font-medium hover:bg-ink"
+                                                                            aria-label={`${label} 忽略失败状态`}
+                                                                        >
+                                                                            忽略
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -1350,6 +1642,13 @@ export default function MultiRacketBookingFlow() {
                     {step === 4 && (
                         <div className="space-y-6">
                             <h2 className="text-xl font-bold text-text-primary">确认订单</h2>
+                            <div className="flex items-center gap-2 text-sm text-info">
+                                <Clock className="w-4 h-4" />
+                                <span className="font-medium text-info">{liveEta.label}</span>
+                                {liveEta.detail && (
+                                    <span className="text-[11px] text-text-tertiary">{liveEta.detail}</span>
+                                )}
+                            </div>
 
                             {/* 服务方式选择 */}
                             <div className="bg-ink-surface rounded-xl border border-border-subtle shadow-sm p-4">
@@ -1504,7 +1803,10 @@ export default function MultiRacketBookingFlow() {
 
             {/* 底部操作栏 - Step 2-4 */}
             {step > 1 && (
-                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-subtle p-4 shadow-lg z-50">
+                <div
+                    className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-subtle p-4 shadow-lg z-50 safe-area-pb"
+                    style={{ touchAction: 'pan-y' }}
+                >
                     <div className="max-w-2xl mx-auto flex flex-col gap-3">
                         <div className="flex items-start justify-between text-xs">
                             <div className="flex flex-col gap-1 text-text-tertiary">

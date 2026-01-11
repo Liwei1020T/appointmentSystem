@@ -7,10 +7,12 @@
 - Pickup address validated on the fly, saved-address chips added, and Step 4 pricing gains dotted leaders with stronger totals.
 - Order detail surfaces a “next step” card with an ETA/last-update stamp, and order list rows now show next-action chips.
 - Accessibility/performance tweaks: aria states for controls, lazy loading, and updated changelog.
+- Lifted the 5MB upload cap for racket photos (client validation removed; server cap disabled unless `MAX_FILE_SIZE` is set).
 
 ## 🔜 Next Optimizations
-1. **Batch Upload Diagnostics:** Map each uploaded file to a specific racket, show per-slot success/failure indicators, and allow re-upload for failed slots.
-2. **Order List Tracking:** Surface “next action” chips (ETA, payment pending, pickup ready) in the order list rows to reduce taps.
-3. **Mobile QA Fixes:** Run through mobile breakpoints, adjust spacing/overscroll, and validate touch hit areas, especially for the sticky controls at Step 2/4.
+1. **Retry Queue Persistence:** Persist retry-queue decisions (localStorage) so failed-slot confirmations survive refresh/reload.
+2. **Upload Confidence:** Add per-file upload progress + cancel, and show a clear “compressing / uploading” stage indicator for large photos.
+3. **Preference Controls:** Provide user toggles for haptics/animations (respect `prefers-reduced-motion`) to avoid over-stimulating feedback.
+4. **Template Library:** Allow selecting a past order as a template (not only the last one), including photo reuse and safe replacement confirmations.
 
 Record progress in this file as you complete each item so future agents can continue from here.

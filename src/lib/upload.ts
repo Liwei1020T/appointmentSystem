@@ -9,7 +9,10 @@ import { randomUUID } from 'crypto';
 import sharp from 'sharp';
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || 'uploads';
-const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '5') * 1024 * 1024; // MB to bytes
+const MAX_FILE_SIZE_MB = Number(process.env.MAX_FILE_SIZE ?? 0);
+const MAX_FILE_SIZE = Number.isFinite(MAX_FILE_SIZE_MB) && MAX_FILE_SIZE_MB > 0
+  ? MAX_FILE_SIZE_MB * 1024 * 1024
+  : 0;
 
 function getUploadRoot() {
   return path.resolve(process.cwd(), 'public', UPLOAD_DIR);
@@ -35,8 +38,8 @@ export async function saveFile(
   const buffer = Buffer.from(await file.arrayBuffer());
   
   // 检查文件大小
-  if (buffer.length > MAX_FILE_SIZE) {
-    throw new Error(`文件大小超过限制 (${MAX_FILE_SIZE / 1024 / 1024}MB)`);
+  if (MAX_FILE_SIZE > 0 && buffer.length > MAX_FILE_SIZE) {
+    throw new Error(`文件大小超过限制 (${MAX_FILE_SIZE_MB}MB)`);
   }
 
   // 生成文件名
