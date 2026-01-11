@@ -51,6 +51,7 @@ docs/
 |------|------|
 | [WhatsApp-Integration-Plan.md](plans/WhatsApp-Integration-Plan.md) | WhatsApp 集成计划 |
 | [ui_ux_modernization_plan.md](plans/ui_ux_modernization_plan.md) | UI/UX 现代化计划 |
+| [optimization_backlog.md](plans/optimization_backlog.md) | 近期可继续优化清单（优先级） |
 
 ---
 
@@ -71,6 +72,7 @@ docs/
 
 - [2025-12/](changelogs/2025-12/) — 2025年12月变更日志
 - [2025-01/](changelogs/2025-01/) — 2025年1月变更日志
+- [2026-01/](changelogs/2026-01/) — 2026年1月变更日志
 
 ---
 

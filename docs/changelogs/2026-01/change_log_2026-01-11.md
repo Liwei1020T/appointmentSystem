@@ -13,6 +13,7 @@ Batch upload diagnostics now map every photo to its racket slot, the order list 
 - Removed the 5MB validation cap for racket photo uploads in the booking flow.
 - Removed the 5MB server-side upload cap (now unlimited unless `MAX_FILE_SIZE` is set).
 - Updated `.gitignore` to ignore `public/uploads/` so uploaded photos/files are never committed.
+- Added `docs/plans/optimization_backlog.md` and linked it from `docs/README.md` to track next-step UI/UX optimizations.
 
 ## Tests
 - Not run (UI changes only).

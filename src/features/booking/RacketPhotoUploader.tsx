@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Camera, X } from 'lucide-react';
 import { uploadImage } from '@/services/imageUploadService';
 import { toast } from 'sonner';
@@ -32,6 +32,16 @@ export default function RacketPhotoUploader({
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [dragActive, setDragActive] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        // Keep the preview in sync when the parent updates the photo URL
+        // (e.g. bulk upload assigns photos without going through this component's upload handler).
+        if (uploading) return;
+        setPreviewUrl(value || null);
+        if (value) {
+            setUploadError(null);
+        }
+    }, [value, uploading]);
 
     const handleFileSelect = async (file: File) => {
         if (disabled) return;
