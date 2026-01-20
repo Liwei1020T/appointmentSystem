@@ -42,9 +42,70 @@ window.open(waLink, '_blank');
 
 ---
 
+### 2. 网站 WhatsApp 浮动按钮
+
+**位置**：网站右下角（所有页面）
+
+**功能描述**：
+- 固定在页面右下角的绿色浮动按钮
+- 点击后直接打开 WhatsApp 联系工作室
+- 自带预设消息
+
+**技术实现**：
+```tsx
+// WhatsApp 浮动按钮组件
+const WHATSAPP_NUMBER = '60XXXXXXXXX'; // 工作室 WhatsApp 号码
+const DEFAULT_MESSAGE = '你好，我想预约穿线服务';
+
+const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(DEFAULT_MESSAGE)}`;
+```
+
+**按钮样式**：
+- 固定位置：`fixed bottom-20 right-4`（避开底部导航）
+- 尺寸：56x56px 圆形
+- 颜色：WhatsApp 绿 (#25D366)
+- 动画：轻微弹跳吸引注意
+
+**显示规则**：
+- ✅ 首页、预约页、评价页显示
+- ❌ 管理后台不显示
+- ❌ 登录/注册页不显示
+
+**预计工时**：1 小时
+
+**状态**：⏳ 待开发
+
+---
+
+### 3. WhatsApp Business 快捷回复模板
+
+**用途**：在 WhatsApp Business App 中设置快捷回复
+
+**模板列表**：
+
+| 快捷键 | 场景 | 消息内容 |
+|--------|------|----------|
+| `/下单` | 引导下单 | "点击链接预约穿线 👇\nhttps://lwstringstudio.li-wei.net/booking" |
+| `/价格` | 询价 | "穿线价格：\n• 普通线 RM25\n• 专业线 RM35-50\n\n详情：https://lwstringstudio.li-wei.net" |
+| `/完成` | 穿线完成 | "您好！您的球拍已穿好，可以来取拍了 🏸" |
+| `/收到` | 收到球拍 | "您好！已收到您的球拍，预计明天完成 ✅" |
+| `/确认` | 收到付款 | "收到付款，谢谢！🙏" |
+| `/取消` | 订单取消 | "您好，您的订单已取消，如有疑问请联系我们" |
+| `/地址` | 店铺地址 | "📍 地址：[你的地址]\n🕐 营业时间：9:00-18:00\n📍 Google Maps：[链接]" |
+| `/营业` | 营业时间 | "🕐 营业时间：\n周一至周六 9:00-18:00\n周日休息" |
+
+**设置步骤**：
+1. 打开 WhatsApp Business App
+2. 设置 → 业务工具 → 快捷回复
+3. 点击 "+" 添加上述模板
+
+**状态**：⏳ 待配置（需要你在手机上操作）
+
+---
+
 ## 🟡 中优先级
 
-### 2. FCM 推送通知
+### 4. FCM 推送通知
 
 **功能**：浏览器/PWA 推送通知
 
@@ -57,7 +118,7 @@ window.open(waLink, '_blank');
 
 ---
 
-### 3. Sentry 错误监控
+### 5. Sentry 错误监控
 
 **功能**：生产环境错误追踪和报警
 
@@ -67,7 +128,7 @@ window.open(waLink, '_blank');
 
 ## 🔵 低优先级
 
-### 4. WhatsApp Business API 集成
+### 6. WhatsApp Business API 集成
 
 **功能**：完全自动化 WhatsApp 消息发送
 
@@ -82,7 +143,7 @@ window.open(waLink, '_blank');
 
 ---
 
-### 5. E2E 自动化测试
+### 7. E2E 自动化测试
 
 **功能**：Playwright 端到端测试
 
