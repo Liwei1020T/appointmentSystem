@@ -126,24 +126,74 @@ const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(DEFAU
 
 ---
 
-## 🔵 低优先级
+## 🔵 低优先级（订单量上来后考虑）
 
-### 6. WhatsApp Business API 集成
+### 6. WhatsApp Bot 智能客服
 
-**功能**：完全自动化 WhatsApp 消息发送
+**功能**：用户通过 WhatsApp 与 Bot 交互
 
-**触发条件**：每日订单量 > 20 单
+**用户可以**：
+| 发送 | Bot 返回 |
+|------|----------|
+| "我的订单" | 订单列表和状态 |
+| "预约" | 引导填写预约信息 |
+| "价格" | 价目表 |
+| "进度" | 当前穿线进度 |
+| "地址" | 店铺地址和营业时间 |
+
+**触发条件**：日订单量 > 10 单（约 300单/月）
+
+**技术实现**：
+```
+用户发 WhatsApp 消息
+       ↓
+WhatsApp Business API (Webhook)
+       ↓
+服务器接收 → Bot 逻辑处理 → 查询数据库
+       ↓
+返回结果给用户
+```
+
+**需要准备**：
+- Meta Business 账号
+- WhatsApp Business API 申请
+- 验证的商业号码
+- 服务器运行 Bot 逻辑
+
+**成本估算**（300单/月）：
+| 项目 | 月费 |
+|------|------|
+| WhatsApp API 消息费 | ~RM 50 |
+| 服务器成本 | ~RM 20 |
+| **总计** | **~RM 70/月** |
+
+**开发时间**：3-5 天
+
+**状态**：🔵 未来考虑（当前30单/月，手动更划算）
+
+---
+
+### 7. WhatsApp Business API 自动通知
+
+**功能**：系统自动发送 WhatsApp 通知（无需手动）
+
+**自动触发场景**：
+- 穿线完成 → 自动发通知
+- 支付审核通过 → 自动发通知
+- 订单状态变更 → 自动发通知
+
+**触发条件**：日订单量 > 20 单
 
 **实现方式**：
-- 通过 Twilio WhatsApp 或 360dialog
+- 通过 Twilio WhatsApp 或 Meta Cloud API
 - 需要申请 WhatsApp Business API 账号
-- 每条消息约 RM 0.15
+- 每条消息约 RM 0.10-0.15
 
 **状态**：🔵 未来考虑
 
 ---
 
-### 7. E2E 自动化测试
+### 8. E2E 自动化测试
 
 **功能**：Playwright 端到端测试
 
