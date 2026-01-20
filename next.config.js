@@ -7,9 +7,18 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: [
-      // Add your Supabase storage domain here
-      // Example: 'your-project.supabase.co'
+    // 使用 remotePatterns 替代 domains (Next.js 14 推荐)
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lwstringstudio.li-wei.net',
+        pathname: '/uploads/**',
+      },
     ],
   },
   env: {

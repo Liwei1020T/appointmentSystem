@@ -21,6 +21,7 @@ import { isValidMyPhone, toE164, toMyCanonicalPhone } from '@/lib/phone';
 import { sendSms } from '@/lib/sms';
 import { Prisma } from '@prisma/client';
 import { handleApiError } from '@/lib/api/handleApiError';
+import { otpLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 const OTP_PURPOSE = 'password_reset';
 const OTP_EXPIRES_SECONDS = 5 * 60; // 5 minutes
@@ -28,6 +29,13 @@ const OTP_COOLDOWN_SECONDS = 60; // 60s per phone
 const OTP_MAX_PER_HOUR = 5;
 
 export async function POST(request: NextRequest) {
+  // Rate Limiting: 每分钟最多 3 次 OTP 请求 (防止短信轰炸)
+  const clientIp = getClientIp(request);
+  const rateLimitResult = otpLimiter.check(clientIp);
+  if (!rateLimitResult.allowed) {
+    return rateLimitResponse(rateLimitResult.resetAt);
+  }
+
   try {
     /**
      * NOTE:

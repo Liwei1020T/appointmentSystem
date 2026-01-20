@@ -487,7 +487,7 @@ export default function PackagePurchaseFlow() {
               <Card className="p-8">
                 <h3 className="text-lg font-semibold text-text-primary mb-2">现金支付</h3>
                 <p className="text-text-secondary">
-                  已提交现金支付申请，请到店支付现金。管理员确认收款后，套餐将自动生效并显示在"我的套餐"。
+                  已提交现金支付申请，请到店支付现金。管理员确认收款后，套餐将自动生效并显示在&ldquo;我的套餐&rdquo;。
                 </p>
                 {paymentId ? (
                   <p className="mt-3 text-sm text-text-tertiary">
@@ -500,7 +500,7 @@ export default function PackagePurchaseFlow() {
                 <Card className="p-6">
                   <h3 className="text-lg font-semibold text-text-primary mb-2">TNG 线上支付</h3>
                   <p className="text-text-secondary">
-                    扫码支付后请上传收据，管理员审核通过后套餐才会生效并显示在"我的套餐"。
+                    扫码支付后请上传收据，管理员审核通过后套餐才会生效并显示在&ldquo;我的套餐&rdquo;。
                   </p>
                 </Card>
 

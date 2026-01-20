@@ -168,7 +168,7 @@ export default function FeaturedReviews() {
 
               {/* 评论内容 */}
               <p className="text-sm text-text-secondary line-clamp-2 mb-3 leading-relaxed">
-                "{review.comment}"
+                &ldquo;{review.comment}&rdquo;
               </p>
 
               {/* 用户信息 */}

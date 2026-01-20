@@ -147,7 +147,7 @@ function PurchaseTab({ isVisible }: { isVisible: boolean }) {
                     <li>• 套餐购买后不支持退款</li>
                     <li>• 有效期内可随时使用</li>
                     <li>• 过期后剩余次数失效</li>
-                    <li>• 可在"我的套餐"查看记录</li>
+                    <li>• 可在&ldquo;我的套餐&rdquo;查看记录</li>
                 </ul>
             </div>
         </div>

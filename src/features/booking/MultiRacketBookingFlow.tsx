@@ -142,15 +142,15 @@ export default function MultiRacketBookingFlow() {
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        const stored = window.localStorage.getItem(SAVED_ADDRESS_KEY);
-        if (!stored) return;
         try {
+            const stored = window.localStorage.getItem(SAVED_ADDRESS_KEY);
+            if (!stored) return;
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed)) {
                 setSavedPickupAddresses(parsed.filter((item) => typeof item === 'string'));
             }
-        } catch (error) {
-            console.error('Failed to parse saved addresses:', error);
+        } catch {
+            // localStorage 在隐私模式下可能不可用，或 JSON 解析失败
         }
     }, []);
 
@@ -227,7 +227,11 @@ export default function MultiRacketBookingFlow() {
 
         setSavedPickupAddresses((prev) => {
             const next = [trimmed, ...prev.filter((item) => item !== trimmed)].slice(0, 5);
-            window.localStorage.setItem(SAVED_ADDRESS_KEY, JSON.stringify(next));
+            try {
+                window.localStorage.setItem(SAVED_ADDRESS_KEY, JSON.stringify(next));
+            } catch {
+                // localStorage 在隐私模式下可能不可用，忽略错误
+            }
             return next;
         });
     }, []);

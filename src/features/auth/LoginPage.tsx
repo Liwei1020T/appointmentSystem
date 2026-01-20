@@ -45,9 +45,13 @@ export default function LoginPage() {
    * 从 localStorage 加载记住的手机号
    */
   useEffect(() => {
-    const savedPhone = localStorage.getItem('remembered_phone');
-    if (savedPhone) {
-      setFormData((prev) => ({ ...prev, phone: savedPhone, rememberMe: true }));
+    try {
+      const savedPhone = localStorage.getItem('remembered_phone');
+      if (savedPhone) {
+        setFormData((prev) => ({ ...prev, phone: savedPhone, rememberMe: true }));
+      }
+    } catch {
+      // localStorage 在隐私模式下可能不可用，忽略错误
     }
   }, []);
 
@@ -110,10 +114,14 @@ export default function LoginPage() {
       });
 
       // 处理"记住我"
-      if (formData.rememberMe) {
-        localStorage.setItem('remembered_phone', formData.phone);
-      } else {
-        localStorage.removeItem('remembered_phone');
+      try {
+        if (formData.rememberMe) {
+          localStorage.setItem('remembered_phone', formData.phone);
+        } else {
+          localStorage.removeItem('remembered_phone');
+        }
+      } catch {
+        // localStorage 在隐私模式下可能不可用，忽略错误
       }
 
       // 登录成功

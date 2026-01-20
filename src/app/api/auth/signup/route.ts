@@ -10,6 +10,7 @@ import { errorResponse, successResponse } from '@/lib/api-response';
 import { isValidMyPhone, toMyCanonicalPhone } from '@/lib/phone';
 import { normalizeMyPhone, validatePassword } from '@/lib/utils';
 import { handleApiError } from '@/lib/api/handleApiError';
+import { authLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 /**
  * Generate a unique 6-digit numeric referral code.
@@ -33,6 +34,13 @@ async function generateUniqueReferralCode6Digits(): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate Limiting: 每分钟最多 5 次注册请求
+  const clientIp = getClientIp(request);
+  const rateLimitResult = authLimiter.check(clientIp);
+  if (!rateLimitResult.allowed) {
+    return rateLimitResponse(rateLimitResult.resetAt);
+  }
+
   try {
     /**
      * Phone + Password Signup

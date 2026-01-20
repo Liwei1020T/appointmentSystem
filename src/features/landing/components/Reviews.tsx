@@ -139,7 +139,7 @@ export default function Reviews() {
 
                 {/* Content */}
                 <p className="text-text-secondary text-sm leading-relaxed mb-6 flex-grow line-clamp-3">
-                  "{review.content}"
+                  &ldquo;{review.content}&rdquo;
                 </p>
 
                 {/* Footer */}
