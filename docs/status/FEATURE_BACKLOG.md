@@ -128,46 +128,115 @@ const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(DEFAU
 
 ## 🔵 低优先级（订单量上来后考虑）
 
-### 6. WhatsApp Bot 智能客服
+### 6. WhatsApp Bot 智能客服（N8N 方案）
 
 **功能**：用户通过 WhatsApp 与 Bot 交互
 
 **用户可以**：
 | 发送 | Bot 返回 |
 |------|----------|
-| "我的订单" | 订单列表和状态 |
-| "预约" | 引导填写预约信息 |
+| "我的订单" / "订单" | 订单列表和状态 |
+| "预约" / "下单" | 引导填写预约信息或发送链接 |
 | "价格" | 价目表 |
 | "进度" | 当前穿线进度 |
-| "地址" | 店铺地址和营业时间 |
+| "地址" / "营业时间" | 店铺地址和营业时间 |
 
 **触发条件**：日订单量 > 10 单（约 300单/月）
 
-**技术实现**：
+---
+
+#### ⚠️ 重要：必须使用 WhatsApp Business API
+
+| 方式 | 自动发送 | 自动接收 | 合法性 |
+|------|----------|----------|--------|
+| WhatsApp Business App | ❌ 手动 | ❌ 手动 | ✅ |
+| **WhatsApp Business API** | ✅ 自动 | ✅ 自动 | ✅ |
+| 非官方破解 | ⚠️ | ⚠️ | ❌ 封号 |
+
+**结论**：要实现 Bot 自动化，必须申请 WhatsApp Business API。
+
+---
+
+#### 🛠️ 推荐方案：N8N + WhatsApp API
+
+**为什么用 N8N**：
+- ✅ 开源免费（自托管）
+- ✅ 可视化工作流，几乎不用写代码
+- ✅ 开发时间从 3-5天 → **几小时**
+- ✅ 可以连接现有 PostgreSQL 数据库
+- ✅ 维护简单
+
+**架构**：
 ```
 用户发 WhatsApp 消息
        ↓
-WhatsApp Business API (Webhook)
+WhatsApp Business API
        ↓
-服务器接收 → Bot 逻辑处理 → 查询数据库
+N8N Webhook 接收
        ↓
-返回结果给用户
+N8N 工作流：
+├── 解析用户意图（关键词匹配）
+├── 查询 PostgreSQL 数据库
+├── 生成回复内容
+       ↓
+N8N 调用 WhatsApp API 发送回复
 ```
 
-**需要准备**：
-- Meta Business 账号
-- WhatsApp Business API 申请
-- 验证的商业号码
-- 服务器运行 Bot 逻辑
+---
 
-**成本估算**（300单/月）：
-| 项目 | 月费 |
+#### 📋 实现步骤
+
+**第一步：申请 WhatsApp Business API**
+1. 注册 Meta Business 账号：https://business.facebook.com
+2. 创建 WhatsApp Business 账号
+3. 添加并验证手机号码
+4. 获取 API Token
+
+**第二步：部署 N8N**
+```bash
+# Docker 部署（可与现有服务器共用）
+docker run -d \
+  --name n8n \
+  -p 5678:5678 \
+  -v n8n_data:/home/node/.n8n \
+  n8nio/n8n
+```
+
+**第三步：创建 N8N 工作流**
+1. 添加 WhatsApp Trigger 节点（接收消息）
+2. 添加 Switch 节点（解析用户意图）
+3. 添加 PostgreSQL 节点（查询数据库）
+4. 添加 WhatsApp 节点（发送回复）
+
+**第四步：设置 Webhook**
+- 在 Meta Developer 后台配置 Webhook URL
+- 指向 N8N 的 Webhook 地址
+
+---
+
+#### 💰 成本估算
+
+| 项目 | 费用 |
 |------|------|
-| WhatsApp API 消息费 | ~RM 50 |
-| 服务器成本 | ~RM 20 |
-| **总计** | **~RM 70/月** |
+| N8N（自托管） | ✅ 免费 |
+| WhatsApp API（Meta Cloud） | ✅ 免费 |
+| 消息费（300单/月×5条） | ~RM 50/月 |
+| 服务器 | 可共用现有 |
+| **总计** | **~RM 50/月** |
 
-**开发时间**：3-5 天
+---
+
+#### 📊 WhatsApp API 提供商对比
+
+| 提供商 | 月费 | 消息费 | N8N 支持 | 推荐 |
+|--------|------|--------|----------|------|
+| **Meta Cloud API** | 免费 | ~RM 0.10/对话 | ✅ | ⭐ 推荐 |
+| Twilio | 免费 | ~RM 0.15/条 | ✅ | 备选 |
+| 360dialog | ~RM 50 | ~RM 0.08/对话 | ✅ | 量大时 |
+
+---
+
+**开发时间**：几小时（N8N 可视化配置）
 
 **状态**：🔵 未来考虑（当前30单/月，手动更划算）
 
