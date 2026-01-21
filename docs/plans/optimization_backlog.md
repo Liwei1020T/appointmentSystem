@@ -65,6 +65,29 @@
 
 ---
 
+## 📋 业务功能增强
+
+> 详见 [`feature_backlog_v2.md`](./feature_backlog_v2.md) — 包含用户增长、收入优化、运营效率等完整规划。
+
+**Quick Wins (Phase 1)**：
+- 新用户首单优惠券自动发放
+- 套餐「省 XX RM」价值标签
+- 评价点赞 + 精选置顶
+- 订单预计完成时间
+
+**Core Enhancements (Phase 2)**：
+- 阶梯式推荐奖励 + 推荐达人徽章
+- 可视化订单进度时间轴
+- 订单自动状态流转 + 超时提醒
+- 库存智能补货建议
+
+**Strategic Features (Phase 3)**：
+- 会员等级系统 (Silver → Gold → VIP)
+- 营销活动管理工具
+- 业务洞察 Dashboard (LTV, 留存率, 客单价)
+
+---
+
 ## ✅ How to Continue (建议工作流)
 
 1. 每完成一项：在对应 changelog（`docs/changelogs/YYYY-MM/`）补一条记录。

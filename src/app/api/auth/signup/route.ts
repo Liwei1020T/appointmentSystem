@@ -11,6 +11,8 @@ import { isValidMyPhone, toMyCanonicalPhone } from '@/lib/phone';
 import { normalizeMyPhone, validatePassword } from '@/lib/utils';
 import { handleApiError } from '@/lib/api/handleApiError';
 import { authLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
+import { issueWelcomeVouchers } from '@/server/services/welcome.service';
+import { processReferralReward } from '@/server/services/referral.service';
 
 /**
  * Generate a unique 6-digit numeric referral code.
@@ -92,11 +94,10 @@ export async function POST(request: NextRequest) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const rewardPoints = Number.parseInt(process.env.REFERRAL_REWARD_POINTS || '50', 10);
     const internalEmail = `u_${canonicalPhone}@phone.local`;
     const referralCodeForUser = await generateUniqueReferralCode6Digits();
 
-    // Create user
+    // Create user (初始积分为0，推荐奖励由 processReferralReward 处理)
     const user = await prisma.user.create({
       data: {
         // Email is kept only for backward compatibility. We generate an internal synthetic email.
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
         referralCode: referralCodeForUser,
         referredBy: referralCode?.trim() || null,
         role: 'customer',
-        points: referrer ? rewardPoints : 0,
+        points: 0,
       },
       select: {
         id: true,
@@ -118,57 +119,35 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Apply referral rewards (both sides)
+    // Apply tiered referral rewards (阶梯式奖励)
     if (referrer) {
-      await prisma.$transaction([
-        prisma.user.update({
-          where: { id: referrer.id },
-          data: { points: { increment: rewardPoints } },
-        }),
-        prisma.pointsLog.create({
-          data: {
-            userId: referrer.id,
-            amount: rewardPoints,
-            type: 'referral',
-            referenceId: user.id,
-            description: `推荐用户 ${canonicalPhone}`,
-            balanceAfter: (referrer.points || 0) + rewardPoints,
-          },
-        }),
-        prisma.pointsLog.create({
-          data: {
-            userId: user.id,
-            amount: rewardPoints,
-            type: 'referral',
-            description: '注册奖励',
-            balanceAfter: rewardPoints,
-          },
-        }),
-        prisma.referralLog.create({
-          data: {
-            referrerId: referrer.id,
-            referredId: user.id,
-            referralCode: referralCode!.trim(),
-            rewardGiven: true,
-          },
-        }),
-        prisma.notification.create({
-          data: {
-            userId: user.id,
-            type: 'system',
-            title: '注册奖励',
-            message: `注册成功，获得 ${rewardPoints} 积分`,
-          },
-        }),
-        prisma.notification.create({
-          data: {
-            userId: referrer.id,
-            type: 'system',
-            title: '邀请奖励',
-            message: `成功邀请新用户，获得 ${rewardPoints} 积分`,
-          },
-        }),
-      ]);
+      try {
+        const result = await processReferralReward(
+          referrer.id,
+          user.id,
+          referralCode!.trim(),
+          canonicalPhone
+        );
+
+        // 如果有新获得的徽章，记录日志
+        if (result.newBadges.length > 0) {
+          console.log(
+            `User ${referrer.id} earned new badges:`,
+            result.newBadges.join(', ')
+          );
+        }
+      } catch (referralError) {
+        // 推荐奖励失败不影响注册流程，仅记录日志
+        console.error('Failed to process referral reward:', referralError);
+      }
+    }
+
+    // 发放新用户欢迎礼包（自动发放的优惠券）
+    try {
+      await issueWelcomeVouchers(user.id);
+    } catch (welcomeError) {
+      // 欢迎礼包发放失败不影响注册流程，仅记录日志
+      console.error('Failed to issue welcome vouchers:', welcomeError);
     }
 
     return successResponse(

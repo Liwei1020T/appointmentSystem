@@ -1,12 +1,13 @@
 /**
  * 订单时间线组件 (Order Timeline)
- * 
+ *
  * 可视化显示订单状态变更历史和服务进度
+ * 支持 ETA 预计完成时间显示
  */
 
 import React from 'react';
 import { formatDate } from '@/lib/utils';
-import { Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, XCircle, Timer } from 'lucide-react';
 
 export type TimelineEvent = {
   status: 'pending' | 'payment_pending' | 'payment_confirmed' | 'in_progress' | 'completed' | 'cancelled';
@@ -29,6 +30,9 @@ interface OrderTimelineProps {
   paymentConfirmedAt?: string;
   inProgressAt?: string;
   paymentPendingAt?: string;
+  // ETA 相关字段
+  estimatedCompletionAt?: string | null;
+  queuePosition?: number | null;
 }
 
 // 状态配置
@@ -95,7 +99,25 @@ export default function OrderTimeline({
   paymentConfirmedAt,
   inProgressAt,
   paymentPendingAt,
+  estimatedCompletionAt,
+  queuePosition,
 }: OrderTimelineProps) {
+  // 格式化 ETA 显示
+  const formatEta = (etaDate: string | null | undefined): string => {
+    if (!etaDate) return '';
+    const eta = new Date(etaDate);
+    const now = new Date();
+    const diffMs = eta.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) return '今日完成';
+    if (diffDays === 1) return '明天完成';
+    if (diffDays <= 7) return `${diffDays} 天后完成`;
+
+    const month = eta.getMonth() + 1;
+    const day = eta.getDate();
+    return `${month}月${day}日完成`;
+  };
   // 生成时间线事件
   const generateEvents = (): TimelineEvent[] => {
     const events: TimelineEvent[] = [];
@@ -256,6 +278,34 @@ export default function OrderTimeline({
           );
         })}
       </div>
+
+      {/* ETA 预计完成时间显示 - 仅对进行中的订单显示 */}
+      {estimatedCompletionAt && (currentStatus === 'pending' || currentStatus === 'in_progress') && (
+        <div className="mt-4 bg-accent/5 border border-accent/20 rounded-lg p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-accent/15 rounded-full flex items-center justify-center">
+                <Timer className="w-4 h-4 text-accent" />
+              </div>
+              <div>
+                <p className="text-xs text-text-tertiary">预计完成时间</p>
+                <p className="text-sm font-semibold text-accent">{formatEta(estimatedCompletionAt)}</p>
+              </div>
+            </div>
+            {queuePosition && queuePosition > 0 && (
+              <div className="text-right">
+                <p className="text-xs text-text-tertiary">队列位置</p>
+                <p className="text-sm font-semibold text-text-primary">第 {queuePosition} 位</p>
+              </div>
+            )}
+          </div>
+          {estimatedCompletionAt && (
+            <p className="text-xs text-text-tertiary mt-2 text-center">
+              预计 {formatDate(estimatedCompletionAt, 'MM月dd日 HH:mm')} 前完成
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

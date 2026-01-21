@@ -214,3 +214,16 @@ export async function getPoints(): Promise<{ balance: number; logs: any[] }> {
 export async function getReferrals(): Promise<any> {
   return apiRequest(`/api/referrals`);
 }
+
+/**
+ * 获取会员详情
+ */
+export async function getMembershipDetails(): Promise<any> {
+  try {
+    const data = await apiRequest('/api/profile/membership');
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch membership details:', error);
+    return null;
+  }
+}

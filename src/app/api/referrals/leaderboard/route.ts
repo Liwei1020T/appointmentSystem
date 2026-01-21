@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const leaderboard = entries.map((entry, index) => ({
       rank: index + 1,
       userId: entry.userId,
-      fullName: entry.fullName,
+      fullName: entry.name,
       referralCount: entry.referralCount,
       totalPoints: entry.totalPoints,
       isCurrentUser: entry.userId === user.id,

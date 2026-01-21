@@ -236,11 +236,16 @@ export async function getReviewByOrder(user: { id: string; role?: string | null 
 
 /**
  * Fetch featured reviews for the homepage.
+ * 优先显示管理员标记的精选评价，然后按点赞数和创建时间排序
  */
 export async function getFeaturedReviews() {
   const reviews = await prisma.review.findMany({
     where: { rating: { gte: 4 }, comment: { not: null } },
-    orderBy: { createdAt: 'desc' },
+    orderBy: [
+      { isFeatured: 'desc' },  // 精选置顶
+      { likesCount: 'desc' },  // 按点赞数排序
+      { createdAt: 'desc' },   // 最后按时间排序
+    ],
     take: 8,
     include: {
       user: { select: { id: true, fullName: true } },
@@ -427,3 +432,98 @@ export async function replyReview(adminId: string, reviewId: string, reply: stri
     admin_reply_by: updated.adminReplyBy || null,
   };
 }
+
+/**
+ * Toggle like on a review (点赞/取消点赞)
+ */
+export async function toggleReviewLike(userId: string, reviewId: string) {
+  if (!isValidUUID(reviewId)) {
+    throw new ApiError('BAD_REQUEST', 400, 'Invalid review id');
+  }
+
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId },
+    select: { id: true, likesCount: true },
+  });
+  if (!review) {
+    throw new ApiError('NOT_FOUND', 404, 'Review not found');
+  }
+
+  // 检查是否已点赞
+  const existingLike = await prisma.reviewLike.findUnique({
+    where: { reviewId_userId: { reviewId, userId } },
+  });
+
+  if (existingLike) {
+    // 取消点赞
+    await prisma.$transaction([
+      prisma.reviewLike.delete({
+        where: { id: existingLike.id },
+      }),
+      prisma.review.update({
+        where: { id: reviewId },
+        data: { likesCount: { decrement: 1 } },
+      }),
+    ]);
+    return { liked: false, likesCount: Math.max(0, review.likesCount - 1) };
+  } else {
+    // 添加点赞
+    await prisma.$transaction([
+      prisma.reviewLike.create({
+        data: { reviewId, userId },
+      }),
+      prisma.review.update({
+        where: { id: reviewId },
+        data: { likesCount: { increment: 1 } },
+      }),
+    ]);
+    return { liked: true, likesCount: review.likesCount + 1 };
+  }
+}
+
+/**
+ * Check if user has liked a review
+ */
+export async function hasUserLikedReview(userId: string, reviewId: string): Promise<boolean> {
+  const like = await prisma.reviewLike.findUnique({
+    where: { reviewId_userId: { reviewId, userId } },
+    select: { id: true },
+  });
+  return !!like;
+}
+
+/**
+ * Get user's liked review IDs (for batch checking)
+ */
+export async function getUserLikedReviewIds(userId: string, reviewIds: string[]): Promise<Set<string>> {
+  const likes = await prisma.reviewLike.findMany({
+    where: { userId, reviewId: { in: reviewIds } },
+    select: { reviewId: true },
+  });
+  return new Set(likes.map((l) => l.reviewId));
+}
+
+/**
+ * Admin: toggle featured status on a review (精选/取消精选)
+ */
+export async function toggleReviewFeatured(reviewId: string) {
+  if (!isValidUUID(reviewId)) {
+    throw new ApiError('BAD_REQUEST', 400, 'Invalid review id');
+  }
+
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId },
+    select: { id: true, isFeatured: true },
+  });
+  if (!review) {
+    throw new ApiError('NOT_FOUND', 404, 'Review not found');
+  }
+
+  const updated = await prisma.review.update({
+    where: { id: reviewId },
+    data: { isFeatured: !review.isFeatured },
+  });
+
+  return { isFeatured: updated.isFeatured };
+}
+

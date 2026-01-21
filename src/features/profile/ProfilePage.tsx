@@ -16,9 +16,11 @@ import {
   getUserStats,
   generateReferralCode,
   logout,
+  getMembershipDetails,
   UserProfile,
 } from '@/services/profileService';
 import { Card, Badge, Button, Modal, Toast } from '@/components';
+import MembershipCard, { MembershipTier } from '@/components/MembershipCard';
 import InlineLoading from '@/components/loading/InlineLoading';
 import { ProfileSkeleton } from '@/components/skeletons';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -40,6 +42,7 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<any>(null);
+  const [membershipData, setMembershipData] = useState<any>(null);
   const [referralCode, setReferralCode] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -68,10 +71,11 @@ export default function ProfilePage() {
     setError('');
 
     try {
-      const [profileResult, statsResult, codeResult] = await Promise.all([
+      const [profileResult, statsResult, codeResult, membershipResult] = await Promise.all([
         getUserProfile(),
         getUserStats(),
         generateReferralCode(),
+        getMembershipDetails(),
       ]);
 
       if (profileResult.error) {
@@ -81,6 +85,7 @@ export default function ProfilePage() {
       }
 
       setStats(statsResult);
+      setMembershipData(membershipResult);
 
       if (codeResult.error) {
         console.error('Referral code error:', codeResult.error);
@@ -193,59 +198,18 @@ export default function ProfilePage() {
         )}
 
         {/* ========== 会员权益卡片 - 强化设计 ========== */}
-        {stats?.membership && (
-          <div className="bg-white rounded-2xl shadow-lg border border-border-subtle overflow-hidden">
-            {/* 顶部装饰条 */}
-            <div className="h-1.5 bg-gradient-to-r from-gradient-start via-accent to-gradient-end" />
-
-            <div className="p-5">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="flex items-center gap-3">
-                  {/* 会员图标 */}
-                  <div className="w-12 h-12 bg-accent-soft rounded-xl flex items-center justify-center">
-                    <svg className="w-6 h-6 text-accent" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-xs text-text-tertiary uppercase tracking-wider">会员等级</p>
-                    <h3 className="text-xl font-bold text-text-primary font-display">{stats.membership.label}</h3>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-text-tertiary">当前折扣</p>
-                  <p className="text-2xl font-bold text-accent font-mono">
-                    {stats.membership.discountRate}% OFF
-                  </p>
-                </div>
-              </div>
-
-              {/* 积分显示 */}
-              <div className="flex items-center justify-between mb-3 p-3 bg-accent-soft rounded-xl">
-                <span className="text-sm text-text-secondary">我的积分</span>
-                <span className="text-xl font-bold text-accent font-mono">{profile.points}</span>
-              </div>
-
-              {/* 累计消费进度 */}
-              <div className="space-y-2">
-                <div className="flex items-baseline justify-between">
-                  <p className="text-sm text-text-tertiary">累计消费</p>
-                  <p className="text-lg font-bold text-text-primary font-mono">{formatCurrency(stats.totalSpent)}</p>
-                </div>
-                <div className="h-2.5 bg-ink rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-gradient-start to-gradient-end rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${Math.min(100, Math.max(2, stats.membership.progress * 100))}%` }}
-                  />
-                </div>
-                <p className="text-xs text-text-tertiary">
-                  {stats.membership.nextTier
-                    ? `再消费 ${formatCurrency(Math.max(0, stats.membership.nextTier.minSpend - stats.totalSpent))} 可升级为 ${stats.membership.nextTier.label}`
-                    : '已达到最高会员等级！'}
-                </p>
-              </div>
-            </div>
-          </div>
+        {membershipData && (
+          <MembershipCard
+            currentTier={membershipData.currentTier}
+            points={membershipData.points}
+            totalSpent={membershipData.totalSpent}
+            nextTier={membershipData.progress.nextTier}
+            spentProgress={membershipData.progress.spentProgress}
+            ordersProgress={membershipData.progress.ordersProgress}
+            spentTarget={membershipData.progress.spentTarget}
+            ordersTarget={membershipData.progress.ordersTarget}
+            benefits={membershipData.benefits}
+          />
         )}
 
         {/* ========== 快捷入口 - 紧凑设计 ========== */}

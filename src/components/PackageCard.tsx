@@ -7,14 +7,22 @@
 import React from 'react';
 import { Package } from '@/services/packageService';
 import Button from '@/components/Button';
-import { Sparkles, Calendar, TrendingDown, CheckCircle2 } from 'lucide-react';
+import { Sparkles, TrendingDown, CheckCircle2, Zap, Clock, Star } from 'lucide-react';
+
+// 套餐标签类型与显示配置
+const TAG_CONFIG: Record<string, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
+  best_value: { label: '性价比之选', icon: Star },
+  most_popular: { label: '最受欢迎', icon: Sparkles },
+  limited_time: { label: '限时优惠', icon: Clock },
+  new: { label: '新上架', icon: Zap },
+};
 
 interface PackageCardProps {
   package: Package;
   onPurchase: (pkg: Package) => void;
   disabled?: boolean;
   showSavings?: boolean;
-  averagePrice?: number; // 单次平均价格，用于计算节省金额
+  averagePrice?: number; // 单次平均价格（仅在 originalPrice 未设置时作为后备）
 }
 
 export default function PackageCard({
@@ -26,12 +34,17 @@ export default function PackageCard({
 }: PackageCardProps) {
   const price = Number(pkg.price);
   const pricePerTime = price / pkg.times;
-  const originalPrice = averagePrice * pkg.times;
+  // 优先使用数据库中的 originalPrice，否则用 averagePrice 计算
+  const originalPrice = pkg.originalPrice ? Number(pkg.originalPrice) : averagePrice * pkg.times;
   const savings = originalPrice - price;
-  const savingsPercentage = ((savings / originalPrice) * 100).toFixed(0);
+  const savingsPercentage = savings > 0 ? ((savings / originalPrice) * 100).toFixed(0) : '0';
 
-  // Standard package (10-times) is the "Hero" card
-  const isHero = pkg.times === 10;
+  // 使用数据库字段判断是否为"英雄"卡片，优先用 isPopular，否则用 tag 或 times
+  const isHero = (pkg as any).isPopular === true || (pkg as any).tag === 'most_popular' || pkg.times === 10;
+
+  // 获取标签配置（优先用数据库 tag，否则根据 isPopular 显示"最受欢迎"）
+  const tagKey = (pkg as any).tag || ((pkg as any).isPopular ? 'most_popular' : null);
+  const tagConfig = tagKey ? TAG_CONFIG[tagKey] : null;
 
   // Feature list for the card
   const features = [
@@ -53,12 +66,21 @@ export default function PackageCard({
         ${disabled ? 'opacity-50 pointer-events-none' : ''}
       `}
     >
-      {/* Most Popular Badge - Centered at top */}
-      {isHero && (
+      {/* Badge - Centered at top (使用数据库标签或默认"最受欢迎") */}
+      {(tagConfig || isHero) && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
           <div className="flex items-center gap-2 bg-accent text-text-onAccent text-xs font-bold px-4 py-1.5 rounded-full shadow-lg whitespace-nowrap">
-            <Sparkles className="w-3.5 h-3.5" />
-            最受欢迎
+            {tagConfig ? (
+              <>
+                <tagConfig.icon className="w-3.5 h-3.5" />
+                {tagConfig.label}
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5" />
+                最受欢迎
+              </>
+            )}
           </div>
         </div>
       )}

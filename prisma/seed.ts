@@ -58,6 +58,8 @@ async function main() {
       price: 90.00,
       originalPrice: 105.00,
       validityDays: 30,
+      tag: 'new',
+      isPopular: false,
     },
     {
       name: '基础套餐',
@@ -66,6 +68,8 @@ async function main() {
       price: 140.00,
       originalPrice: 175.00,
       validityDays: 60,
+      tag: 'best_value',
+      isPopular: false,
     },
     {
       name: '高级套餐',
@@ -74,6 +78,8 @@ async function main() {
       price: 260.00,
       originalPrice: 350.00,
       validityDays: 90,
+      tag: 'most_popular',
+      isPopular: true,
     },
     {
       name: '年度套餐',
@@ -82,6 +88,8 @@ async function main() {
       price: 480.00,
       originalPrice: 700.00,
       validityDays: 365,
+      tag: null,
+      isPopular: false,
     },
   ];
 
@@ -158,7 +166,26 @@ async function main() {
   const validUntil = new Date();
   validUntil.setDate(validUntil.getDate() + 90);
 
+  // 长期有效的欢迎优惠券（自动发放）
+  const welcomeValidUntil = new Date();
+  welcomeValidUntil.setFullYear(welcomeValidUntil.getFullYear() + 2); // 2年有效
+
   const vouchers = [
+    {
+      code: 'WELCOME3',
+      name: '新用户首单立减 RM3',
+      type: 'fixed_amount',
+      value: 3.00,
+      minPurchase: 0,
+      maxUses: null, // 无限制
+      pointsCost: 0,
+      validFrom,
+      validUntil: welcomeValidUntil,
+      tag: 'welcome',
+      isFirstOrderOnly: true,
+      isAutoIssue: true,
+      validityDays: 7, // 发放后7天有效
+    },
     {
       code: 'WELCOME10',
       name: '新用户优惠',
@@ -169,6 +196,10 @@ async function main() {
       pointsCost: 0,
       validFrom,
       validUntil,
+      tag: null,
+      isFirstOrderOnly: false,
+      isAutoIssue: false,
+      validityDays: null,
     },
     {
       code: 'SAVE20',
@@ -179,6 +210,10 @@ async function main() {
       pointsCost: 50,
       validFrom,
       validUntil,
+      tag: null,
+      isFirstOrderOnly: false,
+      isAutoIssue: false,
+      validityDays: null,
     },
     {
       code: 'VIP15',
@@ -189,6 +224,10 @@ async function main() {
       pointsCost: 100,
       validFrom,
       validUntil,
+      tag: null,
+      isFirstOrderOnly: false,
+      isAutoIssue: false,
+      validityDays: null,
     },
   ];
 
@@ -200,6 +239,79 @@ async function main() {
     });
   }
   console.log(`✓ 创建 ${vouchers.length} 个优惠券`);
+
+  // 6. 创建会员权益 (Tier Benefits)
+  const benefits = [
+    {
+      tier: 'SILVER',
+      benefitType: 'points_multiplier',
+      benefitValue: '1.0',
+      description: '基础积分倍率',
+      isActive: true,
+    },
+    {
+      tier: 'GOLD',
+      benefitType: 'points_multiplier',
+      benefitValue: '1.2',
+      description: '1.2倍积分奖励',
+      isActive: true,
+    },
+    {
+      tier: 'GOLD',
+      benefitType: 'exclusive_service',
+      benefitValue: 'true',
+      description: '专属客服通道',
+      isActive: true,
+    },
+    {
+      tier: 'VIP',
+      benefitType: 'points_multiplier',
+      benefitValue: '1.5',
+      description: '1.5倍积分奖励',
+      isActive: true,
+    },
+    {
+      tier: 'VIP',
+      benefitType: 'priority_queue',
+      benefitValue: 'true',
+      description: '优先穿线服务',
+      isActive: true,
+    },
+    {
+      tier: 'VIP',
+      benefitType: 'exclusive_discount',
+      benefitValue: '5%',
+      description: '全场95折',
+      isActive: true,
+    },
+  ];
+
+  // 清除旧权益（如果需要）
+  // await prisma.tierBenefit.deleteMany({});
+
+  for (const benefit of benefits) {
+    // 简单的 upsert 逻辑可能不够，因为没有唯一键约束除了 ID
+    // 这里我们先查询是否存在，不存在则创建
+    const existing = await prisma.tierBenefit.findFirst({
+      where: {
+        tier: benefit.tier as any,
+        benefitType: benefit.benefitType,
+      },
+    });
+
+    if (!existing) {
+      await prisma.tierBenefit.create({
+        data: {
+          tier: benefit.tier as any,
+          benefitType: benefit.benefitType,
+          benefitValue: benefit.benefitValue,
+          description: benefit.description,
+          isActive: benefit.isActive,
+        },
+      });
+    }
+  }
+  console.log(`✓ 创建/更新 ${benefits.length} 个会员权益`);
 
   console.log('\n✅ 数据库初始化完成！');
   console.log('\n默认管理员账号:');

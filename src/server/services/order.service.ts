@@ -3,6 +3,8 @@ import { ApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { Prisma, User } from '@prisma/client';
 import { INVENTORY, ORDER_RULES, POINTS, PRICING } from '@/lib/constants';
+import { calculateEstimatedCompletion, getOrderQueuePosition } from './order-eta.service';
+import { calculatePointsMultiplier, checkAndUpgradeTier } from './membership.service';
 
 export interface CreateOrderPayload {
   stringId?: string;
@@ -143,7 +145,16 @@ export async function getOrderById(userId: string, orderId: string) {
     throw new ApiError('NOT_FOUND', 404, 'Order not found');
   }
 
-  return order;
+  // 获取队列位置（仅对未完成订单）
+  const queuePosition =
+    order.status === 'pending' || order.status === 'in_progress'
+      ? await getOrderQueuePosition(orderId)
+      : null;
+
+  return {
+    ...order,
+    queuePosition,
+  };
 }
 
 export async function createOrder(user: UserSnapshot, payload: CreateOrderPayload) {
@@ -206,6 +217,9 @@ export async function createOrder(user: UserSnapshot, payload: CreateOrderPayloa
     }
   }
 
+  // 计算预计完成时间
+  const estimatedCompletionAt = await calculateEstimatedCompletion();
+
   const order = await prisma.$transaction(async (tx) => {
     const stockResult = await tx.stringInventory.updateMany({
       where: { id: stringId, stock: { gte: INVENTORY.DEDUCT_ON_CREATE } },
@@ -231,6 +245,7 @@ export async function createOrder(user: UserSnapshot, payload: CreateOrderPayloa
         voucherUsedId: voucherId || null,
         status: usePackage ? 'in_progress' : 'pending',
         notes,
+        estimatedCompletionAt,
       },
     });
 
@@ -391,6 +406,9 @@ export async function createOrderWithPackage(user: UserSnapshot, payload: Create
 
   const finalPrice = Math.max(0, basePrice - discount);
 
+  // 计算预计完成时间
+  const estimatedCompletionAt = await calculateEstimatedCompletion();
+
   const order = await prisma.$transaction(async (tx) => {
     const newOrder = await tx.order.create({
       data: {
@@ -406,6 +424,7 @@ export async function createOrderWithPackage(user: UserSnapshot, payload: Create
         packageUsedId: packageUsed?.id,
         voucherUsedId: voucherUsed?.id,
         notes,
+        estimatedCompletionAt,
       },
     });
 
@@ -570,6 +589,9 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
 
   const finalPrice = Math.max(0, totalPrice - discount);
 
+  // 计算预计完成时间
+  const estimatedCompletionAt = await calculateEstimatedCompletion();
+
   const order = await prisma.$transaction(async (tx) => {
     const newOrder = await tx.order.create({
       data: {
@@ -586,6 +608,7 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
         notes: notes || `多球拍订单：${racketCount} 支球拍`,
         serviceType: serviceType || 'in_store',
         pickupAddress: serviceType === 'pickup_delivery' ? pickupAddress : null,
+        estimatedCompletionAt,
       },
     });
 
@@ -842,7 +865,11 @@ export async function completeOrder(admin: AdminSnapshot, orderId: string, admin
     select: { amount: true },
   });
   const orderTotalAmount = Number(latestPayment?.amount ?? order.price ?? 0);
-  const pointsPerOrder = Math.max(0, Math.floor(orderTotalAmount * POINTS.REWARD_RATE));
+
+  // Calculate points with membership multiplier
+  const multiplier = await calculatePointsMultiplier(order.user.membershipTier);
+  const basePoints = Math.floor(orderTotalAmount * POINTS.REWARD_RATE);
+  const pointsPerOrder = Math.max(0, Math.floor(basePoints * multiplier));
 
   await prisma.$transaction(async (tx) => {
     if (!isMultiRacketOrder && order.stringId && order.string) {
@@ -880,7 +907,7 @@ export async function completeOrder(admin: AdminSnapshot, orderId: string, admin
         amount: pointsPerOrder,
         type: 'order',
         referenceId: orderId,
-        description: `订单完成奖励：订单总额 RM${orderTotalAmount.toFixed(2)} × ${POINTS.REWARD_RATE * 100}% = ${pointsPerOrder} 积分`,
+        description: `订单完成奖励：订单总额 RM${orderTotalAmount.toFixed(2)} × ${POINTS.REWARD_RATE * 100}% × ${multiplier}倍 = ${pointsPerOrder} 积分`,
         balanceAfter: newBalance,
       },
     });
@@ -894,12 +921,19 @@ export async function completeOrder(admin: AdminSnapshot, orderId: string, admin
       data: {
         userId: order.userId,
         title: '订单已完成',
-        message: `您的订单已完成，订单总额 RM${orderTotalAmount.toFixed(2)}，获得 ${pointsPerOrder} 积分（${POINTS.REWARD_RATE * 100}%）`,
+        message: `您的订单已完成，订单总额 RM${orderTotalAmount.toFixed(2)}，获得 ${pointsPerOrder} 积分`,
         type: 'order',
         actionUrl: `/orders/${orderId}`,
       },
     });
   });
+
+  // Check for membership upgrade asynchronously
+  try {
+    await checkAndUpgradeTier(order.userId);
+  } catch (error) {
+    console.error('Failed to check tier upgrade:', error);
+  }
 
   return {
     orderId,

@@ -20,6 +20,7 @@ import {
   ClipboardListIcon,
   StarIcon
 } from 'lucide-react';
+import WhatsAppButton from '@/components/WhatsAppButton';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -74,6 +75,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           <BottomNav items={navItems} />
         </div>
       )}
+
+      {/* WhatsApp 浮动按钮 */}
+      <WhatsAppButton />
     </>
   );
 }

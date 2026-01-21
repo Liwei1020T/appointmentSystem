@@ -15,6 +15,12 @@ datasource db {
 // USERS & AUTHENTICATION
 // ============================================
 
+enum MembershipTier {
+  SILVER
+  GOLD
+  VIP
+}
+
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   // Email is optional because the platform now supports phone-only auth (OTP).
@@ -30,6 +36,13 @@ model User {
   referredBy   String?  @map("referred_by")
   points       Int      @default(0)
   role         String   @default("customer") // 'customer' or 'admin'
+
+  // Membership fields
+  membershipTier MembershipTier @default(SILVER) @map("membership_tier")
+  totalSpent     Decimal        @default(0) @map("total_spent") @db.Decimal(10, 2)
+  totalOrders    Int            @default(0) @map("total_orders")
+  tierUpdatedAt  DateTime?      @map("tier_updated_at") @db.Timestamptz(6)
+
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -46,11 +59,43 @@ model User {
   accounts          Account[]
   sessions          Session[]
   reviews           Review[]
+  reviewLikes       ReviewLike[]
+  badges            UserBadge[]
 
   @@index([referralCode])
   @@index([referredBy])
   @@index([email])
   @@map("users")
+}
+
+// 用户徽章系统
+model UserBadge {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  badgeType String    @map("badge_type") // 徽章类型
+  earnedAt  DateTime  @default(now()) @map("earned_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeType])
+  @@index([userId])
+  @@index([badgeType])
+  @@map("user_badges")
+}
+
+model TierBenefit {
+  id          String         @id @default(uuid()) @db.Uuid
+  tier        MembershipTier
+  benefitType String         @map("benefit_type") // "points_multiplier", "priority_queue", "exclusive_discount"
+  benefitValue String        @map("benefit_value") // "1.2", "true", "5%"
+  description String
+  isActive    Boolean        @default(true) @map("is_active")
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([tier])
+  @@index([isActive])
+  @@map("tier_benefits")
 }
 
 // One-time password (OTP) codes for phone-based authentication.
@@ -196,6 +241,8 @@ model Order {
   voucherUsedId  String?   @map("voucher_used_id") @db.Uuid
   notes          String?
   completedAt    DateTime? @map("completed_at") @db.Timestamptz(6)
+  // 预计完成时间（订单创建时计算）
+  estimatedCompletionAt DateTime? @map("estimated_completion_at") @db.Timestamptz(6)
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -260,17 +307,39 @@ model Review {
   adminReplyAt DateTime? @map("admin_reply_at") @db.Timestamptz(6)
   adminReplyBy String?   @map("admin_reply_by") @db.Uuid
 
+  // 社交化功能：点赞与精选
+  isFeatured Boolean @default(false) @map("is_featured") // 精选置顶
+  likesCount Int     @default(0) @map("likes_count")     // 点赞数（冗余计数，提升查询性能）
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id])
+  likes ReviewLike[]
 
   @@unique([orderId]) // One review per order
   @@index([userId])
   @@index([rating])
   @@index([createdAt])
+  @@index([isFeatured])
   @@map("reviews")
+}
+
+// 评价点赞关联表
+model ReviewLike {
+  id        String   @id @default(uuid()) @db.Uuid
+  reviewId  String   @map("review_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([reviewId, userId]) // 每用户每评价只能点赞一次
+  @@index([reviewId])
+  @@index([userId])
+  @@map("review_likes")
 }
 
 // ============================================
@@ -314,6 +383,9 @@ model Package {
   validityDays  Int      @map("validity_days")
   active        Boolean  @default(true)
   imageUrl      String?  @map("image_url")
+  // 套餐标签与展示增强
+  tag           String?  // 'best_value', 'most_popular', 'limited_time', 'new'
+  isPopular     Boolean  @default(false) @map("is_popular") // 是否为热门套餐
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -321,6 +393,7 @@ model Package {
   payments     Payment[]
 
   @@index([active])
+  @@index([tag])
   @@map("packages")
 }
 
@@ -363,12 +436,18 @@ model Voucher {
   validFrom   DateTime @map("valid_from") @db.Timestamptz(6)
   validUntil  DateTime @map("valid_until") @db.Timestamptz(6)
   active      Boolean  @default(true)
+  // 新用户激励字段
+  tag              String?  // 'welcome', 'referral', 'review', 'promotion'
+  isFirstOrderOnly Boolean  @default(false) @map("is_first_order_only") // 仅限首单使用
+  isAutoIssue      Boolean  @default(false) @map("is_auto_issue") // 注册时自动发放
+  validityDays     Int?     @map("validity_days") // 发放后有效天数（覆盖 validUntil）
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   userVouchers UserVoucher[]
 
   @@index([code])
   @@index([active])
+  @@index([tag])
   @@map("vouchers")
 }
 
@@ -464,4 +543,58 @@ model SystemSetting {
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("system_settings")
+}
+
+// ============================================
+// PROMOTIONS & CAMPAIGNS
+// ============================================
+
+enum PromotionType {
+  FLASH_SALE       // Time-limited discount
+  POINTS_BOOST     // 2x Points
+  SPEND_SAVE       // Spend 100 save 10
+}
+
+enum DiscountType {
+  FIXED
+  PERCENTAGE
+}
+
+model Promotion {
+  id              String          @id @default(uuid()) @db.Uuid
+  name            String
+  type            PromotionType
+  discountType    DiscountType    @map("discount_type")
+  discountValue   Decimal         @map("discount_value") @db.Decimal(10, 2)
+  minPurchase     Decimal?        @map("min_purchase") @db.Decimal(10, 2)
+  startAt         DateTime        @map("start_at") @db.Timestamptz(6)
+  endAt           DateTime        @map("end_at") @db.Timestamptz(6)
+  isActive        Boolean         @default(true) @map("is_active")
+  usageLimit      Int?            @map("usage_limit")
+  usageCount      Int             @default(0) @map("usage_count")
+  usages          PromotionUsage[]
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([isActive])
+  @@index([startAt, endAt])
+  @@map("promotions")
+}
+
+model PromotionUsage {
+  id           String    @id @default(uuid()) @db.Uuid
+  promotionId  String    @map("promotion_id") @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  orderId      String?   @map("order_id") @db.Uuid
+  savedAmount  Decimal   @map("saved_amount") @db.Decimal(10, 2)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  promotion    Promotion @relation(fields: [promotionId], references: [id])
+  // We don't strictly enforce relation to User/Order here to avoid circular dependency hell in complex imports,
+  // but logically it links to them. For reporting, we can join if needed.
+  // Actually, let's keep it simple for now.
+
+  @@index([promotionId])
+  @@index([userId])
+  @@map("promotion_usage")
 }
