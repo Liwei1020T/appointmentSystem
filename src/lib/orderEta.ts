@@ -44,6 +44,32 @@ export function getWorkQueueEstimate(order: OrderWithDetails): WorkQueueEstimate
 }
 
 export function getOrderEtaEstimate(order: OrderWithDetails): OrderEtaResult {
+  // 1. 优先使用管理员手动设置的 ETA
+  const etaDateStr = (order as any).estimatedCompletionAt || (order as any).estimated_completion_at;
+
+  if (etaDateStr && (order.status === 'pending' || order.status === 'in_progress')) {
+    const eta = new Date(etaDateStr);
+    const now = new Date();
+    const diffMs = eta.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    let label = '';
+    if (diffDays <= 0) label = '预计今日完成';
+    else if (diffDays === 1) label = '预计明天完成';
+    else if (diffDays <= 7) label = `预计 ${diffDays} 天后完成`;
+    else {
+      const month = eta.getMonth() + 1;
+      const day = eta.getDate();
+      label = `预计 ${month}月${day}日 完成`;
+    }
+
+    return {
+      label,
+      tone: 'info',
+      detail: '管理员已确认'
+    };
+  }
+
   const queue = getWorkQueueEstimate(order);
   if (queue?.etaLabel) {
     return {
