@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect } from 'react';
 import SectionLoading from '@/components/loading/SectionLoading';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import { Camera, ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react';
 import { getOrderPhotos, OrderPhoto } from '@/services/orderPhotosService';
 
@@ -116,11 +117,13 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
             onClick={() => openLightbox(index)}
             className="relative group cursor-pointer rounded-lg overflow-hidden border border-border-subtle hover:shadow-lg transition-shadow"
           >
-            {/* 缩略图 */}
-            <img
+            {/* 缩略图 - 使用 OptimizedImage 懒加载 */}
+            <OptimizedImage
               src={photo.photo_url}
               alt={photo.caption || '订单照片'}
-              className="w-full h-32 object-cover"
+              className="w-full h-32"
+              lazy={true}
+              rootMargin="100px"
             />
 
             {/* 类型标签 */}
@@ -210,10 +213,11 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
                       : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
                 >
-                  <img
+                  <OptimizedImage
                     src={photo.photo_url}
                     alt=""
-                    className="w-full h-full object-cover"
+                    className="w-full h-full"
+                    lazy={false}
                   />
                 </button>
               ))}

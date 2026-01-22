@@ -242,3 +242,26 @@ export async function updateOrderPhotos(
     return { success: false, error: error.message || 'Failed to update order photos' };
   }
 }
+
+/**
+ * 更新订单预计完成时间 (ETA)
+ * @param orderId 订单 ID
+ * @param estimatedCompletionAt ISO 格式日期字符串，或 null 恢复系统计算
+ */
+export async function updateOrderEta(
+  orderId: string,
+  estimatedCompletionAt: string | null
+): Promise<{ order: AdminOrder | null; error: { message: string } | null }> {
+  try {
+    const payload = await apiRequest<{ order: AdminOrder }>(`/api/admin/orders/${orderId}/eta`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estimatedCompletionAt }),
+    });
+    invalidateRequestCacheByPrefix('admin:orders');
+    return { order: payload.order, error: null };
+  } catch (error: any) {
+    console.error('Failed to update order ETA:', error);
+    return { order: null, error: { message: error.message || 'Failed to update order ETA' } };
+  }
+}

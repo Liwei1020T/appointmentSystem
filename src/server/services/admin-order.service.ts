@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { ApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
+import { getOrderQueuePosition } from '@/server/services/order-eta.service';
 
 const ALLOWED_STATUSES = [
   'pending',
@@ -123,7 +124,13 @@ export async function getAdminOrderById(orderId: string) {
     throw new ApiError('NOT_FOUND', 404, 'Order not found');
   }
 
-  return order;
+  // 获取队列位置（仅对未完成订单）
+  let queuePosition: number | null = null;
+  if (order.status === 'pending' || order.status === 'in_progress') {
+    queuePosition = await getOrderQueuePosition(orderId);
+  }
+
+  return { ...order, queuePosition };
 }
 
 /**
@@ -153,6 +160,35 @@ export async function updateAdminOrderStatus(
       status,
       // Preserve existing notes to avoid overwriting customer remarks.
       notes: currentOrder?.notes,
+    },
+    include: {
+      user: { select: { id: true, email: true, fullName: true, phone: true } },
+      string: true,
+      payments: true,
+      packageUsed: { include: { package: true } },
+      voucherUsed: { include: { voucher: true } },
+    },
+  });
+
+  return order;
+}
+
+/**
+ * Update order estimated completion time (ETA).
+ * Allows admin to manually override the system-calculated ETA.
+ */
+export async function updateOrderEta(
+  orderId: string,
+  estimatedCompletionAt: Date | null
+) {
+  if (!isValidUUID(orderId)) {
+    throw new ApiError('BAD_REQUEST', 400, 'Invalid order id');
+  }
+
+  const order = await prisma.order.update({
+    where: { id: orderId },
+    data: {
+      estimatedCompletionAt,
     },
     include: {
       user: { select: { id: true, email: true, fullName: true, phone: true } },

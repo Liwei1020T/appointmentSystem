@@ -547,6 +547,8 @@ export default function AdminOrderDetailPage() {
               updatedAt={(order as any).updatedAt || (order as any).updated_at ? String((order as any).updatedAt || (order as any).updated_at) : undefined}
               completedAt={(order as any).completedAt || (order as any).completed_at ? String((order as any).completedAt || (order as any).completed_at) : undefined}
               cancelledAt={(order as any).cancelledAt || (order as any).cancelled_at ? String((order as any).cancelledAt || (order as any).cancelled_at) : undefined}
+              estimatedCompletionAt={(order as any).estimatedCompletionAt || (order as any).estimated_completion_at || null}
+              queuePosition={(order as any).queuePosition || null}
               onStatusUpdate={loadOrder}
             />
 

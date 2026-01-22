@@ -20,6 +20,7 @@ import {
 } from '@/lib/orderNotificationHelper';
 import { OrderStatus } from '@/components/OrderStatusBadge';
 import OrderStatusBadge from '@/components/OrderStatusBadge';
+import { Badge } from '@/components/Badge';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 import Toast from '@/components/Toast';
@@ -498,15 +499,15 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                 {/* Tags Row */}
                 <div className="flex flex-wrap items-center gap-2">
                   {order.usePackage && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-success/15 text-success">
+                    <Badge variant="success" size="sm" interactive>
                       套餐
-                    </span>
+                    </Badge>
                   )}
 
                   {(order.discountAmount ?? 0) > 0 && !order.usePackage && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-warning/15 text-warning">
+                    <Badge variant="warning" size="sm" interactive>
                       优惠 RM {Number(order.discountAmount ?? 0).toFixed(0)}
-                    </span>
+                    </Badge>
                   )}
 
                   {order.status === 'completed' && (
@@ -520,9 +521,13 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                     </button>
                   )}
 
-                  <span className={`text-xs px-3 py-2 min-h-[36px] inline-flex items-center rounded-full font-medium border ${actionToneMap[nextAction.tone] || actionToneMap.neutral}`}>
+                  <Badge
+                    variant={nextAction.tone === 'danger' ? 'error' : nextAction.tone}
+                    size="sm"
+                    interactive
+                  >
                     {nextAction.label}
-                  </span>
+                  </Badge>
                   {/* Arrow indicator */}
                   <div className="ml-auto flex items-center gap-1 text-text-tertiary text-xs group-hover:text-accent transition-colors">
                     <span>查看详情</span>
@@ -543,13 +548,16 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                     {nextActionChips.map((chip, chipIndex) => {
                       const ChipIcon = chip.icon;
                       return (
-                        <div
+                        <Badge
                           key={`${order.id}-chip-${chipIndex}`}
-                          className={`flex items-center gap-1.5 px-3 py-2 min-h-[36px] rounded-full text-xs font-medium ${chipToneStyles[chip.tone]}`}
+                          variant={chip.tone === 'neutral' ? 'neutral' : chip.tone}
+                          size="sm"
+                          interactive
+                          className="gap-1.5"
                         >
                           {ChipIcon && <ChipIcon className="w-3.5 h-3.5" />}
                           <span>{chip.label}</span>
-                        </div>
+                        </Badge>
                       );
                     })}
                   </div>
