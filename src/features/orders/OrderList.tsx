@@ -513,14 +513,14 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                     <button
                       type="button"
                       onClick={(event) => handleRepeatOrder(event, order.id)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[36px] rounded-full text-xs font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
                     >
                       <Disc className="w-3.5 h-3.5" />
                       再来一单
                     </button>
                   )}
 
-                  <span className={`text-[11px] px-2 py-1 rounded-full font-medium border ${actionToneMap[nextAction.tone] || actionToneMap.neutral}`}>
+                  <span className={`text-xs px-3 py-2 min-h-[36px] inline-flex items-center rounded-full font-medium border ${actionToneMap[nextAction.tone] || actionToneMap.neutral}`}>
                     {nextAction.label}
                   </span>
                   {/* Arrow indicator */}
@@ -545,9 +545,9 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                       return (
                         <div
                           key={`${order.id}-chip-${chipIndex}`}
-                          className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-medium ${chipToneStyles[chip.tone]}`}
+                          className={`flex items-center gap-1.5 px-3 py-2 min-h-[36px] rounded-full text-xs font-medium ${chipToneStyles[chip.tone]}`}
                         >
-                          {ChipIcon && <ChipIcon className="w-3 h-3" />}
+                          {ChipIcon && <ChipIcon className="w-3.5 h-3.5" />}
                           <span>{chip.label}</span>
                         </div>
                       );

@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import FocusTrap from './FocusTrap';
 
 interface ModalProps {
   isOpen: boolean;
@@ -11,7 +12,7 @@ interface ModalProps {
 
 /**
  * Modal dialog component
- * 
+ *
  * @param isOpen - Whether modal is visible
  * @param onClose - Close handler
  * @param title - Modal title
@@ -31,6 +32,7 @@ export const Modal: React.FC<ModalProps> = ({
     md: 'max-w-lg',
     lg: 'max-w-2xl'
   };
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -53,7 +55,10 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="presentation"
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 transition-opacity"
@@ -61,24 +66,27 @@ export const Modal: React.FC<ModalProps> = ({
         aria-hidden="true"
       />
 
-      {/* Modal */}
-      <div
-        className={`relative bg-white rounded-2xl shadow-xl w-full ${sizes[size]} max-h-[90vh] overflow-y-auto ${className}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={title ? 'modal-title' : undefined}
-      >
-        {title && (
-          <div className="px-6 py-4 border-b border-border-subtle">
-            <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
-              {title}
-            </h2>
+      {/* Modal with Focus Trap */}
+      <FocusTrap active={isOpen} restoreFocus>
+        <div
+          ref={modalRef}
+          className={`relative bg-white rounded-2xl shadow-xl w-full ${sizes[size]} max-h-[90vh] overflow-y-auto ${className}`}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={title ? 'modal-title' : undefined}
+        >
+          {title && (
+            <div className="px-6 py-4 border-b border-border-subtle">
+              <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
+                {title}
+              </h2>
+            </div>
+          )}
+          <div className="px-6 py-4 text-text-secondary">
+            {children}
           </div>
-        )}
-        <div className="px-6 py-4 text-text-secondary">
-          {children}
         </div>
-      </div>
+      </FocusTrap>
     </div>
   );
 };

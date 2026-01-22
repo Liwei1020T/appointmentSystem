@@ -63,9 +63,9 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const sizes = {
-    sm: 'h-9 px-3 text-sm',
-    md: 'h-11 px-4 text-base',
-    lg: 'h-12 px-6 text-base'
+    sm: 'h-10 min-h-[40px] px-3 text-sm', // h-10 = 40px，接近 44px 触控热区要求
+    md: 'h-11 min-h-[44px] px-4 text-base',
+    lg: 'h-12 min-h-[48px] px-6 text-base'
   };
 
   const isDisabled = disabled || loading;

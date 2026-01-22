@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Trash2, ChevronDown, ChevronUp, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
@@ -45,7 +45,7 @@ interface RacketItemCardProps {
     onSetTemplate?: () => void;
 }
 
-export default function RacketItemCard({
+function RacketItemCardComponent({
     item,
     index,
     onUpdate,
@@ -367,3 +367,25 @@ export default function RacketItemCard({
         </div>
     );
 }
+
+/**
+ * Memoized RacketItemCard to prevent unnecessary re-renders in multi-racket list.
+ * Re-renders only when item data, index, template status, or disabled state changes.
+ */
+const RacketItemCard = memo(RacketItemCardComponent, (prevProps, nextProps) => {
+    // 深度比较 item 对象的关键字段
+    return (
+        prevProps.item.id === nextProps.item.id &&
+        prevProps.item.racketPhoto === nextProps.item.racketPhoto &&
+        prevProps.item.tensionVertical === nextProps.item.tensionVertical &&
+        prevProps.item.tensionHorizontal === nextProps.item.tensionHorizontal &&
+        prevProps.item.notes === nextProps.item.notes &&
+        prevProps.item.photoStatus === nextProps.item.photoStatus &&
+        prevProps.item.photoError === nextProps.item.photoError &&
+        prevProps.index === nextProps.index &&
+        prevProps.disabled === nextProps.disabled &&
+        prevProps.isTemplate === nextProps.isTemplate
+    );
+});
+
+export default RacketItemCard;

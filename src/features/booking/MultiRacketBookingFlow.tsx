@@ -26,6 +26,7 @@ import VoucherSelector from './VoucherSelector';
 import ServiceMethodSelector, { ServiceType } from './ServiceMethodSelector';
 import { getOrderEtaEstimate } from '@/lib/orderEta';
 import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 type RetryQueueEntry = {
     reason: string;
@@ -81,6 +82,13 @@ export default function MultiRacketBookingFlow() {
     const [syncTension, setSyncTension] = useState(true);
     const [syncNotes, setSyncNotes] = useState(false);
     const [overwriteNotes, setOverwriteNotes] = useState(false);
+    const [syncPhotos, setSyncPhotos] = useState(false);
+    const [photoReplaceConfirmOpen, setPhotoReplaceConfirmOpen] = useState(false);
+    const [pendingPhotoSync, setPendingPhotoSync] = useState<{
+        sourcePhoto: string;
+        targetCount: number;
+        existingCount: number;
+    } | null>(null);
     const [toastState, setToastState] = useState<{
         show: boolean;
         message: string;
@@ -695,13 +703,14 @@ export default function MultiRacketBookingFlow() {
     const applyTemplateToItems = useCallback((options: {
         applyTension: boolean;
         applyNotes: boolean;
+        applyPhotos?: boolean;
         overwriteNotes?: boolean;
     }) => {
         if (cartItems.length < 2) {
             toast.error('至少需要两支球拍才能快速配置');
             return false;
         }
-        if (!options.applyTension && !options.applyNotes) {
+        if (!options.applyTension && !options.applyNotes && !options.applyPhotos) {
             toast.error('请选择要同步的内容');
             return false;
         }
@@ -716,10 +725,19 @@ export default function MultiRacketBookingFlow() {
 
         if (options.applyNotes && !sourceNotes) {
             toast.error('模板备注为空，已跳过同步备注');
-            if (!options.applyTension) {
+            if (!options.applyTension && !options.applyPhotos) {
                 return false;
             }
         }
+
+        if (options.applyPhotos && !source.racketPhoto) {
+            toast.error('模板球拍没有照片，已跳过同步照片');
+            if (!options.applyTension && !options.applyNotes) {
+                return false;
+            }
+        }
+
+        const shouldApplyPhotos = options.applyPhotos && !!source.racketPhoto;
 
         setCartItems(prev => prev.map((item) => {
             if (item.id === source.id) return item;
@@ -730,9 +748,15 @@ export default function MultiRacketBookingFlow() {
             }
             if (shouldApplyNotes) {
                 if (!options.overwriteNotes && item.notes) {
-                    return item;
+                    // Skip items with existing notes if overwrite is disabled
+                } else {
+                    updates.notes = sourceNotes;
                 }
-                updates.notes = sourceNotes;
+            }
+            if (shouldApplyPhotos) {
+                updates.racketPhoto = source.racketPhoto;
+                updates.photoStatus = 'success';
+                updates.photoError = undefined;
             }
             return Object.keys(updates).length > 0 ? { ...item, ...updates } : item;
         }));
@@ -741,18 +765,69 @@ export default function MultiRacketBookingFlow() {
     }, [cartItems, templateId]);
 
     /**
-     * Apply selected template settings based on the current sync options.
+     * Check if photo sync would replace existing photos and show confirmation if needed.
+     * @returns True if confirmation is needed (dialog shown), false if can proceed directly.
      */
-    const handleQuickApply = useCallback(() => {
+    const checkPhotoReplaceConfirmation = useCallback(() => {
+        if (!syncPhotos) return false;
+
+        const source = cartItems.find((item) => item.id === templateId) || cartItems[0];
+        if (!source?.racketPhoto) return false;
+
+        const targets = cartItems.filter((item) => item.id !== source.id);
+        const existingPhotos = targets.filter((item) => !!item.racketPhoto);
+
+        if (existingPhotos.length > 0) {
+            setPendingPhotoSync({
+                sourcePhoto: source.racketPhoto,
+                targetCount: targets.length,
+                existingCount: existingPhotos.length,
+            });
+            setPhotoReplaceConfirmOpen(true);
+            return true;
+        }
+
+        return false;
+    }, [syncPhotos, cartItems, templateId]);
+
+    /**
+     * Execute photo sync after confirmation.
+     */
+    const handleConfirmPhotoReplace = useCallback(() => {
+        setPhotoReplaceConfirmOpen(false);
+        setPendingPhotoSync(null);
+
         const applied = applyTemplateToItems({
             applyTension: syncTension,
             applyNotes: syncNotes,
+            applyPhotos: true,
             overwriteNotes,
         });
         if (applied) {
-            toast.success('已同步配置到其余球拍');
+            toast.success('已同步配置到其余球拍（含照片）');
         }
-    }, [applyTemplateToItems, overwriteNotes, syncNotes, syncTension]);
+    }, [applyTemplateToItems, syncTension, syncNotes, overwriteNotes]);
+
+    /**
+     * Apply selected template settings based on the current sync options.
+     */
+    const handleQuickApply = useCallback(() => {
+        // If photo sync is enabled, check for confirmation
+        if (syncPhotos && checkPhotoReplaceConfirmation()) {
+            return; // Dialog shown, wait for confirmation
+        }
+
+        const applied = applyTemplateToItems({
+            applyTension: syncTension,
+            applyNotes: syncNotes,
+            applyPhotos: syncPhotos,
+            overwriteNotes,
+        });
+        if (applied) {
+            const message = syncPhotos ? '已同步配置到其余球拍（含照片）' : '已同步配置到其余球拍';
+            toast.success(message);
+        }
+    }, [applyTemplateToItems, overwriteNotes, syncNotes, syncTension, syncPhotos, checkPhotoReplaceConfirmation]);
 
     /**
      * Apply only tension values from the template to all other rackets.
@@ -1455,6 +1530,18 @@ export default function MultiRacketBookingFlow() {
                                                 {quickApplySource.notes?.trim() ? quickApplySource.notes : '无'}
                                             </span>
                                         </div>
+                                        <div className="flex items-center justify-between bg-ink rounded-lg px-3 py-2 border border-border-subtle">
+                                            <span>照片</span>
+                                            {quickApplySource.racketPhoto ? (
+                                                <img
+                                                    src={quickApplySource.racketPhoto}
+                                                    alt="模板照片"
+                                                    className="w-8 h-8 rounded object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-text-tertiary">无</span>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="mt-3 flex flex-wrap gap-3 text-xs text-text-secondary">
                                         <label className="flex items-center gap-2">
@@ -1480,6 +1567,18 @@ export default function MultiRacketBookingFlow() {
                                                 className="w-4 h-4 rounded border-border-subtle text-accent focus:ring-2 focus:ring-accent-border"
                                             />
                                             <span>同步备注</span>
+                                        </label>
+                                        <label className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={syncPhotos}
+                                                onChange={(event) => setSyncPhotos(event.target.checked)}
+                                                disabled={!quickApplySource.racketPhoto}
+                                                className="w-4 h-4 rounded border-border-subtle text-accent focus:ring-2 focus:ring-accent-border disabled:opacity-50"
+                                            />
+                                            <span className={!quickApplySource.racketPhoto ? 'opacity-50' : ''}>
+                                                同步照片
+                                            </span>
                                         </label>
                                         {syncNotes && (
                                             <label className="flex items-center gap-2">
@@ -1512,7 +1611,7 @@ export default function MultiRacketBookingFlow() {
                                     <button
                                         type="button"
                                         onClick={handleQuickApply}
-                                        disabled={!syncTension && !syncNotes}
+                                        disabled={!syncTension && !syncNotes && !syncPhotos}
                                         className="mt-4 w-full px-4 py-3 rounded-xl bg-accent text-text-onAccent font-semibold hover:bg-accent/90 transition-all disabled:opacity-50"
                                     >
                                         应用到其余 {cartItems.length - 1} 支
@@ -1877,6 +1976,40 @@ export default function MultiRacketBookingFlow() {
                     </div>
                 </div>
             )}
+
+            {/* 照片替换确认弹窗 */}
+            <ConfirmDialog
+                isOpen={photoReplaceConfirmOpen}
+                onClose={() => {
+                    setPhotoReplaceConfirmOpen(false);
+                    setPendingPhotoSync(null);
+                }}
+                onConfirm={handleConfirmPhotoReplace}
+                title="确认替换照片"
+                message={pendingPhotoSync
+                    ? `将替换 ${pendingPhotoSync.existingCount} 张现有照片`
+                    : '确认替换现有照片？'
+                }
+                details={pendingPhotoSync && (
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                            <span className="text-text-tertiary">模板照片:</span>
+                            <img
+                                src={pendingPhotoSync.sourcePhoto}
+                                alt="模板照片"
+                                className="w-12 h-12 rounded object-cover"
+                            />
+                        </div>
+                        <p className="text-xs text-text-tertiary">
+                            将应用到其余 {pendingPhotoSync.targetCount} 支球拍，
+                            其中 {pendingPhotoSync.existingCount} 支已有照片将被替换
+                        </p>
+                    </div>
+                )}
+                confirmLabel="确认替换"
+                cancelLabel="取消"
+                variant="warning"
+            />
         </div>
     );
 }

@@ -3,7 +3,13 @@ import { ApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { Prisma, User } from '@prisma/client';
 import { INVENTORY, ORDER_RULES, POINTS, PRICING } from '@/lib/constants';
-import { calculateEstimatedCompletion, getOrderQueuePosition } from './order-eta.service';
+import {
+  calculateEstimatedCompletion,
+  getOrderQueuePosition,
+  batchGetOrderEtaQueueMeta,
+  getOrderEtaQueueMeta,
+  type EtaQueueMeta,
+} from './order-eta.service';
 import { calculatePointsMultiplier, checkAndUpgradeTier } from './membership.service';
 
 export interface CreateOrderPayload {
@@ -119,7 +125,7 @@ export async function getUserOrders(
   const take = limit ? Number(limit) : undefined;
   const skip = page && take ? (Number(page) - 1) * take : undefined;
 
-  return prisma.order.findMany({
+  const orders = await prisma.order.findMany({
     where: {
       userId,
       ...(status ? { status } : {}),
@@ -129,6 +135,15 @@ export async function getUserOrders(
     ...(take ? { take } : {}),
     ...(skip !== undefined ? { skip } : {}),
   });
+
+  // 批量获取 ETA 队列元数据
+  const etaMetaMap = await batchGetOrderEtaQueueMeta(orders);
+
+  // 将 ETA 元数据附加到每个订单
+  return orders.map(order => ({
+    ...order,
+    workQueueEstimate: etaMetaMap.get(order.id) || null,
+  }));
 }
 
 export async function getOrderById(userId: string, orderId: string) {
@@ -145,15 +160,13 @@ export async function getOrderById(userId: string, orderId: string) {
     throw new ApiError('NOT_FOUND', 404, 'Order not found');
   }
 
-  // 获取队列位置（仅对未完成订单）
-  const queuePosition =
-    order.status === 'pending' || order.status === 'in_progress'
-      ? await getOrderQueuePosition(orderId)
-      : null;
+  // 获取标准化的 ETA 队列元数据
+  const workQueueEstimate = await getOrderEtaQueueMeta(order);
 
   return {
     ...order,
-    queuePosition,
+    queuePosition: workQueueEstimate.queuePosition,
+    workQueueEstimate,
   };
 }
 
