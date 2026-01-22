@@ -27,6 +27,7 @@ import {
 } from '@/services/adminVoucherService';
 import { Badge, Button, Card, Input, StatsCard } from '@/components';
 import PageLoading from '@/components/loading/PageLoading';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import DistributeVoucherModal from './DistributeVoucherModal';
 
 interface AdminVoucherDetailPageProps {
@@ -41,6 +42,21 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showDistributeModal, setShowDistributeModal] = useState(false);
+
+  // Confirm Dialog State
+  const [confirmDialogState, setConfirmDialogState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    variant?: 'warning' | 'danger' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: async () => {},
+  });
+  const [processingAction, setProcessingAction] = useState(false);
 
   const [formData, setFormData] = useState({
     code: '',
@@ -119,17 +135,24 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
 
   async function handleDelete() {
     if (!voucher) return;
-    if (!confirm('确定要删除这个优惠券吗？此操作不可恢复。')) return;
 
-    setLoading(true);
-    const { success, error } = await deleteVoucher(voucher.id);
+    setConfirmDialogState({
+      isOpen: true,
+      title: '删除优惠券',
+      message: '确定要删除这个优惠券吗？此操作不可恢复。',
+      variant: 'danger',
+      onConfirm: async () => {
+        setProcessingAction(true);
+        const { success, error } = await deleteVoucher(voucher.id);
 
-    if (error) {
-      alert(`Failed to delete: ${error}`);
-      setLoading(false);
-    } else {
-      router.push('/admin/vouchers');
-    }
+        if (error) {
+          alert(`Failed to delete: ${error}`);
+        } else {
+          router.push('/admin/vouchers');
+        }
+        setProcessingAction(false);
+      }
+    });
   }
 
   async function handleToggleStatus() {
@@ -526,6 +549,16 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
             onSuccess={() => loadData()}
           />
         )}
+
+        <ConfirmDialog
+          isOpen={confirmDialogState.isOpen}
+          onClose={() => setConfirmDialogState(prev => ({ ...prev, isOpen: false }))}
+          onConfirm={confirmDialogState.onConfirm}
+          title={confirmDialogState.title}
+          message={confirmDialogState.message}
+          variant={confirmDialogState.variant}
+          loading={processingAction}
+        />
       </div>
     </div>
   );

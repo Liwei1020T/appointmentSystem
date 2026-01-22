@@ -35,6 +35,7 @@ import type {
   UserDevice as ServiceUserDevice,
 } from '@/services/notificationService';
 import SectionLoading from '@/components/loading/SectionLoading';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 type TabType = 'logs' | 'templates' | 'stats' | 'devices';
 
@@ -79,6 +80,21 @@ export default function AdminNotificationsPage() {
 
   // Devices state
   const [devices, setDevices] = useState<UserDevice[]>([]);
+
+  // Confirm Dialog State
+  const [confirmDialogState, setConfirmDialogState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    variant?: 'warning' | 'danger' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: async () => {},
+  });
+  const [processingAction, setProcessingAction] = useState(false);
 
   // Load data based on active tab
   useEffect(() => {
@@ -155,15 +171,24 @@ export default function AdminNotificationsPage() {
   };
 
   const handleRetry = async (notificationId: string) => {
-    if (!confirm('Retry sending this notification?')) return;
-    
-    try {
-      await retryFailedNotification(notificationId);
-      alert('Notification retried successfully');
-      loadNotifications();
-    } catch (error: any) {
-      alert(`Retry failed: ${error.message}`);
-    }
+    setConfirmDialogState({
+      isOpen: true,
+      title: 'Retry Notification',
+      message: 'Are you sure you want to retry sending this notification?',
+      variant: 'info',
+      onConfirm: async () => {
+        setProcessingAction(true);
+        try {
+          await retryFailedNotification(notificationId);
+          alert('Notification retried successfully');
+          loadNotifications();
+        } catch (error: any) {
+          alert(`Retry failed: ${error.message}`);
+        }
+        setProcessingAction(false);
+        setConfirmDialogState(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   };
 
   const handleSaveTemplate = async () => {
@@ -676,6 +701,19 @@ export default function AdminNotificationsPage() {
           </div>
         </div>
       </div>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialogState.isOpen}
+        onClose={() => setConfirmDialogState(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDialogState.onConfirm}
+        title={confirmDialogState.title}
+        message={confirmDialogState.message}
+        variant={confirmDialogState.variant}
+        loading={processingAction}
+        confirmLabel="Confirm"
+        cancelLabel="Cancel"
+      />
     </div>
   );
 }

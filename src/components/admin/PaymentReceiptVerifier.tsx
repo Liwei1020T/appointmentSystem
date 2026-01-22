@@ -14,6 +14,7 @@ import React, { useState } from 'react';
 import { Check, X, Image as ImageIcon, AlertCircle, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface PaymentReceiptVerifierProps {
   receiptUrl?: string | null;
@@ -38,27 +39,48 @@ export default function PaymentReceiptVerifier({
   const [verifying, setVerifying] = useState(false);
   const [notes, setNotes] = useState('');
 
+  // Confirm Dialog State
+  const [confirmDialogState, setConfirmDialogState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    variant?: 'warning' | 'danger' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: async () => {},
+  });
+
   // 处理审核
   const handleVerify = async (approved: boolean) => {
     const action = approved ? '通过' : '拒绝';
-    
+
     if (!approved && !notes.trim()) {
       toast.error('拒绝时必须填写备注');
       return;
     }
 
-    if (!confirm(`确认${action}此支付收据吗？`)) return;
-
-    setVerifying(true);
-    try {
-      await onVerify(approved, notes.trim() || undefined);
-      toast.success(`收据已${action}`);
-      setNotes('');
-    } catch (error: any) {
-      toast.error(`${action}失败：` + error.message);
-    } finally {
-      setVerifying(false);
-    }
+    setConfirmDialogState({
+      isOpen: true,
+      title: `${action}支付收据`,
+      message: `确认${action}此支付收据吗？${approved ? '确认后订单将进入下一阶段。' : '拒绝后需用户重新上传。'}`,
+      variant: approved ? 'info' : 'danger',
+      onConfirm: async () => {
+        setVerifying(true);
+        try {
+          await onVerify(approved, notes.trim() || undefined);
+          toast.success(`收据已${action}`);
+          setNotes('');
+        } catch (error: any) {
+          toast.error(`${action}失败：` + error.message);
+        } finally {
+          setVerifying(false);
+          setConfirmDialogState(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   };
 
   // 如果没有收据
@@ -216,6 +238,16 @@ export default function PaymentReceiptVerifier({
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialogState.isOpen}
+        onClose={() => setConfirmDialogState(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDialogState.onConfirm}
+        title={confirmDialogState.title}
+        message={confirmDialogState.message}
+        variant={confirmDialogState.variant}
+        loading={verifying}
+      />
     </div>
   );
 }

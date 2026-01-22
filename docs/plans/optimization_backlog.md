@@ -7,6 +7,10 @@
 
 ## ✅ Current State (已完成)
 
+- **Admin ETA**: 管理员可手动设置订单 ETA，前端列表与详情页优先展示手动设置的时间 (2025-01-22)。
+- **Mobile Touch Targets**: `OrderList` 中的状态标签、操作按钮全部应用 `Badge interactive` (44px 热区) (2025-01-22)。
+- **Image Performance**: 订单照片展示 (`OrderPhotosDisplay`) 应用 `OptimizedImage` 懒加载与骨架屏 (2025-01-22)。
+- **UI Consistency**: 全面替换原生 `window.confirm` 为自定义 `ConfirmDialog`，提升管理端操作体验 (2025-01-22)。
 - 多球拍预约（Step 2/4）照片批量上传：支持替换全部、进度条、每球拍成功/失败诊断、失败重试队列（确认替换/重试/忽略）。
 - 订单列表：增加 next-action chips（ETA/支付/取拍等），减少进入详情页的次数。
 - ETA：通过 `getOrderEtaEstimate` 在订单列表与预约流程里统一展示“已接单 / 预计完成 X 天 / 已完成”等文案（支持 fallback）。

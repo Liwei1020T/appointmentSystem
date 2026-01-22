@@ -31,6 +31,7 @@ import {
 } from '@/services/adminVoucherService';
 import { Badge, Button, Card, Input, StatsCard, Tabs } from '@/components';
 import SectionLoading from '@/components/loading/SectionLoading';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { Search } from 'lucide-react';
 
 export default function AdminVoucherListPage() {
@@ -49,6 +50,21 @@ export default function AdminVoucherListPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState<Voucher | null>(null);
   const [deletingVoucherId, setDeletingVoucherId] = useState<string | null>(null);
+
+  // Confirm Dialog State
+  const [confirmDialogState, setConfirmDialogState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    variant?: 'warning' | 'danger' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: async () => {},
+  });
+  const [processingAction, setProcessingAction] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -143,21 +159,25 @@ export default function AdminVoucherListPage() {
   }
 
   async function handleDelete(voucherId: string) {
-    if (!confirm('Are you sure you want to delete this voucher?')) {
-      return;
-    }
+    setConfirmDialogState({
+      isOpen: true,
+      title: 'Delete Voucher',
+      message: 'Are you sure you want to delete this voucher? This action cannot be undone.',
+      variant: 'danger',
+      onConfirm: async () => {
+        setProcessingAction(true);
+        const { success, error } = await deleteVoucher(voucherId);
 
-    setLoading(true);
-    const { success, error } = await deleteVoucher(voucherId);
-    
-    if (error) {
-      alert(`Failed to delete voucher: ${error}`);
-    } else {
-      setDeletingVoucherId(null);
-      await loadData();
-    }
-    
-    setLoading(false);
+        if (error) {
+          alert(`Failed to delete voucher: ${error}`);
+        } else {
+          setDeletingVoucherId(null);
+          await loadData();
+        }
+        setProcessingAction(false);
+        setConfirmDialogState(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   }
 
   async function handleToggleStatus(voucherId: string, currentStatus: boolean) {
@@ -593,6 +613,18 @@ export default function AdminVoucherListPage() {
             </div>
           </div>
         )}
+
+        <ConfirmDialog
+          isOpen={confirmDialogState.isOpen}
+          onClose={() => setConfirmDialogState(prev => ({ ...prev, isOpen: false }))}
+          onConfirm={confirmDialogState.onConfirm}
+          title={confirmDialogState.title}
+          message={confirmDialogState.message}
+          variant={confirmDialogState.variant}
+          loading={processingAction}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+        />
       </div>
     </div>
   );

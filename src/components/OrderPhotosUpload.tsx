@@ -10,6 +10,7 @@
 import React, { useEffect, useState } from 'react';
 import ImageUploader from '@/components/ImageUploader';
 import Toast from '@/components/Toast';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { UploadResult } from '@/services/imageUploadService';
 import { Camera, X, MoveUp, MoveDown } from 'lucide-react';
 import {
@@ -53,6 +54,21 @@ export default function OrderPhotosUpload({
     message: '',
     type: 'success',
   });
+
+  // Confirm Dialog State
+  const [confirmDialogState, setConfirmDialogState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    variant?: 'warning' | 'danger' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: async () => {},
+  });
+  const [processingAction, setProcessingAction] = useState(false);
 
   // 首次加载已存在的照片
   useEffect(() => {
@@ -122,29 +138,36 @@ export default function OrderPhotosUpload({
 
   // 删除照片
   const handleDeletePhoto = async (photoId: string) => {
-    if (!confirm('确定要删除这张照片吗？')) {
-      return;
-    }
+    setConfirmDialogState({
+      isOpen: true,
+      title: '删除照片',
+      message: '确定要删除这张照片吗？',
+      variant: 'danger',
+      onConfirm: async () => {
+        setProcessingAction(true);
+        setDeleting(photoId);
 
-    setDeleting(photoId);
-
-    try {
-      await deleteOrderPhoto(orderId, photoId);
-      setPhotos((prev) => prev.filter((p) => p.id !== photoId));
-      setToast({
-        show: true,
-        message: '照片已删除',
-        type: 'success',
-      });
-    } catch (error: any) {
-      setToast({
-        show: true,
-        message: error.message || '删除失败',
-        type: 'error',
-      });
-    } finally {
-      setDeleting(null);
-    }
+        try {
+          await deleteOrderPhoto(orderId, photoId);
+          setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+          setToast({
+            show: true,
+            message: '照片已删除',
+            type: 'success',
+          });
+        } catch (error: any) {
+          setToast({
+            show: true,
+            message: error.message || '删除失败',
+            type: 'error',
+          });
+        } finally {
+          setDeleting(null);
+          setProcessingAction(false);
+          setConfirmDialogState(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   };
 
   // 调整照片顺序
@@ -333,6 +356,16 @@ export default function OrderPhotosUpload({
           onClose={() => setToast({ ...toast, show: false })}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialogState.isOpen}
+        onClose={() => setConfirmDialogState(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDialogState.onConfirm}
+        title={confirmDialogState.title}
+        message={confirmDialogState.message}
+        variant={confirmDialogState.variant}
+        loading={processingAction}
+      />
     </div>
   );
 }

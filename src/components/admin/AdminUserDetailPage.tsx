@@ -35,6 +35,7 @@ import {
   type UserRole,
 } from '@/services/adminUserService';
 import PageLoading from '@/components/loading/PageLoading';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { CheckCircle } from 'lucide-react';
 
 interface AdminUserDetailPageProps {
@@ -54,6 +55,21 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
   const [showPointsModal, setShowPointsModal] = useState(false);
   const [pointsAmount, setPointsAmount] = useState(0);
   const [pointsReason, setPointsReason] = useState('');
+
+  // Confirm Dialog State
+  const [confirmDialogState, setConfirmDialogState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    variant?: 'warning' | 'danger' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: async () => {},
+  });
+  const [processingAction, setProcessingAction] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -148,20 +164,25 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
     if (!user) return;
 
     const action = user.is_blocked ? '解除封禁' : '封禁';
-    if (!confirm(`确定要${action}此用户吗？`)) {
-      return;
-    }
 
-    setLoading(true);
-    const { success, error } = await blockUser(userId, !user.is_blocked);
+    setConfirmDialogState({
+      isOpen: true,
+      title: `${action}用户`,
+      message: `确定要${action}此用户吗？此操作将立即生效。`,
+      variant: user.is_blocked ? 'info' : 'danger',
+      onConfirm: async () => {
+        setProcessingAction(true);
+        const { success, error } = await blockUser(userId, !user.is_blocked);
 
-    if (error) {
-      alert(`操作失败: ${error}`);
-    } else {
-      await loadData();
-    }
-
-    setLoading(false);
+        if (error) {
+          alert(`操作失败: ${error}`);
+        } else {
+          await loadData();
+        }
+        setProcessingAction(false);
+        setConfirmDialogState(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   }
 
   function formatCurrency(amount: number): string {
@@ -634,6 +655,16 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialogState.isOpen}
+        onClose={() => setConfirmDialogState(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDialogState.onConfirm}
+        title={confirmDialogState.title}
+        message={confirmDialogState.message}
+        variant={confirmDialogState.variant}
+        loading={processingAction}
+      />
     </div>
   );
 }

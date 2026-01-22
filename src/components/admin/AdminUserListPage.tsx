@@ -25,6 +25,7 @@ import {
   type UserStatus,
 } from '@/services/adminUserService';
 import SectionLoading from '@/components/loading/SectionLoading';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function AdminUserListPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -39,6 +40,21 @@ export default function AdminUserListPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 20;
+
+  // Confirm Dialog State
+  const [confirmDialogState, setConfirmDialogState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    variant?: 'warning' | 'danger' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: async () => {},
+  });
+  const [processingAction, setProcessingAction] = useState(false);
 
   useEffect(() => {
     loadStats();
@@ -81,21 +97,27 @@ export default function AdminUserListPage() {
 
   async function handleBlockUser(userId: string, currentlyBlocked: boolean) {
     const action = currentlyBlocked ? '解除封禁' : '封禁';
-    if (!confirm(`确定要${action}此用户吗？`)) {
-      return;
-    }
 
-    setLoading(true);
-    const { success, error } = await blockUser(userId, !currentlyBlocked);
-    
-    if (error) {
-      alert(`操作失败: ${error}`);
-    } else {
-      await loadUsers();
-      await loadStats();
-    }
-    
-    setLoading(false);
+    setConfirmDialogState({
+      isOpen: true,
+      title: `${action}用户`,
+      message: `确定要${action}此用户吗？此操作将立即生效。`,
+      variant: currentlyBlocked ? 'info' : 'danger',
+      onConfirm: async () => {
+        setProcessingAction(true);
+        const { success, error } = await blockUser(userId, !currentlyBlocked);
+
+        if (error) {
+          alert(`操作失败: ${error}`);
+        } else {
+          await loadUsers();
+          await loadStats();
+        }
+
+        setProcessingAction(false);
+        setConfirmDialogState(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   }
 
   async function handleChangeRole(userId: string, currentRole: UserRole) {
@@ -406,6 +428,16 @@ export default function AdminUserListPage() {
           )}
         </div>
       )}
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialogState.isOpen}
+        onClose={() => setConfirmDialogState(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDialogState.onConfirm}
+        title={confirmDialogState.title}
+        message={confirmDialogState.message}
+        variant={confirmDialogState.variant}
+        loading={processingAction}
+      />
     </div>
   );
 }
