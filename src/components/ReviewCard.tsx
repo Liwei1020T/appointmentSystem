@@ -6,11 +6,15 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { OrderReview } from '@/services/reviewService';
 import StarRating from '@/components/StarRating';
 import Card from '@/components/Card';
 import { formatDate } from '@/lib/utils';
+import { Share2 } from 'lucide-react';
+import Toast from '@/components/Toast';
+import { buildReviewShareMessage } from '@/lib/share';
+import { useSession } from 'next-auth/react';
 
 interface ReviewCardProps {
   review: OrderReview;
@@ -18,6 +22,77 @@ interface ReviewCardProps {
 }
 
 export default function ReviewCard({ review, showOrder = false }: ReviewCardProps) {
+  const { data: session } = useSession();
+  const referralCode = (session?.user as any)?.referral_code as string | undefined;
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'error';
+  }>({
+    show: false,
+    message: '',
+    type: 'success',
+  });
+
+  const handleShare = async () => {
+    if (!referralCode) {
+      setToast({
+        show: true,
+        message: '暂无邀请码，无法分享',
+        type: 'error',
+      });
+      return;
+    }
+
+    const message = buildReviewShareMessage({ rating: Number(review.rating) || 0 }, referralCode);
+    if (!message) {
+      setToast({
+        show: true,
+        message: '生成分享内容失败',
+        type: 'error',
+      });
+      return;
+    }
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'LW String Studio 评价分享',
+          text: message,
+        });
+        setToast({
+          show: true,
+          message: '分享成功',
+          type: 'success',
+        });
+      } catch (error: any) {
+        if (error?.name !== 'AbortError') {
+          setToast({
+            show: true,
+            message: '分享失败，请稍后重试',
+            type: 'error',
+          });
+        }
+      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(message);
+      setToast({
+        show: true,
+        message: '分享内容已复制',
+        type: 'success',
+      });
+    } catch (error) {
+      setToast({
+        show: true,
+        message: '复制失败，请手动复制',
+        type: 'error',
+      });
+    }
+  };
+
   return (
     <Card className="p-4">
       {/* 头部：评分 + 用户信息 */}
@@ -106,6 +181,27 @@ export default function ReviewCard({ review, showOrder = false }: ReviewCardProp
             {review.helpful_count} 人觉得有帮助
           </p>
         </div>
+      )}
+
+      {referralCode && (
+        <div className="mt-3 pt-3 border-t border-border-subtle flex justify-end">
+          <button
+            type="button"
+            onClick={handleShare}
+            className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
+          >
+            <Share2 className="w-4 h-4" />
+            分享评价
+          </button>
+        </div>
+      )}
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
       )}
     </Card>
   );
