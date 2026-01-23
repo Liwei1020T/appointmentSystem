@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
+import { parseValidityDays } from '@/lib/voucher-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,9 @@ export async function POST(request: NextRequest) {
     const pointsCost = body.pointsCost ?? body.points_cost ?? 0;
     const maxRedemptionsPerUser = body.maxRedemptionsPerUser ?? body.max_redemptions_per_user ?? 1;
     const active = body.active ?? true;
+    const isAutoIssue = body.isAutoIssue ?? body.is_auto_issue ?? false;
+    const isFirstOrderOnly = body.isFirstOrderOnly ?? body.is_first_order_only ?? false;
+    const validityDays = parseValidityDays(body.validityDays ?? body.validity_days ?? null);
 
     if (
       !code ||
@@ -39,7 +43,8 @@ export async function POST(request: NextRequest) {
       !validUntilDate ||
       Number.isNaN(valueNumber) ||
       Number.isNaN(validFromDate.getTime()) ||
-      Number.isNaN(validUntilDate.getTime())
+      Number.isNaN(validUntilDate.getTime()) ||
+      (validityDays !== null && Number.isNaN(validityDays))
     ) {
       return errorResponse('请提供必填字段');
     }
@@ -67,6 +72,9 @@ export async function POST(request: NextRequest) {
         pointsCost: pointsCost || 0,
         maxRedemptionsPerUser: maxRedemptionsPerUser || 1,
         active,
+        isAutoIssue,
+        isFirstOrderOnly,
+        validityDays,
       },
     });
 
@@ -138,6 +146,9 @@ export async function PATCH(request: NextRequest) {
     const active = body.active;
     const maxUses = body.maxUses ?? body.usage_limit;
     const maxRedemptionsPerUser = body.maxRedemptionsPerUser ?? body.max_redemptions_per_user;
+    const isAutoIssue = body.isAutoIssue ?? body.is_auto_issue;
+    const isFirstOrderOnly = body.isFirstOrderOnly ?? body.is_first_order_only;
+    const validityDaysRaw = body.validityDays ?? body.validity_days;
 
     if (!id) {
       return errorResponse('请提供优惠券ID');
@@ -173,6 +184,15 @@ export async function PATCH(request: NextRequest) {
     if (active !== undefined) updateData.active = active;
     if (maxUses !== undefined) updateData.maxUses = maxUses === null ? null : Number(maxUses);
     if (maxRedemptionsPerUser !== undefined) updateData.maxRedemptionsPerUser = Number(maxRedemptionsPerUser) || 1;
+    if (isAutoIssue !== undefined) updateData.isAutoIssue = isAutoIssue;
+    if (isFirstOrderOnly !== undefined) updateData.isFirstOrderOnly = isFirstOrderOnly;
+    if (validityDaysRaw !== undefined) {
+      const parsedValidityDays = parseValidityDays(validityDaysRaw);
+      if (parsedValidityDays !== null && Number.isNaN(parsedValidityDays)) {
+        return errorResponse('有效期天数无效');
+      }
+      updateData.validityDays = parsedValidityDays;
+    }
 
     if (Object.keys(updateData).length === 0) {
       return errorResponse('没有可更新的字段');

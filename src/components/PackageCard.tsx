@@ -45,6 +45,7 @@ export default function PackageCard({
   // 获取标签配置（优先用数据库 tag，否则根据 isPopular 显示"最受欢迎"）
   const tagKey = (pkg as any).tag || ((pkg as any).isPopular ? 'most_popular' : null);
   const tagConfig = tagKey ? TAG_CONFIG[tagKey] : null;
+  const isFirstOrderOnly = (pkg as any).isFirstOrderOnly === true;
 
   // Feature list for the card
   const features = [
@@ -90,6 +91,15 @@ export default function PackageCard({
         <h3 className={`text-center text-lg font-semibold mb-2 font-display ${isHero ? 'text-accent' : 'text-text-primary'}`}>
           {pkg.name}
         </h3>
+
+        {isFirstOrderOnly && (
+          <div className="flex justify-center mb-3">
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/30">
+              <Sparkles className="w-3 h-3" />
+              首单特价
+            </span>
+          </div>
+        )}
 
         {/* Price Section */}
         <div className="text-center mb-4">
@@ -152,4 +162,3 @@ export default function PackageCard({
     </div>
   );
 }
-

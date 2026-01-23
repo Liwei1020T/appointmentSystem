@@ -39,6 +39,7 @@ export default function AnalyticsPage() {
   if (!stats) return null;
 
   const { ltv, retention, aovTrend, popularHours } = stats;
+  const totalOrders = aovTrend.reduce((acc: number, curr: any) => acc + curr.orderCount, 0);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
@@ -75,7 +76,7 @@ export default function AnalyticsPage() {
           <Card className="p-6">
             <p className="text-sm font-medium text-gray-500">总订单数</p>
             <p className="text-3xl font-bold text-blue-600 mt-2 font-mono">
-              {aovTrend.reduce((acc: number, curr: any) => acc + curr.orderCount, 0)}
+              {totalOrders}
             </p>
           </Card>
         </div>

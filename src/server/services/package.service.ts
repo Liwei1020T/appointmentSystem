@@ -4,15 +4,74 @@ import { isValidUUID } from '@/lib/utils';
 import { User } from '@prisma/client';
 
 type UserSnapshot = Pick<User, 'id'>;
+const RENEWAL_WINDOW_DAYS = 7;
 
 /**
  * Fetch all active packages for purchase.
  */
-export async function listAvailablePackages() {
-  return prisma.package.findMany({
+export async function listAvailablePackages(userId?: string) {
+  const packages = await prisma.package.findMany({
     where: { active: true },
     orderBy: { price: 'asc' },
   });
+
+  if (!userId) {
+    return packages;
+  }
+
+  const eligible = await isUserEligibleForFirstOrderPackage(userId);
+  if (eligible) {
+    return packages;
+  }
+
+  return packages.filter((pkg) => !pkg.isFirstOrderOnly);
+}
+
+/**
+ * Check if a user is eligible for first-order-only packages.
+ */
+export async function isUserEligibleForFirstOrderPackage(userId: string) {
+  const orderCount = await prisma.order.count({
+    where: {
+      userId,
+      status: { in: ['in_progress', 'completed'] },
+    },
+  });
+
+  return orderCount === 0;
+}
+
+/**
+ * Return renewal discount when the user's package is nearing expiry.
+ */
+export async function getRenewalDiscountForUser(userId: string, packageId: string) {
+  const pkg = await prisma.package.findUnique({ where: { id: packageId } });
+  if (!pkg || pkg.renewalDiscount <= 0) {
+    return 0;
+  }
+
+  const expiryCutoff = new Date(Date.now() + RENEWAL_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+  const expiringPackage = await prisma.userPackage.findFirst({
+    where: {
+      userId,
+      packageId,
+      expiry: { lte: expiryCutoff },
+    },
+  });
+
+  return expiringPackage ? pkg.renewalDiscount : 0;
+}
+
+/**
+ * Apply renewal discount percentage to a price.
+ */
+export function applyRenewalDiscount(price: number, discountPercent: number) {
+  if (!discountPercent || discountPercent <= 0) {
+    return price;
+  }
+
+  const discounted = price * (1 - discountPercent / 100);
+  return Math.round(discounted * 100) / 100;
 }
 
 /**
@@ -74,20 +133,32 @@ export async function buyPackage(
     throw new ApiError('CONFLICT', 409, 'Package is inactive');
   }
 
+  if (packageData.isFirstOrderOnly) {
+    const eligible = await isUserEligibleForFirstOrderPackage(user.id);
+    if (!eligible) {
+      throw new ApiError('CONFLICT', 409, '首单特价仅限首次下单用户');
+    }
+  }
+
   if (Number(packageData.price) <= 0) {
     throw new ApiError('UNPROCESSABLE_ENTITY', 422, 'Invalid package price');
   }
+
+  const baseAmount = Number(packageData.price);
+  const renewalDiscount = await getRenewalDiscountForUser(user.id, packageData.id);
+  const finalAmount = applyRenewalDiscount(baseAmount, renewalDiscount);
 
   const payment = await prisma.payment.create({
     data: {
       userId: user.id,
       packageId: packageData.id,
-      amount: packageData.price,
+      amount: finalAmount,
       provider: normalizedProvider,
       status: 'pending',
       metadata: {
         type: 'package',
         paymentMethod: normalizedProvider,
+        renewalDiscount,
         createdAt: new Date().toISOString(),
         note:
           normalizedProvider === 'cash'
@@ -101,7 +172,9 @@ export async function buyPackage(
     paymentId: payment.id,
     packageId: packageData.id,
     packageName: packageData.name,
-    amount: Number(packageData.price),
+    amount: finalAmount,
+    originalAmount: baseAmount,
+    renewalDiscount,
     times: packageData.times,
     validityDays: packageData.validityDays,
     paymentRequired: true,

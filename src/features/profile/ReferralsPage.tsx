@@ -11,6 +11,7 @@ import { Users, Copy, Gift, CheckCircle2, Share2, Sparkles } from 'lucide-react'
 import { Toast } from '@/components';
 import PageLoading from '@/components/loading/PageLoading';
 import { getReferrals } from '@/services/profileService';
+import { generateReferralLink } from '@/services/referralService';
 
 interface ReferralStats {
   referral_code: string;
@@ -32,11 +33,13 @@ export default function ReferralsPage() {
   const [stats, setStats] = useState<ReferralStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
     type: 'success' | 'error' | 'info' | 'warning';
   }>({ show: false, message: '', type: 'info' });
+  const shareLink = stats?.referral_code ? generateReferralLink(stats.referral_code) : '';
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -106,12 +109,42 @@ export default function ReferralsPage() {
     }
   };
 
+  const handleCopyLink = async () => {
+    if (!shareLink) {
+      setToast({
+        show: true,
+        message: '暂无可复制的邀请链接',
+        type: 'warning',
+      });
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setLinkCopied(true);
+      setToast({
+        show: true,
+        message: '邀请链接已复制',
+        type: 'success',
+      });
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy referral link:', error);
+      setToast({
+        show: true,
+        message: '复制失败，请重试',
+        type: 'error',
+      });
+    }
+  };
+
   const handleShare = () => {
     if (navigator.share && stats?.referral_code) {
+      const link = shareLink;
       navigator.share({
         title: 'String Service 邀请',
-        text: `使用我的邀请码 ${stats.referral_code} 注册，双方都能获得50积分奖励！`,
-        url: `https://stringservice.com/signup?ref=${stats.referral_code}`,
+        text: `使用我的邀请码 ${stats.referral_code} 注册，双方都能获得50积分奖励！${link ? `\n${link}` : ''}`,
+        ...(link ? { url: link } : {}),
       });
     }
   };
@@ -185,6 +218,32 @@ export default function ReferralsPage() {
               >
                 <Share2 className="w-4 h-4" />
                 分享
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-ink-elevated/70 backdrop-blur-sm rounded-lg p-6 mb-6 border border-border-subtle">
+            <p className="text-text-tertiary text-sm mb-2">邀请链接</p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+              <span className="flex-1 text-xs font-mono text-text-secondary break-all">
+                {shareLink || '-'}
+              </span>
+              <button
+                onClick={handleCopyLink}
+                disabled={!shareLink}
+                className="px-4 py-2 bg-ink-elevated text-text-primary rounded-lg font-medium hover:bg-ink transition-colors inline-flex items-center gap-2 border border-border-subtle disabled:opacity-60"
+              >
+                {linkCopied ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    已复制
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    复制链接
+                  </>
+                )}
               </button>
             </div>
           </div>

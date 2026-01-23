@@ -718,8 +718,15 @@ All authenticated endpoints require:
 - `GET /api/admin/dashboard-stats` → 管理端首页统计（管理员）。  
 - `GET /api/admin/orders` → 管理端订单列表（支持 status/q/page/limit，管理员）。  
 - `GET /api/admin/orders/:id` → 管理端订单详情（管理员）。  
-- `PATCH /api/admin/orders/:id/status` → 管理端更新订单状态（管理员）。  
+- `PATCH /api/admin/orders/:id/status` → 管理端更新订单状态（可选 `notes` 写入状态备注，管理员）。  
 - `GET /api/admin/orders/stats` → 管理端订单统计（支持时间筛选，管理员）。  
+- `GET /api/admin/promotions` → 营销活动列表 + 使用汇总（管理员）。  
+- `POST /api/admin/promotions` → 创建营销活动（管理员）。  
+- `GET /api/admin/analytics` → 业务洞察（LTV/留存/客单价趋势/热门时段，管理员）。  
+- `GET /api/admin/vouchers` → 管理端优惠券列表（管理员）。  
+- `POST /api/admin/vouchers` → 创建优惠券（支持 `isAutoIssue/isFirstOrderOnly/validityDays`，管理员）。  
+- `PATCH /api/admin/vouchers` → 更新优惠券（支持 `isAutoIssue/isFirstOrderOnly/validityDays`，管理员）。  
+- `DELETE /api/admin/vouchers` → 删除优惠券（管理员）。  
 - `GET /api/admin/vouchers/stats` → 管理端优惠券统计（管理员）。  
 - `GET /api/admin/vouchers/user/:userId` → 管理端查看指定用户的优惠券列表（管理员）。  
 - `POST /api/admin/vouchers/:id/distribute` → 管理端分发优惠券（支持 all/specific；返回 `{ count, distributed, skipped }`，管理员）。  
@@ -878,6 +885,99 @@ All authenticated endpoints require:
 {
   "points": 200,  // Update points
   "role": "admin"  // Change role
+}
+```
+
+---
+
+### Admin Order Status Update (Route Handler)
+
+**Endpoint:** `PATCH /api/admin/orders/{id}/status`  
+**Auth Required:** Yes (Admin only)
+
+**Request Body:**
+```json
+{
+  "status": "in_progress",
+  "notes": "预计今晚完成"
+}
+```
+
+**Response:**
+```json
+{
+  "ok": true,
+  "data": { "id": "order-id", "status": "in_progress" }
+}
+```
+
+**Notes:**
+- `notes` 会记录到 `order_status_logs` 作为状态备注。
+
+---
+
+### Admin Promotions (Route Handler)
+
+**Endpoint:** `GET /api/admin/promotions`  
+**Auth Required:** Yes (Admin only)
+
+**Response:**
+```json
+{
+  "ok": true,
+  "data": {
+    "promotions": [
+      {
+        "id": "promo-id",
+        "name": "新年限时折扣",
+        "type": "FLASH_SALE",
+        "discountType": "PERCENTAGE",
+        "discountValue": 10,
+        "usageCount": 12
+      }
+    ],
+    "usageSummary": {
+      "totalSavedAmount": 120.5,
+      "totalUsageCount": 24
+    }
+  }
+}
+```
+
+**Endpoint:** `POST /api/admin/promotions`  
+**Auth Required:** Yes (Admin only)
+
+**Request Body:**
+```json
+{
+  "name": "满 RM50 减 RM5",
+  "type": "SPEND_SAVE",
+  "discountType": "FIXED",
+  "discountValue": 5,
+  "minPurchase": 50,
+  "startAt": "2026-01-01T00:00:00.000Z",
+  "endAt": "2026-01-31T23:59:59.000Z",
+  "usageLimit": 100
+}
+```
+
+---
+
+### Admin Analytics (Route Handler)
+
+**Endpoint:** `GET /api/admin/analytics`  
+**Auth Required:** Yes (Admin only)
+
+**Response:**
+```json
+{
+  "ok": true,
+  "data": {
+    "ltv": { "ltv": 20, "totalSales": 2000, "totalUsers": 100 },
+    "retention": { "retentionRate": 40, "totalOrderingUsers": 50, "repeatUsers": 20 },
+    "aovTrend": [{ "month": "2026-01", "aov": 32, "orderCount": 18 }],
+    "popularHours": [{ "hour": "19:00", "count": 12 }]
+  }
 }
 ```
 

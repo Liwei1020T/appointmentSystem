@@ -9,7 +9,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['node_modules', '.next', 'dist', '.worktrees'],
+    exclude: ['node_modules', '.next', 'dist', '.worktrees', '**/._*'], // Ignore macOS AppleDouble files.
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

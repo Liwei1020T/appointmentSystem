@@ -93,6 +93,19 @@ export function calculateBestDiscount(
 }
 
 /**
+ * 汇总促销使用数据
+ */
+export function summarizePromotionUsage(
+  usages: Array<{ savedAmount: number | string | Decimal | null | undefined }>
+) {
+  const totalSavedAmount = usages.reduce((sum, entry) => {
+    return sum + Number(entry.savedAmount ?? 0);
+  }, 0);
+
+  return { totalSavedAmount };
+}
+
+/**
  * 记录促销活动使用情况
  */
 export async function recordPromotionUsage(

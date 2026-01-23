@@ -1,7 +1,6 @@
 import React from 'react';
 import { formatCurrency } from '@/lib/utils';
-
-export type MembershipTier = 'SILVER' | 'GOLD' | 'VIP';
+import { MembershipTierId, getTierLabel } from '@/lib/membership';
 
 interface TierBenefit {
   description: string;
@@ -9,10 +8,10 @@ interface TierBenefit {
 }
 
 interface MembershipCardProps {
-  currentTier: MembershipTier;
+  currentTier: MembershipTierId;
   points: number;
   totalSpent: number;
-  nextTier: MembershipTier | null;
+  nextTier: MembershipTierId | null;
   spentProgress: number;
   ordersProgress: number;
   spentTarget: number;
@@ -52,6 +51,8 @@ export default function MembershipCard({
   benefits,
 }: MembershipCardProps) {
   const colors = TIER_COLORS[currentTier] || TIER_COLORS.SILVER;
+  const tierLabel = getTierLabel(currentTier);
+  const nextTierLabel = nextTier ? getTierLabel(nextTier) : '';
 
   return (
     <div className={`rounded-2xl shadow-lg border ${colors.border} overflow-hidden`}>
@@ -66,7 +67,7 @@ export default function MembershipCard({
               当前等级
             </p>
             <h2 className={`text-3xl font-bold ${colors.text} font-display mt-1`}>
-              {currentTier} MEMBER
+              {tierLabel} Member
             </h2>
           </div>
           <div className="text-right">
@@ -79,7 +80,7 @@ export default function MembershipCard({
         {nextTier && (
           <div className="mt-6">
             <div className="flex justify-between text-xs mb-1 font-medium opacity-90">
-              <span className={colors.text}>距离 {nextTier} 还需要</span>
+              <span className={colors.text}>距离 {nextTierLabel} 还需要</span>
               <span className={colors.text}>
                 再消费 {formatCurrency(Math.max(0, spentTarget - totalSpent))}
               </span>

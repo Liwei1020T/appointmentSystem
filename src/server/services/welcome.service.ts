@@ -4,6 +4,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
+import { ApiError } from '@/lib/api-errors';
 
 /**
  * 为新用户发放欢迎礼包（自动发放的优惠券）
@@ -94,6 +95,24 @@ export async function isUserFirstOrder(userId: string): Promise<boolean> {
     },
   });
   return orderCount === 0;
+}
+
+/**
+ * 校验首单优惠券的使用资格
+ *
+ * @param userId - 用户 ID
+ * @param isFirstOrderOnly - 是否首单专属
+ */
+export async function assertFirstOrderVoucherEligibility(
+  userId: string,
+  isFirstOrderOnly: boolean
+): Promise<void> {
+  if (!isFirstOrderOnly) return;
+
+  const isFirstOrder = await isUserFirstOrder(userId);
+  if (!isFirstOrder) {
+    throw new ApiError('UNPROCESSABLE_ENTITY', 422, '此优惠券仅限首单使用');
+  }
 }
 
 /**

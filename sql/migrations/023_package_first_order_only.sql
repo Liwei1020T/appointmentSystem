@@ -1,0 +1,2 @@
+ALTER TABLE packages
+ADD COLUMN is_first_order_only BOOLEAN DEFAULT FALSE;

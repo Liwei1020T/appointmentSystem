@@ -9,8 +9,7 @@ import { prisma } from '@/lib/prisma';
 export const REFERRAL_TIERS = [
   { min: 1, max: 5, points: 50, badge: null },
   { min: 6, max: 10, points: 80, badge: 'referral_bronze' },
-  { min: 11, max: 25, points: 100, badge: 'referral_silver' },
-  { min: 26, max: Infinity, points: 120, badge: 'referral_gold' },
+  { min: 11, max: Infinity, points: 100, badge: 'referral_silver' },
 ];
 
 // 徽章配置

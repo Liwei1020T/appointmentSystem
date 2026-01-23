@@ -36,6 +36,8 @@ export default function PackagePurchaseFlow() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('tng');
   const [processing, setProcessing] = useState<boolean>(false);
   const [paymentId, setPaymentId] = useState<string>('');
+  // Server-calculated payable amount (e.g. renewal discount).
+  const [paymentAmount, setPaymentAmount] = useState<number | null>(null);
   const [receiptUploaded, setReceiptUploaded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
@@ -104,6 +106,7 @@ export default function PackagePurchaseFlow() {
 
     setProcessing(true);
     setReceiptUploaded(false);
+    setPaymentAmount(null);
     setStep(3);
 
     try {
@@ -114,6 +117,8 @@ export default function PackagePurchaseFlow() {
         throw new Error('创建支付失败（缺少 paymentId）');
       }
 
+      const payableAmount = Number(data?.amount ?? pkg.price);
+      setPaymentAmount(Number.isFinite(payableAmount) ? payableAmount : Number(pkg.price));
       setPaymentId(createdPaymentId);
 
       // 现金支付无需上传收据，直接进入完成页等待管理员确认
@@ -504,7 +509,10 @@ export default function PackagePurchaseFlow() {
                   </p>
                 </Card>
 
-                <TngQRCodeDisplay amount={Number(pkg.price)} orderId={paymentId || pkg.id} />
+                <TngQRCodeDisplay
+                  amount={paymentAmount ?? Number(pkg.price)}
+                  orderId={paymentId || pkg.id}
+                />
 
                 {paymentId ? (
                   <PaymentReceiptUploader

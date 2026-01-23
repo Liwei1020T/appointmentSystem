@@ -2,18 +2,9 @@ import { prisma } from '@/lib/prisma';
 import { ApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { getOrderQueuePosition } from '@/server/services/order-eta.service';
+import { OrderStatus, validateOrderStatus } from '@/server/services/order-status.service';
 
-const ALLOWED_STATUSES = [
-  'pending',
-  'confirmed',
-  'processing',
-  'in_progress',
-  'ready',
-  'completed',
-  'cancelled',
-] as const;
-
-type AdminOrderStatus = (typeof ALLOWED_STATUSES)[number];
+type AdminOrderStatus = OrderStatus;
 
 function buildCreatedAtFilter(startDate?: string | null, endDate?: string | null) {
   if (!startDate || !endDate) return undefined;
@@ -145,7 +136,7 @@ export async function updateAdminOrderStatus(
     throw new ApiError('BAD_REQUEST', 400, 'Invalid order id');
   }
 
-  if (!status || !ALLOWED_STATUSES.includes(status)) {
+  if (!status || !validateOrderStatus(status)) {
     throw new ApiError('BAD_REQUEST', 400, 'Invalid order status');
   }
 
@@ -154,20 +145,33 @@ export async function updateAdminOrderStatus(
     select: { notes: true },
   });
 
-  const order = await prisma.order.update({
-    where: { id: orderId },
-    data: {
-      status,
-      // Preserve existing notes to avoid overwriting customer remarks.
-      notes: currentOrder?.notes,
-    },
-    include: {
-      user: { select: { id: true, email: true, fullName: true, phone: true } },
-      string: true,
-      payments: true,
-      packageUsed: { include: { package: true } },
-      voucherUsed: { include: { voucher: true } },
-    },
+  const normalizedNote = notes?.trim();
+
+  const order = await prisma.$transaction(async (tx) => {
+    await tx.orderStatusLog.create({
+      data: {
+        orderId,
+        status,
+        note: normalizedNote || null,
+      },
+    });
+
+    return tx.order.update({
+      where: { id: orderId },
+      data: {
+        status,
+        lastStatusChangeAt: new Date(),
+        // Preserve existing notes to avoid overwriting customer remarks.
+        notes: currentOrder?.notes,
+      },
+      include: {
+        user: { select: { id: true, email: true, fullName: true, phone: true } },
+        string: true,
+        payments: true,
+        packageUsed: { include: { package: true } },
+        voucherUsed: { include: { voucher: true } },
+      },
+    });
   });
 
   return order;

@@ -1,4 +1,4 @@
-export type MembershipTierId = 'standard' | 'bronze' | 'silver' | 'gold' | 'platinum';
+export type MembershipTierId = 'SILVER' | 'GOLD' | 'VIP';
 
 export interface MembershipTierDefinition {
   id: MembershipTierId;
@@ -8,44 +8,39 @@ export interface MembershipTierDefinition {
   discountRate: number; // percentage (e.g., 5 means 5%)
 }
 
+export function getTierLabel(tier: string) {
+  const labels: Record<string, string> = {
+    SILVER: 'Silver',
+    GOLD: 'Gold',
+    VIP: 'VIP',
+  };
+  return labels[tier] || labels.SILVER;
+}
+
 /**
  * Membership tiers sorted by ascending spend requirement.
  */
 export const membershipTiers: MembershipTierDefinition[] = [
   {
-    id: 'standard',
-    label: '普通会员',
-    description: '尚未达到会员门槛，继续消费即可升级',
+    id: 'SILVER',
+    label: getTierLabel('SILVER'),
+    description: '基础会员',
     minSpend: 0,
     discountRate: 0,
   },
   {
-    id: 'bronze',
-    label: '青铜会员',
-    description: '消费满 RM 300，解锁 5% 折扣',
-    minSpend: 300,
-    discountRate: 5,
+    id: 'GOLD',
+    label: getTierLabel('GOLD'),
+    description: '累计消费 RM 200 或 5 单升级',
+    minSpend: 200,
+    discountRate: 0,
   },
   {
-    id: 'silver',
-    label: '白银会员',
-    description: '消费满 RM 500，解锁 8% 折扣',
+    id: 'VIP',
+    label: getTierLabel('VIP'),
+    description: '累计消费 RM 500 或 12 单升级',
     minSpend: 500,
-    discountRate: 8,
-  },
-  {
-    id: 'gold',
-    label: '黄金会员',
-    description: '消费满 RM 700，解锁 10% 折扣',
-    minSpend: 700,
-    discountRate: 10,
-  },
-  {
-    id: 'platinum',
-    label: '白金会员',
-    description: '消费满 RM 1000，解锁 12% 折扣',
-    minSpend: 1000,
-    discountRate: 12,
+    discountRate: 5,
   },
 ];
 
@@ -87,13 +82,25 @@ export function getNextTierAfterSpend(totalSpent: number): MembershipTierDefinit
   return null;
 }
 
+export function getNextTierAfterCurrent(currentTierId: MembershipTierId): MembershipTierDefinition | null {
+  const currentIndex = membershipTiers.findIndex((tier) => tier.id === currentTierId);
+  if (currentIndex < 0 || currentIndex >= membershipTiers.length - 1) {
+    return null;
+  }
+  return membershipTiers[currentIndex + 1];
+}
+
 /**
  * Returns progress (0-1) toward the next tier.
  */
-export function getTierProgress(totalSpent: number): number {
+export function getTierProgress(totalSpent: number, currentTierId?: MembershipTierId): number {
   const safeSpend = Math.max(0, totalSpent);
-  const current = getTierForSpend(safeSpend);
-  const next = getNextTierAfterSpend(safeSpend);
+  const current = currentTierId
+    ? getTierDefinitionById(currentTierId) || membershipTiers[0]
+    : getTierForSpend(safeSpend);
+  const next = currentTierId
+    ? getNextTierAfterCurrent(current.id)
+    : getNextTierAfterSpend(safeSpend);
 
   if (!next) {
     return 1;

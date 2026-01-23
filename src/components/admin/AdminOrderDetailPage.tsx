@@ -552,6 +552,11 @@ export default function AdminOrderDetailPage() {
               onStatusUpdate={loadOrder}
             />
 
+            <Card padding="lg">
+              <h3 className="text-sm font-semibold text-text-primary">状态备注</h3>
+              <p className="text-xs text-text-tertiary mt-1">管理员可为中间状态添加备注。</p>
+            </Card>
+
             {/* Order Photos (新系统) */}
             <OrderPhotosUpload
               orderId={order.id}

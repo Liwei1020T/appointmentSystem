@@ -216,7 +216,12 @@ export interface Voucher {
   discount_value?: number;
   max_discount?: number | null;
   description?: string | null;
+  validityDays?: number | null;
   validity_days?: number | null;
+  isAutoIssue?: boolean;
+  is_auto_issue?: boolean;
+  isFirstOrderOnly?: boolean;
+  is_first_order_only?: boolean;
 }
 
 export interface UserVoucher {

@@ -198,6 +198,37 @@ const variants = {
 - 订单详情页顶部摘要组件
 - 包含状态图标、球拍数量、实付金额、状态驱动的主行动按钮
 
+### 11. Membership Card
+
+- 会员中心卡片（Profile）
+- 展示当前等级、积分、消费进度与权益
+- 使用 DB enum：`SILVER/GOLD/VIP`
+
+```tsx
+// File: src/components/MembershipCard.tsx
+<MembershipCard currentTier="SILVER" points={120} totalSpent={300} nextTier="GOLD" spentProgress={45} ordersProgress={20} spentTarget={200} ordersTarget={5} benefits={[]} />
+```
+
+### 12. Order Timeline
+
+- 用户订单详情状态时间轴
+- 支持 `received/picked_up` 阶段与状态备注
+
+```tsx
+// File: src/components/OrderTimeline.tsx
+<OrderTimeline status="in_progress" statusLogs={[]} />
+```
+
+### 13. Admin Order Progress
+
+- 管理端订单状态管理 + ETA/排队信息
+- 搭配 `PATCH /api/admin/orders/:id/status` 写入状态备注
+
+```tsx
+// File: src/components/admin/AdminOrderProgress.tsx
+<AdminOrderProgress orderId={order.id} currentStatus={order.status} onStatusUpdate={refresh} />
+```
+
 ### 11. Order Status Capsule
 
 - 首页“当前订单状态”胶囊卡片

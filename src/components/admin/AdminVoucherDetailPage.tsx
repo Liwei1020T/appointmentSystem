@@ -67,6 +67,9 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
     description: '',
     valid_from: '',
     valid_until: '',
+    validity_days: null as number | null,
+    is_auto_issue: false,
+    is_first_order_only: false,
     usage_limit: null as number | null,
     max_redemptions_per_user: 1, // 每用户兑换上限
     active: true,
@@ -102,6 +105,9 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
         description: voucherData.description || '',
         valid_from: validFrom ? (typeof validFrom === 'string' ? validFrom : validFrom.toISOString().split('T')[0]) : '',
         valid_until: validUntil ? (typeof validUntil === 'string' ? validUntil : validUntil.toISOString().split('T')[0]) : '',
+        validity_days: voucherData.validity_days ?? voucherData.validityDays ?? null,
+        is_auto_issue: voucherData.is_auto_issue ?? voucherData.isAutoIssue ?? false,
+        is_first_order_only: voucherData.is_first_order_only ?? voucherData.isFirstOrderOnly ?? false,
         usage_limit: voucherData.usage_limit || voucherData.usageLimit || null,
         max_redemptions_per_user: voucherData.maxRedemptionsPerUser || voucherData.max_redemptions_per_user || 1,
         active: voucherData.active ?? voucherData.isActive ?? true,
@@ -257,13 +263,23 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-text-primary">{voucher.code}</h1>
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex flex-wrap items-center gap-2 mt-2">
               <Badge variant={isActive ? 'success' : 'neutral'} size="sm">
                 {isActive ? '活跃' : '停用'}
               </Badge>
               <span className="text-sm text-text-tertiary">
                 {voucher.type === 'fixed_amount' ? '固定金额' : '百分比'}
               </span>
+              {voucher.isAutoIssue && (
+                <Badge variant="info" size="sm">
+                  自动发放
+                </Badge>
+              )}
+              {voucher.isFirstOrderOnly && (
+                <Badge variant="warning" size="sm">
+                  首单专属
+                </Badge>
+              )}
             </div>
           </div>
 
@@ -382,6 +398,37 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
                       value={formData.valid_until}
                       onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
                     />
+                  </div>
+
+                  <Input
+                    label="发放后有效期 (天)"
+                    type="number"
+                    value={formData.validity_days ?? ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, validity_days: e.target.value ? parseInt(e.target.value, 10) : null })
+                    }
+                    placeholder="留空则使用结束日期"
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label className="flex items-center gap-2 text-sm text-text-secondary">
+                      <input
+                        type="checkbox"
+                        checked={formData.is_auto_issue}
+                        onChange={(e) => setFormData({ ...formData, is_auto_issue: e.target.checked })}
+                        className="w-4 h-4 text-accent rounded focus:ring-2 focus:ring-accent-border"
+                      />
+                      注册自动发放
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-text-secondary">
+                      <input
+                        type="checkbox"
+                        checked={formData.is_first_order_only}
+                        onChange={(e) => setFormData({ ...formData, is_first_order_only: e.target.checked })}
+                        className="w-4 h-4 text-accent rounded focus:ring-2 focus:ring-accent-border"
+                      />
+                      首单专属
+                    </label>
                   </div>
 
                   <Input
