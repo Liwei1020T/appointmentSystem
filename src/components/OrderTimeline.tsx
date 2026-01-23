@@ -9,16 +9,19 @@ import React from 'react';
 import { formatDate } from '@/lib/utils';
 import { Clock, CheckCircle, AlertCircle, XCircle, Timer } from 'lucide-react';
 
+export type OrderTimelineStatus = 'pending' | 'received' | 'in_progress' | 'completed' | 'picked_up' | 'cancelled';
+
 export type TimelineEvent = {
-  status: 'pending' | 'payment_pending' | 'payment_confirmed' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'pending' | 'payment_pending' | 'payment_confirmed' | 'received' | 'in_progress' | 'completed' | 'picked_up' | 'cancelled';
   timestamp: string;
   description?: string;
+  note?: string;
   active?: boolean;
   completed?: boolean;
 };
 
 interface OrderTimelineProps {
-  currentStatus: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  currentStatus: OrderTimelineStatus;
   createdAt: string;
   updatedAt?: string;
   completedAt?: string;
@@ -30,13 +33,27 @@ interface OrderTimelineProps {
   paymentConfirmedAt?: string;
   inProgressAt?: string;
   paymentPendingAt?: string;
+  statusLogs?: Array<{
+    status: string;
+    createdAt: string;
+    note?: string | null;
+  }>;
   // ETA 相关字段
   estimatedCompletionAt?: string | null;
   queuePosition?: number | null;
 }
 
+type TimelineStatusConfig = {
+  label: string;
+  icon: typeof Clock;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  iconBg: string;
+};
+
 // 状态配置
-const statusConfig = {
+const statusConfig: Record<TimelineEvent['status'], TimelineStatusConfig> = {
   pending: {
     label: '订单已创建',
     icon: Clock,
@@ -61,6 +78,14 @@ const statusConfig = {
     borderColor: 'border-info/30',
     iconBg: 'bg-info-soft',
   },
+  received: {
+    label: '已收拍',
+    icon: CheckCircle,
+    color: 'text-info',
+    bgColor: 'bg-info-soft',
+    borderColor: 'border-info/30',
+    iconBg: 'bg-info-soft',
+  },
   in_progress: {
     label: '穿线处理中',
     icon: Clock,
@@ -71,6 +96,14 @@ const statusConfig = {
   },
   completed: {
     label: '服务完成',
+    icon: CheckCircle,
+    color: 'text-success',
+    bgColor: 'bg-success/10',
+    borderColor: 'border-success/30',
+    iconBg: 'bg-success/15',
+  },
+  picked_up: {
+    label: '已取拍',
     icon: CheckCircle,
     color: 'text-success',
     bgColor: 'bg-success/10',
@@ -99,6 +132,7 @@ export default function OrderTimeline({
   paymentConfirmedAt,
   inProgressAt,
   paymentPendingAt,
+  statusLogs,
   estimatedCompletionAt,
   queuePosition,
 }: OrderTimelineProps) {
@@ -118,6 +152,34 @@ export default function OrderTimeline({
     const day = eta.getDate();
     return `${month}月${day}日完成`;
   };
+
+  const statusLogMap = new Map<string, { timestamp: string; note?: string }>();
+  statusLogs?.forEach((log) => {
+    if (!log?.status || !log?.createdAt) return;
+    statusLogMap.set(log.status, {
+      timestamp: log.createdAt,
+      note: log.note || undefined,
+    });
+  });
+
+  const getLogTimestamp = (status: string, fallback?: string) => {
+    return statusLogMap.get(status)?.timestamp || fallback || '';
+  };
+
+  const getLogNote = (status: string) => {
+    return statusLogMap.get(status)?.note;
+  };
+
+  const statusRank: Record<Exclude<OrderTimelineStatus, 'cancelled'>, number> = {
+    pending: 0,
+    received: 1,
+    in_progress: 2,
+    completed: 3,
+    picked_up: 4,
+  };
+  const currentRank = currentStatus === 'cancelled' ? -1 : statusRank[currentStatus];
+  const hasReached = (status: Exclude<OrderTimelineStatus, 'cancelled'>) =>
+    currentRank >= statusRank[status];
   // 生成时间线事件
   const generateEvents = (): TimelineEvent[] => {
     const events: TimelineEvent[] = [];
@@ -150,7 +212,8 @@ export default function OrderTimeline({
         paymentStatus === 'success' ||
         paymentStatus === 'completed' ||
         currentStatus === 'in_progress' ||
-        currentStatus === 'completed';
+        currentStatus === 'completed' ||
+        currentStatus === 'picked_up';
 
       events.push({
         status: isPaymentDone ? 'payment_confirmed' : 'payment_pending',
@@ -164,25 +227,52 @@ export default function OrderTimeline({
       });
     }
 
-    // 3. 处理中
+    // 3. 已收拍
+    events.push({
+      status: 'received',
+      timestamp: hasReached('received') ? getLogTimestamp('received', updatedAt || createdAt) : '',
+      description: hasReached('received') ? '球拍已收取' : '等待收拍',
+      note: getLogNote('received'),
+      completed: hasReached('received'),
+      active: currentStatus === 'received',
+    });
+
+    // 4. 处理中
     events.push({
       status: 'in_progress',
-      timestamp:
-        currentStatus === 'in_progress' || currentStatus === 'completed'
-          ? (inProgressAt || updatedAt || createdAt)
-          : '',
-      description: currentStatus === 'in_progress' ? '正在进行穿线服务' : currentStatus === 'completed' ? '穿线服务已完成' : '待开始处理',
-      completed: currentStatus === 'completed',
+      timestamp: hasReached('in_progress')
+        ? getLogTimestamp('in_progress', inProgressAt || updatedAt || createdAt)
+        : '',
+      description: currentStatus === 'in_progress'
+        ? '正在进行穿线服务'
+        : currentStatus === 'completed' || currentStatus === 'picked_up'
+          ? '穿线服务已完成'
+          : '待开始处理',
+      note: getLogNote('in_progress'),
+      completed: hasReached('in_progress'),
       active: currentStatus === 'in_progress',
     });
 
-    // 4. 完成
+    // 5. 完成
     events.push({
       status: 'completed',
-      timestamp: currentStatus === 'completed' ? (completedAt || updatedAt || createdAt) : '',
-      description: currentStatus === 'completed' ? '穿线完成，可取拍' : '等待完成',
-      completed: currentStatus === 'completed',
-      active: false,
+      timestamp: hasReached('completed')
+        ? getLogTimestamp('completed', completedAt || updatedAt || createdAt)
+        : '',
+      description: hasReached('completed') ? '穿线完成，可取拍' : '等待完成',
+      note: getLogNote('completed'),
+      completed: hasReached('completed'),
+      active: currentStatus === 'completed',
+    });
+
+    // 6. 已取拍
+    events.push({
+      status: 'picked_up',
+      timestamp: hasReached('picked_up') ? getLogTimestamp('picked_up', updatedAt || createdAt) : '',
+      description: hasReached('picked_up') ? '已完成取拍' : '等待取拍',
+      note: getLogNote('picked_up'),
+      completed: hasReached('picked_up'),
+      active: currentStatus === 'picked_up',
     });
 
     return events;
@@ -225,6 +315,12 @@ export default function OrderTimeline({
               {event.description && (
                 <div className={`text-xs mt-1 ${event.completed || event.active ? 'text-text-tertiary' : 'text-text-tertiary'}`}>
                   {event.description}
+                </div>
+              )}
+
+              {event.note && (
+                <div className="text-xs mt-1 text-text-secondary">
+                  备注: {event.note}
                 </div>
               )}
             </div>

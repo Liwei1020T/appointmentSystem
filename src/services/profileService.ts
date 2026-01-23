@@ -1,4 +1,4 @@
-import { MembershipTierId } from '@/lib/membership';
+import { MembershipTierId, getTierDefinitionById } from '@/lib/membership';
 import { apiRequest } from '@/services/apiClient';
 
 /**
@@ -127,16 +127,27 @@ export interface UserStats {
  * 获取用户统计信息
  */
 export async function getUserStats(): Promise<UserStats> {
+  const fallbackTier = getTierDefinitionById('SILVER');
+  const fallbackMembership = fallbackTier
+    ? {
+        tier: fallbackTier.id,
+        label: fallbackTier.label,
+        description: fallbackTier.description,
+        discountRate: fallbackTier.discountRate,
+        progress: 0,
+        nextTier: null,
+      }
+    : {
+        tier: 'SILVER' as MembershipTierId,
+        label: 'Silver',
+        description: '',
+        discountRate: 0,
+        progress: 0,
+        nextTier: null,
+      };
   try {
     const data = await apiRequest<any>(`/api/user/stats`);
-    const membership = data?.membership || {
-      tier: 'standard' as MembershipTierId,
-      label: '普通会员',
-      description: '尚未达到会员门槛，继续消费即可升级',
-      discountRate: 0,
-      progress: 0,
-      nextTier: null,
-    };
+    const membership = data?.membership || fallbackMembership;
 
     return {
       totalOrders: data?.totalOrders || 0,
@@ -160,14 +171,7 @@ export async function getUserStats(): Promise<UserStats> {
       availableVouchers: 0,
       totalPoints: 0,
       totalSpent: 0,
-      membership: {
-        tier: 'standard',
-        label: '普通会员',
-        description: '尚未达到会员门槛，继续消费即可升级',
-        discountRate: 0,
-        progress: 0,
-        nextTier: null,
-      },
+      membership: fallbackMembership,
     };
   }
 }

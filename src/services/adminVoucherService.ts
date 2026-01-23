@@ -49,12 +49,18 @@ export interface Voucher {
   createdAt?: Date;
   updated_at?: Date;
   updatedAt?: Date;
+  isAutoIssue?: boolean;
+  is_auto_issue?: boolean;
+  isFirstOrderOnly?: boolean;
+  is_first_order_only?: boolean;
+  validityDays?: number | null;
+  validity_days?: number | null;
   // 每用户兑换上限
   maxRedemptionsPerUser?: number;
   max_redemptions_per_user?: number;
 }
 
-function normalizeVoucher(raw: any): Voucher {
+export function normalizeVoucher(raw: any): Voucher {
   // Normalize API voucher payload to expose both camelCase and snake_case fields for UI compatibility
   if (!raw) return raw;
   const validFrom = raw.validFrom || raw.valid_from;
@@ -62,6 +68,9 @@ function normalizeVoucher(raw: any): Voucher {
   const minPurchaseValue = raw.minPurchase ?? raw.min_purchase ?? 0;
   const pointsCostValue = raw.pointsCost ?? raw.points_cost ?? 0;
   const maxUsesValue = raw.maxUses ?? raw.usage_limit ?? null;
+  const isAutoIssue = raw.isAutoIssue ?? raw.is_auto_issue ?? false;
+  const isFirstOrderOnly = raw.isFirstOrderOnly ?? raw.is_first_order_only ?? false;
+  const validityDays = raw.validityDays ?? raw.validity_days ?? null;
 
   return {
     ...raw,
@@ -83,6 +92,12 @@ function normalizeVoucher(raw: any): Voucher {
     active: raw.active ?? raw.isActive ?? raw.is_active,
     maxRedemptionsPerUser: raw.maxRedemptionsPerUser ?? raw.max_redemptions_per_user ?? 1,
     max_redemptions_per_user: raw.maxRedemptionsPerUser ?? raw.max_redemptions_per_user ?? 1,
+    isAutoIssue,
+    is_auto_issue: isAutoIssue,
+    isFirstOrderOnly,
+    is_first_order_only: isFirstOrderOnly,
+    validityDays,
+    validity_days: validityDays,
     // 时间字段双向映射
     createdAt: raw.createdAt || raw.created_at,
     created_at: raw.createdAt || raw.created_at,

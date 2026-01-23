@@ -9,6 +9,7 @@ import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
 import { prisma } from '@/lib/prisma';
+import { summarizePromotionUsage } from '@/server/services/promotion.service';
 import { PromotionType, DiscountType } from '@prisma/client';
 import { z } from 'zod';
 
@@ -27,11 +28,21 @@ export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
 
-    const promotions = await prisma.promotion.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
+    const [promotions, usageRecords] = await Promise.all([
+      prisma.promotion.findMany({
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.promotionUsage.findMany({
+        select: { savedAmount: true },
+      }),
+    ]);
 
-    return successResponse(promotions);
+    const usageSummary = {
+      ...summarizePromotionUsage(usageRecords),
+      totalUsageCount: usageRecords.length,
+    };
+
+    return successResponse({ promotions, usageSummary });
   } catch (error) {
     return handleApiError(error);
   }

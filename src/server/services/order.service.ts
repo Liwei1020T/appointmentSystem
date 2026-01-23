@@ -3,6 +3,7 @@ import { ApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { Prisma, User } from '@prisma/client';
 import { INVENTORY, ORDER_RULES, POINTS, PRICING } from '@/lib/constants';
+import { assertFirstOrderVoucherEligibility } from './welcome.service';
 import {
   calculateEstimatedCompletion,
   getOrderQueuePosition,
@@ -223,11 +224,14 @@ export async function createOrder(user: UserSnapshot, payload: CreateOrderPayloa
         status: 'active',
         expiry: { gt: new Date() },
       },
+      include: { voucher: true },
     });
 
     if (!userVoucher) {
       throw new ApiError('CONFLICT', 409, 'Voucher not available');
     }
+
+    await assertFirstOrderVoucherEligibility(user.id, !!userVoucher.voucher?.isFirstOrderOnly);
   }
 
   // 计算预计完成时间
@@ -392,6 +396,7 @@ export async function createOrderWithPackage(user: UserSnapshot, payload: Create
     }
 
     const voucher = voucherUsed.voucher;
+    await assertFirstOrderVoucherEligibility(user.id, !!voucher.isFirstOrderOnly);
     const now = new Date();
     if (now < new Date(voucher.validFrom) || now > new Date(voucher.validUntil)) {
       throw new ApiError('CONFLICT', 409, 'Voucher not valid');
@@ -579,6 +584,7 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
     }
 
     const voucher = voucherUsed.voucher;
+    await assertFirstOrderVoucherEligibility(user.id, !!voucher.isFirstOrderOnly);
     const now = new Date();
     if (now < new Date(voucher.validFrom) || now > new Date(voucher.validUntil)) {
       throw new ApiError('CONFLICT', 409, 'Voucher not valid');

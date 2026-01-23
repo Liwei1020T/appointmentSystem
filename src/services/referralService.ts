@@ -65,9 +65,11 @@ export async function getReferralStats(): Promise<ReferralStats> {
  * 生成推荐链接
  */
 export function generateReferralLink(referralCode: string): string {
-  if (typeof window === 'undefined') return '';
-  const baseUrl = window.location.origin;
-  return `${baseUrl}/signup?ref=${referralCode}`;
+  const envBase = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '');
+  const browserBase = typeof window !== 'undefined' ? window.location.origin : '';
+  const baseUrl = envBase || browserBase;
+  if (!baseUrl) return '';
+  return `${baseUrl}/signup?ref=${encodeURIComponent(referralCode)}`;
 }
 
 /**

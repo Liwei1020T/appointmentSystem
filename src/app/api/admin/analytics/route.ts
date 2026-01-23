@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     const stats = await getDashboardStats();
 
-    return successResponse(stats);
+    return successResponse({ ...stats });
   } catch (error) {
     return handleApiError(error);
   }

@@ -9,6 +9,16 @@ type AdminSnapshot = Pick<User, 'id' | 'fullName'>;
 
 type UserSnapshot = Pick<User, 'id' | 'role'>;
 
+/**
+ * Determines whether an order should advance based on payment status.
+ * @param orderStatus Current order status
+ * @param paymentStatus Current payment status
+ * @returns True when the order should move forward
+ */
+export function shouldAdvanceOrderStatus(orderStatus: string, paymentStatus: string) {
+  return orderStatus === 'pending' && paymentStatus === 'success';
+}
+
 export async function getPaymentForUser(params: { paymentId: string; user: UserSnapshot }) {
   const { paymentId, user } = params;
   const payment = await prisma.payment.findFirst({
@@ -288,7 +298,7 @@ export async function verifyPayment(params: {
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
     include: {
-      order: { select: { id: true, userId: true } },
+      order: { select: { id: true, userId: true, status: true } },
       package: { select: { id: true, name: true, times: true, validityDays: true, price: true } },
     },
   });
@@ -369,6 +379,13 @@ export async function verifyPayment(params: {
     }
 
     if (payment.orderId) {
+      if (payment.order && shouldAdvanceOrderStatus(payment.order.status, 'success')) {
+        await tx.order.update({
+          where: { id: payment.orderId },
+          data: { status: 'in_progress' },
+        });
+      }
+
       await tx.notification.create({
         data: {
           userId: targetUserId,

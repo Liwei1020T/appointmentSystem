@@ -6,6 +6,11 @@
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 
+export function calculateLtv(totalRevenue: number, userCount: number) {
+  if (!userCount) return 0;
+  return Math.round((totalRevenue / userCount) * 100) / 100;
+}
+
 /**
  * 获取用户生命周期价值 (LTV)
  * 计算公式：总销售额 / 总用户数
@@ -22,10 +27,10 @@ export async function getUserLtv() {
   ]);
 
   const sales = Number(totalSales._sum.price || 0);
-  const ltv = totalUsers > 0 ? sales / totalUsers : 0;
+  const ltv = calculateLtv(sales, totalUsers);
 
   return {
-    ltv: parseFloat(ltv.toFixed(2)),
+    ltv,
     totalSales: parseFloat(sales.toFixed(2)),
     totalUsers,
   };

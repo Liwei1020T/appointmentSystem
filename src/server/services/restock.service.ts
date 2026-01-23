@@ -24,6 +24,7 @@ export interface RestockSuggestion {
   priority: 'critical' | 'high' | 'medium' | 'low';
   reason: string;
   estimatedCost: number;
+  estimatedProfit: number;
   lastRestockDate: string | null;
 }
 
@@ -146,7 +147,14 @@ function calculatePriority(
 /**
  * 计算建议补货数量
  */
-function calculateSuggestedQuantity(
+/**
+ * 计算建议补货数量
+ * @param currentStock 当前库存
+ * @param minimumStock 最低安全库存
+ * @param avgDailySales 日均销量
+ * @returns 建议补货数量
+ */
+export function calculateSuggestedQuantity(
   currentStock: number,
   minimumStock: number,
   avgDailySales: number
@@ -207,6 +215,7 @@ export async function getRestockSuggestions(): Promise<RestockSummary> {
       stock: true,
       minimumStock: true,
       costPrice: true,
+      sellingPrice: true,
     },
   });
 
@@ -254,7 +263,11 @@ export async function getRestockSuggestions(): Promise<RestockSummary> {
     const costPrice = string.costPrice instanceof Decimal
       ? string.costPrice.toNumber()
       : Number(string.costPrice);
+    const sellingPrice = string.sellingPrice instanceof Decimal
+      ? string.sellingPrice.toNumber()
+      : Number(string.sellingPrice);
     const estimatedCost = suggestedQuantity * costPrice;
+    const estimatedProfit = suggestedQuantity * Math.max(0, sellingPrice - costPrice);
 
     // 生成原因
     const reason = generateReason(
@@ -278,6 +291,7 @@ export async function getRestockSuggestions(): Promise<RestockSummary> {
       priority,
       reason,
       estimatedCost: Math.round(estimatedCost * 100) / 100,
+      estimatedProfit: Math.round(estimatedProfit * 100) / 100,
       lastRestockDate: lastRestock ? lastRestock.toISOString() : null,
     });
   }

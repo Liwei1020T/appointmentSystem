@@ -32,8 +32,9 @@ This database schema supports the complete String Service Platform, including:
 - Points and voucher system
 - Referral program
 - Notifications and analytics
+- Promotion campaigns and usage tracking
 
-**Total Tables:** 15 core tables + system tables
+**Total Tables:** 17 core tables + system tables
 
 ---
 
@@ -64,6 +65,10 @@ This database schema supports the complete String Service Platform, including:
 ┌──────────────┐          ┌──────────────┐
 │referral_logs │          │notifications │
 └──────────────┘          └──────────────┘
+
+┌──────────────┐          ┌────────────────┐
+│ promotions   │──1:N────▶│promotion_usage │
+└──────────────┘          └────────────────┘
 ```
 
 ---
@@ -168,6 +173,7 @@ Customer booking and order records.
 | `voucher_used_id`| `uuid`      | FK → user_vouchers.id    | Voucher used                          |
 | `notes`         | `text`       |                          | Customer notes                        |
 | `completed_at`  | `timestamptz`|                          | Completion timestamp                  |
+| `last_status_change_at` | `timestamptz` | DEFAULT now()      | Last status change timestamp          |
 | `created_at`    | `timestamptz`| DEFAULT now()            | Order creation time                   |
 | `updated_at`    | `timestamptz`| DEFAULT now()            |                                       |
 
@@ -205,6 +211,23 @@ Multi-racket order items. Each item represents one racket within a multi-racket 
 - Each item references its own string in `string_inventory`
 - `racket_photo` is required - enforced at application level
 - Cascade delete: deleting parent order deletes all items
+
+---
+
+### 3.2 `order_status_logs`
+
+Order status transition logs.
+
+| Column        | Type         | Constraints                     | Description                        |
+|--------------|--------------|----------------------------------|------------------------------------|
+| `id`         | `uuid`       | PRIMARY KEY                      | Log ID                             |
+| `order_id`   | `uuid`       | FK → orders.id, NOT NULL         | Parent order                       |
+| `status`     | `text`       | NOT NULL                         | Status code                        |
+| `note`       | `text`       |                                  | Optional status note               |
+| `created_at` | `timestamptz`| DEFAULT now()                    | Log timestamp                      |
+
+**Indexes:**
+- `idx_order_status_logs_order_id` on `order_id`
 
 ---
 
@@ -294,6 +317,9 @@ Voucher/coupon definitions.
 | `max_uses`      | `integer`    |                          | Maximum total uses (null = unlimited) |
 | `used_count`    | `integer`    | DEFAULT 0                | Current usage count            |
 | `points_cost`   | `integer`    | DEFAULT 0                | Points required to redeem      |
+| `is_auto_issue` | `boolean`    | DEFAULT false            | Auto-issue on signup           |
+| `is_first_order_only` | `boolean` | DEFAULT false         | First-order-only voucher       |
+| `validity_days` | `integer`    |                          | Post-issue validity window     |
 | `max_redemptions_per_user` | `integer` | DEFAULT 1         | 每用户最大兑换次数 (2025-12-23 新增) |
 | `valid_from`    | `timestamptz`| NOT NULL                 | Start date                     |
 | `valid_until`   | `timestamptz`| NOT NULL                 | End date                       |
@@ -453,6 +479,51 @@ Order review records (user feedback after completion).
 
 **Notes:**
 - Review APIs are implemented in Next.js App Router (`/api/reviews/*`) and persist via Prisma; future Supabase/Edge migration should keep payload shape compatible.
+
+---
+
+### 15. `promotions`
+
+Marketing promotion campaigns.
+
+| Column           | Type         | Constraints              | Description                              |
+|------------------|--------------|--------------------------|------------------------------------------|
+| `id`             | `uuid`       | PRIMARY KEY              | Promotion ID                             |
+| `name`           | `text`       | NOT NULL                 | Campaign name                            |
+| `type`           | `text`       | NOT NULL                 | `FLASH_SALE` / `POINTS_BOOST` / `SPEND_SAVE` |
+| `discount_type`  | `text`       | NOT NULL                 | `FIXED` / `PERCENTAGE`                   |
+| `discount_value` | `numeric`    | NOT NULL                 | Discount amount or percentage            |
+| `min_purchase`   | `numeric`    |                          | Minimum spend threshold                  |
+| `start_at`       | `timestamptz`| NOT NULL                 | Start time                               |
+| `end_at`         | `timestamptz`| NOT NULL                 | End time                                 |
+| `is_active`      | `boolean`    | DEFAULT true             | Active flag                              |
+| `usage_limit`    | `integer`    |                          | Optional global usage cap                |
+| `usage_count`    | `integer`    | DEFAULT 0                | Usage count                              |
+| `created_at`     | `timestamptz`| DEFAULT now()            | Created timestamp                        |
+| `updated_at`     | `timestamptz`| DEFAULT now()            | Updated timestamp                        |
+
+**Indexes:**
+- `idx_promotions_is_active` on `is_active`
+- `idx_promotions_start_end` on `(start_at, end_at)`
+
+---
+
+### 15.1 `promotion_usage`
+
+Promotion usage log (per order/user).
+
+| Column          | Type         | Constraints              | Description                              |
+|-----------------|--------------|--------------------------|------------------------------------------|
+| `id`            | `uuid`       | PRIMARY KEY              | Usage ID                                 |
+| `promotion_id`  | `uuid`       | FK → promotions.id       | Promotion                                |
+| `user_id`       | `uuid`       |                          | User applying the promotion              |
+| `order_id`      | `uuid`       |                          | Order ID (nullable)                      |
+| `saved_amount`  | `numeric`    | NOT NULL                 | Saved amount                             |
+| `created_at`    | `timestamptz`| DEFAULT now()            | Usage timestamp                          |
+
+**Indexes:**
+- `idx_promotion_usage_promotion_id` on `promotion_id`
+- `idx_promotion_usage_user_id` on `user_id`
 
 ---
 

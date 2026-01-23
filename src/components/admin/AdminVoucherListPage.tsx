@@ -77,6 +77,9 @@ export default function AdminVoucherListPage() {
     description: '',
     valid_from: '',
     valid_until: '',
+    validity_days: null as number | null,
+    is_auto_issue: false,
+    is_first_order_only: false,
     usage_limit: null as number | null,
     active: true,
   });
@@ -131,6 +134,9 @@ export default function AdminVoucherListPage() {
       maxUses: formData.usage_limit ?? null,
       pointsCost: Number(formData.points_cost) || 0,
       description: formData.description?.trim() || '',
+      validityDays: formData.validity_days ?? null,
+      isAutoIssue: formData.is_auto_issue,
+      isFirstOrderOnly: formData.is_first_order_only,
       active: formData.active,
     };
 
@@ -211,6 +217,9 @@ export default function AdminVoucherListPage() {
       valid_until: validUntil
         ? (typeof validUntil === 'string' ? validUntil.slice(0, 10) : new Date(validUntil).toISOString().slice(0, 10))
         : '',
+      validity_days: voucher.validity_days ?? voucher.validityDays ?? null,
+      is_auto_issue: voucher.is_auto_issue ?? voucher.isAutoIssue ?? false,
+      is_first_order_only: voucher.is_first_order_only ?? voucher.isFirstOrderOnly ?? false,
       usage_limit: voucher.usage_limit || voucher.usageLimit || null,
       active: voucher.active ?? voucher.isActive ?? true,
     });
@@ -228,6 +237,9 @@ export default function AdminVoucherListPage() {
       description: '',
       valid_from: '',
       valid_until: '',
+      validity_days: null,
+      is_auto_issue: false,
+      is_first_order_only: false,
       usage_limit: null,
       active: true,
     });
@@ -378,12 +390,27 @@ export default function AdminVoucherListPage() {
                           </p>
                         )}
                       </div>
-                      <Badge variant={isActive ? 'success' : 'neutral'} size="sm">
-                        {isActive ? '活跃' : '停用'}
-                      </Badge>
-                    </div>
+                  <Badge variant={isActive ? 'success' : 'neutral'} size="sm">
+                    {isActive ? '活跃' : '停用'}
+                  </Badge>
+                </div>
 
-                  <div className="space-y-2 text-sm">
+                {(voucher.isAutoIssue || voucher.isFirstOrderOnly) && (
+                  <div className="flex flex-wrap gap-2">
+                    {voucher.isAutoIssue && (
+                      <Badge variant="info" size="sm">
+                        自动发放
+                      </Badge>
+                    )}
+                    {voucher.isFirstOrderOnly && (
+                      <Badge variant="warning" size="sm">
+                        首单专属
+                      </Badge>
+                    )}
+                  </div>
+                )}
+
+                <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-text-tertiary">类型</span>
                       <span className="font-medium text-text-primary">
@@ -571,6 +598,35 @@ export default function AdminVoucherListPage() {
                     value={formData.valid_until}
                     onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
                   />
+                </div>
+
+                <Input
+                  label="发放后有效期 (天)"
+                  type="number"
+                  value={formData.validity_days ?? ''}
+                  onChange={(e) => setFormData({ ...formData, validity_days: e.target.value ? parseInt(e.target.value, 10) : null })}
+                  placeholder="留空则使用结束日期"
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label className="flex items-center gap-2 text-sm text-text-secondary">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_auto_issue}
+                      onChange={(e) => setFormData({ ...formData, is_auto_issue: e.target.checked })}
+                      className="w-4 h-4 text-accent rounded focus:ring-2 focus:ring-accent-border"
+                    />
+                    注册自动发放
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-text-secondary">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_first_order_only}
+                      onChange={(e) => setFormData({ ...formData, is_first_order_only: e.target.checked })}
+                      className="w-4 h-4 text-accent rounded focus:ring-2 focus:ring-accent-border"
+                    />
+                    首单专属
+                  </label>
                 </div>
 
                 <Input

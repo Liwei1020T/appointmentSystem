@@ -11,6 +11,15 @@ const ORDER_INPROGRESS_WARNING_HOURS = 72; // 处理中订单预警时间（小�
 const ORDER_COMPLETION_REMINDER_HOURS = 24; // 完成后取拍提醒时间（小时）
 
 /**
+ * 判断订单是否超过指定小时阈值（基于状态变更时间）
+ */
+export function isOrderOverdue(order: { lastStatusChangeAt: Date }, thresholdHours: number) {
+  const cutoff = new Date();
+  cutoff.setHours(cutoff.getHours() - thresholdHours);
+  return order.lastStatusChangeAt < cutoff;
+}
+
+/**
  * 检查并取消超时的待支付订单
  * 返回被取消的订单数量
  */
@@ -25,7 +34,7 @@ export async function cancelTimedOutOrders(): Promise<{
   const timedOutOrders = await prisma.order.findMany({
     where: {
       status: 'pending',
-      createdAt: { lt: timeoutDate },
+      lastStatusChangeAt: { lt: timeoutDate },
       // 排除使用套餐的订单（不需要支付）
       usePackage: false,
       // 排除已有成功支付的订单
@@ -96,7 +105,7 @@ export async function checkInProgressOrderWarnings(): Promise<{
   const overdueOrders = await prisma.order.findMany({
     where: {
       status: 'in_progress',
-      updatedAt: { lt: warningDate },
+      lastStatusChangeAt: { lt: warningDate },
     },
     select: {
       id: true,
@@ -285,14 +294,14 @@ export async function getOrderAutomationStats(): Promise<{
     prisma.order.count({
       where: {
         status: 'pending',
-        createdAt: { lt: nearTimeoutDate },
+        lastStatusChangeAt: { lt: nearTimeoutDate },
         usePackage: false,
         payments: { none: { status: { in: ['success', 'completed'] } } },
       },
     }),
     prisma.order.count({ where: { status: 'in_progress' } }),
     prisma.order.count({
-      where: { status: 'in_progress', updatedAt: { lt: overdueDate } },
+      where: { status: 'in_progress', lastStatusChangeAt: { lt: overdueDate } },
     }),
     prisma.order.count({
       where: {

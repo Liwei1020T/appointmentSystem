@@ -21,8 +21,19 @@ interface Promotion {
   usageLimit?: number;
 }
 
+interface PromotionUsageSummary {
+  totalSavedAmount: number;
+  totalUsageCount: number;
+}
+
+interface PromotionsResponse {
+  promotions: Promotion[];
+  usageSummary: PromotionUsageSummary;
+}
+
 export default function PromotionsPage() {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [usageSummary, setUsageSummary] = useState<PromotionUsageSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -45,8 +56,9 @@ export default function PromotionsPage() {
 
   const loadPromotions = async () => {
     try {
-      const data = await apiRequest<Promotion[]>('/api/admin/promotions');
-      setPromotions(data);
+      const data = await apiRequest<PromotionsResponse>('/api/admin/promotions');
+      setPromotions(data.promotions || []);
+      setUsageSummary(data.usageSummary || null);
     } catch (error) {
       console.error('Failed to load promotions:', error);
     } finally {
@@ -90,6 +102,8 @@ export default function PromotionsPage() {
     }
   };
 
+  const summary = usageSummary || { totalSavedAmount: 0, totalUsageCount: 0 };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
       <PageHeader title="营销活动管理" />
@@ -101,6 +115,21 @@ export default function PromotionsPage() {
             创建新活动
           </Button>
         </div>
+
+        {!loading && (
+          <div className="grid gap-4 sm:grid-cols-2 mb-6">
+            <Card className="p-4">
+              <p className="text-xs text-gray-500">累计使用次数</p>
+              <p className="text-2xl font-semibold text-gray-900">{summary.totalUsageCount}</p>
+            </Card>
+            <Card className="p-4">
+              <p className="text-xs text-gray-500">累计为用户节省</p>
+              <p className="text-2xl font-semibold text-accent font-mono">
+                RM {summary.totalSavedAmount.toFixed(2)}
+              </p>
+            </Card>
+          </div>
+        )}
 
         {loading ? (
           <div className="text-center py-10">加载中...</div>

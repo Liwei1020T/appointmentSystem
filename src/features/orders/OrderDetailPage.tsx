@@ -262,6 +262,13 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
     || updatedAt;
   const paymentPendingAt = (paymentRecord as any)?.created_at || createdAt;
   const inProgressAt = (order as any).in_progress_at || updatedAt;
+  const statusLogs = Array.isArray((order as any).statusLogs)
+    ? (order as any).statusLogs.map((log: any) => ({
+      status: log.status,
+      createdAt: log.createdAt || log.created_at,
+      note: log.note || log.notes || null,
+    }))
+    : undefined;
   const packageName = order.packageUsed?.package?.name || '配套服务';
   const packageRemainingCount = order.packageUsed?.remaining;
   const packageExpiry = order.packageUsed?.expiry ?? order.packageUsed?.expires_at;
@@ -407,6 +414,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             paymentConfirmedAt={paymentConfirmedAt as any}
             inProgressAt={inProgressAt as any}
             paymentPendingAt={paymentPendingAt as any}
+            statusLogs={statusLogs}
             estimatedCompletionAt={(order as any).estimatedCompletionAt || (order as any).estimated_completion_at}
             queuePosition={(order as any).queuePosition}
           />

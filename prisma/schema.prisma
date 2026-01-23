@@ -243,6 +243,7 @@ model Order {
   completedAt    DateTime? @map("completed_at") @db.Timestamptz(6)
   // 预计完成时间（订单创建时计算）
   estimatedCompletionAt DateTime? @map("estimated_completion_at") @db.Timestamptz(6)
+  lastStatusChangeAt DateTime @default(now()) @map("last_status_change_at") @db.Timestamptz(6)
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -253,11 +254,25 @@ model Order {
   payments    Payment[]
   reviews     Review[]
   items       OrderItem[] // New: Multi-racket support
+  statusLogs  OrderStatusLog[]
 
   @@index([userId])
   @@index([status])
   @@index([createdAt])
   @@map("orders")
+}
+
+model OrderStatusLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  orderId   String   @map("order_id") @db.Uuid
+  status    String
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@map("order_status_logs")
 }
 
 // ============================================

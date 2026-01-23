@@ -3,9 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { ApiError } from '@/lib/api-errors';
 import { validatePassword } from '@/lib/utils';
 import {
-  getTierForSpend,
+  MembershipTierId,
+  getTierDefinitionById,
   getTierProgress,
-  getNextTierAfterSpend,
+  getNextTierAfterCurrent,
 } from '@/lib/membership';
 
 export interface UpdateProfileInput {
@@ -150,7 +151,10 @@ export async function getUserStats(userId: string) {
         expiry: { gt: new Date() },
       },
     }),
-    prisma.user.findUnique({ where: { id: userId }, select: { points: true } }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { points: true, membershipTier: true },
+    }),
     prisma.order.aggregate({
       where: {
         userId,
@@ -161,8 +165,11 @@ export async function getUserStats(userId: string) {
   ]);
 
   const totalSpent = Number(totalSpentResult._sum.price ?? 0);
-  const membershipTier = getTierForSpend(totalSpent);
-  const nextTier = getNextTierAfterSpend(totalSpent);
+  const currentTierId = (userProfile?.membershipTier || 'SILVER') as MembershipTierId;
+  const membershipTier = getTierDefinitionById(currentTierId);
+  const fallbackTier = getTierDefinitionById('SILVER');
+  const resolvedTier = membershipTier || fallbackTier;
+  const nextTier = resolvedTier ? getNextTierAfterCurrent(resolvedTier.id) : null;
 
   return {
     totalOrders,
@@ -174,11 +181,11 @@ export async function getUserStats(userId: string) {
     points: userProfile?.points || 0,
     totalSpent,
     membership: {
-      tier: membershipTier.id,
-      label: membershipTier.label,
-      description: membershipTier.description,
-      discountRate: membershipTier.discountRate,
-      progress: getTierProgress(totalSpent),
+      tier: resolvedTier?.id || 'SILVER',
+      label: resolvedTier?.label || 'Silver',
+      description: resolvedTier?.description || '',
+      discountRate: resolvedTier?.discountRate || 0,
+      progress: getTierProgress(totalSpent, resolvedTier?.id),
       nextTier: nextTier
         ? {
             id: nextTier.id,
