@@ -387,6 +387,7 @@ model Package {
   tag           String?  // 'best_value', 'most_popular', 'limited_time', 'new'
   isPopular     Boolean  @default(false) @map("is_popular") // 是否为热门套餐
   isFirstOrderOnly Boolean @default(false) @map("is_first_order_only")
+  renewalDiscount Int     @default(0) @map("renewal_discount")
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 

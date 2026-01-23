@@ -4,6 +4,7 @@ import { isValidUUID } from '@/lib/utils';
 import { User } from '@prisma/client';
 
 type UserSnapshot = Pick<User, 'id'>;
+const RENEWAL_WINDOW_DAYS = 7;
 
 /**
  * Fetch all active packages for purchase.
@@ -38,6 +39,27 @@ export async function isUserEligibleForFirstOrderPackage(userId: string) {
   });
 
   return orderCount === 0;
+}
+
+/**
+ * Return renewal discount when the user's package is nearing expiry.
+ */
+export async function getRenewalDiscountForUser(userId: string, packageId: string) {
+  const pkg = await prisma.package.findUnique({ where: { id: packageId } });
+  if (!pkg || pkg.renewalDiscount <= 0) {
+    return 0;
+  }
+
+  const expiryCutoff = new Date(Date.now() + RENEWAL_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+  const expiringPackage = await prisma.userPackage.findFirst({
+    where: {
+      userId,
+      packageId,
+      expiry: { lte: expiryCutoff },
+    },
+  });
+
+  return expiringPackage ? pkg.renewalDiscount : 0;
 }
 
 /**
