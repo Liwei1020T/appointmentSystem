@@ -8,11 +8,22 @@ type UserSnapshot = Pick<User, 'id'>;
 /**
  * Fetch all active packages for purchase.
  */
-export async function listAvailablePackages() {
-  return prisma.package.findMany({
+export async function listAvailablePackages(userId?: string) {
+  const packages = await prisma.package.findMany({
     where: { active: true },
     orderBy: { price: 'asc' },
   });
+
+  if (!userId) {
+    return packages;
+  }
+
+  const eligible = await isUserEligibleForFirstOrderPackage(userId);
+  if (eligible) {
+    return packages;
+  }
+
+  return packages.filter((pkg) => !pkg.isFirstOrderOnly);
 }
 
 /**
@@ -86,6 +97,13 @@ export async function buyPackage(
 
   if (!packageData.active) {
     throw new ApiError('CONFLICT', 409, 'Package is inactive');
+  }
+
+  if (packageData.isFirstOrderOnly) {
+    const eligible = await isUserEligibleForFirstOrderPackage(user.id);
+    if (!eligible) {
+      throw new ApiError('CONFLICT', 409, '首单特价仅限首次下单用户');
+    }
   }
 
   if (Number(packageData.price) <= 0) {
