@@ -75,8 +75,23 @@ function PurchaseTab({ isVisible }: { isVisible: boolean }) {
         </div>
     );
 
+    const hasFirstOrderOffer = packages.some((pkg) => (pkg as any).isFirstOrderOnly);
+
     return (
         <div className="space-y-8">
+            {hasFirstOrderOffer && (
+                <Card className="p-4 bg-accent/10 border border-accent/20">
+                    <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-accent-soft flex items-center justify-center">
+                            <Sparkles className="w-4 h-4 text-accent" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold text-text-primary">首单特价礼包</p>
+                            <p className="text-xs text-text-secondary">仅限首次下单用户购买，结算时自动校验资格。</p>
+                        </div>
+                    </div>
+                </Card>
+            )}
             {/* Compact Benefit Banner - 4 Column Icon Grid */}
             <div className={`
                 bg-gradient-to-r from-accent/10 to-white rounded-2xl border border-accent/20 p-4
