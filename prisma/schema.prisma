@@ -386,6 +386,7 @@ model Package {
   // 套餐标签与展示增强
   tag           String?  // 'best_value', 'most_popular', 'limited_time', 'new'
   isPopular     Boolean  @default(false) @map("is_popular") // 是否为热门套餐
+  isFirstOrderOnly Boolean @default(false) @map("is_first_order_only")
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 

@@ -52,6 +52,17 @@ async function main() {
   // 3. 创建套餐
   const packages = [
     {
+      name: '首单特价',
+      description: '首次穿线体验价，仅限新用户',
+      times: 1,
+      price: 18.00,
+      originalPrice: 28.00,
+      validityDays: 30,
+      tag: 'limited_time',
+      isPopular: false,
+      isFirstOrderOnly: true,
+    },
+    {
       name: '体验套餐',
       description: '适合新手体验',
       times: 3,

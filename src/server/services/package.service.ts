@@ -16,6 +16,20 @@ export async function listAvailablePackages() {
 }
 
 /**
+ * Check if a user is eligible for first-order-only packages.
+ */
+export async function isUserEligibleForFirstOrderPackage(userId: string) {
+  const orderCount = await prisma.order.count({
+    where: {
+      userId,
+      status: { in: ['in_progress', 'completed'] },
+    },
+  });
+
+  return orderCount === 0;
+}
+
+/**
  * Fetch featured packages with a limit.
  */
 export async function listFeaturedPackages(limit = 3) {
