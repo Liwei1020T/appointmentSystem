@@ -63,6 +63,18 @@ export async function getRenewalDiscountForUser(userId: string, packageId: strin
 }
 
 /**
+ * Apply renewal discount percentage to a price.
+ */
+export function applyRenewalDiscount(price: number, discountPercent: number) {
+  if (!discountPercent || discountPercent <= 0) {
+    return price;
+  }
+
+  const discounted = price * (1 - discountPercent / 100);
+  return Math.round(discounted * 100) / 100;
+}
+
+/**
  * Fetch featured packages with a limit.
  */
 export async function listFeaturedPackages(limit = 3) {
@@ -132,16 +144,21 @@ export async function buyPackage(
     throw new ApiError('UNPROCESSABLE_ENTITY', 422, 'Invalid package price');
   }
 
+  const baseAmount = Number(packageData.price);
+  const renewalDiscount = await getRenewalDiscountForUser(user.id, packageData.id);
+  const finalAmount = applyRenewalDiscount(baseAmount, renewalDiscount);
+
   const payment = await prisma.payment.create({
     data: {
       userId: user.id,
       packageId: packageData.id,
-      amount: packageData.price,
+      amount: finalAmount,
       provider: normalizedProvider,
       status: 'pending',
       metadata: {
         type: 'package',
         paymentMethod: normalizedProvider,
+        renewalDiscount,
         createdAt: new Date().toISOString(),
         note:
           normalizedProvider === 'cash'
@@ -155,7 +172,9 @@ export async function buyPackage(
     paymentId: payment.id,
     packageId: packageData.id,
     packageName: packageData.name,
-    amount: Number(packageData.price),
+    amount: finalAmount,
+    originalAmount: baseAmount,
+    renewalDiscount,
     times: packageData.times,
     validityDays: packageData.validityDays,
     paymentRequired: true,
