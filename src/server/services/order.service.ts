@@ -396,11 +396,12 @@ export async function createOrderWithPackage(user: UserSnapshot, payload: Create
     }
 
     const voucher = voucherUsed.voucher;
-    await assertFirstOrderVoucherEligibility(user.id, !!voucher.isFirstOrderOnly);
     const now = new Date();
     if (now < new Date(voucher.validFrom) || now > new Date(voucher.validUntil)) {
       throw new ApiError('CONFLICT', 409, 'Voucher not valid');
     }
+
+    await assertFirstOrderVoucherEligibility(user.id, !!voucher.isFirstOrderOnly);
 
     const voucherValue = Number(voucher.value);
     const minPurchase = Number(voucher.minPurchase);
@@ -584,11 +585,12 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
     }
 
     const voucher = voucherUsed.voucher;
-    await assertFirstOrderVoucherEligibility(user.id, !!voucher.isFirstOrderOnly);
     const now = new Date();
     if (now < new Date(voucher.validFrom) || now > new Date(voucher.validUntil)) {
       throw new ApiError('CONFLICT', 409, 'Voucher not valid');
     }
+
+    await assertFirstOrderVoucherEligibility(user.id, !!voucher.isFirstOrderOnly);
 
     const voucherValue = Number(voucher.value);
     const minPurchase = Number(voucher.minPurchase);

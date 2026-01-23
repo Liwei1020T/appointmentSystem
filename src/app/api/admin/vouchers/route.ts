@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
+import { parseValidityDays } from '@/lib/voucher-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,9 +32,7 @@ export async function POST(request: NextRequest) {
     const active = body.active ?? true;
     const isAutoIssue = body.isAutoIssue ?? body.is_auto_issue ?? false;
     const isFirstOrderOnly = body.isFirstOrderOnly ?? body.is_first_order_only ?? false;
-    const validityDaysRaw = body.validityDays ?? body.validity_days ?? null;
-    const validityDays =
-      validityDaysRaw === null || validityDaysRaw === undefined ? null : Number(validityDaysRaw);
+    const validityDays = parseValidityDays(body.validityDays ?? body.validity_days ?? null);
 
     if (
       !code ||
@@ -188,8 +187,7 @@ export async function PATCH(request: NextRequest) {
     if (isAutoIssue !== undefined) updateData.isAutoIssue = isAutoIssue;
     if (isFirstOrderOnly !== undefined) updateData.isFirstOrderOnly = isFirstOrderOnly;
     if (validityDaysRaw !== undefined) {
-      const parsedValidityDays =
-        validityDaysRaw === null || validityDaysRaw === '' ? null : Number(validityDaysRaw);
+      const parsedValidityDays = parseValidityDays(validityDaysRaw);
       if (parsedValidityDays !== null && Number.isNaN(parsedValidityDays)) {
         return errorResponse('有效期天数无效');
       }
