@@ -17,6 +17,7 @@ import {
   type UserPackage,
 } from '@/services/adminPackageService';
 import { Badge, Button, Card, StatsCard } from '@/components';
+import EmptyState from '@/components/EmptyState';
 import PageLoading from '@/components/loading/PageLoading';
 
 interface AdminPackageDetailPageProps {
@@ -149,9 +150,9 @@ export default function AdminPackageDetailPage({ packageId }: AdminPackageDetail
             {/* Purchase History */}
             <Card padding="lg">
               <h2 className="text-lg font-semibold text-text-primary mb-4">购买记录 ({purchases.length})</h2>
-              
+
               {purchases.length === 0 ? (
-                <p className="text-text-tertiary text-center py-8">暂无购买记录</p>
+                <EmptyState type="no-data" title="暂无购买记录" description="该套餐尚未被用户购买" size="sm" />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-border-subtle">

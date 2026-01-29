@@ -1,12 +1,13 @@
 /**
  * 邀请记录列表组件 (Referral List Component)
- * 
+ *
  * 显示用户的邀请记录列表
  */
 
 'use client';
 
 import { UserPlus, CheckCircle, Clock } from 'lucide-react';
+import EmptyState from '@/components/EmptyState';
 
 // 支持多种referral类型
 interface SimpleReferral {
@@ -24,16 +25,13 @@ interface ReferralListProps {
 export default function ReferralList({ referrals }: ReferralListProps) {
   if (referrals.length === 0) {
     return (
-      <div className="bg-ink-surface rounded-lg border border-border-subtle p-8 text-center">
-        <div className="bg-ink-elevated rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-          <UserPlus className="w-8 h-8 text-text-tertiary" />
-        </div>
-        <h3 className="text-lg font-semibold text-text-primary mb-2">
-          暂无邀请记录
-        </h3>
-        <p className="text-sm text-text-tertiary">
-          分享你的邀请码给好友，开始赚取积分奖励
-        </p>
+      <div className="bg-ink-surface rounded-lg border border-border-subtle p-6">
+        <EmptyState
+          type="no-referrals"
+          title="暂无邀请记录"
+          description="分享你的邀请码给好友，开始赚取积分奖励"
+          size="md"
+        />
       </div>
     );
   }

@@ -4,7 +4,6 @@ import React from 'react';
 import { cubicBezier, motion } from 'framer-motion';
 import { Smartphone, Target, TrendingDown, Truck, QrCode, Gift } from 'lucide-react';
 import SpotlightCard from './SpotlightCard';
-import { cn } from '@/lib/utils';
 
 const features = [
   {
@@ -64,14 +63,14 @@ const itemVariants = {
 
 export default function Features() {
   return (
-    <section id="features" className="py-20 md:py-24 bg-ink">
+    <section id="features" className="py-20 md:py-24 bg-ink dark:bg-dark">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-bold text-text-primary mb-4 font-display"
+            className="text-3xl md:text-4xl font-bold text-text-primary dark:text-gray-100 mb-4 font-display"
           >
             为什么选择我们
           </motion.h2>
@@ -80,7 +79,7 @@ export default function Features() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-lg text-text-secondary max-w-2xl mx-auto"
+            className="text-lg text-text-secondary dark:text-gray-400 max-w-2xl mx-auto"
           >
             打造专业、透明、便捷的穿线体验
           </motion.p>
@@ -99,15 +98,15 @@ export default function Features() {
               variants={itemVariants}
               className="h-full"
             >
-              <SpotlightCard className="h-full p-6 md:p-8 flex flex-col hover:shadow-card-hover transition-shadow duration-300 bg-white">
+              <SpotlightCard className="h-full p-6 md:p-8 flex flex-col hover:shadow-card-hover transition-shadow duration-300 bg-white dark:bg-dark-elevated">
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${feature.bg} ${feature.text}`}>
                   {feature.icon}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-text-primary mb-3 font-display">
+                  <h3 className="text-xl font-bold text-text-primary dark:text-gray-100 mb-3 font-display">
                     {feature.title}
                   </h3>
-                  <p className="text-text-secondary text-sm leading-relaxed">
+                  <p className="text-text-secondary dark:text-gray-400 text-sm leading-relaxed">
                     {feature.description}
                   </p>
                 </div>

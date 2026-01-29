@@ -12,15 +12,12 @@
  * - 收入 = amount 求和
  * - 活跃用户 = 不重复 userId 数量
  */
-
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
-import { errorResponse, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
-
 export const dynamic = 'force-dynamic';
-
 /**
  * GET /api/admin/packages/sales
  * Query:
@@ -31,25 +28,20 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
-
     const searchParams = request.nextUrl.searchParams;
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const packageId = searchParams.get('packageId');
-
     const confirmedStatuses = ['success', 'completed'] as const;
-
     // 时间范围筛选（可选）
     const createdAt: { gte?: Date; lte?: Date } = {};
     if (startDate) createdAt.gte = new Date(startDate);
     if (endDate) createdAt.lte = new Date(endDate);
-
     const where = {
       packageId: packageId || { not: null },
       status: { in: confirmedStatuses as unknown as string[] },
       ...(startDate || endDate ? { createdAt } : {}),
     } as const;
-
     const payments = await prisma.payment.findMany({
       where,
       select: {
@@ -60,17 +52,14 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'desc' },
     });
-
     const packageIds = Array.from(
       new Set(payments.map((p) => p.packageId).filter(Boolean) as string[])
     );
-
     const packages = await prisma.package.findMany({
       where: { id: { in: packageIds } },
       select: { id: true, name: true },
     });
     const packageNameById = new Map(packages.map((p) => [p.id, p.name]));
-
     // 按 packageId 聚合
     const acc = new Map<
       string,
@@ -80,7 +69,6 @@ export async function GET(request: NextRequest) {
         userIds: Set<string>;
       }
     >();
-
     for (const payment of payments) {
       const pid = payment.packageId;
       if (!pid) continue;
@@ -94,12 +82,10 @@ export async function GET(request: NextRequest) {
       current.userIds.add(payment.userId);
       acc.set(pid, current);
     }
-
     const period =
       startDate || endDate
         ? `${startDate || ''}~${endDate || ''}`.replace(/~$/, '')
         : 'all';
-
     const data = Array.from(acc.entries()).map(([pid, stats]) => {
       const packageName = packageNameById.get(pid) || '套餐';
       const activeUsers = stats.userIds.size;
@@ -121,7 +107,6 @@ export async function GET(request: NextRequest) {
         revenue: stats.totalRevenue,
       };
     });
-
     // 保持输出稳定：无数据时返回空数组
     return successResponse(data);
   } catch (error) {

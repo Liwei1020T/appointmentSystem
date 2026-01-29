@@ -25,6 +25,8 @@ import {
   type PackageSalesData,
 } from '@/services/adminPackageService';
 import { Badge, Button, Card, Input, StatsCard, Tabs } from '@/components';
+import EmptyState from '@/components/EmptyState';
+import { SkeletonCard } from '@/components/Skeleton';
 import SectionLoading from '@/components/loading/SectionLoading';
 import { Search } from 'lucide-react';
 
@@ -300,14 +302,18 @@ export default function AdminPackageListPage() {
 
         {/* Loading State */}
         {loading ? (
-          <SectionLoading label="加载套餐..." minHeightClassName="min-h-[240px]" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
         ) : (
           <>
             {/* Packages Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               {packages.length === 0 ? (
-                <div className="col-span-full text-center py-12">
-                  <p className="text-text-tertiary">暂无套餐数据</p>
+                <div className="col-span-full">
+                  <EmptyState type="no-packages" />
                 </div>
               ) : (
                 packages.map((pkg) => {
@@ -508,7 +514,11 @@ export default function AdminPackageListPage() {
                 <Button
                   variant="secondary"
                   onClick={() => {
-                    showCreateModal ? setShowCreateModal(false) : setShowEditModal(false);
+                    if (showCreateModal) {
+                      setShowCreateModal(false);
+                    } else {
+                      setShowEditModal(false);
+                    }
                     resetForm();
                     setSelectedPackage(null);
                   }}

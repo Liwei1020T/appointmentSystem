@@ -22,6 +22,7 @@ import {
   type StockChangeType,
 } from '@/services/inventoryService';
 import { Badge, Button, Card, Input, StatsCard } from '@/components';
+import EmptyState from '@/components/EmptyState';
 import PageLoading from '@/components/loading/PageLoading';
 import { AlertTriangle } from 'lucide-react';
 
@@ -431,7 +432,7 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
                     </div>
                     <div>
                       <span className="text-sm font-medium text-text-primary">推荐球线</span>
-                      <p className="text-xs text-text-tertiary">开启后将在用户端显示"推荐"标签</p>
+                      <p className="text-xs text-text-tertiary">开启后将在用户端显示&quot;推荐&quot;标签</p>
                     </div>
                   </label>
                 </div>
@@ -519,7 +520,7 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
               <h2 className="text-lg font-semibold text-text-primary mb-4">库存变更记录</h2>
 
               {stockLogs.length === 0 ? (
-                <p className="text-text-tertiary text-center py-8">暂无库存变更记录</p>
+                <EmptyState type="no-data" title="暂无库存变更记录" description="开始使用后将显示库存变动历史" size="sm" />
               ) : (
                 <div className="space-y-4">
                   {stockLogs.map((log) => {

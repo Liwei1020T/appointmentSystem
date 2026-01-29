@@ -11,8 +11,9 @@
  */
 
 import React from 'react';
+import Image from 'next/image';
 import { Smartphone, AlertCircle, Copy, Check } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 interface TngQRCodeDisplayProps {
@@ -22,11 +23,20 @@ interface TngQRCodeDisplayProps {
 
 export default function TngQRCodeDisplay({ amount, orderId }: TngQRCodeDisplayProps) {
   const [copied, setCopied] = useState(false);
+  const [imageExists, setImageExists] = useState(false);
 
   // Configuration - can be set via environment variables
   const qrCodeUrl = process.env.NEXT_PUBLIC_TNG_QR_PATH || '/images/tng-qr-code.png';
   const merchantPhone = process.env.NEXT_PUBLIC_MERCHANT_PHONE || '01X-XXXX-XXXX';
   const merchantName = process.env.NEXT_PUBLIC_MERCHANT_NAME || 'LW String Studio';
+
+  // Check if QR code image exists
+  useEffect(() => {
+    const img = document.createElement('img');
+    img.onload = () => setImageExists(true);
+    img.onerror = () => setImageExists(false);
+    img.src = qrCodeUrl;
+  }, [qrCodeUrl]);
 
   const handleCopyPhone = () => {
     navigator.clipboard.writeText(merchantPhone);
@@ -36,51 +46,55 @@ export default function TngQRCodeDisplay({ amount, orderId }: TngQRCodeDisplayPr
   };
 
   return (
-    <div className="rounded-lg border border-border-subtle bg-ink-surface p-6">
+    <div className="rounded-lg border border-border-subtle dark:border-gray-700 bg-ink-surface dark:bg-dark-elevated p-6">
       {/* 标题 */}
       <div className="mb-4 flex items-center gap-3">
         <div className="rounded-full bg-accent p-2">
           <Smartphone className="h-6 w-6 text-text-onAccent" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-text-primary">Touch &apos;n Go eWallet 扫码支付</h3>
-          <p className="text-sm text-text-secondary">使用 TNG 应用扫描二维码完成支付</p>
+          <h3 className="text-lg font-semibold text-text-primary dark:text-gray-100">Touch &apos;n Go eWallet 扫码支付</h3>
+          <p className="text-sm text-text-secondary dark:text-gray-400">使用 TNG 应用扫描二维码完成支付</p>
         </div>
       </div>
 
       {/* 支付金额 */}
-      <div className="mb-4 rounded-lg bg-ink-surface p-4 text-center">
-        <div className="text-sm text-text-secondary">应付金额</div>
+      <div className="mb-4 rounded-lg bg-ink-surface dark:bg-dark-surface p-4 text-center">
+        <div className="text-sm text-text-secondary dark:text-gray-400">应付金额</div>
         <div className="text-4xl font-bold text-accent">RM {amount.toFixed(2)}</div>
-        <div className="mt-1 text-xs text-text-tertiary">订单编号：{orderId.slice(0, 8)}</div>
+        <div className="mt-1 text-xs text-text-tertiary dark:text-gray-500">订单编号：{orderId.slice(0, 8)}</div>
       </div>
 
       {/* 二维码 */}
-      <div className="mb-4 flex justify-center rounded-lg bg-ink-surface p-6">
+      <div className="mb-4 flex justify-center rounded-lg bg-ink-surface dark:bg-dark-surface p-6">
         <div className="relative">
-          {/* TODO: 替换为实际的 QR Code 图片 */}
-          <div className="flex h-64 w-64 items-center justify-center rounded-lg border-2 border-dashed border-border-subtle bg-ink-elevated">
-            <div className="text-center">
-              <Smartphone className="mx-auto h-12 w-12 text-text-tertiary" />
-              <p className="mt-2 text-sm text-text-tertiary">TNG 收款码</p>
-              <p className="text-xs text-text-tertiary">请放置实际二维码图片</p>
+          {imageExists ? (
+            <Image
+              src={qrCodeUrl}
+              alt="TNG QR Code"
+              width={256}
+              height={256}
+              className="rounded-lg border-2 border-border-subtle dark:border-gray-700"
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAQMDBAMBAAAAAAAAAAAAAQIDBAAFEQYHEiExQVFh/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAZEQADAQEBAAAAAAAAAAAAAAAAAQIRAwT/2gAMAwEAAhEDEEA/ANLt+5tlhW+FGFsuB8RYzSh5kJT+lKRX0YH2mlKZJon/2Q=="
+            />
+          ) : (
+            <div className="flex h-64 w-64 items-center justify-center rounded-lg border-2 border-dashed border-border-subtle dark:border-gray-700 bg-ink-elevated dark:bg-dark-elevated">
+              <div className="text-center">
+                <Smartphone className="mx-auto h-12 w-12 text-text-tertiary dark:text-gray-500" />
+                <p className="mt-2 text-sm text-text-tertiary dark:text-gray-500">TNG 收款码</p>
+                <p className="text-xs text-text-tertiary dark:text-gray-500">请放置实际二维码图片</p>
+              </div>
             </div>
-          </div>
-
-          {/* 如果有实际图片，使用下面的代码：
-          <img 
-            src={qrCodeUrl} 
-            alt="TNG QR Code" 
-            className="h-64 w-64 rounded-lg border-2 border-border-subtle"
-          />
-          */}
+          )}
         </div>
       </div>
 
       {/* 支付步骤说明 */}
-      <div className="mb-4 rounded-lg bg-ink-surface p-4">
-        <h4 className="mb-3 font-semibold text-text-primary">支付步骤：</h4>
-        <ol className="space-y-2 text-sm text-text-secondary">
+      <div className="mb-4 rounded-lg bg-ink-surface dark:bg-dark-surface p-4">
+        <h4 className="mb-3 font-semibold text-text-primary dark:text-gray-100">支付步骤：</h4>
+        <ol className="space-y-2 text-sm text-text-secondary dark:text-gray-400">
           <li className="flex gap-2">
             <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-text-onAccent">
               1
@@ -123,31 +137,31 @@ export default function TngQRCodeDisplay({ amount, orderId }: TngQRCodeDisplayPr
       </div>
 
       {/* 手动转账选项 */}
-      <div className="rounded-lg border border-border-subtle bg-ink-surface p-4">
-        <h4 className="mb-2 text-sm font-semibold text-text-primary">或使用手动转账</h4>
+      <div className="rounded-lg border border-border-subtle dark:border-gray-700 bg-ink-surface dark:bg-dark-surface p-4">
+        <h4 className="mb-2 text-sm font-semibold text-text-primary dark:text-gray-100">或使用手动转账</h4>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-text-secondary">TNG 电话号码：</span>
-          <code className="rounded bg-ink-elevated px-2 py-1 text-sm font-mono text-text-primary">
+          <span className="text-sm text-text-secondary dark:text-gray-400">TNG 电话号码：</span>
+          <code className="rounded bg-ink-elevated dark:bg-dark-elevated px-2 py-1 text-sm font-mono text-text-primary dark:text-gray-100">
             {merchantPhone}
           </code>
           <button
             onClick={handleCopyPhone}
-            className="rounded-lg p-1.5 hover:bg-ink"
+            className="rounded-lg p-1.5 hover:bg-ink dark:hover:bg-gray-700"
             title="复制电话号码"
           >
             {copied ? (
               <Check className="h-4 w-4 text-success" />
             ) : (
-              <Copy className="h-4 w-4 text-text-secondary" />
+              <Copy className="h-4 w-4 text-text-secondary dark:text-gray-400" />
             )}
           </button>
         </div>
       </div>
 
       {/* 重要提示 */}
-      <div className="mt-4 flex gap-2 rounded-lg bg-warning/15 p-3">
+      <div className="mt-4 flex gap-2 rounded-lg bg-warning/15 dark:bg-warning/20 p-3">
         <AlertCircle className="h-5 w-5 shrink-0 text-warning" />
-        <div className="text-xs text-text-secondary">
+        <div className="text-xs text-text-secondary dark:text-gray-400">
           <p className="font-semibold">重要提示：</p>
           <ul className="mt-1 list-inside list-disc space-y-1">
             <li>请确保支付金额正确（RM {amount.toFixed(2)}）</li>

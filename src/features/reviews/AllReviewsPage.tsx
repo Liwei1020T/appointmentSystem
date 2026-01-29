@@ -10,7 +10,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, Star } from 'lucide-react';
-import { Card, Skeleton } from '@/components';
+import { Card, Skeleton, SkeletonReviewCard } from '@/components';
+import EmptyState from '@/components/EmptyState';
 import PageHeader from '@/components/layout/PageHeader';
 import StarRating from '@/components/StarRating';
 import { formatDate } from '@/lib/utils';
@@ -49,30 +50,18 @@ export default function AllReviewsPage() {
 
         {loading ? (
           <div className="space-y-4">
-            {[1, 2, 3].map((item) => (
-              <Card key={item} className="p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Skeleton className="h-3 w-24" />
-                      <Skeleton className="h-3 w-16" />
-                    </div>
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-4/5" />
-                    <div className="flex items-center gap-2">
-                      <Skeleton className="h-3 w-20" />
-                      <Skeleton className="h-3 w-28" />
-                    </div>
-                  </div>
-                  <Skeleton className="h-4 w-4" />
-                </div>
-              </Card>
-            ))}
+            <SkeletonReviewCard />
+            <SkeletonReviewCard />
+            <SkeletonReviewCard />
           </div>
         ) : reviews.length === 0 ? (
-          <Card className="p-6">
-            <p className="text-sm text-text-secondary">暂无公开评价</p>
-          </Card>
+          <EmptyState
+            type="no-reviews"
+            title="暂无公开评价"
+            description="成为第一个分享体验的用户吧"
+            actionLabel="立即预约"
+            actionHref="/booking"
+          />
         ) : (
           <div className="space-y-4">
             {reviews.map((review) => (

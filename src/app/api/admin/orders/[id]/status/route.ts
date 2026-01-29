@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/server-auth';
 import { parseJson } from '@/lib/validation';
 import { okResponse, failResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
 import { updateAdminOrderStatus } from '@/server/services/admin-order.service';
 import { handleApiError } from '@/lib/api/handleApiError';
+import type { OrderStatus } from '@/server/services/order-status.service';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +32,11 @@ export async function PATCH(
       return failResponse('UNPROCESSABLE_ENTITY', 'Invalid request body', 422, parsed.error.flatten());
     }
 
-    const order = await updateAdminOrderStatus(params?.id, parsed.data.status as any, parsed.data.notes);
+    const order = await updateAdminOrderStatus(
+      params?.id,
+      parsed.data.status as OrderStatus,
+      parsed.data.notes
+    );
     return okResponse(order);
   } catch (error) {
     return handleApiError(error);

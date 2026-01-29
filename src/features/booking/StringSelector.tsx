@@ -156,10 +156,6 @@ export default function StringSelector({ selectedString, onSelect, onNext, hideB
     }
   }, [selectedString, onSelect]);
 
-  const handleClearSelection = useCallback(() => {
-    onSelect(null);
-  }, [onSelect]);
-
   // Loading state
   if (loading) {
     return (
@@ -282,7 +278,6 @@ export default function StringSelector({ selectedString, onSelect, onNext, hideB
       {!hideBottomBar && (
         <StickySelectionBar
           selectedString={selectedString}
-          onClearSelection={handleClearSelection}
           onNext={onNext}
         />
       )}

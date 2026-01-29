@@ -69,7 +69,7 @@ const cardVariants = {
 
 export default function Reviews() {
   return (
-    <section id="reviews" className="py-20 md:py-24 bg-ink-elevated border-t border-b border-border-subtle">
+    <section id="reviews" className="py-20 md:py-24 bg-ink-elevated dark:bg-dark-elevated border-t border-b border-border-subtle dark:border-gray-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header & Summary */}
@@ -78,7 +78,7 @@ export default function Reviews() {
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-bold text-text-primary mb-4 font-display"
+            className="text-3xl md:text-4xl font-bold text-text-primary dark:text-gray-100 mb-4 font-display"
           >
             球友心声
           </motion.h2>
@@ -88,17 +88,17 @@ export default function Reviews() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="flex flex-wrap items-center justify-center gap-4 text-sm text-text-secondary bg-ink inline-flex px-6 py-3 rounded-full border border-border-subtle shadow-sm"
+            className="flex flex-wrap items-center justify-center gap-4 text-sm text-text-secondary dark:text-gray-400 bg-ink dark:bg-dark inline-flex px-6 py-3 rounded-full border border-border-subtle dark:border-gray-700 shadow-sm"
           >
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 fill-warning text-warning" />
-              <span className="font-semibold text-text-primary">4.8</span> 平均评分
+              <span className="font-semibold text-text-primary dark:text-gray-100">4.8</span> 平均评分
             </div>
-            <span className="text-border-subtle">|</span>
+            <span className="text-border-subtle dark:text-gray-700">|</span>
             <div className="flex items-center gap-1">
               <span className="font-semibold text-accent">500+</span> 球友信赖
             </div>
-            <span className="text-border-subtle">|</span>
+            <span className="text-border-subtle dark:text-gray-700">|</span>
             <div className="flex items-center gap-1">
               <CheckCircle2 className="w-4 h-4 text-accent" />
               真实反馈
@@ -138,20 +138,20 @@ export default function Reviews() {
                 </div>
 
                 {/* Content */}
-                <p className="text-text-secondary text-sm leading-relaxed mb-6 flex-grow line-clamp-3">
+                <p className="text-text-secondary dark:text-gray-400 text-sm leading-relaxed mb-6 flex-grow line-clamp-3">
                   &ldquo;{review.content}&rdquo;
                 </p>
 
                 {/* Footer */}
-                <div className="flex items-center mt-auto border-t border-border-subtle/50 pt-4">
-                  <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-xs mr-3">
+                <div className="flex items-center mt-auto border-t border-border-subtle/50 dark:border-gray-700/50 pt-4">
+                  <div className="w-8 h-8 rounded-full bg-accent/10 dark:bg-accent/20 flex items-center justify-center text-accent font-bold text-xs mr-3">
                     {review.name[0]}
                   </div>
                   <div>
-                    <div className="font-medium text-text-primary text-sm">{review.name}</div>
-                    <div className="text-xs text-text-tertiary">{review.role}</div>
+                    <div className="font-medium text-text-primary dark:text-gray-100 text-sm">{review.name}</div>
+                    <div className="text-xs text-text-tertiary dark:text-gray-500">{review.role}</div>
                   </div>
-                  <Quote className="w-4 h-4 text-border-subtle ml-auto" />
+                  <Quote className="w-4 h-4 text-border-subtle dark:text-gray-700 ml-auto" />
                 </div>
               </SpotlightCard>
             </motion.div>

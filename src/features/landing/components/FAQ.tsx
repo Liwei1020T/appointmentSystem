@@ -42,18 +42,18 @@ export default function FAQ() {
   };
 
   return (
-    <section id="faq" className="py-20 md:py-24 bg-ink-elevated">
+    <section id="faq" className="py-20 md:py-24 bg-ink-elevated dark:bg-dark-elevated">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <motion.h2 
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-bold text-text-primary mb-4"
+            className="text-3xl md:text-4xl font-bold text-text-primary dark:text-gray-100 mb-4"
           >
             常见问题
           </motion.h2>
-          <p className="text-lg text-text-secondary">
+          <p className="text-lg text-text-secondary dark:text-gray-400">
             解答您关于服务的疑问
           </p>
         </div>
@@ -66,21 +66,21 @@ export default function FAQ() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.05 }}
-              className="border border-border-subtle rounded-xl bg-ink overflow-hidden hover:border-accent/30 transition-colors"
+              className="border border-border-subtle dark:border-gray-700 rounded-xl bg-ink dark:bg-dark overflow-hidden hover:border-accent/30 transition-colors"
             >
               <button
                 onClick={() => toggleIndex(index)}
                 className="w-full flex items-center justify-between p-5 text-left focus:outline-none"
                 aria-expanded={activeIndex === index}
               >
-                <span className={`text-lg font-medium transition-colors ${activeIndex === index ? 'text-accent' : 'text-text-primary'}`}>
+                <span className={`text-lg font-medium transition-colors ${activeIndex === index ? 'text-accent' : 'text-text-primary dark:text-gray-100'}`}>
                   {faq.question}
                 </span>
                 <motion.div
                   animate={{ rotate: activeIndex === index ? 180 : 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <ChevronDown className="w-5 h-5 text-text-tertiary" />
+                  <ChevronDown className="w-5 h-5 text-text-tertiary dark:text-gray-500" />
                 </motion.div>
               </button>
 
@@ -92,7 +92,7 @@ export default function FAQ() {
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
                   >
-                    <div className="p-5 pt-0 text-text-secondary leading-relaxed border-t border-dashed border-border-subtle/50 mt-2">
+                    <div className="p-5 pt-0 text-text-secondary dark:text-gray-400 leading-relaxed border-t border-dashed border-border-subtle/50 dark:border-gray-700/50 mt-2">
                       {faq.answer}
                     </div>
                   </motion.div>
@@ -107,15 +107,15 @@ export default function FAQ() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="bg-ink p-6 rounded-2xl border border-border-subtle flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left"
+          className="bg-ink dark:bg-dark p-6 rounded-2xl border border-border-subtle dark:border-gray-700 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left"
         >
           <div className="flex items-center gap-3">
-            <div className="bg-info/10 p-2 rounded-full text-info">
+            <div className="bg-info/10 dark:bg-info/20 p-2 rounded-full text-info">
               <HelpCircle className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-semibold text-text-primary">还有其他问题？</h4>
-              <p className="text-sm text-text-secondary">注册账户后查看更多指引或联系我们</p>
+              <h4 className="font-semibold text-text-primary dark:text-gray-100">还有其他问题？</h4>
+              <p className="text-sm text-text-secondary dark:text-gray-400">注册账户后查看更多指引或联系我们</p>
             </div>
           </div>
           <Button 

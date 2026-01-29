@@ -2,20 +2,15 @@
  * User vouchers API
  * GET /api/user/vouchers
  */
-
 import { requireUser } from '@/lib/server-auth';
-import { okResponse, failResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
+import { okResponse } from '@/lib/api-response';
 import { getUserVouchers } from '@/server/services/voucher.service';
 import { handleApiError } from '@/lib/api/handleApiError';
-
 export const dynamic = 'force-dynamic';
-
 export async function GET() {
   try {
     const user = await requireUser();
     const userVouchers = await getUserVouchers(user.id);
-
     const vouchers = userVouchers.map((uv) => {
       const v = uv.voucher;
       const now = new Date();
@@ -28,7 +23,6 @@ export async function GET() {
         typeof v.minPurchase === 'object' && 'toNumber' in v.minPurchase
           ? v.minPurchase.toNumber()
           : Number(v.minPurchase || 0);
-
       return {
         id: uv.id,
         voucherId: v.id,
@@ -46,7 +40,6 @@ export async function GET() {
         createdAt: uv.createdAt,
       };
     });
-
     return okResponse({ vouchers });
   } catch (error) {
     return handleApiError(error);

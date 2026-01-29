@@ -7,7 +7,6 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { requireUser } from '@/lib/server-auth';
 import { okResponse, failResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
 import { getUserVouchers, getUserVouchersMapped } from '@/server/services/voucher.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 

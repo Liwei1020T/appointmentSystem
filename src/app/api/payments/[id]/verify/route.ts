@@ -4,7 +4,6 @@ import { requireAdmin } from '@/lib/server-auth';
 import { isValidUUID } from '@/lib/utils';
 import { parseJson } from '@/lib/validation';
 import { okResponse, failResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
 import { verifyPayment } from '@/server/services/payment.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 

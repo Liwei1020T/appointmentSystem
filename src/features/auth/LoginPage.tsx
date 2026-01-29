@@ -149,8 +149,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-ink flex items-center justify-center p-6">
-      <div className="w-full max-w-4xl bg-white border border-border-subtle rounded-3xl shadow-lg overflow-hidden animate-slide-up">
+    <div className="min-h-screen bg-ink dark:bg-dark flex items-center justify-center p-6">
+      <div className="w-full max-w-4xl bg-white dark:bg-dark-elevated border border-border-subtle rounded-3xl shadow-lg overflow-hidden animate-slide-up">
         <div className="grid md:grid-cols-[1.1fr_1fr]">
           {/* Left: Brand Panel */}
           <div className="p-8 bg-gradient-to-br from-accent to-accent-alt text-white">
@@ -173,10 +173,10 @@ export default function LoginPage() {
           </div>
 
           {/* Right: Form */}
-          <div className="p-8">
+          <div className="p-8 dark:bg-dark-elevated">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-text-primary font-display">登录账户</h2>
-              <p className="text-sm text-text-secondary mt-1">
+              <h2 className="text-2xl font-bold text-text-primary dark:text-dark-text-primary font-display">登录账户</h2>
+              <p className="text-sm text-text-secondary dark:text-dark-text-secondary mt-1">
                 输入手机号与密码继续
               </p>
             </div>
@@ -236,9 +236,9 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 pt-6 border-t border-border-subtle text-center text-sm text-text-secondary">
+            <div className="mt-6 pt-6 border-t border-border-subtle text-center text-sm text-text-secondary dark:text-dark-text-secondary">
               还没有账户？{' '}
-              <Link href="/signup" className="text-accent hover:text-accent/80 font-semibold transition-colors">
+              <Link href="/signup" className="text-accent hover:text-accent/80 dark:text-accent dark:hover:text-accent/80 font-semibold transition-colors">
                 立即注册
               </Link>
             </div>

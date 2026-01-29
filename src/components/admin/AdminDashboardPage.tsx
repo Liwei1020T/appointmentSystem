@@ -17,6 +17,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Badge, Button, Card, StatsCard } from '@/components';
+import EmptyState from '@/components/EmptyState';
 import { DashboardSkeleton } from '@/components/skeletons';
 import LowStockAlert from '@/components/admin/LowStockAlert';
 import RestockModal from '@/components/admin/RestockModal';
@@ -294,9 +295,7 @@ export default function AdminDashboardPage() {
           </div>
           <div className="divide-y divide-border-subtle">
             {recentOrders.length === 0 ? (
-              <div className="py-10 text-center text-text-tertiary">
-                <p>暂无订单</p>
-              </div>
+              <EmptyState type="no-orders" size="sm" />
             ) : (
               recentOrders.map((order) => (
                 <button

@@ -1,15 +1,118 @@
 /**
- * Web Push Service Worker
- * 
- * 处理 Web Push 通知的接收和显示
- * - 监听推送消息
- * - 显示通知
- * - 处理通知点击事件
- * - 处理通知关闭事件
+ * Web Push Service Worker + Offline Caching
+ *
+ * 功能：
+ * - 处理 Web Push 通知的接收和显示
+ * - 提供离线缓存支持
+ * - 缓存静态资源和 API 响应
  */
 
 /// <reference lib="webworker" />
 declare const self: ServiceWorkerGlobalScope;
+
+// Cache names
+const CACHE_NAME = 'lw-string-v1';
+const STATIC_CACHE = 'lw-string-static-v1';
+const DYNAMIC_CACHE = 'lw-string-dynamic-v1';
+
+// Assets to cache immediately on install
+const STATIC_ASSETS = [
+  '/',
+  '/offline',
+  '/manifest.webmanifest',
+  '/images/icon-192x192.png',
+  '/images/icon-512x512.png',
+];
+
+// ============================
+// Cache Management
+// ============================
+
+// Cache static assets on install
+async function cacheStaticAssets() {
+  const cache = await caches.open(STATIC_CACHE);
+  console.log('[Service Worker] Caching static assets');
+  return cache.addAll(STATIC_ASSETS.filter(url => !url.includes('offline')));
+}
+
+// Network first, fallback to cache strategy
+async function networkFirst(request: Request): Promise<Response> {
+  try {
+    const networkResponse = await fetch(request);
+    // Cache successful responses
+    if (networkResponse.ok) {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch (error) {
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    // Return offline page for navigation requests
+    if (request.mode === 'navigate') {
+      const offlinePage = await caches.match('/offline');
+      if (offlinePage) return offlinePage;
+    }
+    throw error;
+  }
+}
+
+// Cache first, fallback to network strategy
+async function cacheFirst(request: Request): Promise<Response> {
+  const cachedResponse = await caches.match(request);
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+  try {
+    const networkResponse = await fetch(request);
+    if (networkResponse.ok) {
+      const cache = await caches.open(STATIC_CACHE);
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch (error) {
+    throw error;
+  }
+}
+
+// ============================
+// Fetch Event Handler
+// ============================
+
+self.addEventListener('fetch', (event: FetchEvent) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip non-HTTP requests and external resources
+  if (!request.url.startsWith('http')) return;
+  if (url.origin !== self.location.origin) return;
+
+  // Skip API requests for auth/payment (sensitive data)
+  if (url.pathname.startsWith('/api/auth') ||
+      url.pathname.startsWith('/api/payments')) {
+    return;
+  }
+
+  // Static assets - cache first
+  if (url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|webp|ico|woff2?)$/)) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // API requests - network first with cache fallback
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // Navigation requests - network first
+  if (request.mode === 'navigate') {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+});
 
 // ============================
 // Push Event Listener
@@ -180,7 +283,20 @@ self.addEventListener('notificationclose', (event: NotificationEvent) => {
 
 self.addEventListener('activate', (event) => {
   console.log('[Service Worker] Activated');
-  event.waitUntil(self.clients.claim());
+
+  // Clean up old caches
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => name !== STATIC_CACHE && name !== DYNAMIC_CACHE && name !== CACHE_NAME)
+          .map((name) => {
+            console.log('[Service Worker] Deleting old cache:', name);
+            return caches.delete(name);
+          })
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
 // ============================
@@ -189,7 +305,9 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('install', (event) => {
   console.log('[Service Worker] Installed');
-  self.skipWaiting();
+  event.waitUntil(
+    cacheStaticAssets().then(() => self.skipWaiting())
+  );
 });
 
 export {};

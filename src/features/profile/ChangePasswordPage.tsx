@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { changePassword } from '@/services/profileService';
-import { Card, Button, Toast, Input } from '@/components';
+import { Card, Button, Toast } from '@/components';
 import PageLoading from '@/components/loading/PageLoading';
 
 export default function ChangePasswordPage() {
@@ -121,10 +121,11 @@ export default function ChangePasswordPage() {
           router.back();
         }, 2000);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '修改失败';
       setToast({
         show: true,
-        message: err.message || '修改失败',
+        message,
         type: 'error',
       });
     } finally {

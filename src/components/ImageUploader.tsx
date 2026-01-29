@@ -14,8 +14,8 @@
 
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Upload, X } from 'lucide-react';
 import { uploadImage, UploadOptions, UploadResult } from '@/services/imageUploadService';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
 
@@ -58,6 +58,18 @@ export default function ImageUploader({
   );
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Track blob URLs for cleanup on unmount
+  const blobUrlsRef = useRef<Set<string>>(new Set());
+
+  // Cleanup blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      blobUrlsRef.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      blobUrlsRef.current.clear();
+    };
+  }, []);
 
   // 当前可上传数量
   const canUploadMore = images.length < maxFiles;
@@ -80,12 +92,16 @@ export default function ImageUploader({
     }
 
     // 创建预览
-    const newPreviews: ImagePreview[] = validFiles.map((file) => ({
-      url: URL.createObjectURL(file),
-      file,
-      uploaded: false,
-      uploading: true,
-    }));
+    const newPreviews: ImagePreview[] = validFiles.map((file) => {
+      const blobUrl = URL.createObjectURL(file);
+      blobUrlsRef.current.add(blobUrl);
+      return {
+        url: blobUrl,
+        file,
+        uploaded: false,
+        uploading: true,
+      };
+    });
 
     setImages((prev) => [...prev, ...newPreviews]);
 
@@ -99,13 +115,19 @@ export default function ImageUploader({
         const result = await uploadImage(file, uploadOptions);
         results.push(result);
         
-        // 更新预览状态
+        // 更新预览状态 - 如果上传成功，替换 blob URL 为服务器 URL
         setImages((prev) =>
-          prev.map((img, idx) =>
-            idx === images.length + i
-              ? { ...img, uploading: false, uploaded: result.success, url: result.url || img.url }
-              : img
-          )
+          prev.map((img, idx) => {
+            if (idx === images.length + i) {
+              // 如果上传成功且有新 URL，清理旧的 blob URL
+              if (result.success && result.url && img.url.startsWith('blob:')) {
+                blobUrlsRef.current.delete(img.url);
+                URL.revokeObjectURL(img.url);
+              }
+              return { ...img, uploading: false, uploaded: result.success, url: result.url || img.url };
+            }
+            return img;
+          })
         );
 
         if (!result.success) {
@@ -116,16 +138,21 @@ export default function ImageUploader({
         onUploadError?.('上传失败，请重试');
         
         // 移除失败的预览
-        setImages((prev) => prev.filter((_, idx) => idx !== images.length + i));
+        setImages((prev) => {
+          const removed = prev[images.length + i];
+          if (removed && removed.url.startsWith('blob:')) {
+            blobUrlsRef.current.delete(removed.url);
+            URL.revokeObjectURL(removed.url);
+          }
+          return prev.filter((_, idx) => idx !== images.length + i);
+        });
       }
     }
 
-    // 清理对象 URL
-    newPreviews.forEach((preview) => {
-      if (preview.file) {
-        URL.revokeObjectURL(preview.url);
-      }
-    });
+    // NOTE: Blob URLs are now cleaned up in three places:
+    // 1. On successful upload - replaced by server URL
+    // 2. On failed upload - removed from preview
+    // 3. On component unmount - cleanup effect
 
     // 回调成功结果
     const successResults = results.filter((r) => r.success);
@@ -178,7 +205,15 @@ export default function ImageUploader({
 
   // 删除图片
   const handleDelete = (index: number) => {
-    setImages((prev) => prev.filter((_, idx) => idx !== index));
+    setImages((prev) => {
+      const removed = prev[index];
+      // Clean up blob URL if it's a local preview
+      if (removed && removed.url.startsWith('blob:')) {
+        blobUrlsRef.current.delete(removed.url);
+        URL.revokeObjectURL(removed.url);
+      }
+      return prev.filter((_, idx) => idx !== index);
+    });
     onDelete?.(index);
   };
 
@@ -186,7 +221,7 @@ export default function ImageUploader({
     <div className="space-y-3">
       {/* 标签 */}
       {label && (
-        <label className="block text-sm font-medium text-text-secondary">
+        <label className="block text-sm font-medium text-text-secondary dark:text-gray-400">
           {label}
         </label>
       )}
@@ -198,9 +233,9 @@ export default function ImageUploader({
             border-2 border-dashed rounded-lg p-6
             flex flex-col items-center justify-center
             cursor-pointer transition-all
-            ${isDragging 
-              ? 'border-accent-border bg-ink-elevated' 
-              : 'border-border-subtle hover:border-accent-border hover:bg-ink'
+            ${isDragging
+              ? 'border-accent-border bg-ink-elevated dark:bg-dark-elevated'
+              : 'border-border-subtle dark:border-gray-700 hover:border-accent-border hover:bg-ink dark:hover:bg-gray-800'
             }
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
@@ -209,11 +244,11 @@ export default function ImageUploader({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <Upload className="w-12 h-12 text-text-tertiary mb-3" />
-          <p className="text-text-secondary font-medium mb-1">
+          <Upload className="w-12 h-12 text-text-tertiary dark:text-gray-500 mb-3" />
+          <p className="text-text-secondary dark:text-gray-400 font-medium mb-1">
             {hint.replace('{max}', maxFiles.toString())}
           </p>
-          <p className="text-sm text-text-tertiary">
+          <p className="text-sm text-text-tertiary dark:text-gray-500">
             支持 JPG、PNG、WebP、GIF（最大5MB）
           </p>
         </div>
@@ -225,18 +260,19 @@ export default function ImageUploader({
           {images.map((image, index) => (
             <div
               key={index}
-              className="relative aspect-square rounded-lg overflow-hidden border border-border-subtle group"
+              className="relative aspect-square rounded-lg overflow-hidden border border-border-subtle dark:border-gray-700 group"
             >
-              {/* 图片 */}
+              {/* 图片 - 使用原生 img 因为支持 blob URLs */}
               <img
                 src={image.url}
                 alt={`预览 ${index + 1}`}
                 className="w-full h-full object-cover"
+                loading="lazy"
               />
 
               {/* 上传中遮罩 */}
               {image.uploading && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center">
                   <LoadingSpinner size="md" tone="inverse" className="w-8 h-8" />
                 </div>
               )}
@@ -245,7 +281,7 @@ export default function ImageUploader({
               {!image.uploading && (
                 <button
                   onClick={() => handleDelete(index)}
-                  className="absolute top-2 right-2 bg-danger text-text-primary rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-danger/90"
+                  className="absolute top-2 right-2 bg-danger text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-danger/90"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -253,7 +289,7 @@ export default function ImageUploader({
 
               {/* 已上传标识 */}
               {image.uploaded && !image.uploading && (
-                <div className="absolute bottom-2 right-2 bg-success text-text-primary text-xs px-2 py-1 rounded">
+                <div className="absolute bottom-2 right-2 bg-success text-white text-xs px-2 py-1 rounded">
                   已上传
                 </div>
               )}
@@ -264,7 +300,7 @@ export default function ImageUploader({
 
       {/* 图片数量提示 */}
       {images.length > 0 && (
-        <p className="text-sm text-text-tertiary">
+        <p className="text-sm text-text-tertiary dark:text-gray-500">
           已选择 {images.length} / {maxFiles} 张图片
         </p>
       )}

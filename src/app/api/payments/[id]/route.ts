@@ -1,6 +1,5 @@
 import { requireAuth } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { getPaymentForUser } from '@/server/services/payment.service';
 import { handleApiError } from '@/lib/api/handleApiError';

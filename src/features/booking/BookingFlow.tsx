@@ -478,10 +478,6 @@ export default function BookingFlow() {
       {step === 2 && (
         <StickySelectionBar
           selectedString={selectedString}
-          onClearSelection={() => {
-            setSelectedString(null);
-            setStep(1);
-          }}
           onNext={handleNext}
         />
       )}

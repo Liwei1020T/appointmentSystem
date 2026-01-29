@@ -137,5 +137,5 @@ netstat -ano | findstr :3000
 ## 下一步
 
 - 阅读 [迁移指南](./MIGRATION_GUIDE.md) 了解迁移详情
-- 查看 [API 文档](./api_spec.md) 了解接口
-- 查看 [ERD 文档](./erd.md) 了解数据库结构
+- 查看 [API 文档](../core/api_spec.md) 了解接口
+- 查看 [ERD 文档](../core/erd.md) 了解数据库结构

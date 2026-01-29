@@ -2,9 +2,23 @@ import { describe, it, expect } from 'vitest';
 import { getOrderEtaEstimate } from '@/lib/orderEta';
 import type { OrderWithDetails } from '@/services/orderService';
 
+type QueueEstimate = {
+  etaLabel?: string;
+  status?: string;
+  minDays?: number;
+  maxDays?: number;
+  queuePosition?: number;
+};
+
+type OrderWithQueue = OrderWithDetails & {
+  workQueueEstimate?: QueueEstimate;
+  queueEstimate?: QueueEstimate;
+  workQueue?: QueueEstimate;
+};
+
 // 创建模拟订单数据的工厂函数
-function createMockOrder(overrides: Partial<OrderWithDetails> = {}): OrderWithDetails {
-  return {
+function createMockOrder(overrides: Partial<OrderWithQueue> = {}): OrderWithQueue {
+  const base: OrderWithQueue = {
     id: 'test-order-id',
     userId: 'test-user-id',
     stringId: 'test-string-id',
@@ -24,8 +38,9 @@ function createMockOrder(overrides: Partial<OrderWithDetails> = {}): OrderWithDe
     ratingScore: null,
     ratingComment: null,
     ratedAt: null,
-    ...overrides,
-  } as OrderWithDetails;
+  };
+
+  return { ...base, ...overrides };
 }
 
 describe('getOrderEtaEstimate', () => {
@@ -56,7 +71,7 @@ describe('getOrderEtaEstimate', () => {
     });
 
     it('未知状态返回 neutral tone', () => {
-      const order = createMockOrder({ status: 'unknown' as any });
+      const order = createMockOrder({ status: 'unknown' as OrderWithDetails['status'] });
       const result = getOrderEtaEstimate(order);
 
       expect(result.tone).toBe('neutral');
@@ -70,7 +85,7 @@ describe('getOrderEtaEstimate', () => {
         status: 'pending',
       });
       // 添加队列估算数据
-      (order as any).workQueueEstimate = {
+      order.workQueueEstimate = {
         etaLabel: '明天完成',
         status: '已接单',
       };
@@ -84,7 +99,7 @@ describe('getOrderEtaEstimate', () => {
 
     it('有 minDays/maxDays 时格式化范围', () => {
       const order = createMockOrder({ status: 'pending' });
-      (order as any).workQueueEstimate = {
+      order.workQueueEstimate = {
         minDays: 2,
         maxDays: 4,
       };
@@ -97,7 +112,7 @@ describe('getOrderEtaEstimate', () => {
 
     it('minDays 和 maxDays 相同时只显示单个数字', () => {
       const order = createMockOrder({ status: 'pending' });
-      (order as any).workQueueEstimate = {
+      order.workQueueEstimate = {
         minDays: 3,
         maxDays: 3,
       };
@@ -110,7 +125,7 @@ describe('getOrderEtaEstimate', () => {
 
     it('有 queuePosition 时显示排队位置', () => {
       const order = createMockOrder({ status: 'pending' });
-      (order as any).workQueueEstimate = {
+      order.workQueueEstimate = {
         queuePosition: 5,
       };
 
@@ -131,7 +146,7 @@ describe('getOrderEtaEstimate', () => {
 
     it('支持 queueEstimate 别名', () => {
       const order = createMockOrder({ status: 'pending' });
-      (order as any).queueEstimate = {
+      order.queueEstimate = {
         etaLabel: '测试标签',
       };
 
@@ -142,7 +157,7 @@ describe('getOrderEtaEstimate', () => {
 
     it('支持 workQueue 别名', () => {
       const order = createMockOrder({ status: 'pending' });
-      (order as any).workQueue = {
+      order.workQueue = {
         etaLabel: '工作队列标签',
       };
 

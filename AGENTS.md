@@ -1,342 +1,538 @@
-🧠 AGENTS.md — AI Coding Agent Development Protocol
+# 🤖 AGENTS.md — AI Agent Development Protocol
 
-String Service Platform — Development Governance Document  
-版本：1.3  
-最后更新：2025-12-31  
-
----
-
-## 📌 1. 目的（Purpose）
-
-此文档用于规范项目中所有 AI Codex / LLM Agent 的开发行为，使其能够：
-
-- 在每次开发前 **自动理解整个项目上下文**  
-- 在开发执行过程中 **遵守一致的架构、风格与规范**  
-- 在开发结束后 **产出系统级文档并放入 `docs/` 文件夹**  
-- 确保未来所有 Agent 都能基于历史文档持续开发，而不会偏离项目方向  
-
-此文档是项目开发的 **唯一行为准则（Single Source of Truth for Agents）**。
+**String Service Platform — 通用 AI Agent 开发规范**
+**版本：2.0**
+**最后更新：2026-01-27**
+**适用于：Claude, GPT, Gemini, Copilot 及其他 AI 编程助手**
 
 ---
 
-## 📌 2. 开发前必须执行的步骤（MANDATORY）
+## 📌 1. 概述
 
-每次开始写代码前，AI Agent 必须执行以下动作：
+本文档是所有 AI Agent 在本项目中进行开发的**唯一行为准则**。
 
-### ✔ STEP 1：加载 `docs/` 下所有文档
+无论你是 Claude、GPT、Gemini 还是其他 AI 模型，在本项目中开发时**必须**遵循此规范。
 
-包括但不限于：
+### 核心原则
 
-- `docs/core/System-Design-Document.md`  
-- `docs/core/UI-Design-Guide.md`  
-- `docs/core/api_spec.md`  
-- `docs/core/erd.md`  
-- `docs/core/components.md`  
-- 以及 `docs/changelogs/` 下最新的变更日志（必须串读以确认上下文）  
-
-Agent 必须阅读这些文件并建立上下文。
-
-### ✔ STEP 2：理解或更新以下全局信息
-
-Agent 需要对以下内容有清晰理解（或在变更时同步更新文档）：
-
-- 系统架构  
-- 数据结构（ERD）  
-- API 规范  
-- 文件结构  
-- UI 组件规范（React + Tailwind）  
-- 技术栈与依赖  
-- 现有代码组织方式  
-- 已完成与未完成功能  
-- 命名规范（变量、文件、函数、组件）  
-- 当前存在的临时 / 占位接口（Next.js API stubs），需要在未来替换为真实 Supabase/Edge Functions 时同步更新文档  
-
-> Agent **不得在不了解上下文的情况下开始编码**。
-
-### ✔ STEP 3：生成 “Development Plan”（开发任务计划）
-
-在编写代码前，Agent 必须输出：
-
-- 要修改 / 新增的文件列表  
-- 各文件的修改说明  
-- 新设计的数据库字段必须包含迁移方案  
-- 新增 API 需描述输入 / 输出结构  
-- 新组件需描述复用方式  
-
-只有经过计划确认后，才能执行代码生成。
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    开发黄金法则                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. 先读后写 - 了解上下文再编码                              │
+│  2. 复用优先 - 使用现有组件和模块                            │
+│  3. 类型安全 - 拒绝 any，拥抱 TypeScript                    │
+│  4. 文档驱动 - 每次变更都有记录                              │
+│  5. 测试保障 - 关键逻辑必须有测试                            │
+│  6. 验证必过 - type-check + lint + test + build            │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 📌 3. 开发过程中的要求（BEST PRACTICES）
+## 📌 2. 开发前必须执行（BEFORE CODING）
 
-所有输出必须满足：
+### STEP 1：阅读项目文档
 
-### 3.1 代码风格一致性
+**必读文档清单：**
 
-使用技术栈：
+| 优先级 | 文档 | 路径 | 内容 |
+|--------|------|------|------|
+| 🔴 高 | 系统设计 | `docs/core/System-Design-Document.md` | 架构、技术栈、数据流 |
+| 🔴 高 | API 规范 | `docs/core/api_spec.md` | 114 个 API 端点定义 |
+| 🔴 高 | 数据库设计 | `docs/core/erd.md` | 25 个数据模型 |
+| 🟡 中 | 服务架构 | `docs/core/SERVICE_ARCHITECTURE.md` | 27 个服务层说明 |
+| 🟡 中 | 业务逻辑 | `docs/core/BUSINESS_LOGIC.md` | 核心算法规则 |
+| 🟡 中 | 组件库 | `docs/core/components.md` | UI 组件规范 |
+| 🟢 低 | 工具库 | `docs/core/LIB_UTILITIES.md` | Lib 函数说明 |
+| 🟢 低 | 最新变更 | `docs/changelogs/` | 最近的变更记录 |
 
-- React + TypeScript  
-- Tailwind CSS  
-- Supabase Client SDK  
-- Functional Component + Hooks  
-
-命名与结构：
-
-- 文件命名采用 **kebab-case** 或组件使用 **PascalCase**  
-- 逻辑模块化、可扩展  
-
-### 3.2 代码必须可运行，不可只做示意
-
-所有 Agent 生成代码必须：
-
-- 可直接复制并运行  
-- 不依赖未声明文件  
-- 不引用不存在的变量或库  
-- 遵循已有项目文件组织  
-
-### 3.3 代码必须有注释
-
-需要带解释性注释，包括：
-
-- 函数用途  
-- 参数说明  
-- 返回值  
-- 业务逻辑重点  
-- 数据流解释  
-
-### 3.4 新功能必须符合系统设计文档
-
-不允许：
-
-- 创建与现有结构冲突的 API  
-- 重复定义已有功能  
-- 破坏已定义的模块边界  
+> ⚠️ **禁止在未阅读相关文档的情况下编码**
 
 ---
 
-## 📌 4. 开发完成后必须执行的步骤（MANDATORY）
+### STEP 2：理解现有代码
 
-每次开发任务完成后，Agent 必须：
+在修改任何文件前，必须：
 
-### ✔ STEP 1：生成对应文档，并放入 `docs/` 文件夹
+1. **阅读目标文件** - 理解现有实现
+2. **追踪数据流** - 从 API → Service → Database
+3. **检查依赖** - 确认修改不会破坏其他模块
+4. **查看测试** - 了解现有测试覆盖
 
-必须产出的文档包括：
+---
 
-#### 4.1 `docs/changelogs/YYYY-MM/change_log_<date>.md`
+### STEP 3：生成开发计划
 
-内容包含：
-
-- 新增功能  
-- 修改功能  
-- API 更新  
-- 组件更新  
-- 数据库变更  
-- 影响范围  
-- 如何测试  
-
-格式示例：
+在编写代码前，必须输出开发计划：
 
 ```markdown
-# Change Log — 2025-12-11
+## Development Plan
 
-## Summary
-Added booking discount system + updated inventory logic.
+### 目标
+[一句话描述要实现的功能]
 
-## Changes
-- Added function: applyCoupon() in booking API
-- Updated table: orders (new field: discount_amount)
-- Updated UI: BookingScreen shows coupon selector
-- Updated AdminAnalytics dashboard profit logic
+### 影响范围
+- 修改文件：[列出所有要修改的文件]
+- 新增文件：[列出所有新增的文件]
+- 数据库变更：[如有 Prisma schema 变更]
+- API 变更：[如有新增/修改 API]
 
-## Tests
-- Created test cases for discount logic
-- Manual UI test on booking flow
+### 技术方案
+[简述实现思路]
+
+### 风险评估
+[可能的风险和缓解措施]
 ```
-
-#### 4.2 更新相关文档（如需要）
-
-可能需要同步更新的文档：
-
-- `docs/core/System-Design-Document.md`  
-- `docs/core/api_spec.md`  
-- `docs/core/erd.md`  
-- `docs/core/UI-Design-Guide.md`  
-- `docs/status/PROJECT_STATUS.md`  
-
-#### 4.3 调整 README 模块进度（如果有）
-
-若 README 中含有模块进度或 TODO，需要同步更新状态。
 
 ---
 
-## 📌 5. 文件组织规范（File Conventions）
+## 📌 3. 技术栈规范
 
-项目目录建议如下：
+### 3.1 技术栈
 
-```text
+| 类别 | 技术 | 版本 |
+|------|------|------|
+| 框架 | Next.js (App Router) | 14.x |
+| 语言 | TypeScript (严格模式) | 5.3+ |
+| 数据库 | PostgreSQL + Prisma ORM | 15 / 6.19 |
+| 认证 | NextAuth.js | v5 |
+| 样式 | Tailwind CSS | 3.4 |
+| 测试 | Vitest + React Testing Library | latest |
+| 图标 | Lucide React | latest |
+
+### 3.2 命名规范
+
+| 类型 | 规范 | 示例 |
+|------|------|------|
+| 组件文件 | PascalCase.tsx | `OrderCard.tsx` |
+| 工具文件 | camelCase.ts | `formatDate.ts` |
+| API 路由 | kebab-case 文件夹 | `api/orders/[id]/route.ts` |
+| 变量 | camelCase | `orderTotal` |
+| 常量 | UPPER_SNAKE_CASE | `MAX_FILE_SIZE` |
+| 类型/接口 | PascalCase | `OrderStatus` |
+| 数据库表 | snake_case | `order_items` |
+| API 字段 | camelCase | `createdAt` |
+
+### 3.3 文件结构
+
+```
 src/
-  components/         # 复用组件
-  features/           # 每个功能模块
-  pages/ or app/      # 路由
-  lib/                # 工具函数
-  services/           # API service
-  hooks/              # React hooks
-docs/
-  README.md           # 文档索引
-  core/               # 核心设计文档
-    System-Design-Document.md
-    api_spec.md
-    erd.md
-    components.md
-    UI-Design-Guide.md
-  guides/             # 开发与部署指南
-  plans/              # 功能规划文档
-  status/             # 项目状态跟踪
-  changelogs/         # 变更日志（按月份归档）
-    2025-12/
-    2025-01/
-AGENTS.md             # 本文件（Agent 行为规范）
+├── app/                    # Next.js App Router
+│   ├── api/               # API 路由 (114 个端点)
+│   ├── admin/             # 管理端页面
+│   └── (user)/            # 用户端页面
+├── components/            # 复用组件 (85+)
+│   ├── admin/            # 管理端专用组件
+│   └── payment/          # 支付相关组件
+├── features/              # 功能模块
+│   ├── booking/          # 预订流程
+│   ├── profile/          # 用户资料
+│   └── ...
+├── services/              # 业务服务层 (27 个服务)
+├── lib/                   # 工具函数 (22 个工具)
+├── types/                 # TypeScript 类型定义
+└── __tests__/             # 测试文件
 ```
 
 ---
 
-## 📌 6. Agent 输出格式规范（Response Format）
+## 📌 4. 代码质量标准
 
-无论需求多小，Agent 输出必须符合以下结构：
+### 4.1 TypeScript 规范
 
-### `## Development Plan`
+```typescript
+// ✅ 正确：使用明确类型
+async function getOrder(orderId: string): Promise<Order | null> {
+  return prisma.order.findUnique({ where: { id: orderId } });
+}
 
-- 列出要修改、新增的内容  
-- 简述每一项变更的目的与影响  
+// ❌ 错误：使用 any
+async function getOrder(orderId: any): Promise<any> { ... }
+```
 
-### `## Implementation`
-
-- 按文件分段给出完整代码  
-- 标明文件路径 + 修改内容  
-
-### `## Updated Docs`
-
-- 列出更新或新增的文档文件  
-- 给出变更内容（可直接复制到对应文档）  
-
-### `## Notes`
-
-- 可选补充说明  
-- 记录技术债 / 后续优化点  
-
----
-
-## 📌 7. 禁止事项（Prohibited Behaviors）
-
-Agent 不得：
-
-- ❌ 无视 `docs/` 文件内容  
-- ❌ 不根据系统设计文档随意定义 API  
-- ❌ 修改数据库而不更新 ERD  
-- ❌ 添加未记录在 change_log 的变更  
-- ❌ 输出不完整、无法运行的代码  
-- ❌ 生成与当前架构不一致的风格  
-- ❌ 破坏组件命名与目录规划  
-
----
-
-## 📌 8. Agent 行为总结（Core Behavior Summary）
-
-Agent 在本项目中扮演：
-
-- 架构遵守者  
-- 文档维护者  
-- 代码生成器  
-- 项目上下文记忆管理者  
-
-必须遵循：
-
-> **Documentation-driven development & Context-driven generation**  
-> 文档驱动开发 + 上下文驱动的代码生成
-
-核心原则：
-
-- 避免重复造轮子，复用既有组件与模块。  
-- 严格参照文档执行，保持结构与风格一致性。  
-- 每次开发都为“未来的 Agent”留下清晰的上下文。  
-
----
-
-## 📌 9. 视觉设计系统（Visual Design System）
-
-项目采用 **呼吸感设计（Breathing Design）**，Agent 在开发 UI 时必须遵循：
-
-### 9.1 配色层级
-
-| 元素 | 颜色 | 说明 |
-|------|------|------|
-| 页面背景 | `bg-gray-50` | 非常浅的灰色 |
-| 卡片/模块 | `bg-white` | 白色，形成浮起效果 |
-| 边框 | `border-gray-100` | 轻描边 |
-| 阴影 | `shadow-sm` | 轻阴影 |
-| 主强调色 | `accent` (橙色) | 仅用于主行动按钮 |
-
-### 9.2 间距体系
-
-- 内容区宽度：`max-w-xl` (~576px) 或 `max-w-2xl` (~672px)
-- 区块垂直间距：`space-y-8` (32px) 或 `space-y-6` (24px)
-- 卡片内边距：`p-4` / `p-5` / `p-6`
-- 横向间隔：`px-5`
-
-### 9.3 排版节奏
-
-| 元素 | 字号 | 颜色 |
-|------|------|------|
-| 标题 | 15-18px (`text-[15px]` / `text-lg`) | `text-gray-900` |
-| 描述 | 12-14px (`text-xs` / `text-sm`) | `text-gray-500` |
-| 辅助文字 | 12px (`text-xs`) | `text-gray-400` |
-
-### 9.4 卡片统一风格
+### 4.2 React 组件规范
 
 ```tsx
-// 标准卡片样式
-className="bg-white rounded-xl border border-gray-100 shadow-sm"
+// ✅ 正确：函数组件 + Props 接口
+interface OrderCardProps {
+  order: Order;
+  onSelect?: (id: string) => void;
+}
 
-// 主行动卡片（橙色强调）
-className="bg-accent/10 border border-accent/30 rounded-xl"
+export function OrderCard({ order, onSelect }: OrderCardProps) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+      {/* 内容 */}
+    </div>
+  );
+}
 
-// 次要卡片（灰度）  
-className="bg-white border border-gray-100 hover:shadow-md"
+// ❌ 错误：无类型、Class 组件
+export default class OrderCard extends React.Component { ... }
 ```
 
-### 9.5 图标规范
+### 4.3 API 路由规范
 
-- 固定容器尺寸：`w-10 h-10` 或 `w-8 h-8`
-- 图标本身：`w-5 h-5` 或 `w-4 h-4`
-- 背景色：`bg-gray-50` (次要) / `bg-accent` (主要)
-- 使用 `lucide-react` 图标库
+```typescript
+// ✅ 正确：标准 API 结构
+import { requireAuth } from '@/lib/server-auth';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { AppError } from '@/lib/api-errors';
 
-### 9.6 交互反馈
+export async function GET(request: Request) {
+  try {
+    const user = await requireAuth();
+    const data = await getOrdersForUser(user.id);
+    return successResponse(data);
+  } catch (error) {
+    if (error instanceof AppError) {
+      return errorResponse(error.code, error.message, error.status);
+    }
+    console.error('[API] Unexpected error:', error);
+    return errorResponse('SYSTEM_ERROR', 'An unexpected error occurred', 500);
+  }
+}
+```
 
-- Hover 效果：`hover:shadow-md` / `hover:border-gray-200`
-- 过渡动画：`transition-all` / `transition-colors`
-- 按钮 Hover：`hover:opacity-90`
+### 4.4 错误处理规范
 
-### 9.7 票据/交易类组件设计 (Transactional Design)
+```typescript
+// ✅ 正确：使用 AppError
+import { AppError } from '@/lib/api-errors';
 
-对于订单收据、结算单等交易类组件，采用 **拟物化收据风格**：
+if (!order) {
+  throw new AppError('ORDER_NOT_FOUND', 'Order does not exist', 404);
+}
 
-- **锯齿边缘 (Zigzag Border)**：使用 CSS `linear-gradient` 实现真实纸质锯齿效果。
-- **点状引导线 (Dot Leaders)**：使用 `border-dotted` 连接项目与金额，增强易读性。
-- **等宽字体 (Monospace)**：金额与数量使用 `font-mono`，模拟打印机效果。
-- **双线分隔 (Double Border)**：使用 `border-double` 强调合计金额。
-- **信息层级**：
-  - `OrderSummaryCard`：顶部摘要，包含状态、核心金额、主行动按钮。
-  - `ReceiptCard`：底部详情，模拟物理收据，包含明细、支付方式、时间戳。
+// ❌ 错误：直接抛出 Error
+throw new Error('Order not found');
+```
+
+**错误码必须在 `docs/ERROR_CODES.md` 中定义**
+
+### 4.5 日志规范
+
+```typescript
+// ✅ 正确：使用 console.info，带上下文
+console.info('[OrderService] Order created:', { orderId, userId });
+
+// ❌ 错误：使用 console.log
+console.log('order created');
+```
+
+### 4.6 注释规范
+
+```typescript
+/**
+ * 计算订单积分（包含会员倍率）
+ * @param orderAmount - 订单金额（RM）
+ * @param membershipTier - 会员等级
+ * @returns 应获得的积分数
+ */
+function calculateOrderPoints(
+  orderAmount: number,
+  membershipTier: MembershipTier
+): number {
+  // NOTE: 仅在订单完成时调用，不处理退款场景
+  const basePoints = Math.floor(orderAmount);
+  const multiplier = getPointsMultiplier(membershipTier);
+  return Math.floor(basePoints * multiplier);
+}
+```
+
+**注释规则：**
+- 使用 `NOTE:` 代替 `TODO:` 和 `FIXME:`
+- 复杂业务逻辑必须有注释
+- 公共函数使用 JSDoc 风格
 
 ---
 
-## 📌 10. Change Log 文档规范
+## 📌 5. 安全规范
 
-每次开发完成后，必须在 `docs/changelogs/YYYY-MM/` 创建 `change_log_YYYY-MM-DD.md`，格式参考：
+### 5.1 认证检查
 
-- `docs/changelogs/2025-12/change_log_2025-12-23.md` — 视觉呼吸感优化 + UX 改进
+```typescript
+// 需要认证的 API
+const user = await requireAuth();
+
+// 需要管理员权限的 API
+const admin = await requireAdmin();
+```
+
+### 5.2 输入验证
+
+```typescript
+import { z } from 'zod';
+
+const createOrderSchema = z.object({
+  stringId: z.string().cuid(),
+  tension: z.number().min(15).max(35),
+  notes: z.string().max(500).optional()
+});
+
+// 使用验证
+const data = createOrderSchema.parse(body);
+```
+
+### 5.3 禁止事项
+
+- ❌ 硬编码密钥或密码
+- ❌ 在响应中返回敏感信息
+- ❌ 直接拼接 SQL（使用 Prisma）
+- ❌ 跳过权限检查
+- ❌ 信任客户端输入
 
 ---
 
-> **本文档最后更新：2025-12-31**
+## 📌 6. UI/UX 规范
+
+### 6.1 设计系统 - Paper Court
+
+| 元素 | Tailwind 类 |
+|------|-------------|
+| 页面背景 | `bg-gray-50` |
+| 卡片背景 | `bg-white` |
+| 卡片边框 | `border border-gray-100` |
+| 卡片阴影 | `shadow-sm` |
+| 圆角 | `rounded-xl` |
+| 主色调 | `accent` (#0F766E) |
+
+### 6.2 标准卡片样式
+
+```tsx
+// 基础卡片
+<div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+
+// 强调卡片
+<div className="bg-accent/10 border border-accent/30 rounded-xl p-4">
+
+// 可点击卡片
+<div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer">
+```
+
+### 6.3 间距规范
+
+| 元素 | 间距类 |
+|------|--------|
+| 页面内边距 | `px-4` / `px-5` |
+| 区块间距 | `space-y-6` / `space-y-8` |
+| 卡片内边距 | `p-4` / `p-5` / `p-6` |
+| 内容宽度 | `max-w-xl` / `max-w-2xl` |
+
+### 6.4 组件复用
+
+**必须复用现有组件：**
+
+```tsx
+// ✅ 正确
+import { Button } from '@/components/Button';
+import { Card } from '@/components/Card';
+import { Badge } from '@/components/Badge';
+
+// ❌ 错误：创建重复组件
+const MyButton = () => <button className="...">...</button>;
+```
+
+---
+
+## 📌 7. 开发完成后必须执行（AFTER CODING）
+
+### STEP 1：运行验证命令
+
+```bash
+# 类型检查
+npm run type-check
+
+# Lint 检查
+npm run lint
+
+# 运行测试
+npm run test:run
+
+# 构建验证
+npm run build
+```
+
+**所有命令必须通过**
+
+---
+
+### STEP 2：创建变更日志
+
+在 `docs/changelogs/YYYY-MM/` 创建 `change_log_YYYY-MM-DD_<feature>.md`：
+
+```markdown
+# Change Log — YYYY-MM-DD
+
+## Summary
+[简述变更内容]
+
+## Changes
+
+### Added
+- [新增功能]
+
+### Modified
+- [修改功能]
+
+### Fixed
+- [修复问题]
+
+## Files Changed
+
+| File | Type | Description |
+|------|------|-------------|
+| `src/...` | Added/Modified | [描述] |
+
+## API Changes
+[如有 API 变更]
+
+## Database Changes
+[如有数据库变更]
+
+## Testing
+- [ ] 类型检查通过
+- [ ] Lint 检查通过
+- [ ] 测试通过
+- [ ] 构建成功
+```
+
+---
+
+### STEP 3：更新相关文档
+
+| 变更类型 | 需要更新的文档 |
+|----------|----------------|
+| 新增 API | `docs/core/api_spec.md` |
+| 新增模型 | `docs/core/erd.md` |
+| 新增服务 | `docs/core/SERVICE_ARCHITECTURE.md` |
+| 新增组件 | `docs/core/components.md` |
+| 新增工具 | `docs/core/LIB_UTILITIES.md` |
+| 业务逻辑 | `docs/core/BUSINESS_LOGIC.md` |
+| 环境变量 | `docs/guides/ENVIRONMENT_SETUP.md` |
+| 新增错误码 | `docs/ERROR_CODES.md` |
+
+---
+
+## 📌 8. 禁止事项（PROHIBITED）
+
+| 序号 | 禁止行为 | 原因 |
+|------|----------|------|
+| 1 | 不读上下文就编码 | 会破坏现有架构 |
+| 2 | 随意创建 API | 必须符合 api_spec.md |
+| 3 | 修改数据库不更新 ERD | 文档失去同步 |
+| 4 | 不写变更日志 | 无法追踪历史 |
+| 5 | 输出不完整代码 | 无法运行 |
+| 6 | 使用 `any` 类型 | 类型不安全 |
+| 7 | 使用 `console.log` | 生产环境用 `console.info` |
+| 8 | 使用 `TODO/FIXME` | 使用 `NOTE` |
+| 9 | 跳过验证步骤 | 代码质量无法保证 |
+| 10 | 破坏现有功能 | 必须向后兼容 |
+
+---
+
+## 📌 9. 质量检查清单
+
+每次开发完成前检查：
+
+### 代码验证
+- [ ] `npm run type-check` 通过
+- [ ] `npm run lint` 通过
+- [ ] `npm run test:run` 通过
+- [ ] `npm run build` 成功
+
+### 代码规范
+- [ ] 使用正确的命名规范
+- [ ] 使用 AppError 处理错误
+- [ ] 使用 console.info 而非 console.log
+- [ ] 复杂逻辑有注释说明
+- [ ] 复用现有组件和工具
+
+### 安全规范
+- [ ] API 有正确的认证检查
+- [ ] 输入数据经过验证
+- [ ] 无硬编码敏感信息
+
+### 文档规范
+- [ ] 创建变更日志
+- [ ] 更新相关文档
+
+---
+
+## 📌 10. 快速参考
+
+### 常用命令
+
+```bash
+npm run dev          # 启动开发服务器
+npm run build        # 构建生产版本
+npm run type-check   # TypeScript 检查
+npm run lint         # ESLint 检查
+npm run test         # 运行测试 (watch)
+npm run test:run     # 运行测试 (单次)
+npm run db:push      # 推送数据库 schema
+npm run db:studio    # 打开 Prisma Studio
+```
+
+### 常用导入
+
+```typescript
+// 数据库
+import { prisma } from '@/lib/prisma';
+
+// 认证
+import { requireAuth, requireAdmin } from '@/lib/server-auth';
+
+// API 响应
+import { successResponse, errorResponse } from '@/lib/api-response';
+
+// 错误处理
+import { AppError } from '@/lib/api-errors';
+
+// 验证
+import { z } from 'zod';
+```
+
+### 文档快速索引
+
+| 需要了解 | 查看文档 |
+|----------|----------|
+| 项目概述 | `README.md` |
+| API 列表 | `docs/core/api_spec.md` |
+| 数据模型 | `docs/core/erd.md` |
+| 组件库 | `docs/core/components.md` |
+| 业务逻辑 | `docs/core/BUSINESS_LOGIC.md` |
+| 错误码 | `docs/ERROR_CODES.md` |
+| 开发模板 | `docs/DEVELOPMENT_TEMPLATES.md` |
+| 检查清单 | `docs/CODE_REVIEW_CHECKLIST.md` |
+| 测试指南 | `docs/guides/TESTING_GUIDE.md` |
+| 故障排除 | `docs/guides/TROUBLESHOOTING.md` |
+
+---
+
+## 📌 11. 响应格式规范
+
+所有 Agent 输出必须符合以下结构：
+
+```markdown
+## Development Plan
+[开发计划]
+
+## Implementation
+[按文件分段的完整代码]
+
+## Updated Docs
+[需要更新的文档内容]
+
+## Notes
+[补充说明、技术债、后续优化点]
+```
+
+---
+
+> **本文档适用于所有 AI 编程助手**
+> **版本：2.0**
+> **最后更新：2026-01-27**

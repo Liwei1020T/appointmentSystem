@@ -6,7 +6,6 @@
 import { z } from 'zod';
 import { requireAuth } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
 import { listPackageUsage } from '@/server/services/package.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 

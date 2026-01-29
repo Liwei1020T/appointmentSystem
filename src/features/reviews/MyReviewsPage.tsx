@@ -14,6 +14,7 @@ import { getUserReviews, getPendingReviewOrders, OrderReview, PendingReviewOrder
 import ReviewCard from '@/components/ReviewCard';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
+import EmptyState from '@/components/EmptyState';
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
 import PageHeader from '@/components/layout/PageHeader';
@@ -50,8 +51,9 @@ export default function MyReviewsPage() {
       ]);
       setReviews(Array.isArray(reviewsList) ? reviewsList : []);
       setPendingOrders(Array.isArray(pendingList) ? pendingList : []);
-    } catch (err: any) {
-      setError(err?.message || '加载评价失败');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '加载评价失败';
+      setError(message);
       setReviews([]);
       setPendingOrders([]);
     } finally {
@@ -138,9 +140,7 @@ export default function MyReviewsPage() {
               </div>
             ) : (
               <EmptyState
-                icon={<Star className="w-16 h-16" />}
-                title="暂无评价"
-                description="完成订单后，您可以对服务进行评价"
+                type="no-reviews"
                 actionLabel="查看订单"
                 onAction={() => router.push('/orders')}
               />
@@ -163,12 +163,11 @@ export default function MyReviewsPage() {
               </div>
             ) : (
               <EmptyState
-                icon={<Clock className="w-16 h-16" />}
+                type="no-reviews"
                 title="暂无待评价订单"
                 description="订单完成后会在这里显示待评价项目"
                 actionLabel="查看所有订单"
                 onAction={() => router.push('/orders')}
-                variant="secondary"
               />
             )}
           </>
@@ -229,44 +228,5 @@ function PendingReviewTicket({ order, index }: { order: PendingReviewOrder; inde
         <div className="h-1 bg-gradient-to-r from-gradient-start via-accent to-gradient-end" />
       </div>
     </Link>
-  );
-}
-
-/**
- * 空状态组件 - Empty State Component
- */
-function EmptyState({
-  icon,
-  title,
-  description,
-  actionLabel,
-  onAction,
-  variant = 'primary',
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  actionLabel: string;
-  onAction: () => void;
-  variant?: 'primary' | 'secondary';
-}) {
-  return (
-    <div className="bg-white rounded-2xl border border-border-subtle shadow-sm p-10 text-center animate-fade-in">
-      <div className={`mx-auto mb-5 w-20 h-20 rounded-2xl flex items-center justify-center ${variant === 'primary'
-        ? 'bg-accent-soft text-accent'
-        : 'bg-ink text-text-tertiary'
-        }`}>
-        {icon}
-      </div>
-      <h3 className="text-lg font-semibold text-text-primary mb-2">{title}</h3>
-      <p className="text-text-secondary mb-6 max-w-xs mx-auto">{description}</p>
-      <Button
-        onClick={onAction}
-        variant={variant === 'primary' ? 'primary' : 'secondary'}
-        glow={variant === 'primary'}
-      >
-        {actionLabel}
-      </Button>
-    </div>
   );
 }

@@ -9,29 +9,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Star, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { getFeaturedReviews } from '@/services/reviewService';
+import { getFeaturedReviews, type OrderReview } from '@/services/reviewService';
 import { Skeleton } from '@/components';
 
-interface Review {
-  id: string;
-  rating: number;
-  comment: string;
-  tags: string[];
-  is_anonymous: boolean;
-  created_at: string;
-  user?: {
-    full_name: string;
+type OrderString = NonNullable<OrderReview['order']>['string'];
+
+type ReviewApiItem = OrderReview & {
+  user?: OrderReview['user'] | OrderReview['user'][];
+  order?: NonNullable<OrderReview['order']> & {
+    string?: OrderString | OrderString[];
   };
-  order?: {
-    string?: {
-      brand: string;
-      model: string;
-    };
-  };
-}
+};
 
 export default function FeaturedReviews() {
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<OrderReview[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -39,9 +30,10 @@ export default function FeaturedReviews() {
     loadFeaturedReviews();
   }, []);
 
-  // 自动滚动
+  // 自动滚动 - 只依赖 reviews.length 以避免不必要的重新创建
+  const reviewsLength = reviews.length;
   useEffect(() => {
-    if (reviews.length <= 1) return;
+    if (reviewsLength <= 1) return;
 
     const interval = setInterval(() => {
       if (scrollRef.current) {
@@ -58,12 +50,12 @@ export default function FeaturedReviews() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [reviews]);
+  }, [reviewsLength]);
 
   const loadFeaturedReviews = async () => {
     try {
       const data = await getFeaturedReviews();
-      const normalized = data.map((review: any) => ({
+      const normalized: OrderReview[] = data.map((review: ReviewApiItem) => ({
         ...review,
         user: Array.isArray(review?.user) ? review.user[0] : review?.user,
         order: review?.order
@@ -75,8 +67,8 @@ export default function FeaturedReviews() {
           }
           : undefined,
       }));
-      setReviews(normalized as Review[]);
-    } catch (error) {
+      setReviews(normalized);
+    } catch {
       setReviews([]);
     } finally {
       setLoading(false);

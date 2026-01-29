@@ -1,9 +1,9 @@
 # 🧩 UI Components Library
 
-**String Service Platform — Component Specification**  
-**Version:** 2.0  
-**Last Updated:** 2025-12-19  
-**Framework:** React + TypeScript + Tailwind CSS
+**String Service Platform — Component Specification**
+**Version:** 2.1
+**Last Updated:** 2026-01-28
+**Framework:** React 18 + TypeScript + Tailwind CSS
 
 ---
 
@@ -40,6 +40,7 @@ Use Tailwind utility classes mapped to design tokens:
 
 ```typescript
 const colors = {
+  // Light Mode
   ink: '#F7F3EE',
   elevated: '#FFFFFF',
   surface: '#FFFFFF',
@@ -54,8 +55,34 @@ const colors = {
   info: '#2563EB',
   success: '#16A34A',
   warning: '#F59E0B',
-  danger: '#EF4444'
+  danger: '#EF4444',
+
+  // Dark Mode (use with dark: prefix)
+  dark: '#1a1a1a',
+  darkElevated: '#2a2a2a',
+  darkSurface: '#333333',
+  darkBorder: '#374151', // gray-700
+  darkTextPrimary: '#f3f4f6', // gray-100
+  darkTextSecondary: '#9ca3af', // gray-400
+  darkTextTertiary: '#6b7280', // gray-500
 }
+```
+
+### Dark Mode Usage
+
+```tsx
+// Container backgrounds
+<div className="bg-ink dark:bg-dark" />
+
+// Card backgrounds
+<div className="bg-white dark:bg-dark-elevated" />
+
+// Borders
+<div className="border-border-subtle dark:border-gray-700" />
+
+// Text colors
+<p className="text-text-primary dark:text-gray-100" />
+<p className="text-text-secondary dark:text-gray-400" />
 ```
 
 ---
@@ -260,19 +287,90 @@ const variants = {
 - `glass-strong` 容器 + `border-border-subtle`
 - 关闭方式支持 ESC
 
+### 12. EmptyState
+
+空状态占位组件，13 种可爱 SVG 插画：
+
+```tsx
+<EmptyState
+  type="no-orders"
+  title="暂无订单"
+  description="预约穿线服务开始您的第一单"
+  actionLabel="立即预约"
+  actionHref="/booking"
+/>
+```
+
+可用类型：`no-orders`, `no-reviews`, `no-vouchers`, `no-packages`, `no-notifications`, `no-points`, `no-referrals`, `no-inventory`, `no-users`, `no-payments`, `no-data`, `search-empty`, `error`
+
+### 13. OnboardingTutorial
+
+步骤式用户引导组件：
+
+```tsx
+<OnboardingTutorial
+  steps={[
+    { id: 'step1', title: '欢迎', description: '...', position: 'center' },
+    { id: 'step2', title: '功能A', description: '...', targetSelector: '#feature-a' },
+  ]}
+  storageKey="my-tutorial"
+  onComplete={() => console.log('完成')}
+/>
+```
+
+### 14. Confetti
+
+庆祝动效组件：
+
+```tsx
+import { useConfetti, OrderCompleteConfetti } from '@/components/Confetti';
+
+// Hook 方式
+const { fire } = useConfetti();
+fire('celebration');
+
+// 组件方式（订单完成时自动触发）
+<OrderCompleteConfetti trigger={orderCompleted} />
+```
+
+可用效果：`celebration`, `fireworks`, `stars`, `snow`, `emoji`
+
 ---
 
 ## Navigation Components
 
-### 12. Bottom Navigation
+### 15. Bottom Navigation
 
 - 背景：`glass-surface`
 - Active：`text-accent`
 
-### 13. Admin Sidebar
+### 16. Admin Sidebar
 
 - 背景：`bg-ink-surface`
 - Active：`bg-accent/10` + 左侧 `border-accent`
+
+### 17. ThemeProvider
+
+主题管理系统，支持浅色/深色/跟随系统：
+
+```tsx
+// layout.tsx 中包裹应用
+<ThemeProvider defaultTheme="system">
+  {children}
+</ThemeProvider>
+
+// 使用主题切换按钮
+import { ThemeToggle } from '@/components/ThemeProvider';
+<ThemeToggle />
+
+// 使用主题选择器（三选一）
+import { ThemeSelector } from '@/components/ThemeProvider';
+<ThemeSelector />
+
+// 在组件中获取当前主题
+import { useTheme } from '@/components/ThemeProvider';
+const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
+```
 
 ---
 
@@ -286,3 +384,175 @@ const variants = {
 ---
 
 **End of Components Documentation**
+
+---
+
+## Appendix: Component Reference
+
+### Core Components (src/components/)
+
+| Component | File | Description |
+|-----------|------|-------------|
+| `Button` | Button.tsx | Primary button with variants |
+| `Badge` | Badge.tsx | Status and label badges |
+| `Input` | Input.tsx | Form input field |
+| `Select` | Select.tsx | Dropdown select |
+| `Checkbox` | Checkbox.tsx | Form checkbox |
+| `Card` | Card.tsx | Container card |
+| `Container` | Container.tsx | Layout container |
+| `AvatarUploader` | AvatarUploader.tsx | Profile avatar upload |
+| `BrandLogo` | BrandLogo.tsx | App logo component |
+| `ConfirmDialog` | ConfirmDialog.tsx | Confirmation modal |
+| `FeaturedReviews` | FeaturedReviews.tsx | Reviews carousel |
+| `ImagePreview` | ImagePreview.tsx | Image zoom modal |
+| `ImageUploader` | ImageUploader.tsx | General image upload |
+| `InviteCard` | InviteCard.tsx | Referral invite UI |
+| `MembershipCard` | MembershipCard.tsx | Membership status display |
+| `NotificationBell` | NotificationBell.tsx | Header notification icon |
+| `NotificationItem` | NotificationItem.tsx | Single notification |
+| `NotificationPanel` | NotificationPanel.tsx | Notification dropdown |
+| `OptimizedImage` | OptimizedImage.tsx | Next.js Image wrapper |
+| `OrderPaymentSection` | OrderPaymentSection.tsx | Payment options |
+| `OrderPhotosDisplay` | OrderPhotosDisplay.tsx | Photo gallery viewer |
+| `OrderStatusBadge` | OrderStatusBadge.tsx | Order status indicator |
+| `OrderTimeline` | OrderTimeline.tsx | Order progress timeline |
+| `PackageCard` | PackageCard.tsx | Package purchase card |
+| `PaymentReceiptUploader` | PaymentReceiptUploader.tsx | Receipt upload |
+| `ReferralList` | ReferralList.tsx | Referral history |
+| `ReferralStatsCard` | ReferralStatsCard.tsx | Referral statistics |
+| `ReviewCard` | ReviewCard.tsx | Single review display |
+| `ReviewForm` | ReviewForm.tsx | Review submission |
+| `Sidebar` | Sidebar.tsx | Navigation sidebar |
+| `Skeleton` | Skeleton.tsx | Loading placeholder |
+| `Spinner` | Spinner.tsx | Loading spinner |
+| `InlineLoading` | InlineLoading.tsx | Inline loading indicator |
+| `PageLoading` | PageLoading.tsx | Full page loading |
+| `SectionLoading` | SectionLoading.tsx | Section loading placeholder |
+| `StarRating` | StarRating.tsx | 5-star rating |
+| `Tabs` | Tabs.tsx | Tab navigation |
+| `TngQRCodeDisplay` | TngQRCodeDisplay.tsx | TNG payment QR |
+| `WhatsAppButton` | WhatsAppButton.tsx | WhatsApp contact |
+| `ThemeProvider` | ThemeProvider.tsx | 主题上下文、切换器、选择器 |
+| `OnboardingTutorial` | OnboardingTutorial.tsx | 通用步骤式引导教程 |
+| `HomeOnboarding` | HomeOnboarding.tsx | 首页用户引导 |
+| `ServiceWorkerRegistration` | ServiceWorkerRegistration.tsx | PWA Service Worker 注册 |
+| `EmptyState` | EmptyState.tsx | 空状态插画组件 |
+| `FirstOrderModal` | FirstOrderModal.tsx | 首单优惠弹窗 |
+| `Confetti` | Confetti.tsx | 庆祝动效组件 |
+
+### Admin Components (src/components/admin/)
+
+| Component | File | Description |
+|-----------|------|-------------|
+| `AdminDashboardPage` | AdminDashboardPage.tsx | Dashboard overview |
+| `AdminInventoryDetailPage` | AdminInventoryDetailPage.tsx | Inventory detail |
+| `AdminInventoryListPage` | AdminInventoryListPage.tsx | Inventory list |
+| `AdminNotificationsPage` | AdminNotificationsPage.tsx | Notifications mgmt |
+| `AdminOrderDetailPage` | AdminOrderDetailPage.tsx | Order detail |
+| `AdminOrderListPage` | AdminOrderListPage.tsx | Order list |
+| `AdminOrderProgress` | AdminOrderProgress.tsx | Status management |
+| `AdminPackageDetailPage` | AdminPackageDetailPage.tsx | Package detail |
+| `AdminPackageListPage` | AdminPackageListPage.tsx | Package list |
+| `AdminReportsPage` | AdminReportsPage.tsx | Reports dashboard |
+| `AdminUserDetailPage` | AdminUserDetailPage.tsx | User detail |
+| `AdminUserListPage` | AdminUserListPage.tsx | User list |
+| `AdminVoucherDetailPage` | AdminVoucherDetailPage.tsx | Voucher detail |
+| `AdminVoucherListPage` | AdminVoucherListPage.tsx | Voucher list |
+| `DistributeVoucherModal` | DistributeVoucherModal.tsx | Voucher distribution |
+| `LowStockAlert` | LowStockAlert.tsx | Low stock warnings |
+| `OrderPhotosUploader` | OrderPhotosUploader.tsx | Photo upload for orders |
+| `PaymentReceiptVerifier` | PaymentReceiptVerifier.tsx | Receipt verification |
+| `PaymentVerificationPage` | PaymentVerificationPage.tsx | Payment review |
+| `RestockModal` | RestockModal.tsx | Restock dialog |
+| `StockHistory` | StockHistory.tsx | Stock change log |
+
+### Feature Components (src/features/)
+
+| Feature | Key Components | Description |
+|---------|----------------|-------------|
+| `booking/` | BookingFlow, MultiRacketBookingFlow, StringSelector, ServiceMethodSelector | Order creation flow |
+| `landing/` | LandingPage, Features, SpotlightCard, HeroSection | Public landing page |
+| `profile/` | ProfilePage, EditProfilePage, ChangePasswordPage, PointsCenterPage | User profile mgmt |
+| `reviews/` | MyReviewsPage, ReviewDetailPage | Review management |
+| `referrals/` | ReferralLeaderboardPage, ReferralDashboard | Referral program |
+| `payment/` | PaymentPage, PaymentStatusPage | Payment flow |
+
+### Payment Components (src/components/payment/)
+
+| Component | File | Description |
+|-----------|------|-------------|
+| `PaymentPage` | PaymentPage.tsx | Main payment flow |
+| `PaymentMethodSelector` | PaymentMethodSelector.tsx | Method selection |
+| `PaymentSummary` | PaymentSummary.tsx | Order summary |
+| `PaymentStatus` | PaymentStatus.tsx | Status display |
+
+---
+
+## Component Props Reference
+
+### Button
+
+```typescript
+interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  fullWidth?: boolean;
+  loading?: boolean;
+  icon?: React.ReactNode;
+  disabled?: boolean;
+  children: React.ReactNode;
+  onClick?: () => void;
+}
+```
+
+### Badge
+
+```typescript
+interface BadgeProps {
+  variant?: 'success' | 'warning' | 'error' | 'info' | 'neutral';
+  size?: 'sm' | 'md';
+  children: React.ReactNode;
+}
+```
+
+### OrderTimeline
+
+```typescript
+interface OrderTimelineProps {
+  status: OrderStatus;
+  statusLogs?: StatusLog[];
+  createdAt?: string;
+  completedAt?: string;
+}
+```
+
+### MembershipCard
+
+```typescript
+interface MembershipCardProps {
+  currentTier: 'REGULAR' | 'BRONZE' | 'SILVER' | 'GOLD' | 'VIP';
+  points: number;
+  totalSpent: number;
+  nextTier?: string;
+  spentProgress: number;
+  ordersProgress: number;
+  spentTarget?: number;
+  ordersTarget?: number;
+  benefits?: Benefit[];
+}
+```
+
+### PackageCard
+
+```typescript
+interface PackageCardProps {
+  package: Package;
+  onPurchase?: () => void;
+  showPurchaseButton?: boolean;
+  highlighted?: boolean;
+}
+```
+
+---
+
+**End of Component Reference**

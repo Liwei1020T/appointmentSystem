@@ -1,4 +1,4 @@
-// Database Types (auto-generated from Supabase schema)
+// Database Types - TypeScript interfaces for Prisma models
 
 export interface User {
   id: string;

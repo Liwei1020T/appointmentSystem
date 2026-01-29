@@ -1,12 +1,10 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
-import { errorResponse, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { buildDayKeys, parseDateRangeFromSearchParams, toDayKey } from '@/lib/reporting';
 import { handleApiError } from '@/lib/api/handleApiError';
-
 export const dynamic = 'force-dynamic';
-
 /**
  * 管理员 - 用户增长统计
  *
@@ -24,11 +22,9 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
-
     const { start, end } = parseDateRangeFromSearchParams(request.nextUrl.searchParams, {
       defaultDays: 30,
     });
-
     const [totalUsers, newUsersRecords, activeUserIds, referralNewUsers, directNewUsers] =
       await Promise.all([
         prisma.user.count(),
@@ -49,10 +45,8 @@ export async function GET(request: NextRequest) {
           where: { createdAt: { gte: start, lte: end }, referredBy: null },
         }),
       ]);
-
     const newUsers = newUsersRecords.length;
     const activeUsers = activeUserIds.length;
-
     // daily growth
     const dayKeys = buildDayKeys(start, end);
     const newUsersByDay = new Map<string, number>();
@@ -60,11 +54,9 @@ export async function GET(request: NextRequest) {
       const key = toDayKey(u.createdAt);
       newUsersByDay.set(key, (newUsersByDay.get(key) ?? 0) + 1);
     }
-
     // 区间起始时的累计用户数（近似）：当前总用户 - 区间内新增
     const baseUsers = Math.max(totalUsers - newUsers, 0);
     let cumulative = baseUsers;
-
     const dailyGrowth = dayKeys.map((date) => {
       const inc = newUsersByDay.get(date) ?? 0;
       cumulative += inc;
@@ -74,7 +66,6 @@ export async function GET(request: NextRequest) {
         cumulativeUsers: cumulative,
       };
     });
-
     const usersBySourceTotal = referralNewUsers + directNewUsers;
     const usersBySource = [
       {
@@ -88,7 +79,6 @@ export async function GET(request: NextRequest) {
         percentage: usersBySourceTotal > 0 ? (referralNewUsers / usersBySourceTotal) * 100 : 0,
       },
     ];
-
     // growthRate：与前一同长度周期的新增用户对比
     const days = dayKeys.length;
     const prevStart = new Date(start);
@@ -99,7 +89,6 @@ export async function GET(request: NextRequest) {
       where: { createdAt: { gte: prevStart, lte: prevEnd } },
     });
     const growthRate = prevNewUsers > 0 ? ((newUsers - prevNewUsers) / prevNewUsers) * 100 : 0;
-
     return successResponse({
       totalUsers,
       newUsers,

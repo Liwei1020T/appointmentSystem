@@ -19,6 +19,8 @@ import { getAllOrders, getOrderStats, searchOrders } from '@/services/adminOrder
 import type { AdminOrder, OrderStatus, OrderStats } from '@/services/adminOrderService';
 import { generateShortCode, formatDate } from '@/lib/utils';
 import { Button, Input, Tabs } from '@/components';
+import EmptyState from '@/components/EmptyState';
+import { SkeletonTable } from '@/components/Skeleton';
 import SectionLoading from '@/components/loading/SectionLoading';
 import { Search, Inbox, Disc, Settings, CheckCircle } from 'lucide-react';
 
@@ -251,19 +253,17 @@ export default function AdminOrderListPage() {
       {/* Order List */}
       <div className="max-w-7xl mx-auto px-6 py-6">
         {loading ? (
-          <SectionLoading label="加载订单..." minHeightClassName="min-h-[240px]" />
+          <SkeletonTable rows={10} columns={6} />
         ) : error ? (
           <div className="bg-danger/15 border border-danger/40 rounded-lg p-4 text-center">
             <p className="text-danger">{error}</p>
           </div>
         ) : orders.length === 0 ? (
-          <div className="bg-ink-surface rounded-lg p-12 text-center">
-            <div className="flex justify-center mb-4">
-              <Inbox className="w-16 h-16 text-text-tertiary" />
-            </div>
-            <p className="text-text-secondary mb-2">暂无订单</p>
-            <p className="text-sm text-text-tertiary">没有找到符合条件的订单</p>
-          </div>
+          <EmptyState
+            type="no-orders"
+            title="暂无订单"
+            description={searchTerm || filterStatus !== 'all' ? '没有找到符合条件的订单' : '还没有收到任何订单'}
+          />
         ) : (
           <>
             <div className="bg-ink-surface rounded-lg shadow-sm border border-border-subtle overflow-hidden">

@@ -50,7 +50,7 @@ export default function Highlights() {
   ];
 
   return (
-    <section className="py-20 md:py-24 bg-ink overflow-hidden">
+    <section className="py-20 md:py-24 bg-ink dark:bg-dark overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
           
@@ -61,11 +61,11 @@ export default function Highlights() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-6 font-display">
+            <h2 className="text-3xl md:text-4xl font-bold text-text-primary dark:text-gray-100 mb-6 font-display">
               不仅是便宜，<br />
               更是对专业的执着
             </h2>
-            <p className="text-lg text-text-secondary mb-8 leading-relaxed">
+            <p className="text-lg text-text-secondary dark:text-gray-400 mb-8 leading-relaxed">
               我们深知每一根球线对击球手感的影响。虽然价格亲民，但我们坚持使用顶级穿线设备和标准流程，确保您的装备始终处于最佳竞技状态。
             </p>
             
@@ -73,7 +73,7 @@ export default function Highlights() {
               {points.map((point, index) => (
                 <div key={index} className="flex items-center">
                   <CheckCircle2 className="w-5 h-5 text-accent mr-3 flex-shrink-0" />
-                  <span className="text-text-secondary font-medium">{point}</span>
+                  <span className="text-text-secondary dark:text-gray-400 font-medium">{point}</span>
                 </div>
               ))}
             </div>
@@ -93,7 +93,7 @@ export default function Highlights() {
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="relative bg-white rounded-3xl border border-border-subtle p-8 md:p-12 shadow-lg min-h-[400px] flex flex-col justify-between"
+            className="relative bg-white dark:bg-dark-elevated rounded-3xl border border-border-subtle dark:border-gray-700 p-8 md:p-12 shadow-lg min-h-[400px] flex flex-col justify-between"
           >
             <AnimatePresence mode="wait">
               <motion.div
@@ -107,10 +107,10 @@ export default function Highlights() {
                 <div className={`w-24 h-24 mx-auto ${slides[currentSlide].color} rounded-full flex items-center justify-center mb-6`}>
                   {slides[currentSlide].icon}
                 </div>
-                <h3 className="text-2xl font-bold text-text-primary mb-4">
+                <h3 className="text-2xl font-bold text-text-primary dark:text-gray-100 mb-4">
                   {slides[currentSlide].title}
                 </h3>
-                <p className="text-text-secondary leading-relaxed">
+                <p className="text-text-secondary dark:text-gray-400 leading-relaxed">
                   {slides[currentSlide].desc}
                 </p>
               </motion.div>
@@ -123,7 +123,7 @@ export default function Highlights() {
                   key={idx}
                   onClick={() => setCurrentSlide(idx)}
                   className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                    currentSlide === idx ? 'bg-accent w-6' : 'bg-border-subtle hover:bg-border-subtle/70'
+                    currentSlide === idx ? 'bg-accent w-6' : 'bg-border-subtle dark:bg-gray-700 hover:bg-border-subtle/70 dark:hover:bg-gray-600'
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />

@@ -44,7 +44,8 @@ export async function POST(request: NextRequest) {
 
     const result = await runOrderAutomation();
 
-    console.log('[Order Automation] Run completed:', result);
+    // Log cron job completion for monitoring
+    console.info('[Order Automation] Run completed:', result);
 
     return successResponse({
       message: 'Order automation completed',

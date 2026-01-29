@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/server-auth';
 import { okResponse, failResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
 import { getAdminDashboardStats } from '@/server/services/stats.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 

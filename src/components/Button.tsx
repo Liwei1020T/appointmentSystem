@@ -48,16 +48,19 @@ export const Button: React.FC<ButtonProps> = ({
       ${glow ? 'shadow-glow hover:shadow-glow' : 'shadow-sm hover:shadow-sm'}
     `.trim(),
     secondary: `
-      bg-white text-text-primary 
-      border border-border-subtle 
+      bg-white text-text-primary
+      border border-border-subtle
       hover:bg-ink hover:border-accent/40
+      dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600
+      dark:border-gray-600
     `.trim(),
     ghost: `
-      bg-transparent text-text-secondary 
+      bg-transparent text-text-secondary
       hover:bg-ink hover:text-text-primary
+      dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100
     `.trim(),
     danger: `
-      bg-danger text-white 
+      bg-danger text-white
       hover:bg-danger/90 hover:shadow-sm
     `.trim()
   };

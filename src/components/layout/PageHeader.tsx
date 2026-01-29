@@ -39,21 +39,21 @@ const PageHeader: React.FC<PageHeaderProps> = ({
     };
 
     return (
-        <div className="bg-white/90 backdrop-blur-md sticky top-[64px] z-30 border-b border-border-subtle shadow-sm">
+        <div className="bg-white/90 dark:bg-dark-elevated/90 backdrop-blur-md sticky top-[64px] z-30 border-b border-border-subtle dark:border-gray-700 shadow-sm">
             <div className={`${maxWidth} mx-auto px-4 py-5 flex items-center gap-4`}>
                 {showBack && (
                     <button
                         onClick={handleBack}
-                        className="w-10 h-10 flex items-center justify-center bg-ink hover:bg-ink/80 rounded-xl transition-colors shrink-0"
+                        className="w-10 h-10 flex items-center justify-center bg-ink hover:bg-ink/80 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-xl transition-colors shrink-0"
                         aria-label="返回"
                     >
-                        <ArrowLeft className="w-5 h-5 text-text-secondary" />
+                        <ArrowLeft className="w-5 h-5 text-text-secondary dark:text-gray-300" />
                     </button>
                 )}
                 <div className="flex-1 min-w-0">
-                    <h1 className="text-xl font-bold text-text-primary font-display truncate">{title}</h1>
+                    <h1 className="text-xl font-bold text-text-primary dark:text-gray-100 font-display truncate">{title}</h1>
                     {subtitle && (
-                        <p className="text-sm text-text-secondary mt-0.5 truncate">{subtitle}</p>
+                        <p className="text-sm text-text-secondary dark:text-gray-400 mt-0.5 truncate">{subtitle}</p>
                     )}
                 </div>
             </div>

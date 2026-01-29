@@ -14,6 +14,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Card from '@/components/Card';
+import EmptyState from '@/components/EmptyState';
 import PageLoading from '@/components/loading/PageLoading';
 import Button from '@/components/Button';
 import ImagePreview from '@/components/ImagePreview';
@@ -447,14 +448,11 @@ export default function AdminReviewsPage() {
         {/* 评价列表 */}
         <div className="space-y-4">
           {filteredReviews.length === 0 ? (
-            <Card className="p-12 text-center">
-              <MessageSquare className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
-              <p className="text-text-secondary">
-                {searchQuery || filterRating !== 'all'
-                  ? '没有找到匹配的评价'
-                  : '暂无评价'}
-              </p>
-            </Card>
+            <EmptyState
+              type={searchQuery || filterRating !== 'all' ? 'search-empty' : 'no-reviews'}
+              title={searchQuery || filterRating !== 'all' ? '没有找到匹配的评价' : '暂无评价'}
+              description={searchQuery || filterRating !== 'all' ? '试试其他搜索条件' : '完成订单后客户可以留下评价'}
+            />
           ) : (
             filteredReviews.map((review) => (
               <Card key={review.id} className="p-6">

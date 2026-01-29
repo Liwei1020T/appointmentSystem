@@ -234,8 +234,8 @@ export async function simulatePayment(
   amount: number
 ): Promise<{ success: boolean; transactionId: string | null }> {
   try {
-    // Simulate payment processing
-    console.log(`Simulating payment for order ${orderId}, amount: ${amount}`);
+    // Simulate payment processing (development only)
+    console.info(`[DEV] Simulating payment for order ${orderId}, amount: ${amount}`);
     return { success: true, transactionId: `SIM_${Date.now()}` };
   } catch (error) {
     console.error('Payment simulation failed:', error);

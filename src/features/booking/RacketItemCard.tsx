@@ -8,7 +8,7 @@
 'use client';
 
 import React, { useState, memo } from 'react';
-import { Trash2, ChevronDown, ChevronUp, Settings } from 'lucide-react';
+import { Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
 import RacketPhotoUploader from './RacketPhotoUploader';

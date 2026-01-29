@@ -16,6 +16,13 @@ vi.mock('@/server/services/order-eta.service', () => ({
 import { prisma } from '@/lib/prisma';
 import { createOrderWithPackage } from '@/server/services/order.service';
 
+type OrderTransactionClient = {
+  order: { create: ReturnType<typeof vi.fn> };
+  userVoucher: { update: ReturnType<typeof vi.fn> };
+  payment: { create: ReturnType<typeof vi.fn> };
+  userPackage: { update: ReturnType<typeof vi.fn> };
+};
+
 describe('createOrderWithPackage first-order voucher guard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -42,13 +49,14 @@ describe('createOrderWithPackage first-order voucher guard', () => {
         validUntil: new Date(Date.now() + 86400000),
       },
     });
-    (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(async (fn: any) =>
-      fn({
-        order: { create: vi.fn().mockResolvedValue({ id: 'order-1' }) },
-        userVoucher: { update: vi.fn() },
-        payment: { create: vi.fn() },
-        userPackage: { update: vi.fn() },
-      })
+    const transactionClient: OrderTransactionClient = {
+      order: { create: vi.fn().mockResolvedValue({ id: 'order-1' }) },
+      userVoucher: { update: vi.fn() },
+      payment: { create: vi.fn() },
+      userPackage: { update: vi.fn() },
+    };
+    (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
+      async (fn: (tx: OrderTransactionClient) => unknown) => fn(transactionClient)
     );
 
     await expect(
@@ -84,13 +92,14 @@ describe('createOrderWithPackage first-order voucher guard', () => {
         validUntil: new Date(Date.now() - 86400000),
       },
     });
-    (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(async (fn: any) =>
-      fn({
-        order: { create: vi.fn().mockResolvedValue({ id: 'order-2' }) },
-        userVoucher: { update: vi.fn() },
-        payment: { create: vi.fn() },
-        userPackage: { update: vi.fn() },
-      })
+    const transactionClient: OrderTransactionClient = {
+      order: { create: vi.fn().mockResolvedValue({ id: 'order-2' }) },
+      userVoucher: { update: vi.fn() },
+      payment: { create: vi.fn() },
+      userPackage: { update: vi.fn() },
+    };
+    (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
+      async (fn: (tx: OrderTransactionClient) => unknown) => fn(transactionClient)
     );
 
     await expect(

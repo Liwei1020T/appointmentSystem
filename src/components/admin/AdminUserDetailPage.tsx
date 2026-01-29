@@ -35,6 +35,7 @@ import {
   type UserRole,
 } from '@/services/adminUserService';
 import PageLoading from '@/components/loading/PageLoading';
+import EmptyState from '@/components/EmptyState';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { CheckCircle } from 'lucide-react';
 
@@ -418,7 +419,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
           <div className="bg-ink-surface rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4">订单历史</h2>
             {orders.length === 0 ? (
-              <div className="text-center py-8 text-text-tertiary">暂无订单</div>
+              <EmptyState type="no-orders" size="sm" />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[720px]">
@@ -488,7 +489,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
           <div className="bg-ink-surface rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4">积分记录</h2>
             {pointsLog.length === 0 ? (
-              <div className="text-center py-8 text-text-tertiary">暂无积分记录</div>
+              <EmptyState type="no-points" size="sm" />
             ) : (
               <div className="space-y-2">
                 {pointsLog.map((log) => (
@@ -540,7 +541,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
           <div className="bg-ink-surface rounded-lg shadow p-6">
             <h3 className="text-lg font-bold mb-4">拥有套餐</h3>
             {packages.length === 0 ? (
-              <div className="text-center py-4 text-text-tertiary text-sm">暂无套餐</div>
+              <EmptyState type="no-packages" size="sm" />
             ) : (
               <div className="space-y-3">
                 {packages.map((pkg) => (
@@ -562,7 +563,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
           <div className="bg-ink-surface rounded-lg shadow p-6">
             <h3 className="text-lg font-bold mb-4">拥有优惠券</h3>
             {vouchers.length === 0 ? (
-              <div className="text-center py-4 text-text-tertiary text-sm">暂无优惠券</div>
+              <EmptyState type="no-vouchers" size="sm" />
             ) : (
               <div className="space-y-3">
                 {vouchers.map((voucher) => (

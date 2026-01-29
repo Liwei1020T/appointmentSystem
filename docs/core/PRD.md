@@ -1,8 +1,8 @@
 🏸 **String Service Platform — 产品需求文档（PRD）**
 
-- 版本：v2.0  
-- 作者：产品需求经理  
-- 最后更新：2025-12-11
+- 版本：v2.0
+- 作者：产品需求经理
+- 最后更新：2026-01-27
 
 ---
 
@@ -285,7 +285,8 @@ String Service Platform 是一个为羽毛球穿线师打造的，集 **预约�
 
 ### 6.2 安全
 
-- 使用 Supabase Row Level Security。  
+- 使用 Prisma ORM 进行类型安全的数据库访问。
+- 应用层权限控制（NextAuth.js + API 中间件）。
 - 支付采用安全支付网关（PCI-DSS 合规）。  
 
 ### 6.3 可用性

@@ -3,7 +3,7 @@
  * POST /api/reviews/[id]/like - 点赞/取消点赞
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth';
 import { okResponse, failResponse } from '@/lib/api-response';
 import { toggleReviewLike } from '@/server/services/review.service';

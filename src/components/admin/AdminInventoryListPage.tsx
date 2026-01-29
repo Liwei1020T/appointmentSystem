@@ -20,6 +20,8 @@ import {
   type LowStockAlert,
 } from '@/services/inventoryService';
 import { Badge, Button, Card, Input, StatsCard, Tabs } from '@/components';
+import EmptyState from '@/components/EmptyState';
+import { SkeletonTable } from '@/components/Skeleton';
 import SectionLoading from '@/components/loading/SectionLoading';
 import { AlertTriangle, Boxes, Search, XCircle } from 'lucide-react';
 
@@ -264,7 +266,7 @@ export default function AdminInventoryListPage() {
 
         {/* Loading State */}
         {loading ? (
-          <SectionLoading label="加载库存..." minHeightClassName="min-h-[240px]" />
+          <SkeletonTable rows={10} columns={9} />
         ) : (
           <>
             {/* Strings Table */}
@@ -305,13 +307,8 @@ export default function AdminInventoryListPage() {
                   <tbody className="bg-ink-surface divide-y divide-border-subtle">
                     {strings.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="px-6 py-12 text-center text-text-tertiary">
-                          <div className="flex flex-col items-center">
-                            <svg className="h-12 w-12 text-text-tertiary mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                            </svg>
-                            <p className="text-sm">暂无库存数据</p>
-                          </div>
+                        <td colSpan={9} className="px-6 py-12">
+                          <EmptyState type="no-inventory" />
                         </td>
                       </tr>
                     ) : (

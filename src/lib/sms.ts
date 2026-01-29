@@ -29,8 +29,8 @@ export async function sendSms(to: string, body: string): Promise<SmsSendResult> 
 
   // Dev fallback: no external dependency; avoids blocking local development.
   if (!accountSid || !authToken || !fromNumber) {
-    console.log('[SMS DEV] To:', to);
-    console.log('[SMS DEV] Body:', body);
+    console.info('[SMS DEV] To:', to);
+    console.info('[SMS DEV] Body:', body);
     return { success: true, provider: 'dev' };
   }
 

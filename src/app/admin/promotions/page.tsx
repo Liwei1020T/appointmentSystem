@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { Card, Button, Badge, Toast, Modal } from '@/components';
 import PageHeader from '@/components/layout/PageHeader';
@@ -31,12 +30,18 @@ interface PromotionsResponse {
   usageSummary: PromotionUsageSummary;
 }
 
+type ToastType = 'success' | 'error' | 'warning' | 'info';
+
 export default function PromotionsPage() {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [usageSummary, setUsageSummary] = useState<PromotionUsageSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: ToastType }>({
+    show: false,
+    message: '',
+    type: 'success',
+  });
 
   // Form State
   const [formData, setFormData] = useState({
@@ -97,8 +102,9 @@ export default function PromotionsPage() {
         endAt: '',
         usageLimit: '',
       });
-    } catch (error: any) {
-      setToast({ show: true, message: error.message || '创建失败', type: 'error' });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : '创建失败';
+      setToast({ show: true, message, type: 'error' });
     }
   };
 
@@ -208,7 +214,7 @@ export default function PromotionsPage() {
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 value={formData.type}
-                onChange={e => setFormData({...formData, type: e.target.value as any})}
+                onChange={e => setFormData({...formData, type: e.target.value as Promotion['type']})}
               >
                 <option value="FLASH_SALE">限时折扣</option>
                 <option value="POINTS_BOOST">积分翻倍</option>
@@ -220,7 +226,7 @@ export default function PromotionsPage() {
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 value={formData.discountType}
-                onChange={e => setFormData({...formData, discountType: e.target.value as any})}
+                onChange={e => setFormData({...formData, discountType: e.target.value as Promotion['discountType']})}
               >
                 <option value="FIXED">固定金额</option>
                 <option value="PERCENTAGE">百分比</option>
@@ -308,7 +314,7 @@ export default function PromotionsPage() {
       {toast.show && (
         <Toast
           message={toast.message}
-          type={toast.type as any}
+          type={toast.type}
           onClose={() => setToast({ ...toast, show: false })}
         />
       )}

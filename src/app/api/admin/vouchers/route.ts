@@ -9,6 +9,7 @@ import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
 import { parseValidityDays } from '@/lib/voucher-utils';
+import type { Prisma } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,7 +97,7 @@ export async function GET(request: NextRequest) {
     const active = searchParams.get('active');
     const id = searchParams.get('id');
 
-    const where: any = {};
+    const where: Prisma.VoucherWhereInput = {};
     if (id) {
       where.id = id;
     }
@@ -105,7 +106,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (id) {
-      const voucher = await prisma.voucher.findUnique({ where });
+      const voucher = await prisma.voucher.findFirst({ where });
       if (!voucher) {
         return errorResponse('优惠券不存在', 404);
       }
@@ -154,7 +155,7 @@ export async function PATCH(request: NextRequest) {
       return errorResponse('请提供优惠券ID');
     }
 
-    const updateData: any = {};
+    const updateData: Prisma.VoucherUpdateInput = {};
     if (code) updateData.code = code;
     if (name) updateData.name = name;
     if (type) updateData.type = type;
@@ -198,7 +199,7 @@ export async function PATCH(request: NextRequest) {
       return errorResponse('没有可更新的字段');
     }
 
-    if (updateData.code) {
+    if (typeof updateData.code === 'string') {
       const existing = await prisma.voucher.findFirst({
         where: {
           code: updateData.code,

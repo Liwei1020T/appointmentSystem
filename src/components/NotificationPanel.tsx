@@ -12,7 +12,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { X, CheckCheck, Trash2, RefreshCw } from 'lucide-react';
+import { X, CheckCheck, RefreshCw } from 'lucide-react';
 import {
   getNotifications,
   markAsRead,
@@ -22,6 +22,7 @@ import {
 } from '@/services/notificationService';
 import NotificationItem from './NotificationItem';
 import SectionLoading from '@/components/loading/SectionLoading';
+import EmptyState from '@/components/EmptyState';
 
 interface NotificationPanelProps {
   userId: string;
@@ -193,12 +194,11 @@ export default function NotificationPanel({ userId, isOpen, onClose, onUnreadCou
           {loading ? (
             <SectionLoading label="加载通知..." minHeightClassName="min-h-[192px]" />
           ) : notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 text-text-tertiary">
-              <div className="text-5xl mb-3">🔔</div>
-              <p className="text-sm">
-                {filter === 'unread' ? '没有未读通知' : '暂无通知'}
-              </p>
-            </div>
+            <EmptyState
+              type="no-notifications"
+              title={filter === 'unread' ? '没有未读通知' : '暂无通知'}
+              size="sm"
+            />
           ) : (
             <div className="divide-y divide-border-subtle">
               {notifications.map((notification) => (

@@ -1,17 +1,13 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
-import { errorResponse, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
-
 export const dynamic = 'force-dynamic';
-
 export async function GET(_request: NextRequest) {
   try {
     await requireAdmin();
-
     const now = new Date();
-
     const [
       totalVouchers,
       activeVouchers,
@@ -41,16 +37,13 @@ export async function GET(_request: NextRequest) {
         _sum: { discountAmount: true, discount: true },
       }),
     ]);
-
     const toNumber = (value: number | { toNumber(): number } | null | undefined) => {
       if (value === null || value === undefined) return 0;
       if (typeof value === 'object' && 'toNumber' in value) return value.toNumber();
       return Number(value);
     };
-
     const totalDiscountGiven = toNumber(discountAgg._sum.discountAmount ?? discountAgg._sum.discount ?? 0);
     const usageRate = totalDistributed > 0 ? Math.round((totalUsed / totalDistributed) * 100) : 0;
-
     const payload = {
       // camelCase
       totalVouchers,
@@ -63,7 +56,6 @@ export async function GET(_request: NextRequest) {
       totalDiscountGiven,
       totalRedemptions: totalUsed,
       totalDiscount: totalDiscountGiven,
-
       // snake_case (UI + backward compatibility)
       total_vouchers: totalVouchers,
       active_vouchers: activeVouchers,
@@ -76,7 +68,6 @@ export async function GET(_request: NextRequest) {
       total_redemptions: totalUsed,
       total_discount: totalDiscountGiven,
     };
-
     return successResponse(payload);
   } catch (error) {
     return handleApiError(error);

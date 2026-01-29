@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/server-auth';
 import { parseJson } from '@/lib/validation';
 import { okResponse, failResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { replyReview } from '@/server/services/review.service';
 import { handleApiError } from '@/lib/api/handleApiError';

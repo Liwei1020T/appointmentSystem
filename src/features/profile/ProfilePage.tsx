@@ -11,24 +11,28 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import {
   getUserProfile,
   getUserStats,
   generateReferralCode,
   logout,
   getMembershipDetails,
+  type UserStats,
+  type MembershipTierInfo,
   UserProfile,
 } from '@/services/profileService';
-import { Card, Badge, Button, Modal, Toast } from '@/components';
-import MembershipCard, { MembershipTier } from '@/components/MembershipCard';
+import { Badge, Button, Modal, Toast } from '@/components';
+import MembershipCard from '@/components/MembershipCard';
 import InlineLoading from '@/components/loading/InlineLoading';
 import { ProfileSkeleton } from '@/components/skeletons';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { ThemeSelector } from '@/components/ThemeProvider';
+import { formatDate } from '@/lib/utils';
 import { isAdminRole } from '@/lib/roles';
 
 // 图标组件 - 统一使用橙色主题
 const ChevronRightIcon = () => (
-  <svg className="w-5 h-5 text-text-tertiary" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+  <svg className="w-5 h-5 text-text-tertiary dark:text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
     <path d="M9 5l7 7-7 7" />
   </svg>
 );
@@ -41,8 +45,21 @@ export default function ProfilePage() {
   const authLoading = status === 'loading';
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [stats, setStats] = useState<any>(null);
-  const [membershipData, setMembershipData] = useState<any>(null);
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [membershipData, setMembershipData] = useState<{
+    currentTier: MembershipTierInfo['tier'];
+    points: number;
+    totalSpent: number;
+    totalOrders: number;
+    benefits: Array<{ description: string; isActive: boolean }>;
+    progress: {
+      nextTier: MembershipTierInfo['tier'] | null;
+      spentProgress: number;
+      ordersProgress: number;
+      spentTarget: number;
+      ordersTarget: number;
+    };
+  } | null>(null);
   const [referralCode, setReferralCode] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -85,15 +102,27 @@ export default function ProfilePage() {
       }
 
       setStats(statsResult);
-      setMembershipData(membershipResult);
+      const normalizedBenefits = Array.isArray(membershipResult?.benefits)
+        ? membershipResult.benefits
+            .map((benefit: { description?: string | null; isActive?: boolean | null }) => ({
+              description: String(benefit?.description ?? '').trim(),
+              isActive: Boolean(benefit?.isActive ?? true),
+            }))
+            .filter((benefit: { description: string }) => benefit.description.length > 0)
+        : [];
+      const normalizedMembership = membershipResult
+        ? { ...membershipResult, benefits: normalizedBenefits }
+        : null;
+      setMembershipData(normalizedMembership);
 
       if (codeResult.error) {
         console.error('Referral code error:', codeResult.error);
       } else {
         setReferralCode(codeResult.code || '');
       }
-    } catch (err: any) {
-      setError(err.message || '加载失败');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '加载失败';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -120,7 +149,7 @@ export default function ProfilePage() {
         document.body.removeChild(textarea);
       }
       setToast({ show: true, message: '邀请码已复制到剪贴板', type: 'success' });
-    } catch (err) {
+    } catch {
       setToast({ show: true, message: '复制失败，请手动选择并复制', type: 'error' });
     }
   };
@@ -134,8 +163,9 @@ export default function ProfilePage() {
       } else {
         setToast({ show: true, message: '退出登录失败', type: 'error' });
       }
-    } catch (err: any) {
-      setToast({ show: true, message: err.message || '退出登录失败', type: 'error' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '退出登录失败';
+      setToast({ show: true, message, type: 'error' });
     } finally {
       setLoggingOut(false);
     }
@@ -150,17 +180,23 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-ink pb-24">
+    <div className="min-h-screen bg-ink dark:bg-dark pb-24">
       {/* ========== 顶部个人信息区 - 卡片化设计 ========== */}
       <div className="relative">
-        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-br from-accent/15 via-emerald-50 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-br from-accent/15 via-emerald-50 to-transparent dark:from-accent/10 dark:via-gray-800 dark:to-transparent" />
         <div className="max-w-2xl mx-auto px-4 pt-8 pb-6 relative">
-          <div className="flex items-center gap-4 bg-white/90 rounded-2xl border border-border-subtle shadow-lg p-5 backdrop-blur">
+          <div className="flex items-center gap-4 bg-white/90 dark:bg-dark-elevated/90 rounded-2xl border border-border-subtle dark:border-gray-700 shadow-lg p-5 backdrop-blur">
             {/* 头像 */}
             <div className="relative">
-              <div className="w-20 h-20 bg-accent text-text-onAccent rounded-full flex items-center justify-center text-3xl font-bold overflow-hidden ring-4 ring-white/60 shadow-sm">
+              <div className="w-20 h-20 bg-accent text-text-onAccent rounded-full flex items-center justify-center text-3xl font-bold overflow-hidden ring-4 ring-white/60 dark:ring-gray-700/60 shadow-sm">
                 {profile.avatar_url ? (
-                  <img src={profile.avatar_url} alt="头像" className="w-full h-full object-cover" />
+                  <Image
+                    src={profile.avatar_url}
+                    alt="头像"
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   (profile.full_name || profile.fullName || 'U').charAt(0).toUpperCase()
                 )}
@@ -169,17 +205,17 @@ export default function ProfilePage() {
 
             {/* 用户信息 */}
             <div className="flex-1">
-              <h1 className="text-2xl font-bold mb-1 text-text-primary font-display">{profile.full_name || profile.fullName || '用户'}</h1>
-              <p className="text-text-secondary text-sm">{profile.email}</p>
-              {profile.phone && <p className="text-text-tertiary text-sm">{profile.phone}</p>}
+              <h1 className="text-2xl font-bold mb-1 text-text-primary dark:text-gray-100 font-display">{profile.full_name || profile.fullName || '用户'}</h1>
+              <p className="text-text-secondary dark:text-gray-400 text-sm">{profile.email}</p>
+              {profile.phone && <p className="text-text-tertiary dark:text-gray-400 text-sm">{profile.phone}</p>}
             </div>
 
             {/* 编辑按钮 */}
             <button
               onClick={() => router.push('/profile/edit')}
-              className="w-10 h-10 bg-ink hover:bg-ink/80 rounded-full flex items-center justify-center transition-colors"
+              className="w-10 h-10 bg-ink dark:bg-gray-700 hover:bg-ink/80 dark:hover:bg-gray-600 rounded-full flex items-center justify-center transition-colors"
             >
-              <svg className="w-5 h-5 text-text-secondary" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-text-secondary dark:text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                 <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </button>
@@ -192,8 +228,8 @@ export default function ProfilePage() {
 
         {/* 错误提示 */}
         {error && (
-          <div className="bg-danger/10 border border-danger/30 rounded-xl p-4">
-            <p className="text-sm text-danger">{error}</p>
+          <div className="bg-danger/10 dark:bg-danger/20 border border-danger/30 dark:border-danger/40 rounded-xl p-4">
+            <p className="text-sm text-danger dark:text-red-400">{error}</p>
           </div>
         )}
 
@@ -214,54 +250,54 @@ export default function ProfilePage() {
 
         {/* ========== 快捷入口 - 紧凑设计 ========== */}
         {stats && (
-          <div className="bg-white rounded-2xl shadow-sm border border-border-subtle p-4">
+          <div className="bg-white dark:bg-dark-elevated rounded-2xl shadow-sm border border-border-subtle dark:border-gray-700 p-4">
             <div className="grid grid-cols-3 gap-3">
               <button
                 onClick={() => router.push('/profile/orders')}
-                className="flex flex-col items-center p-3 rounded-xl hover:bg-accent-soft transition-colors group"
+                className="flex flex-col items-center p-3 rounded-xl hover:bg-accent-soft dark:hover:bg-gray-700 transition-colors group"
               >
-                <div className="w-10 h-10 bg-accent-soft rounded-xl flex items-center justify-center mb-2 group-hover:bg-accent/20 transition-colors">
-                  <svg className="w-5 h-5 text-accent" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-10 h-10 bg-accent-soft dark:bg-gray-700 rounded-xl flex items-center justify-center mb-2 group-hover:bg-accent/20 dark:group-hover:bg-gray-600 transition-colors">
+                  <svg className="w-5 h-5 text-accent dark:text-accent" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                     <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
-                <span className="text-sm font-medium text-text-secondary">订单</span>
-                <span className="text-lg font-bold text-text-primary font-mono">{stats.totalOrders}</span>
+                <span className="text-sm font-medium text-text-secondary dark:text-gray-400">订单</span>
+                <span className="text-lg font-bold text-text-primary dark:text-gray-100 font-mono">{stats.totalOrders}</span>
               </button>
 
               <button
                 onClick={() => router.push('/packages?tab=my')}
-                className="flex flex-col items-center p-3 rounded-xl hover:bg-accent-soft transition-colors group"
+                className="flex flex-col items-center p-3 rounded-xl hover:bg-accent-soft dark:hover:bg-gray-700 transition-colors group"
               >
-                <div className="w-10 h-10 bg-accent-soft rounded-xl flex items-center justify-center mb-2 group-hover:bg-accent/20 transition-colors">
-                  <svg className="w-5 h-5 text-accent" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-10 h-10 bg-accent-soft dark:bg-gray-700 rounded-xl flex items-center justify-center mb-2 group-hover:bg-accent/20 dark:group-hover:bg-gray-600 transition-colors">
+                  <svg className="w-5 h-5 text-accent dark:text-accent" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                     <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 </div>
-                <span className="text-sm font-medium text-text-secondary">套餐</span>
-                <span className="text-lg font-bold text-text-primary font-mono">{stats.activePackages}</span>
+                <span className="text-sm font-medium text-text-secondary dark:text-gray-400">套餐</span>
+                <span className="text-lg font-bold text-text-primary dark:text-gray-100 font-mono">{stats.activePackages}</span>
               </button>
 
               <button
                 onClick={() => router.push('/profile/vouchers')}
-                className="flex flex-col items-center p-3 rounded-xl hover:bg-accent-soft transition-colors group"
+                className="flex flex-col items-center p-3 rounded-xl hover:bg-accent-soft dark:hover:bg-gray-700 transition-colors group"
               >
-                <div className="w-10 h-10 bg-accent-soft rounded-xl flex items-center justify-center mb-2 group-hover:bg-accent/20 transition-colors">
-                  <svg className="w-5 h-5 text-accent" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-10 h-10 bg-accent-soft dark:bg-gray-700 rounded-xl flex items-center justify-center mb-2 group-hover:bg-accent/20 dark:group-hover:bg-gray-600 transition-colors">
+                  <svg className="w-5 h-5 text-accent dark:text-accent" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                     <path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                   </svg>
                 </div>
-                <span className="text-sm font-medium text-text-secondary">优惠券</span>
-                <span className="text-lg font-bold text-text-primary font-mono">{stats.availableVouchers}</span>
+                <span className="text-sm font-medium text-text-secondary dark:text-gray-400">优惠券</span>
+                <span className="text-lg font-bold text-text-primary dark:text-gray-100 font-mono">{stats.availableVouchers}</span>
               </button>
             </div>
           </div>
         )}
 
         {/* ========== 积分活动区 ========== */}
-        <div className="bg-white rounded-2xl shadow-sm border border-border-subtle overflow-hidden">
-          <div className="px-4 py-3 border-b border-border-subtle">
-            <h2 className="font-semibold text-text-primary flex items-center gap-2">
+        <div className="bg-white dark:bg-dark-elevated rounded-2xl shadow-sm border border-border-subtle dark:border-gray-700 overflow-hidden">
+          <div className="px-4 py-3 border-b border-border-subtle dark:border-gray-700">
+            <h2 className="font-semibold text-text-primary dark:text-gray-100 flex items-center gap-2">
               <span className="w-1 h-4 bg-accent rounded-full" />
               积分活动
             </h2>
@@ -270,17 +306,17 @@ export default function ProfilePage() {
           {/* 积分中心 */}
           <button
             onClick={() => router.push('/points')}
-            className="w-full p-4 flex items-center justify-between hover:bg-ink transition-colors border-b border-border-subtle"
+            className="w-full p-4 flex items-center justify-between hover:bg-ink dark:hover:bg-gray-700 transition-colors border-b border-border-subtle dark:border-gray-700"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-accent-soft rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
+              <div className="w-10 h-10 bg-accent-soft dark:bg-gray-700 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-accent dark:text-accent" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
               </div>
               <div className="text-left">
-                <span className="font-medium text-text-primary block">积分中心</span>
-                <span className="text-xs text-text-tertiary">积分明细与兑换</span>
+                <span className="font-medium text-text-primary dark:text-gray-100 block">积分中心</span>
+                <span className="text-xs text-text-tertiary dark:text-gray-400">积分明细与兑换</span>
               </div>
             </div>
             <ChevronRightIcon />
@@ -289,17 +325,17 @@ export default function ProfilePage() {
           {/* 邀请好友 */}
           <button
             onClick={() => router.push('/profile/referrals')}
-            className="w-full p-4 flex items-center justify-between hover:bg-ink transition-colors"
+            className="w-full p-4 flex items-center justify-between hover:bg-ink dark:hover:bg-gray-700 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-accent-soft rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-accent" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-10 h-10 bg-accent-soft dark:bg-gray-700 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-accent dark:text-accent" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                   <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
               <div className="text-left">
-                <span className="font-medium text-text-primary block">邀请好友</span>
-                <span className="text-xs text-text-tertiary">
+                <span className="font-medium text-text-primary dark:text-gray-100 block">邀请好友</span>
+                <span className="text-xs text-text-tertiary dark:text-gray-400">
                   邀请码:
                   {referralCode ? (
                     <span className="ml-1 font-mono text-accent font-bold">{referralCode}</span>
@@ -324,20 +360,20 @@ export default function ProfilePage() {
         </div>
 
         {/* ========== 我的评价 ========== */}
-        <div className="bg-white rounded-2xl shadow-sm border border-border-subtle overflow-hidden">
+        <div className="bg-white dark:bg-dark-elevated rounded-2xl shadow-sm border border-border-subtle dark:border-gray-700 overflow-hidden">
           <button
             onClick={() => router.push('/reviews')}
-            className="w-full p-4 flex items-center justify-between hover:bg-ink transition-colors"
+            className="w-full p-4 flex items-center justify-between hover:bg-ink dark:hover:bg-gray-700 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-accent-soft rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-accent" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-10 h-10 bg-accent-soft dark:bg-gray-700 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-accent dark:text-accent" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                   <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                 </svg>
               </div>
               <div className="text-left">
-                <span className="font-medium text-text-primary block">我的评价</span>
-                <span className="text-xs text-text-tertiary">查看我的评价记录</span>
+                <span className="font-medium text-text-primary dark:text-gray-100 block">我的评价</span>
+                <span className="text-xs text-text-tertiary dark:text-gray-400">查看我的评价记录</span>
               </div>
             </div>
             <ChevronRightIcon />
@@ -345,28 +381,43 @@ export default function ProfilePage() {
         </div>
 
         {/* ========== 账户设置区 ========== */}
-        <div className="bg-white rounded-2xl shadow-sm border border-border-subtle overflow-hidden">
-          <div className="px-4 py-3 border-b border-border-subtle">
-            <h2 className="font-semibold text-text-primary flex items-center gap-2">
-              <span className="w-1 h-4 bg-ink rounded-full" />
+        <div className="bg-white dark:bg-dark-elevated rounded-2xl shadow-sm border border-border-subtle dark:border-gray-700 overflow-hidden">
+          <div className="px-4 py-3 border-b border-border-subtle dark:border-gray-700">
+            <h2 className="font-semibold text-text-primary dark:text-gray-100 flex items-center gap-2">
+              <span className="w-1 h-4 bg-ink dark:bg-gray-600 rounded-full" />
               账户设置
             </h2>
+          </div>
+
+          {/* 主题切换 */}
+          <div className="p-4 border-b border-border-subtle dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-ink dark:bg-gray-700 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-text-secondary dark:text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                </div>
+                <span className="font-medium text-text-primary dark:text-gray-100">外观主题</span>
+              </div>
+              <ThemeSelector />
+            </div>
           </div>
 
           {/* 编辑资料 */}
           <button
             onClick={() => router.push('/profile/edit')}
-            className="w-full p-4 flex items-center justify-between hover:bg-ink transition-colors border-b border-border-subtle"
+            className="w-full p-4 flex items-center justify-between hover:bg-ink dark:hover:bg-gray-700 transition-colors border-b border-border-subtle dark:border-gray-700"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-ink rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-text-secondary" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-10 h-10 bg-ink dark:bg-gray-700 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-text-secondary dark:text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                   <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
               <div className="text-left">
-                <span className="font-medium text-text-primary block">编辑资料</span>
-                <span className="text-xs text-text-tertiary">修改头像、姓名、联系方式</span>
+                <span className="font-medium text-text-primary dark:text-gray-100 block">编辑资料</span>
+                <span className="text-xs text-text-tertiary dark:text-gray-400">修改头像、姓名、联系方式</span>
               </div>
             </div>
             <ChevronRightIcon />
@@ -375,15 +426,15 @@ export default function ProfilePage() {
           {/* 修改密码 */}
           <button
             onClick={() => router.push('/profile/password')}
-            className="w-full p-4 flex items-center justify-between hover:bg-ink transition-colors border-b border-border-subtle"
+            className="w-full p-4 flex items-center justify-between hover:bg-ink dark:hover:bg-gray-700 transition-colors border-b border-border-subtle dark:border-gray-700"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-ink rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-text-secondary" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-10 h-10 bg-ink dark:bg-gray-700 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-text-secondary dark:text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                   <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                 </svg>
               </div>
-              <span className="font-medium text-text-primary">修改密码</span>
+              <span className="font-medium text-text-primary dark:text-gray-100">修改密码</span>
             </div>
             <ChevronRightIcon />
           </button>
@@ -391,26 +442,26 @@ export default function ProfilePage() {
           {/* 退出登录 */}
           <button
             onClick={() => setShowLogoutModal(true)}
-            className="w-full p-4 flex items-center justify-between hover:bg-danger/10 transition-colors"
+            className="w-full p-4 flex items-center justify-between hover:bg-danger/10 dark:hover:bg-danger/20 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-danger/10 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-danger" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-10 h-10 bg-danger/10 dark:bg-danger/20 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-danger dark:text-red-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                   <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
               </div>
-              <span className="font-medium text-danger">退出登录</span>
+              <span className="font-medium text-danger dark:text-red-400">退出登录</span>
             </div>
           </button>
         </div>
 
         {/* ========== 账户信息 ========== */}
-        <div className="bg-white rounded-2xl shadow-sm border border-border-subtle p-4">
-          <h3 className="text-sm font-semibold text-text-primary mb-3">账户信息</h3>
-          <div className="space-y-2 text-sm text-text-secondary">
+        <div className="bg-white dark:bg-dark-elevated rounded-2xl shadow-sm border border-border-subtle dark:border-gray-700 p-4">
+          <h3 className="text-sm font-semibold text-text-primary dark:text-gray-100 mb-3">账户信息</h3>
+          <div className="space-y-2 text-sm text-text-secondary dark:text-gray-400">
             <div className="flex justify-between">
               <span>注册时间</span>
-              <span className="text-text-primary">{profile.created_at || profile.createdAt ? formatDate(profile.created_at || profile.createdAt!) : '未知'}</span>
+              <span className="text-text-primary dark:text-gray-100">{profile.created_at || profile.createdAt ? formatDate(profile.created_at || profile.createdAt!) : '未知'}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>账户类型</span>

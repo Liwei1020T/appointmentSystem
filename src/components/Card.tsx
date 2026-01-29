@@ -41,9 +41,9 @@ export const Card: React.FC<CardProps> = ({
   };
 
   const variants = {
-    default: 'bg-ink-surface',
-    elevated: 'bg-ink-elevated',
-    'gradient-border': 'bg-ink-elevated border-gradient',
+    default: 'bg-ink-surface dark:bg-dark-elevated',
+    elevated: 'bg-ink-elevated dark:bg-dark-elevated',
+    'gradient-border': 'bg-ink-elevated dark:bg-dark-elevated border-gradient',
   };
 
   const isClickable = !!onClick;
@@ -51,9 +51,9 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div
       className={`
-        ${variants[variant]} 
-        rounded-2xl 
-        border border-border-subtle 
+        ${variants[variant]}
+        rounded-2xl
+        border border-border-subtle dark:border-gray-700
         ${shadow ? 'shadow-card' : ''}
         ${paddings[padding]}
         ${hover ? 'card-hover' : ''}

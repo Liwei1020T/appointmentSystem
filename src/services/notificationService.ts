@@ -346,9 +346,10 @@ export async function getUserDevices(userId?: string): Promise<{ data: UserDevic
 
 /**
  * 获取用户通知偏好设置 (Mocked)
+ * NOTE: Returns default preferences. Backend endpoint for user preferences is planned for future release.
  */
 export async function getNotificationPreferences(): Promise<{ data: NotificationPreferences | null; error: string | null }> {
-  // TODO: Implement backend endpoint for user preferences
+  // Returns default mock data until backend endpoint is implemented
   return {
     data: {
       sms: true,
@@ -374,8 +375,9 @@ export async function getNotificationPreferences(): Promise<{ data: Notification
 
 /**
  * 更新用户通知偏好设置 (Mocked)
+ * NOTE: Mock implementation. Backend endpoint for user preferences is planned for future release.
  */
 export async function updateNotificationPreferences(prefs: Partial<NotificationPreferences>): Promise<{ success: boolean; error: string | null }> {
-  // TODO: Implement backend endpoint for user preferences
+  // Mock success until backend endpoint is implemented
   return { success: true, error: null };
 }

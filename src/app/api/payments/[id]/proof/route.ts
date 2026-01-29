@@ -8,7 +8,6 @@ import { requireAuth } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { saveFile } from '@/lib/upload';
 import { isValidUUID } from '@/lib/utils';
-import { isApiError } from '@/lib/api-errors';
 import { recordPaymentProof } from '@/server/services/payment.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 

@@ -48,6 +48,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import EmptyState from '@/components/EmptyState';
+import { SkeletonDashboard } from '@/components/Skeleton';
 
 // Color palette for charts
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -174,7 +176,7 @@ export default function AdminReportsPage() {
   }
 
   if (loading) {
-    return <PageLoading surface="dark" label="Loading reports..." />;
+    return <SkeletonDashboard />;
   }
 
   if (error) {
@@ -390,8 +392,8 @@ export default function AdminReportsPage() {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-56 flex items-center justify-center text-text-tertiary">
-                  暂无可展示的营收数据
+                <div className="h-56 flex items-center justify-center">
+                  <EmptyState type="no-data" title="暂无营收数据" description="选择的日期范围内没有订单数据" size="sm" />
                 </div>
               )}
             </div>
@@ -537,8 +539,8 @@ export default function AdminReportsPage() {
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-44 flex items-center justify-center text-text-tertiary">
-                    暂无订单状态数据
+                  <div className="h-44 flex items-center justify-center">
+                    <EmptyState type="no-data" title="暂无订单状态数据" description="选择的日期范围内没有订单数据" size="sm" />
                   </div>
                 )}
               </div>
@@ -810,8 +812,8 @@ export default function AdminReportsPage() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-44 flex items-center justify-center text-text-tertiary">
-                  暂无用户来源数据
+                <div className="h-44 flex items-center justify-center">
+                  <EmptyState type="no-data" title="暂无用户来源数据" description="选择的日期范围内没有新用户注册" size="sm" />
                 </div>
               )}
             </div>

@@ -59,8 +59,8 @@ export interface TNGCallbackData {
 }
 
 export async function handleTNGCallback(callbackData: TNGCallbackData): Promise<void> {
-  // Stub implementation
-  console.log('TNG callback received:', callbackData);
+  // Stub implementation - log for debugging
+  console.info('[TNG] Callback received:', callbackData);
 }
 
 /**

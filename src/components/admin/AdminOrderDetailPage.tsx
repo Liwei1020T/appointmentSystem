@@ -18,6 +18,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { getOrderById, updateOrderStatus, updateOrderPhotos } from '@/services/adminOrderService';
 import type { AdminOrder, OrderStatus } from '@/services/adminOrderService';
 import { Badge, Button, Card } from '@/components';
+import EmptyState from '@/components/EmptyState';
 import PageLoading from '@/components/loading/PageLoading';
 import OrderPhotosUploader from '@/components/admin/OrderPhotosUploader';
 import OrderPhotosUpload from '@/components/OrderPhotosUpload';
@@ -488,7 +489,7 @@ export default function AdminOrderDetailPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-text-tertiary">暂无支付信息</p>
+                <EmptyState type="no-data" title="暂无支付信息" description="订单未关联支付记录" size="sm" />
               )}
             </Card>
 

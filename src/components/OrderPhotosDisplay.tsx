@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect } from 'react';
 import SectionLoading from '@/components/loading/SectionLoading';
+import EmptyState from '@/components/EmptyState';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { Camera, ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react';
 import { getOrderPhotos, OrderPhoto } from '@/services/orderPhotosService';
@@ -92,11 +93,16 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
   if (photos.length === 0) {
     return (
       <div className="bg-ink-surface rounded-lg border border-border-subtle p-6">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-4">
           <Camera className="w-5 h-5 text-text-tertiary" />
           <h3 className="text-lg font-semibold text-text-primary">穿线照片</h3>
         </div>
-        <p className="text-sm text-text-tertiary">暂无照片，订单完成后管理员会上传穿线照片</p>
+        <EmptyState
+          type="no-data"
+          title="暂无照片"
+          description="订单完成后管理员会上传穿线照片"
+          size="sm"
+        />
       </div>
     );
   }

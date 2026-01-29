@@ -1,23 +1,29 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import PackageCard from '@/components/PackageCard';
+import type { Package } from '@/services/packageService';
 
 describe('PackageCard', () => {
   it('shows first-order badge when package is first-order-only', () => {
-    render(
-      <PackageCard
-        package={{
-          id: 'pkg-1',
-          name: '体验套餐',
-          price: 18,
-          times: 1,
-          validityDays: 30,
-          active: true,
-          isFirstOrderOnly: true,
-        } as any}
-        onPurchase={vi.fn()}
-      />
-    );
+    const pkg: Package = {
+      id: 'pkg-1',
+      name: '体验套餐',
+      description: null,
+      times: 1,
+      price: 18 as unknown as Package['price'],
+      originalPrice: null,
+      validityDays: 30,
+      active: true,
+      imageUrl: null,
+      tag: null,
+      isPopular: false,
+      isFirstOrderOnly: true,
+      renewalDiscount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    render(<PackageCard package={pkg} onPurchase={vi.fn()} />);
 
     expect(screen.getByText('首单特价')).toBeInTheDocument();
   });

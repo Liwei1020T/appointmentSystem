@@ -7,7 +7,6 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/server-auth';
 import { okResponse, failResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
 import { getAdminOrders } from '@/server/services/admin-order.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 

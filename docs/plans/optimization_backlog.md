@@ -74,7 +74,7 @@
 
 ---
 
-## ✅ How to Continue (建议工作流)
+## ✅ How to Continue (建议工作流)11
 
 1. 每完成一项：在对应 changelog（`docs/changelogs/YYYY-MM/`）补一条记录。
 2. 每次合并前：至少通过 `npm run type-check`，并在移动端断点做一次手动回归（Step 2/4）。

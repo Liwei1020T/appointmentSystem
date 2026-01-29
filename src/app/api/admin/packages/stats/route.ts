@@ -1,12 +1,9 @@
-import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
-import { errorResponse, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import type { Prisma } from '@prisma/client';
 import { handleApiError } from '@/lib/api/handleApiError';
-
 export const dynamic = 'force-dynamic';
-
 /**
  * GET /api/admin/packages/stats
  *
@@ -20,24 +17,20 @@ export const dynamic = 'force-dynamic';
  * - 本月：createdAt 落在当月区间
  * - 最受欢迎：按支付记录数量最多的 packageId
  */
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     await requireAdmin();
-
     const totalPackages = await prisma.package.count();
     const activePackages = await prisma.package.count({ where: { active: true } });
-
     const confirmedStatuses: string[] = ['success', 'completed'];
     const paymentsWhere: Prisma.PaymentWhereInput = {
       packageId: { not: null },
       status: { in: confirmedStatuses },
     };
-
     // 本月时间范围（本地时区）
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-
     const [allAgg, monthAgg, mostPopular] = await Promise.all([
       prisma.payment.aggregate({
         where: paymentsWhere,
@@ -61,12 +54,10 @@ export async function GET(_request: NextRequest) {
         take: 1,
       }),
     ]);
-
     const totalPurchases = allAgg._count.id ?? 0;
     const totalRevenue = Number(allAgg._sum.amount ?? 0);
     const thisMonthPurchases = monthAgg._count.id ?? 0;
     const thisMonthRevenue = Number(monthAgg._sum.amount ?? 0);
-
     const mostPopularRow = mostPopular[0];
     const mostPopularPackageId = (mostPopularRow?.packageId as string | null) ?? null;
     const mostPopularPackage = mostPopularPackageId
@@ -75,10 +66,8 @@ export async function GET(_request: NextRequest) {
           select: { name: true },
         })
       : null;
-
     const mostPopularName = mostPopularPackage?.name ?? null;
     const mostPopularCount = mostPopularRow?._count.id ?? 0;
-
     return successResponse({
       // camelCase
       totalPackages,

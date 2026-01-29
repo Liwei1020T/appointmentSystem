@@ -1,12 +1,10 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
-import { errorResponse, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { parseDateRangeFromSearchParams } from '@/lib/reporting';
 import { handleApiError } from '@/lib/api/handleApiError';
-
 export const dynamic = 'force-dynamic';
-
 /**
  * 管理员 - 热门球线（按已完成订单聚合）
  *
@@ -19,11 +17,9 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
-
     const searchParams = request.nextUrl.searchParams;
     const limit = Math.max(1, Number(searchParams.get('limit') || 10));
     const { start, end } = parseDateRangeFromSearchParams(searchParams, { defaultDays: 30 });
-
     const orders = await prisma.order.findMany({
       where: {
         status: 'completed',
@@ -37,7 +33,6 @@ export async function GET(request: NextRequest) {
         string: { select: { brand: true, model: true } },
       },
     });
-
     const acc = new Map<
       string,
       {
@@ -50,7 +45,6 @@ export async function GET(request: NextRequest) {
         tensionCount: number;
       }
     >();
-
     for (const order of orders) {
       const sid = order.stringId as string;
       const brand = order.string?.brand || '';
@@ -73,7 +67,6 @@ export async function GET(request: NextRequest) {
       }
       acc.set(sid, current);
     }
-
     const data = Array.from(acc.values())
       .map((row) => ({
         id: row.stringId,
@@ -88,7 +81,6 @@ export async function GET(request: NextRequest) {
       }))
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, limit);
-
     return successResponse(data);
   } catch (error) {
     return handleApiError(error);

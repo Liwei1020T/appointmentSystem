@@ -1,4 +1,5 @@
 import React from 'react';
+import EmptyState from '@/components/EmptyState';
 
 export interface Column<T> {
   key: string;
@@ -49,11 +50,13 @@ export function Table<T>({
         <tbody>
           {data.length === 0 ? (
             <tr>
-              <td 
-                colSpan={columns.length} 
-                className="px-4 py-8 text-center text-text-tertiary"
-              >
-                {emptyMessage}
+              <td colSpan={columns.length} className="px-4 py-8">
+                <EmptyState
+                  type="no-data"
+                  title="暂无数据"
+                  description={emptyMessage}
+                  size="sm"
+                />
               </td>
             </tr>
           ) : (

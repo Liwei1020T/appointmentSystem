@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
@@ -22,15 +22,14 @@ import {
   AlertCircle,
   CheckCircle2,
   Sparkles,
-  Clock,
-  Tag,
   History,
   X,
 } from 'lucide-react';
 import PageHeader from '@/components/layout/PageHeader';
 import PageLoading from '@/components/loading/PageLoading';
+import EmptyState from '@/components/EmptyState';
 import { getPointsBalance, getPointsHistory } from '@/services/pointsService';
-import { getRedeemableVouchers, redeemVoucherWithPoints, getUserVouchersForProfile, getVoucherStats } from '@/services/voucherService';
+import { getRedeemableVouchers, redeemVoucherWithPoints, getUserVouchersForProfile, type RedeemableVoucher } from '@/services/voucherService';
 import { formatDate } from '@/lib/utils';
 
 // Types
@@ -43,24 +42,11 @@ interface PointsLog {
   created_at: string;
 }
 
-interface AvailableVoucher {
-  id: string;
-  code: string;
-  name?: string;
-  type?: string;
-  discount_type?: 'percentage' | 'fixed';
-  discount_value?: number;
-  value?: number;
-  points_required?: number;
+interface AvailableVoucher extends RedeemableVoucher {
   pointsCost?: number;
-  min_purchase?: number;
   minPurchase?: number;
   description?: string;
-  owned_count: number;
-  max_per_user: number;
   maxRedemptionsPerUser?: number;
-  can_redeem: boolean;
-  remaining_redemptions: number;
 }
 
 interface UserVoucher {
@@ -82,6 +68,7 @@ interface UserVoucher {
 }
 
 type TabType = 'exchange' | 'my' | 'history';
+type VoucherFilter = 'all' | 'available' | 'used' | 'expired';
 
 function PointsCenterContent() {
   const router = useRouter();
@@ -90,7 +77,6 @@ function PointsCenterContent() {
   const activeTab = tabFromUrl || 'exchange';
 
   const { data: session, status } = useSession();
-  const user = session?.user;
   const isAuthenticated = !!session;
   const authLoading = status === 'loading';
 
@@ -99,10 +85,9 @@ function PointsCenterContent() {
   const [pointsLogs, setPointsLogs] = useState<PointsLog[]>([]);
   const [availableVouchers, setAvailableVouchers] = useState<AvailableVoucher[]>([]);
   const [userVouchers, setUserVouchers] = useState<UserVoucher[]>([]);
-  const [voucherStats, setVoucherStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [redeeming, setRedeeming] = useState<string | null>(null);
-  const [voucherFilter, setVoucherFilter] = useState<'all' | 'available' | 'used' | 'expired'>('all');
+  const [voucherFilter, setVoucherFilter] = useState<VoucherFilter>('all');
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
@@ -117,29 +102,15 @@ function PointsCenterContent() {
     }
   }, [isAuthenticated, authLoading, loading]);
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-    if (isAuthenticated) {
-      loadData();
-    }
-  }, [isAuthenticated, authLoading]);
-
   // Auto-hide toast
   useEffect(() => {
     if (toast.show) {
-      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      const timer = setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3000);
       return () => clearTimeout(timer);
     }
   }, [toast.show]);
 
-  const setTab = (tab: TabType) => {
-    router.replace(`/profile/points?tab=${tab}`, { scroll: false });
-  };
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       // 获取积分余额
@@ -151,15 +122,17 @@ function PointsCenterContent() {
       // 获取积分明细
       const logsResult = await getPointsHistory();
       if (!logsResult.error && Array.isArray(logsResult.logs)) {
-        const mapped: PointsLog[] = logsResult.logs.map((log: any) => {
-          const amount = Number(log.amount ?? 0);
+        const mapped: PointsLog[] = logsResult.logs.map((log) => {
+          const amount = Number(log.amount ?? log.points ?? 0);
+          const rawCreatedAt = log.createdAt ?? log.created_at ?? new Date().toISOString();
+          const createdAt = rawCreatedAt instanceof Date ? rawCreatedAt.toISOString() : String(rawCreatedAt);
           return {
             id: String(log.id),
             points: Math.abs(amount),
             type: amount > 0 ? 'earned' : amount < 0 ? 'spent' : 'expired',
             source: String(log.type || 'bonus'),
             description: String(log.description || log.reason || ''),
-            created_at: String(log.createdAt || log.created_at || new Date().toISOString()),
+            created_at: createdAt,
           };
         });
         setPointsLogs(mapped);
@@ -168,22 +141,32 @@ function PointsCenterContent() {
       // 获取可兑换优惠券
       const vouchersResult = await getRedeemableVouchers();
       if (!vouchersResult.error && Array.isArray(vouchersResult.vouchers)) {
-        setAvailableVouchers(vouchersResult.vouchers as any);
+        setAvailableVouchers(vouchersResult.vouchers);
       }
 
       // 获取用户已有优惠券
       const userVouchersResult = await getUserVouchersForProfile();
       if (!userVouchersResult.error && Array.isArray(userVouchersResult.vouchers)) {
-        setUserVouchers(userVouchersResult.vouchers as any);
+        setUserVouchers(userVouchersResult.vouchers as UserVoucher[]);
       }
-
-      // 获取优惠券统计
-      const statsResult = await getVoucherStats();
-      setVoucherStats(statsResult);
     } catch (error) {
       console.error('Failed to load data:', error);
     }
     setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+    if (isAuthenticated) {
+      loadData();
+    }
+  }, [isAuthenticated, authLoading, loadData, router]);
+
+  const setTab = (tab: TabType) => {
+    router.replace(`/profile/points?tab=${tab}`, { scroll: false });
   };
 
   const handleRedeemVoucher = async (voucher: AvailableVoucher) => {
@@ -199,8 +182,9 @@ function PointsCenterContent() {
 
       setToast({ show: true, message: '兑换成功！', type: 'success' });
       loadData();
-    } catch (err: any) {
-      setToast({ show: true, message: err.message || '兑换失败', type: 'error' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '兑换失败';
+      setToast({ show: true, message, type: 'error' });
     } finally {
       setRedeeming(null);
     }
@@ -348,10 +332,7 @@ function PointsCenterContent() {
               </div>
 
               {availableVouchers.length === 0 ? (
-                <div className="text-center py-12">
-                  <Gift className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
-                  <p className="text-text-tertiary">暂无可兑换优惠券</p>
-                </div>
+                <EmptyState type="no-vouchers" />
               ) : (
                 <div className="grid md:grid-cols-2 gap-4">
                   {availableVouchers.map((voucher) => {
@@ -386,8 +367,8 @@ function PointsCenterContent() {
                             {voucher.name && (
                               <p className="text-sm text-text-secondary font-medium">{voucher.name}</p>
                             )}
-                            {(voucher.min_purchase || (voucher as any).minPurchase > 0) && (
-                              <p className="text-xs text-text-tertiary mt-1">满 RM {voucher.min_purchase || (voucher as any).minPurchase} 可用</p>
+                            {(voucher.min_purchase || (voucher.minPurchase ?? 0) > 0) && (
+                              <p className="text-xs text-text-tertiary mt-1">满 RM {voucher.min_purchase || voucher.minPurchase} 可用</p>
                             )}
                           </div>
                           <div className="p-2 bg-accent/10 rounded-lg">
@@ -418,7 +399,7 @@ function PointsCenterContent() {
                           <div className="text-right">
                             {!hasEnoughPoints && !isMaxedOut && (
                               <p className="text-xs text-warning font-medium mb-1">
-                                还差 {(voucher.points_required || (voucher as any).pointsCost) - currentPoints} 积分
+                                还差 {pointsRequired - currentPoints} 积分
                               </p>
                             )}
                             <button
@@ -460,7 +441,7 @@ function PointsCenterContent() {
                 ].map((f) => (
                   <button
                     key={f.key}
-                    onClick={() => setVoucherFilter(f.key as any)}
+                    onClick={() => setVoucherFilter(f.key as VoucherFilter)}
                     className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all ${voucherFilter === f.key
                       ? 'bg-accent text-white shadow-sm'
                       : 'bg-ink text-text-secondary hover:bg-ink/80'
@@ -473,16 +454,11 @@ function PointsCenterContent() {
 
               {/* Voucher list */}
               {getFilteredVouchers().length === 0 ? (
-                <div className="text-center py-12">
-                  <Gift className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
-                  <p className="text-text-tertiary mb-4">暂无优惠券</p>
-                  <button
-                    onClick={() => setTab('exchange')}
-                    className="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:shadow-glow"
-                  >
-                    去兑换优惠券
-                  </button>
-                </div>
+                <EmptyState
+                  type="no-vouchers"
+                  actionLabel="去兑换优惠券"
+                  onAction={() => setTab('exchange')}
+                />
               ) : (
                 <div className="space-y-3">
                   {getFilteredVouchers().map((voucher) => {
@@ -571,10 +547,7 @@ function PointsCenterContent() {
               </div>
 
               {pointsLogs.length === 0 ? (
-                <div className="text-center py-12">
-                  <Coins className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
-                  <p className="text-text-tertiary">暂无积分记录</p>
-                </div>
+                <EmptyState type="no-points" />
               ) : (
                 <div className="divide-y divide-border-subtle max-h-[500px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 pr-2">
                   {pointsLogs.map((log) => (

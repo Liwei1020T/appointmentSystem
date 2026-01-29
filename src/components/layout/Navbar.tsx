@@ -56,7 +56,7 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 relative">
-        <div className="flex justify-between h-16 rounded-2xl bg-white/90 backdrop-blur-md border border-border-subtle shadow-sm px-4">
+        <div className="flex justify-between h-16 rounded-2xl bg-white/90 dark:bg-dark-elevated/90 backdrop-blur-md border border-border-subtle dark:border-gray-700 shadow-sm px-4">
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2.5 group">
@@ -71,8 +71,8 @@ export default function Navbar() {
                 <Link
                   href="/booking"
                   className={`px-3 py-2 rounded-xl text-sm font-medium ${isActive('/booking')
-                    ? 'bg-ink text-text-primary ring-1 ring-border-subtle'
-                    : 'text-text-secondary hover:bg-ink'
+                    ? 'bg-ink text-text-primary dark:bg-gray-700 dark:text-gray-100 ring-1 ring-border-subtle dark:ring-gray-600'
+                    : 'text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700'
                     }`}
                 >
                   预约穿线
@@ -81,8 +81,8 @@ export default function Navbar() {
                 <Link
                   href="/orders"
                   className={`px-3 py-2 rounded-xl text-sm font-medium ${isActive('/orders')
-                    ? 'bg-ink text-text-primary ring-1 ring-border-subtle'
-                    : 'text-text-secondary hover:bg-ink'
+                    ? 'bg-ink text-text-primary dark:bg-gray-700 dark:text-gray-100 ring-1 ring-border-subtle dark:ring-gray-600'
+                    : 'text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700'
                     }`}
                 >
                   我的订单
@@ -91,8 +91,8 @@ export default function Navbar() {
                 <Link
                   href="/profile/packages"
                   className={`px-3 py-2 rounded-xl text-sm font-medium ${isPackagesActive
-                    ? 'bg-ink text-text-primary ring-1 ring-border-subtle'
-                    : 'text-text-secondary hover:bg-ink'
+                    ? 'bg-ink text-text-primary dark:bg-gray-700 dark:text-gray-100 ring-1 ring-border-subtle dark:ring-gray-600'
+                    : 'text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700'
                     }`}
                 >
                   套餐
@@ -101,8 +101,8 @@ export default function Navbar() {
                 <Link
                   href="/profile/points"
                   className={`px-3 py-2 rounded-xl text-sm font-medium ${pathname?.startsWith('/profile/vouchers') || pathname?.startsWith('/profile/points')
-                    ? 'bg-ink text-text-primary ring-1 ring-border-subtle'
-                    : 'text-text-secondary hover:bg-ink'
+                    ? 'bg-ink text-text-primary dark:bg-gray-700 dark:text-gray-100 ring-1 ring-border-subtle dark:ring-gray-600'
+                    : 'text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700'
                     }`}
                 >
                   优惠券
@@ -111,8 +111,8 @@ export default function Navbar() {
                 <Link
                   href="/reviews"
                   className={`px-3 py-2 rounded-xl text-sm font-medium ${pathname === '/reviews' || pathname?.startsWith('/reviews')
-                    ? 'bg-ink text-text-primary ring-1 ring-border-subtle'
-                    : 'text-text-secondary hover:bg-ink'
+                    ? 'bg-ink text-text-primary dark:bg-gray-700 dark:text-gray-100 ring-1 ring-border-subtle dark:ring-gray-600'
+                    : 'text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700'
                     }`}
                 >
                   评价
@@ -123,8 +123,8 @@ export default function Navbar() {
                   <Link
                     href="/admin/dashboard"
                     className={`px-3 py-2 rounded-xl text-sm font-medium ${pathname?.startsWith('/admin')
-                      ? 'bg-accent/15 text-accent ring-1 ring-accent/30'
-                      : 'text-accent hover:bg-accent/10'
+                      ? 'bg-accent/15 text-accent dark:bg-accent/25 dark:text-accent ring-1 ring-accent/30 dark:ring-accent/40'
+                      : 'text-accent dark:text-accent hover:bg-accent/10 dark:hover:bg-accent/20'
                       }`}
                   >
                     管理后台
@@ -140,7 +140,7 @@ export default function Navbar() {
 
                 {/* User Menu */}
                 <div className="relative group">
-                  <button className="flex items-center space-x-2 px-3 py-2 rounded-xl text-sm font-medium text-text-secondary hover:bg-ink">
+                  <button className="flex items-center space-x-2 px-3 py-2 rounded-xl text-sm font-medium text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700">
                     <span>{session.user.name || session.user.phone || session.user.email || '用户'}</span>
                     <svg
                       className="w-4 h-4"
@@ -158,16 +158,16 @@ export default function Navbar() {
                   </button>
 
                   <div className="absolute right-0 top-full pt-2 z-50 opacity-0 invisible pointer-events-none transition group-hover:opacity-100 group-hover:visible group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:visible group-focus-within:pointer-events-auto">
-                    <div className="w-48 glass-strong rounded-xl py-1">
+                    <div className="w-48 glass-strong dark:bg-dark-elevated dark:border dark:border-gray-700 rounded-xl py-1">
                       <Link
                         href="/profile"
-                        className="block px-4 py-2 text-sm text-text-secondary hover:bg-ink"
+                        className="block px-4 py-2 text-sm text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700"
                       >
                         个人中心
                       </Link>
                       <button
                         onClick={handleSignOut}
-                        className="block w-full text-left px-4 py-2 text-sm text-text-secondary hover:bg-ink"
+                        className="block w-full text-left px-4 py-2 text-sm text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700"
                       >
                         退出登录
                       </button>
@@ -179,13 +179,13 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="px-3 py-2 rounded-xl text-sm font-medium text-text-secondary hover:bg-ink"
+                  className="px-3 py-2 rounded-xl text-sm font-medium text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700"
                 >
                   登录
                 </Link>
                 <Link
                   href="/signup"
-                  className="px-3 py-2 rounded-xl text-sm font-semibold text-text-onAccent bg-accent hover:shadow-sm"
+                  className="px-3 py-2 rounded-xl text-sm font-semibold text-text-onAccent bg-accent hover:shadow-sm dark:bg-accent dark:text-white"
                 >
                   注册
                 </Link>
@@ -199,7 +199,7 @@ export default function Navbar() {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-text-secondary hover:text-text-primary p-2"
+              className="text-text-secondary dark:text-gray-400 hover:text-text-primary dark:hover:text-gray-100 p-2"
             >
               {mobileMenuOpen ? (
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -216,55 +216,55 @@ export default function Navbar() {
 
         {/* Mobile Menu Dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden absolute left-0 right-0 top-full bg-white border border-border-subtle shadow-lg py-3 space-y-1 z-50 rounded-2xl mt-3">
+          <div className="md:hidden absolute left-0 right-0 top-full bg-white dark:bg-dark-elevated border border-border-subtle dark:border-gray-700 shadow-lg py-3 space-y-1 z-50 rounded-2xl mt-3">
             {status === 'authenticated' ? (
               <>
                 <Link
                   href="/booking"
-                  className={`block px-4 py-3 rounded-xl text-sm font-medium ${isActive('/booking') ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-ink'
+                  className={`block px-4 py-3 rounded-xl text-sm font-medium ${isActive('/booking') ? 'bg-accent/10 text-accent dark:bg-accent/20 dark:text-accent' : 'text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700'
                     }`}
                 >
                   预约穿线
                 </Link>
                 <Link
                   href="/orders"
-                  className={`block px-4 py-3 rounded-xl text-sm font-medium ${isActive('/orders') ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-ink'
+                  className={`block px-4 py-3 rounded-xl text-sm font-medium ${isActive('/orders') ? 'bg-accent/10 text-accent dark:bg-accent/20 dark:text-accent' : 'text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700'
                     }`}
                 >
                   我的订单
                 </Link>
                 <Link
                   href="/packages"
-                  className={`block px-4 py-3 rounded-xl text-sm font-medium ${isPackagesActive ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-ink'
+                  className={`block px-4 py-3 rounded-xl text-sm font-medium ${isPackagesActive ? 'bg-accent/10 text-accent dark:bg-accent/20 dark:text-accent' : 'text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700'
                     }`}
                 >
                   套餐
                 </Link>
                 <Link
                   href="/profile/vouchers"
-                  className={`block px-4 py-3 rounded-xl text-sm font-medium ${pathname?.startsWith('/profile/vouchers') ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-ink'
+                  className={`block px-4 py-3 rounded-xl text-sm font-medium ${pathname?.startsWith('/profile/vouchers') ? 'bg-accent/10 text-accent dark:bg-accent/20 dark:text-accent' : 'text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700'
                     }`}
                 >
                   优惠券
                 </Link>
                 <Link
                   href="/reviews"
-                  className={`block px-4 py-3 rounded-xl text-sm font-medium ${pathname?.startsWith('/reviews') ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-ink'
+                  className={`block px-4 py-3 rounded-xl text-sm font-medium ${pathname?.startsWith('/reviews') ? 'bg-accent/10 text-accent dark:bg-accent/20 dark:text-accent' : 'text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700'
                     }`}
                 >
                   评价
                 </Link>
-                <div className="border-t border-border-subtle my-2" />
+                <div className="border-t border-border-subtle dark:border-gray-700 my-2" />
                 <Link
                   href="/profile"
-                  className={`block px-4 py-3 rounded-xl text-sm font-medium ${isActive('/profile') ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-ink'
+                  className={`block px-4 py-3 rounded-xl text-sm font-medium ${isActive('/profile') ? 'bg-accent/10 text-accent dark:bg-accent/20 dark:text-accent' : 'text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700'
                     }`}
                 >
                   个人中心
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-danger hover:bg-danger/10"
+                  className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-danger hover:bg-danger/10 dark:text-red-400 dark:hover:bg-red-900/20"
                 >
                   退出登录
                 </button>
@@ -273,13 +273,13 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="block px-4 py-3 rounded-lg text-sm font-medium text-text-secondary hover:bg-ink"
+                  className="block px-4 py-3 rounded-lg text-sm font-medium text-text-secondary dark:text-gray-400 hover:bg-ink dark:hover:bg-gray-700"
                 >
                   登录
                 </Link>
                 <Link
                   href="/signup"
-                  className="block px-4 py-3 rounded-lg text-sm font-medium text-accent hover:bg-accent-soft"
+                  className="block px-4 py-3 rounded-lg text-sm font-medium text-accent dark:text-accent hover:bg-accent-soft dark:hover:bg-accent/20"
                 >
                   注册
                 </Link>

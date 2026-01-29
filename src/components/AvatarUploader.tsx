@@ -16,7 +16,7 @@
 
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
-import { Camera, Upload, X, User } from 'lucide-react';
+import { Camera, X, User } from 'lucide-react';
 import { uploadAvatar, deleteImage } from '@/services/imageUploadService';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
 
@@ -183,24 +183,25 @@ export default function AvatarUploader({
             height={128}
             className="w-full h-full object-cover"
             priority={size === 'lg'}
+            loading={size === 'lg' ? 'eager' : 'lazy'}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-accent/40 to-info/40 flex items-center justify-center text-text-primary font-semibold">
+          <div className="w-full h-full bg-gradient-to-br from-accent/40 to-info/40 dark:from-accent/30 dark:to-info/30 flex items-center justify-center text-text-primary dark:text-gray-100 font-semibold">
             {getInitials()}
           </div>
         )}
 
         {/* 上传中遮罩 */}
         {isUploading && (
-          <div className="absolute inset-0 bg-ink/60 flex items-center justify-center">
+          <div className="absolute inset-0 bg-ink/60 dark:bg-dark/70 flex items-center justify-center">
             <LoadingSpinner size="md" tone="inverse" className="w-8 h-8" />
           </div>
         )}
 
         {/* 悬停遮罩（可编辑时） */}
         {editable && !isUploading && (
-          <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/40 flex items-center justify-center transition-all">
-            <Camera className="w-8 h-8 text-text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/40 dark:group-hover:bg-dark/50 flex items-center justify-center transition-all">
+            <Camera className="w-8 h-8 text-text-primary dark:text-gray-100 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         )}
 
@@ -208,7 +209,7 @@ export default function AvatarUploader({
         {editable && currentAvatarUrl && !isUploading && (
           <button
             onClick={handleDelete}
-            className="absolute top-0 right-0 bg-danger text-text-primary rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-danger/90"
+            className="absolute top-0 right-0 bg-danger text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-danger/90"
           >
             <X className="w-4 h-4" />
           </button>
@@ -218,10 +219,10 @@ export default function AvatarUploader({
       {/* 上传提示 */}
       {editable && !isUploading && (
         <div className="text-center">
-          <p className="text-sm text-text-secondary mb-1">
+          <p className="text-sm text-text-secondary dark:text-gray-400 mb-1">
             点击或拖拽上传头像
           </p>
-          <p className="text-xs text-text-tertiary">
+          <p className="text-xs text-text-tertiary dark:text-gray-500">
             支持 JPG、PNG、WebP（最大5MB）
           </p>
         </div>

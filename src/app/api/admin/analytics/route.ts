@@ -3,7 +3,6 @@
  * GET /api/admin/analytics - 获取仪表盘数据
  */
 
-import { NextRequest } from 'next/server';
 import { requireAdmin } from '@/lib/server-auth';
 import { successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
@@ -11,7 +10,7 @@ import { getDashboardStats } from '@/server/services/analytics.service';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     await requireAdmin();
 

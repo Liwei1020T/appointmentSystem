@@ -259,6 +259,9 @@ model Order {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  // Composite indexes for common query patterns
+  @@index([userId, status, createdAt])
+  @@index([status, lastStatusChangeAt])
   @@map("orders")
 }
 
@@ -432,6 +435,8 @@ model UserPackage {
   @@index([userId])
   @@index([status])
   @@index([expiry])
+  // Composite index for finding active packages by user
+  @@index([userId, status, expiry])
   @@map("user_packages")
 }
 
@@ -546,6 +551,8 @@ model Notification {
 
   @@index([userId])
   @@index([read])
+  // Composite index for unread notifications query
+  @@index([userId, read, createdAt])
   @@map("notifications")
 }
 

@@ -20,6 +20,7 @@ import {
 } from '@/services/adminVoucherService';
 import { getAllUsers } from '@/services/adminUserService';
 import { Button, Input } from '@/components';
+import EmptyState from '@/components/EmptyState';
 import SectionLoading from '@/components/loading/SectionLoading';
 import { Search } from 'lucide-react';
 
@@ -242,9 +243,11 @@ export default function DistributeVoucherModal({
                 {loading ? (
                   <SectionLoading label="加载用户..." minHeightClassName="min-h-[200px]" />
                 ) : filteredUsers.length === 0 ? (
-                  <div className="p-4 text-center text-text-tertiary">
-                    {searchTerm ? '未找到匹配的用户' : '暂无用户'}
-                  </div>
+                  <EmptyState
+                    type={searchTerm ? 'search-empty' : 'no-users'}
+                    title={searchTerm ? '未找到匹配的用户' : '暂无用户'}
+                    size="sm"
+                  />
                 ) : (
                   <div className="divide-y divide-border-subtle">
                     {filteredUsers.map((user) => (

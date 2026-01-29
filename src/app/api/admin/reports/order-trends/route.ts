@@ -1,12 +1,10 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
-import { errorResponse, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { buildDayKeys, parseDateRangeFromSearchParams, toDayKey } from '@/lib/reporting';
 import { handleApiError } from '@/lib/api/handleApiError';
-
 export const dynamic = 'force-dynamic';
-
 /**
  * 管理员 - 订单趋势
  *
@@ -22,11 +20,9 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
-
     const { start, end } = parseDateRangeFromSearchParams(request.nextUrl.searchParams, {
       defaultDays: 30,
     });
-
     const orders = await prisma.order.findMany({
       where: { createdAt: { gte: start, lte: end } },
       select: {
@@ -37,12 +33,10 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'asc' },
     });
-
     const totalOrders = orders.length;
     const completedOrders = orders.filter((o) => o.status === 'completed');
     const cancelledOrders = orders.filter((o) => o.status === 'cancelled');
     const pendingOrders = orders.filter((o) => !['completed', 'cancelled'].includes(o.status));
-
     // ordersByDay（用于概览）
     const dayKeys = buildDayKeys(start, end);
     const byDay = new Map<string, { pending: number; completed: number; cancelled: number }>();
@@ -58,7 +52,6 @@ export async function GET(request: NextRequest) {
       date,
       ...(byDay.get(date) ?? { pending: 0, completed: 0, cancelled: 0 }),
     }));
-
     // ordersByHour
     const hourCounts = new Array(24).fill(0);
     for (const order of orders) {
@@ -69,7 +62,6 @@ export async function GET(request: NextRequest) {
       hour: String(hour).padStart(2, '0'),
       count,
     }));
-
     // ordersByDayOfWeek
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const dowCounts = new Array(7).fill(0);
@@ -81,7 +73,6 @@ export async function GET(request: NextRequest) {
       dayName: dayNames[dow],
       count,
     }));
-
     // ordersByMonth（YYYY-MM）
     const monthMap = new Map<string, { count: number; revenue: number }>();
     for (const order of orders) {
@@ -98,7 +89,6 @@ export async function GET(request: NextRequest) {
         count: v.count,
         revenue: Number(v.revenue.toFixed(2)),
       }));
-
     // 平均完成耗时（小时）
     const completionDurations = completedOrders
       .filter((o) => o.completedAt)
@@ -107,7 +97,6 @@ export async function GET(request: NextRequest) {
       completionDurations.length > 0
         ? completionDurations.reduce((sum, h) => sum + h, 0) / completionDurations.length
         : 0;
-
     return successResponse({
       totalOrders,
       pendingOrders: pendingOrders.length,

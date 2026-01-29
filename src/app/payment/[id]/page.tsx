@@ -28,9 +28,9 @@ export default function PaymentRoute({ params }: PaymentPageProps) {
 }
 
 function PaymentPageWrapper({ paymentId }: { paymentId: string }) {
-  // TODO: 从 API 获取支付详情
-  // const payment = await getPayment(paymentId);
-  
+  // NOTE: This component uses example data for demonstration.
+  // Production implementation should fetch payment details from /api/payments/:id
+
   // 临时示例数据
   const exampleData = {
     paymentId,

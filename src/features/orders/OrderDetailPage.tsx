@@ -49,6 +49,7 @@ import {
   Truck,
   CheckCircle
 } from 'lucide-react';
+import { OrderCompleteConfetti } from '@/components/Confetti';
 
 interface OrderDetailPageProps {
   orderId: string;
@@ -77,6 +78,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
     message: '',
     type: 'success',
   });
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // 加载订单详情
   const loadOrder = async () => {
@@ -145,6 +147,11 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
           // 显示浏览器通知（如果已授权）
           showBrowserNotification(notification);
+
+          // 订单完成时触发庆祝动效
+          if (newData.status === 'completed') {
+            setShowConfetti(true);
+          }
         }
 
         // 更新订单数据
@@ -385,6 +392,9 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
   return (
     <div className="min-h-screen bg-ink">
+      {/* 订单完成庆祝动效 */}
+      <OrderCompleteConfetti trigger={showConfetti} />
+
       <PageHeader title="订单详情" />
 
       <div className="max-w-2xl mx-auto p-4 space-y-4 pb-24">

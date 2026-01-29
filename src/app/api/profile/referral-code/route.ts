@@ -1,9 +1,7 @@
 import { requireUser } from '@/lib/server-auth';
-import { okResponse, failResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
+import { okResponse } from '@/lib/api-response';
 import { generateReferralCode } from '@/server/services/profile.service';
 import { handleApiError } from '@/lib/api/handleApiError';
-
 /**
  * Referral code API
  * POST /api/profile/referral-code

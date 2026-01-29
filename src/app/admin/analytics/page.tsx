@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Badge } from '@/components';
+import { Card } from '@/components';
 import PageHeader from '@/components/layout/PageHeader';
 import { apiRequest } from '@/services/apiClient';
 import { formatCurrency } from '@/lib/utils';
@@ -9,8 +9,31 @@ import LtvChart from '@/components/charts/LtvChart';
 import RetentionChart from '@/components/charts/RetentionChart';
 import HourlyChart from '@/components/charts/HourlyChart';
 
+type AnalyticsStats = {
+  ltv: {
+    ltv: number;
+    totalSales: number;
+    totalUsers: number;
+  };
+  retention: {
+    retentionRate: number;
+    totalOrderingUsers: number;
+    repeatUsers: number;
+  };
+  aovTrend: Array<{
+    month: string;
+    aov: number;
+    orderCount: number;
+    totalSales: number;
+  }>;
+  popularHours: Array<{
+    hour: string;
+    count: number;
+  }>;
+};
+
 export default function AnalyticsPage() {
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<AnalyticsStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,7 +42,7 @@ export default function AnalyticsPage() {
 
   const loadStats = async () => {
     try {
-      const data = await apiRequest('/api/admin/analytics');
+      const data = await apiRequest<AnalyticsStats>('/api/admin/analytics');
       setStats(data);
     } catch (error) {
       console.error('Failed to load analytics:', error);
@@ -39,7 +62,7 @@ export default function AnalyticsPage() {
   if (!stats) return null;
 
   const { ltv, retention, aovTrend, popularHours } = stats;
-  const totalOrders = aovTrend.reduce((acc: number, curr: any) => acc + curr.orderCount, 0);
+  const totalOrders = aovTrend.reduce((acc, curr) => acc + curr.orderCount, 0);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12">

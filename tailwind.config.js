@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -9,11 +10,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Paper Court - Quiet Professional
+        // Paper Court - Quiet Professional (Light Mode)
         ink: {
           DEFAULT: '#F7F3EE',      // 页面背景 - paper
           elevated: '#FFFFFF',     // 卡片背景
           surface: '#FFFFFF',      // 表面/微调
+        },
+        // Dark Mode Colors
+        dark: {
+          DEFAULT: '#1a1a1a',      // 深色背景
+          elevated: '#2a2a2a',     // 深色卡片
+          surface: '#333333',      // 深色表面
         },
         border: {
           subtle: '#E6E1DA',       // paper edge
@@ -73,6 +80,9 @@ module.exports = {
         'slide-up': 'slideUp 0.4s ease-out forwards',
         'slide-in-right': 'slideInRight 0.3s ease-out forwards',
         'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+        'bounce-slow': 'bounceSlow 3s ease-in-out infinite',
+        'shimmer': 'shimmer 2s linear infinite',
+        'confetti': 'confetti 0.5s ease-out forwards',
       },
       keyframes: {
         fadeIn: {
@@ -90,6 +100,18 @@ module.exports = {
         pulseGlow: {
           '0%, 100%': { boxShadow: '0 0 0 0 rgba(15, 118, 110, 0.4)' },
           '50%': { boxShadow: '0 0 0 8px rgba(15, 118, 110, 0)' },
+        },
+        bounceSlow: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-8px)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+        confetti: {
+          '0%': { transform: 'scale(0)', opacity: '1' },
+          '100%': { transform: 'scale(1)', opacity: '0' },
         },
       },
     },

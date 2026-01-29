@@ -4,12 +4,13 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Users, Copy, Gift, CheckCircle2, Share2, Sparkles } from 'lucide-react';
 import { Toast } from '@/components';
 import PageLoading from '@/components/loading/PageLoading';
+import EmptyState from '@/components/EmptyState';
 import { getReferrals } from '@/services/profileService';
 import { generateReferralLink } from '@/services/referralService';
 
@@ -25,10 +26,19 @@ interface ReferralStats {
   }>;
 }
 
+interface ReferralItemRaw {
+  id: string;
+  referred?: {
+    fullName?: string | null;
+    createdAt?: string | null;
+  } | null;
+  createdAt?: string | null;
+  rewardGiven?: boolean | null;
+}
+
 export default function ReferralsPage() {
   const router = useRouter();
   const { data: session } = useSession();
-  const user = session?.user;
   const isAuthenticated = !!session;
   const [stats, setStats] = useState<ReferralStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,15 +51,7 @@ export default function ReferralsPage() {
   }>({ show: false, message: '', type: 'info' });
   const shareLink = stats?.referral_code ? generateReferralLink(stats.referral_code) : '';
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-    loadData();
-  }, [isAuthenticated]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       // 获取邀请统计
       const data = await getReferrals();
@@ -60,12 +62,15 @@ export default function ReferralsPage() {
       const rewardPointsPerReferral = totalRewards
         ? Math.round(totalPointsEarned / totalRewards)
         : 0;
-      const mappedReferrals = referrals.map((referral: any) => ({
-        id: referral.id,
-        full_name: referral.referred?.fullName || '用户',
-        created_at: referral.referred?.createdAt || referral.createdAt,
-        reward_points: referral.rewardGiven ? rewardPointsPerReferral : 0,
-      }));
+      const mappedReferrals = (referrals as ReferralItemRaw[]).map((referral) => {
+        const createdAt = referral.referred?.createdAt || referral.createdAt || new Date().toISOString();
+        return {
+          id: referral.id,
+          full_name: referral.referred?.fullName || '用户',
+          created_at: String(createdAt),
+          reward_points: referral.rewardGiven ? rewardPointsPerReferral : 0,
+        };
+      });
 
       setStats({
         referral_code: data?.referralCode || '',
@@ -78,7 +83,15 @@ export default function ReferralsPage() {
     }
 
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+    loadData();
+  }, [isAuthenticated, loadData, router]);
 
   const handleCopy = async () => {
     if (!stats?.referral_code) {
@@ -332,11 +345,7 @@ export default function ReferralsPage() {
                 </div>
               ))
             ) : (
-              <div className="p-12 text-center">
-                <Users className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
-                <p className="text-text-secondary">还没有邀请记录</p>
-                <p className="text-sm text-text-tertiary mt-1">快去邀请好友吧！</p>
-              </div>
+              <EmptyState type="no-referrals" />
             )}
           </div>
         </div>

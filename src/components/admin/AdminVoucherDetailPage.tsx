@@ -26,6 +26,7 @@ import {
   type VoucherType,
 } from '@/services/adminVoucherService';
 import { Badge, Button, Card, Input, StatsCard } from '@/components';
+import EmptyState from '@/components/EmptyState';
 import PageLoading from '@/components/loading/PageLoading';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import DistributeVoucherModal from './DistributeVoucherModal';
@@ -536,9 +537,7 @@ export default function AdminVoucherDetailPage({ voucherId }: AdminVoucherDetail
               <h2 className="text-lg font-semibold text-text-primary mb-4">用户持有列表</h2>
 
               {userVouchers.length === 0 ? (
-                <div className="text-center py-8 text-text-tertiary">
-                  暂无用户持有此优惠券
-                </div>
+                <EmptyState type="no-data" title="暂无用户持有此优惠券" size="sm" />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-border-subtle">

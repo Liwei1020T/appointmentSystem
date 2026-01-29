@@ -9,7 +9,6 @@ import { z } from 'zod';
 import { requireUser } from '@/lib/server-auth';
 import { parseJson } from '@/lib/validation';
 import { okResponse, failResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
 import { getUserProfile, updateUserProfile } from '@/server/services/profile.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 

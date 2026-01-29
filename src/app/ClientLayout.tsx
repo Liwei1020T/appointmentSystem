@@ -15,7 +15,6 @@ import { BottomNav } from '@/components/BottomNav';
 import {
   HomeIcon,
   CalendarIcon,
-  ShoppingBagIcon,
   UserIcon,
   ClipboardListIcon,
   StarIcon

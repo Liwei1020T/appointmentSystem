@@ -30,6 +30,8 @@ import {
   type VoucherStats,
 } from '@/services/adminVoucherService';
 import { Badge, Button, Card, Input, StatsCard, Tabs } from '@/components';
+import EmptyState from '@/components/EmptyState';
+import { SkeletonCard } from '@/components/Skeleton';
 import SectionLoading from '@/components/loading/SectionLoading';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { Search } from 'lucide-react';
@@ -354,9 +356,11 @@ export default function AdminVoucherListPage() {
 
         {/* Loading/Error States */}
         {loading && (
-          <Card padding="lg">
-            <SectionLoading label="加载中..." minHeightClassName="min-h-[160px]" />
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
         )}
 
         {error && (
@@ -369,9 +373,9 @@ export default function AdminVoucherListPage() {
         {!loading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {vouchers.length === 0 ? (
-              <Card padding="lg" className="col-span-full text-center text-text-tertiary">
-                暂无优惠券
-              </Card>
+              <div className="col-span-full">
+                <EmptyState type="no-vouchers" />
+              </div>
             ) : (
               vouchers.map((voucher) => {
                 const isActive = voucher.active ?? voucher.isActive ?? false;

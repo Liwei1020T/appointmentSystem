@@ -14,16 +14,13 @@ import { formatCurrency } from '@/lib/utils';
 
 interface StickySelectionBarProps {
     selectedString: StringInventory | null;
-    onClearSelection: () => void;
     onNext: () => void;
 }
 
 export default function StickySelectionBar({
     selectedString,
-    onClearSelection,
     onNext,
 }: StickySelectionBarProps) {
-    const isDisabled = !selectedString;
     const price = selectedString
         ? Number(selectedString.sellingPrice) || Number(selectedString.selling_price) || 0
         : 0;

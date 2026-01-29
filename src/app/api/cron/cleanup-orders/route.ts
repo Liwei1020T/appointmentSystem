@@ -1,29 +1,64 @@
 /**
  * Cron API: 自动取消超时未支付订单
- * 
+ *
  * 功能：
  * 1. 自动取消超过 1 小时未支付的 pending 订单
  * 2. 释放已锁定的库存
  * 3. 记录取消日志
- * 
+ *
  * 调用方式：
  * - Vercel Cron: 配置 vercel.json
  * - 手动调用: GET /api/cron/cleanup-orders?secret=xxx
  */
 
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-// Cron 密钥验证（生产环境必须配置）
-const CRON_SECRET = process.env.CRON_SECRET || 'dev-secret-key';
+// Cron 密钥验证（生产环境必须配置强密钥）
+const CRON_SECRET = process.env.CRON_SECRET;
 
 // 订单超时时间（毫秒）
 const ORDER_TIMEOUT_MS = 60 * 60 * 1000; // 1 小时
 
+/**
+ * Timing-safe comparison to prevent timing attacks
+ */
+function timingSafeSecretCompare(provided: string, expected: string): boolean {
+    try {
+        // Ensure both buffers have same length for timing-safe comparison
+        const providedBuffer = Buffer.from(provided);
+        const expectedBuffer = Buffer.from(expected);
+
+        if (providedBuffer.length !== expectedBuffer.length) {
+            // Compare with expected to prevent timing leak on length difference
+            crypto.timingSafeEqual(expectedBuffer, expectedBuffer);
+            return false;
+        }
+
+        return crypto.timingSafeEqual(providedBuffer, expectedBuffer);
+    } catch {
+        return false;
+    }
+}
+
 export async function GET(request: NextRequest) {
     try {
+        // Reject weak or missing secrets in production
+        if (!CRON_SECRET || CRON_SECRET === 'dev-secret-key') {
+            if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+                console.error('[Cron] CRON_SECRET not configured or using weak default');
+                return NextResponse.json(
+                    { error: 'Server configuration error' },
+                    { status: 500 }
+                );
+            }
+            // Allow weak secret only in development
+            console.info('[Cron] WARNING: Using weak CRON_SECRET in development');
+        }
+
         // 验证 Cron 密钥
         const secret = request.nextUrl.searchParams.get('secret');
 
@@ -31,7 +66,10 @@ export async function GET(request: NextRequest) {
         const authHeader = request.headers.get('authorization');
         const bearerToken = authHeader?.replace('Bearer ', '');
 
-        if (secret !== CRON_SECRET && bearerToken !== CRON_SECRET) {
+        const providedSecret = secret || bearerToken || '';
+        const expectedSecret = CRON_SECRET || 'dev-secret-key';
+
+        if (!timingSafeSecretCompare(providedSecret, expectedSecret)) {
             return NextResponse.json(
                 { error: 'Unauthorized' },
                 { status: 401 }
@@ -186,7 +224,7 @@ export async function GET(request: NextRequest) {
         });
 
         // 记录日志
-        console.log(
+        console.info(
             `[Cron] Cancelled ${cancelledOrderIds.length} expired orders (payments cancelled: ${cancelledPaymentsCount}, vouchers restored: ${restoredVouchersCount}, stock restore logs: ${restoredStockEntries})`,
             cancelledOrderIds
         );

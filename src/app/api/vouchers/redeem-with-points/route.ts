@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { requireUser } from '@/lib/server-auth';
 import { parseJson } from '@/lib/validation';
 import { okResponse, failResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { redeemVoucherWithPoints } from '@/server/services/voucher.service';
 import { handleApiError } from '@/lib/api/handleApiError';

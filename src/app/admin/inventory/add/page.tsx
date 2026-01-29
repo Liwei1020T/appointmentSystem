@@ -30,7 +30,7 @@ function AddStringForm() {
   const [error, setError] = useState<string | null>(null);
 
   // Handle form field change
-  const handleFieldChange = (field: string, value: any) => {
+  const handleFieldChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -68,8 +68,9 @@ function AddStringForm() {
         minimum_stock: formData.minimum_stock,
         description: formData.description || undefined,
       });
-    } catch (err: any) {
-      setError(err.message || 'Failed to create string');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to create string';
+      setError(message);
       setSaving(false);
       return;
     }

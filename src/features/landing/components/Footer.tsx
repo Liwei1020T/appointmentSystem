@@ -24,7 +24,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-ink border-t border-border-subtle">
+    <footer className="bg-ink dark:bg-dark border-t border-border-subtle dark:border-gray-700">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -34,10 +34,10 @@ export default function Footer() {
             <div className="mb-4">
               <BrandLogo size="sm" showName />
             </div>
-            <p className="text-sm text-text-secondary leading-relaxed mb-4">
+            <p className="text-sm text-text-secondary dark:text-gray-400 leading-relaxed mb-4">
               居家穿线师工作室，用最实惠的价格，带给你最专业的穿线体验。告别门店溢价，享受冠军级手艺。
             </p>
-            <div className="flex items-center gap-2 text-sm text-text-tertiary">
+            <div className="flex items-center gap-2 text-sm text-text-tertiary dark:text-gray-500">
               <MapPin className="w-4 h-4" />
               <span>马来西亚 · 居家服务</span>
             </div>
@@ -45,13 +45,13 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div className="md:col-span-1">
-            <h4 className="font-semibold text-text-primary mb-4">快速导航</h4>
+            <h4 className="font-semibold text-text-primary dark:text-gray-100 mb-4">快速导航</h4>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.id}>
                   <button
                     onClick={() => scrollToSection(link.id)}
-                    className="text-sm text-text-secondary hover:text-accent transition-colors"
+                    className="text-sm text-text-secondary dark:text-gray-400 hover:text-accent transition-colors"
                   >
                     {link.name}
                   </button>
@@ -62,21 +62,21 @@ export default function Footer() {
 
           {/* Contact Section */}
           <div className="md:col-span-1">
-            <h4 className="font-semibold text-text-primary mb-4">联系我们</h4>
+            <h4 className="font-semibold text-text-primary dark:text-gray-100 mb-4">联系我们</h4>
             <div className="space-y-3">
               <a
                 href="https://wa.me/60123456789"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 text-sm text-text-secondary hover:text-accent transition-colors group"
+                className="flex items-center gap-3 text-sm text-text-secondary dark:text-gray-400 hover:text-accent transition-colors group"
               >
-                <div className="w-8 h-8 bg-success/10 rounded-lg flex items-center justify-center group-hover:bg-success/20 transition-colors">
+                <div className="w-8 h-8 bg-success/10 dark:bg-success/20 rounded-lg flex items-center justify-center group-hover:bg-success/20 dark:group-hover:bg-success/30 transition-colors">
                   <MessageCircle className="w-4 h-4 text-success" />
                 </div>
                 <span>WhatsApp 咨询</span>
               </a>
-              <div className="flex items-center gap-3 text-sm text-text-tertiary">
-                <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
+              <div className="flex items-center gap-3 text-sm text-text-tertiary dark:text-gray-500">
+                <div className="w-8 h-8 bg-accent/10 dark:bg-accent/20 rounded-lg flex items-center justify-center">
                   <Clock className="w-4 h-4 text-accent" />
                 </div>
                 <span>周一至周日 9:00 - 21:00</span>
@@ -87,13 +87,13 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-border-subtle">
+      <div className="border-t border-border-subtle dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-text-tertiary">
+            <div className="text-sm text-text-tertiary dark:text-gray-500">
               © {year} LW String Studio. All rights reserved.
             </div>
-            <div className="text-xs text-text-tertiary">
+            <div className="text-xs text-text-tertiary dark:text-gray-500">
               专业穿线 · 价格实惠 · 服务到家
             </div>
           </div>

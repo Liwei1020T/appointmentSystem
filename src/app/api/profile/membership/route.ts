@@ -3,7 +3,6 @@
  * GET /api/profile/membership - 获取会员详情、权益和升级进度
  */
 
-import { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
@@ -13,7 +12,9 @@ import {
   getNextTierProgress,
 } from '@/server/services/membership.service';
 
-export async function GET(request: NextRequest) {
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
   try {
     const session = await auth();
     if (!session?.user?.id) {

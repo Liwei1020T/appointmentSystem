@@ -34,6 +34,8 @@ import type {
   NotificationStats as ServiceNotificationStats,
   UserDevice as ServiceUserDevice,
 } from '@/services/notificationService';
+import EmptyState from '@/components/EmptyState';
+import { SkeletonTable } from '@/components/Skeleton';
 import SectionLoading from '@/components/loading/SectionLoading';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
@@ -165,8 +167,7 @@ export default function AdminNotificationsPage() {
 
   const loadDevices = async () => {
     // Get all devices by fetching without user filter
-    // This would require a new service method, for now we'll use a workaround
-    // TODO: Add getAllDevices() to notificationService
+    // NOTE: getAllDevices() service method planned for future release
     setDevices([]);
   };
 
@@ -293,7 +294,7 @@ export default function AdminNotificationsPage() {
 
           <div className="p-6">
             {loading ? (
-              <SectionLoading label="Loading..." minHeightClassName="min-h-[240px]" />
+              <SkeletonTable rows={8} columns={7} />
             ) : (
               <>
                 {/* Tab 1: Notification Logs */}
@@ -432,9 +433,11 @@ export default function AdminNotificationsPage() {
                       </table>
 
                       {notifications.length === 0 && (
-                        <div className="text-center py-12 text-text-tertiary">
-                          No notifications found
-                        </div>
+                        <tr>
+                          <td colSpan={7} className="px-6 py-12">
+                            <EmptyState type="no-notifications" title="暂无通知记录" description="发送通知后将在这里显示" />
+                          </td>
+                        </tr>
                       )}
                     </div>
                   </div>
@@ -689,9 +692,11 @@ export default function AdminNotificationsPage() {
                       </table>
 
                       {devices.length === 0 && (
-                        <div className="text-center py-12 text-text-tertiary">
-                          No devices registered yet
-                        </div>
+                        <tr>
+                          <td colSpan={6} className="px-6 py-12">
+                            <EmptyState type="no-data" title="暂无注册设备" description="用户尚未注册推送通知设备" />
+                          </td>
+                        </tr>
                       )}
                     </div>
                   </div>

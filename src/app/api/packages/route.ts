@@ -2,15 +2,11 @@
  * Packages API
  * GET /api/packages
  */
-
-import { failResponse, okResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
+import { okResponse } from '@/lib/api-response';
 import { listAvailablePackages } from '@/server/services/package.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 import { getCurrentUser } from '@/lib/server-auth';
-
 export const dynamic = 'force-dynamic';
-
 export async function GET() {
   try {
     const user = await getCurrentUser();

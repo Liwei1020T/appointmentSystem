@@ -25,6 +25,8 @@ import {
   type UserStatus,
 } from '@/services/adminUserService';
 import SectionLoading from '@/components/loading/SectionLoading';
+import EmptyState from '@/components/EmptyState';
+import { SkeletonTable } from '@/components/Skeleton';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function AdminUserListPage() {
@@ -285,7 +287,7 @@ export default function AdminUserListPage() {
 
       {/* Loading/Error States */}
       {loading && users.length === 0 && (
-        <SectionLoading label="加载用户..." minHeightClassName="min-h-[240px]" />
+        <SkeletonTable rows={10} columns={8} />
       )}
 
       {error && (
@@ -330,8 +332,8 @@ export default function AdminUserListPage() {
               <tbody className="bg-ink-surface divide-y divide-border-subtle">
                 {!Array.isArray(users) || users.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-4 text-center text-text-tertiary">
-                      暂无用户数据
+                    <td colSpan={8} className="px-6 py-4">
+                      <EmptyState type="no-users" size="sm" />
                     </td>
                   </tr>
                 ) : (

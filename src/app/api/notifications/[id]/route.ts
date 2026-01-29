@@ -1,6 +1,5 @@
 import { requireUser } from '@/lib/server-auth';
 import { okResponse, failResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { deleteNotification } from '@/server/services/notification.service';
 import { handleApiError } from '@/lib/api/handleApiError';

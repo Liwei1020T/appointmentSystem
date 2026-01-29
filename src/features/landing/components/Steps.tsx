@@ -30,7 +30,7 @@ const steps = [
 
 export default function Steps() {
   return (
-    <section id="steps" className="py-20 md:py-24 bg-ink relative overflow-hidden">
+    <section id="steps" className="py-20 md:py-24 bg-ink dark:bg-dark relative overflow-hidden">
       {/* Background - Flipped vertically for variety */}
       <BreathingBackground className="scale-y-[-1] opacity-50" />
 
@@ -40,11 +40,11 @@ export default function Steps() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-bold text-text-primary mb-4 font-display"
+            className="text-3xl md:text-4xl font-bold text-text-primary dark:text-gray-100 mb-4 font-display"
           >
             简单四步，轻松搞定
           </motion.h2>
-          <p className="text-lg text-text-secondary max-w-2xl mx-auto">
+          <p className="text-lg text-text-secondary dark:text-gray-400 max-w-2xl mx-auto">
             标准化流程，让每一次体验都流畅无阻
           </p>
         </div>
@@ -70,17 +70,17 @@ export default function Steps() {
                 ></motion.div>
               )}
 
-              <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-border-subtle text-center hover:shadow-card-hover hover:border-accent-border transition-all duration-300 h-full flex flex-col items-center">
+              <div className="bg-white/90 dark:bg-dark-elevated/90 backdrop-blur-sm p-6 rounded-2xl border border-border-subtle dark:border-gray-700 text-center hover:shadow-card-hover hover:border-accent-border transition-all duration-300 h-full flex flex-col items-center">
                 <div className="w-16 h-16 bg-accent text-text-onAccent rounded-2xl flex items-center justify-center mb-5 shadow-sm transform group-hover:-translate-y-1 transition-transform duration-300">
                   {step.icon}
                 </div>
-                <div className="absolute top-4 right-4 text-xs font-mono text-text-tertiary opacity-30">
+                <div className="absolute top-4 right-4 text-xs font-mono text-text-tertiary dark:text-gray-500 opacity-30">
                   0{index + 1}
                 </div>
-                <h3 className="text-lg font-bold text-text-primary mb-2">
+                <h3 className="text-lg font-bold text-text-primary dark:text-gray-100 mb-2">
                   {step.title}
                 </h3>
-                <p className="text-sm text-text-secondary leading-relaxed">
+                <p className="text-sm text-text-secondary dark:text-gray-400 leading-relaxed">
                   {step.description}
                 </p>
               </div>

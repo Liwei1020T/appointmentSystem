@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/server-auth';
 import { parseJson } from '@/lib/validation';
 import { failResponse, okResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { rejectPayment } from '@/server/services/payment.service';
 import { handleApiError } from '@/lib/api/handleApiError';

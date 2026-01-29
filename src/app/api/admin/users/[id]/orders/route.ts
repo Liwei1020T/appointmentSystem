@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const skip = (page - 1) * limit;
 
-    const where: any = { userId };
+    const where: { userId: string; status?: string } = { userId };
     if (status) where.status = status;
 
     const [orders, total] = await Promise.all([

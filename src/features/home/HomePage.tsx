@@ -15,6 +15,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import FeaturedReviews from '@/components/FeaturedReviews';
+import HomeOnboarding from '@/components/HomeOnboarding';
 import QuickActions from './QuickActions';
 import RecentOrders from './RecentOrders';
 import PackageSummary from './PackageSummary';
@@ -140,6 +141,9 @@ export default function HomePage() {
         {/* 精选评价 */}
         <FeaturedReviews />
       </div>
+
+      {/* 新用户引导教程 */}
+      <HomeOnboarding />
     </div>
   );
 }

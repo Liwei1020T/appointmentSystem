@@ -1,59 +1,59 @@
 # 🚀 Deployment Checklist
 
-**String Service Platform - Manual Payment System**  
-**Version:** 1.0  
-**Last Updated:** 2025-12-12
+**String Service Platform**
+**Version:** 2.0
+**Last Updated:** 2026-01-27
+**Stack:** Next.js 14 + Prisma + PostgreSQL + NextAuth.js
+
+---
+
+> ⚠️ **Architecture Note:** This project uses **Prisma ORM + PostgreSQL + NextAuth.js** (NOT Supabase). All database operations go through Prisma, and authentication is handled by NextAuth.js v5.
 
 ---
 
 ## 📋 Pre-Deployment Checklist
 
-### 1. Database Migration ✅
+### 1. Database Setup ✅
 
-- [ ] Run all migrations in `supabase/migrations/` directory
-- [ ] Verify `payments` table has new fields:
-  - `receipt_url`
-  - `receipt_uploaded_at`
-  - `verified_by`
-  - `verified_at`
-  - `admin_notes`
-- [ ] Verify new payment status: `pending_verification`
-- [ ] Check RLS policies are correctly applied
+- [ ] PostgreSQL 15 instance running (Docker or managed service)
+- [ ] Create database and user with appropriate permissions
+- [ ] Run Prisma schema push: `npm run db:push`
+- [ ] Run database seed: `npm run db:seed`
+- [ ] Verify all 13 tables created correctly
 
-```sql
--- Verify payments table structure
-SELECT column_name, data_type, is_nullable
-FROM information_schema.columns
-WHERE table_name = 'payments'
-ORDER BY ordinal_position;
+```bash
+# Initialize database
+npm run db:push
+npm run db:seed
 
--- Check for pending verification status
-SELECT status, COUNT(*) 
-FROM payments 
-GROUP BY status;
+# Verify with Prisma Studio
+npm run db:studio
 ```
 
 ---
 
-### 2. Supabase Storage Setup 🗄️
+### 2. Environment Variables 🔐
 
-- [ ] Create `receipts` bucket (run `scripts/setup-storage.sql`)
-- [ ] Verify bucket is **PRIVATE** (not public)
-- [ ] Confirm file size limit: 5MB
-- [ ] Verify allowed MIME types: `image/jpeg`, `image/png`, `image/webp`, `application/pdf`
-- [ ] Test RLS policies:
-  - Users can upload to their own folder
-  - Users can view their own receipts
-  - Admins can view all receipts
+- [ ] Create `.env` file with all required variables:
 
-**Quick Test:**
-```bash
-# In Supabase Dashboard > Storage
-1. Go to Storage section
-2. Look for "receipts" bucket
-3. Try uploading a test image
-4. Verify URL structure: receipts/payment-receipts/{userId}/{filename}
+```env
+# Database (Required)
+DATABASE_URL="postgresql://user:password@host:5432/string_db"
+
+# NextAuth (Required)
+NEXTAUTH_URL="https://your-domain.com"
+NEXTAUTH_SECRET="generate-with-openssl-rand-base64-32"
+
+# App Configuration
+UPLOAD_DIR="./public/uploads"
 ```
+
+- [ ] Generate secure NEXTAUTH_SECRET:
+  ```bash
+  openssl rand -base64 32
+  ```
+
+- [ ] For production, set environment variables in hosting platform (Vercel/Railway/etc.)
 
 ---
 
@@ -62,8 +62,6 @@ GROUP BY status;
 - [ ] Generate real TNG QR code from TNG eWallet app
 - [ ] Save as high-quality PNG (recommended: 800x800px)
 - [ ] Place file at: `public/images/tng-qr-code.png`
-- [ ] Remove or keep placeholder: `tng-qr-code-placeholder.svg`
-- [ ] Update merchant phone number in code (if needed)
 
 **File Location:**
 ```
@@ -74,57 +72,13 @@ public/
 
 ---
 
-### 4. Environment Variables 🔐
-
-- [ ] Verify `.env` has all required variables:
-
-```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-
-# App Configuration
-NEXT_PUBLIC_APP_URL=https://your-domain.com
-NEXT_PUBLIC_MERCHANT_PHONE=+60123456789
-NEXT_PUBLIC_MERCHANT_NAME=Your Business Name
-
-# Payment Configuration
-NEXT_PUBLIC_TNG_QR_PATH=/images/tng-qr-code.png
-```
-
-- [ ] For production, set environment variables in hosting platform (Vercel/Netlify)
-
----
-
-### 5. Code Configuration ⚙️
-
-**Update TngQRCodeDisplay.tsx:**
-
-- [ ] Verify `qrCodeUrl` points to correct image path
-- [ ] Update `merchantPhone` with actual contact number
-- [ ] Update `merchantName` (optional)
-
-**Update PaymentReceiptUploader.tsx:**
-
-- [ ] Verify Supabase storage bucket name: `receipts`
-- [ ] Check upload path: `payment-receipts/{userId}/{timestamp}-{filename}`
-- [ ] Confirm file size limit matches backend (5MB)
-
-**Update PaymentReceiptVerifier.tsx:**
-
-- [ ] Verify admin-only access
-- [ ] Test approve/reject functionality
-- [ ] Check notification integration (if enabled)
-
----
-
-### 6. Frontend Build & Test 🧪
+### 4. Build & Test 🧪
 
 - [ ] Run production build: `npm run build`
-- [ ] Fix any TypeScript errors
-- [ ] Fix any ESLint warnings
+- [ ] Fix any TypeScript errors: `npm run type-check`
+- [ ] Fix any ESLint warnings: `npm run lint`
+- [ ] Run test suite: `npm run test:run`
 - [ ] Test on mobile devices (responsive design)
-- [ ] Test on different browsers (Chrome, Safari, Firefox)
 
 ```bash
 npm run build
@@ -133,110 +87,68 @@ npm run start
 
 ---
 
-### 7. User Flow Testing 👤
+### 5. User Flow Testing 👤
 
 **Customer Journey:**
 
-- [ ] Create test order
+- [ ] Create test user account at `/signup`
+- [ ] Login with credentials
+- [ ] Create test order at `/booking`
 - [ ] Navigate to payment section
 - [ ] See TNG QR code displayed correctly
-- [ ] Can scan QR code with TNG app
-- [ ] Upload payment receipt (test various formats: JPG, PNG, PDF)
-- [ ] Verify receipt uploaded successfully
-- [ ] Check payment status shows "pending_verification"
-- [ ] Receive confirmation message
+- [ ] Upload payment receipt
+- [ ] Verify payment status shows "pending"
 
 **Admin Journey:**
 
-- [ ] Login to admin dashboard
-- [ ] Navigate to orders with pending payment verification
-- [ ] View uploaded receipt (image preview works)
-- [ ] Approve receipt
-- [ ] Verify order status changes to "confirmed"
-- [ ] Verify payment status changes to "completed"
-- [ ] Test rejecting a receipt
-- [ ] Verify user is notified (if notifications enabled)
+- [ ] Promote user to admin:
+  ```sql
+  UPDATE "User" SET role = 'admin' WHERE email = 'your@email.com';
+  ```
+- [ ] Login to admin dashboard at `/admin`
+- [ ] Navigate to pending payments
+- [ ] View uploaded receipt
+- [ ] Approve/reject payment
+- [ ] Verify order status updates correctly
 
 ---
 
-### 8. Database Verification 🗃️
+### 6. Database Verification 🗃️
 
 After completing test transactions:
 
 ```sql
--- Check payment records
-SELECT 
-  id,
-  order_id,
-  amount,
-  status,
-  receipt_url,
-  receipt_uploaded_at,
-  verified_by,
-  verified_at,
-  admin_notes,
-  created_at
-FROM payments
-ORDER BY created_at DESC
-LIMIT 10;
+-- Check user records
+SELECT id, email, role, "createdAt" FROM "User" LIMIT 10;
 
--- Check orders status sync
-SELECT 
-  o.id,
-  o.status,
-  p.status as payment_status,
-  p.receipt_url IS NOT NULL as has_receipt
-FROM orders o
-LEFT JOIN payments p ON p.order_id = o.id
-ORDER BY o.created_at DESC
-LIMIT 10;
+-- Check order records
+SELECT id, status, "totalAmount", "createdAt" FROM "Order" ORDER BY "createdAt" DESC LIMIT 10;
+
+-- Check payment records
+SELECT id, "orderId", amount, status, "createdAt" FROM "Payment" ORDER BY "createdAt" DESC LIMIT 10;
 ```
 
 ---
 
-### 9. Security Audit 🔒
+### 7. Security Audit 🔒
 
-- [ ] RLS policies prevent unauthorized access
-- [ ] Receipts are private (not publicly accessible)
-- [ ] Only admins can verify/reject receipts
-- [ ] Users cannot modify payment status directly
-- [ ] File upload has size and type restrictions
-- [ ] SQL injection prevention (parameterized queries)
-- [ ] XSS prevention (input sanitization)
-
----
-
-### 10. Performance Check ⚡
-
-- [ ] Image loading optimized (use Next.js Image component)
-- [ ] Receipt upload shows progress indicator
-- [ ] Admin dashboard loads quickly
-- [ ] Receipt preview doesn't block UI
-- [ ] Database queries are indexed properly
+- [ ] All API routes check authentication via `requireAuth()`
+- [ ] Admin routes verify `role === 'admin'`
+- [ ] File uploads restricted to images only
+- [ ] File size limits enforced (5MB max)
+- [ ] Passwords hashed with bcrypt
+- [ ] HTTPS enabled in production
+- [ ] Environment variables not exposed to client
 
 ---
 
-### 11. Error Handling 🚨
+### 8. Performance Check ⚡
 
-Test edge cases:
-
-- [ ] Upload fails (network error)
-- [ ] File too large (>5MB)
-- [ ] Invalid file type (e.g., .exe)
-- [ ] Missing QR code image
-- [ ] Admin verifies already-verified payment
-- [ ] User tries to upload receipt twice
-- [ ] Payment without associated order
-
----
-
-### 12. Documentation 📚
-
-- [ ] README updated with new payment flow
-- [ ] API documentation reflects new endpoints
-- [ ] Change log created/updated
-- [ ] Component documentation complete
-- [ ] Deployment guide available
+- [ ] Images optimized with Sharp
+- [ ] Database queries use proper indexes
+- [ ] API responses cached where appropriate
+- [ ] Static assets served efficiently
+- [ ] Rate limiting enabled for auth routes
 
 ---
 
@@ -245,25 +157,19 @@ Test edge cases:
 ### Final Steps Before Launch:
 
 1. **Backup Database**
-   ```sql
-   -- Create backup before major release
-   pg_dump -h your-db-host -U postgres -d your-db > backup-$(date +%Y%m%d).sql
+   ```bash
+   pg_dump -h your-db-host -U postgres -d string_db > backup-$(date +%Y%m%d).sql
    ```
 
-2. **Monitor Logs**
-   - Set up error tracking (Sentry, LogRocket, etc.)
-   - Monitor Supabase logs
-   - Set up alerts for failed payments
+2. **Monitor Setup**
+   - [ ] Error tracking configured (Sentry recommended)
+   - [ ] Health check endpoint working: `/api/health`
+   - [ ] Log aggregation set up
 
-3. **Customer Communication**
-   - Notify users about new payment method
-   - Provide clear instructions
-   - Set up support channel for payment issues
-
-4. **Rollback Plan**
-   - Keep old payment code in git history
-   - Document rollback procedure
-   - Have database migration rollback script ready
+3. **DNS & SSL**
+   - [ ] Domain configured
+   - [ ] SSL certificate active
+   - [ ] NEXTAUTH_URL matches production domain
 
 ---
 
@@ -271,18 +177,18 @@ Test edge cases:
 
 ### Week 1:
 
-- [ ] Monitor payment success rate
-- [ ] Track receipt upload failures
+- [ ] Monitor error logs daily
+- [ ] Track payment success rate
 - [ ] Check admin verification time
 - [ ] Collect user feedback
-- [ ] Review error logs daily
+- [ ] Verify all notifications working
 
 ### Week 2-4:
 
 - [ ] Analyze payment completion time
 - [ ] Optimize slow queries
-- [ ] Add missing features based on feedback
 - [ ] Update documentation with learnings
+- [ ] Address user feedback
 
 ---
 
@@ -290,44 +196,38 @@ Test edge cases:
 
 ### Common Issues:
 
+**Database Connection Fails:**
+- Verify DATABASE_URL format
+- Check PostgreSQL is running
+- Verify network/firewall rules
+
+**Authentication Issues:**
+- Verify NEXTAUTH_SECRET is set
+- Check NEXTAUTH_URL matches actual URL
+- Clear browser cookies and retry
+
 **QR Code Not Displaying:**
 - Check file exists at `public/images/tng-qr-code.png`
 - Verify file permissions
 - Clear browser cache
-- Check Next.js static file serving
 
-**Receipt Upload Fails:**
-- Verify Supabase storage bucket exists
-- Check RLS policies
-- Verify user authentication
-- Check file size/type restrictions
-
-**Admin Cannot See Receipts:**
-- Verify admin role in database
-- Check RLS policies for admin access
-- Clear storage cache
-- Check Supabase storage URL
-
-**Payment Status Not Updating:**
-- Check order-payment relationship
-- Verify trigger functions
-- Check RLS policies on orders table
-- Review Edge Function logs
+**Build Fails:**
+- Run `npm run type-check` for TypeScript errors
+- Check for missing environment variables
+- Verify all dependencies installed
 
 ---
 
 ## ✅ Sign-Off
 
 - [ ] Development team tested
-- [ ] QA team approved
-- [ ] Product owner approved
+- [ ] All core flows working
 - [ ] Security review passed
-- [ ] Performance benchmarks met
 - [ ] Documentation complete
 - [ ] Stakeholders notified
 
-**Deployed By:** _______________  
-**Date:** _______________  
+**Deployed By:** _______________
+**Date:** _______________
 **Version:** _______________
 
 ---

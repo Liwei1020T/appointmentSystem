@@ -13,6 +13,7 @@
 import { useEffect, useState } from 'react';
 import { History, Package, TrendingDown, TrendingUp, RefreshCw, Filter } from 'lucide-react';
 import { getStockHistory, type StockHistoryEntry } from '@/services/inventoryService';
+import EmptyState from '@/components/EmptyState';
 import SectionLoading from '@/components/loading/SectionLoading';
 
 interface StockHistoryProps {
@@ -114,9 +115,8 @@ export default function StockHistory({ stringId, limit = 50 }: StockHistoryProps
 
       {/* 空状态 */}
       {!loading && !error && history.length === 0 && (
-        <div className="text-center py-12">
-          <Package className="w-12 h-12 mx-auto mb-3 text-text-tertiary" />
-          <p className="text-sm text-text-tertiary">暂无库存变动记录</p>
+        <div className="py-8">
+          <EmptyState type="no-data" title="暂无库存变动记录" description="开始使用后将显示变动历史" size="sm" />
         </div>
       )}
 

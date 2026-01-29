@@ -1,11 +1,9 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
-import { errorResponse, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
-
 export const dynamic = 'force-dynamic';
-
 /**
  * 管理员 - 报表概览（用于简单 KPI）
  *
@@ -19,17 +17,14 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
-
     const period = (request.nextUrl.searchParams.get('period') || 'month') as
       | 'today'
       | 'week'
       | 'month'
       | 'year';
-
     const now = new Date();
     const start = new Date(now);
     start.setHours(0, 0, 0, 0);
-
     if (period === 'today') {
       // already start of day
     } else if (period === 'week') {
@@ -39,12 +34,9 @@ export async function GET(request: NextRequest) {
     } else if (period === 'year') {
       start.setDate(start.getDate() - 364);
     }
-
     const end = new Date(now);
     end.setHours(23, 59, 59, 999);
-
     const confirmedStatuses = ['success', 'completed'];
-
     const [revenueAgg, orders, customers] = await Promise.all([
       prisma.payment.aggregate({
         where: { status: { in: confirmedStatuses }, createdAt: { gte: start, lte: end } },
@@ -57,7 +49,6 @@ export async function GET(request: NextRequest) {
         select: { userId: true },
       }),
     ]);
-
     return successResponse({
       revenue: Number(revenueAgg._sum.amount ?? 0),
       orders,

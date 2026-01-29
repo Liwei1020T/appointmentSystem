@@ -6,7 +6,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { okResponse, failResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
 import { getFeaturedReviews } from '@/server/services/review.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 

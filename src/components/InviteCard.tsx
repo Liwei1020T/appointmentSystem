@@ -49,7 +49,7 @@ export default function InviteCard() {
       setCopied(true);
       toast.success('邀请码已复制');
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch {
       toast.error('复制失败');
     }
   };
@@ -58,7 +58,7 @@ export default function InviteCard() {
     try {
       await navigator.clipboard.writeText(shareLink);
       toast.success('邀请链接已复制');
-    } catch (error) {
+    } catch {
       toast.error('复制失败');
     }
   };
@@ -79,9 +79,10 @@ export default function InviteCard() {
           text: message,
         });
         toast.success('分享成功');
-      } catch (error: any) {
+      } catch (error: unknown) {
         // 用户取消分享不显示错误
-        if (error.name !== 'AbortError') {
+        const isAbort = error instanceof DOMException && error.name === 'AbortError';
+        if (!isAbort) {
           console.error('Share failed:', error);
         }
       }
@@ -90,7 +91,7 @@ export default function InviteCard() {
       try {
         await navigator.clipboard.writeText(message);
         toast.success('分享内容已复制到剪贴板');
-      } catch (error) {
+      } catch {
         toast.error('复制失败');
       }
     }

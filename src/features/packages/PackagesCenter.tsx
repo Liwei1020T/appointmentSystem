@@ -33,6 +33,7 @@ import {
 import PackageCard from '@/components/PackageCard';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
+import EmptyState from '@/components/EmptyState';
 import SectionLoading from '@/components/loading/SectionLoading';
 import { formatDate, calculateDaysRemaining } from '@/lib/utils';
 import PageHeader from '@/components/layout/PageHeader';
@@ -65,15 +66,7 @@ function PurchaseTab({ isVisible }: { isVisible: boolean }) {
 
     if (error) return <Card className="p-8 text-center text-danger bg-white border border-border-subtle shadow-sm">{error}</Card>;
 
-    if (packages.length === 0) return (
-        <div className="bg-white rounded-2xl border border-border-subtle shadow-sm p-12 text-center">
-            <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-ink flex items-center justify-center">
-                <PackageIcon className="w-10 h-10 text-text-tertiary" />
-            </div>
-            <h3 className="text-lg font-semibold text-text-primary mb-2">暂无可购买套餐</h3>
-            <p className="text-text-tertiary">敬请期待更多优惠套餐</p>
-        </div>
-    );
+    if (packages.length === 0) return <EmptyState type="no-packages" />;
 
     const hasFirstOrderOffer = packages.some((pkg) => (pkg as any).isFirstOrderOnly);
 
@@ -502,22 +495,13 @@ function MyPackagesTab({ isVisible }: { isVisible: boolean }) {
                     })}
                 </div>
             ) : (
-                <div className="bg-white rounded-2xl border border-border-subtle shadow-md p-12 text-center">
-                    <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-accent-soft flex items-center justify-center">
-                        <PackageIcon className="w-10 h-10 text-accent" />
-                    </div>
-                    <h3 className="text-lg font-bold text-text-primary mb-2">
-                        {showExpired ? '无已过期套餐' : '暂无有效套餐'}
-                    </h3>
-                    <p className="text-text-tertiary mb-6">
-                        {showExpired ? '您目前没有已过期的套餐' : '购买套餐享受更多优惠'}
-                    </p>
-                    {!showExpired && (
-                        <Button onClick={() => router.push('/packages?tab=purchase')} glow className="px-8 py-3 text-base font-bold">
-                            购买套餐
-                        </Button>
-                    )}
-                </div>
+                <EmptyState
+                    type="no-packages"
+                    title={showExpired ? '无已过期套餐' : '暂无有效套餐'}
+                    description={showExpired ? '您目前没有已过期的套餐' : '购买套餐享受更多优惠'}
+                    actionLabel={showExpired ? undefined : '购买套餐'}
+                    onAction={showExpired ? undefined : () => router.push('/packages?tab=purchase')}
+                />
             )}
 
             {/* ========== 使用说明 ========== */}
@@ -566,12 +550,7 @@ function MyPackagesTab({ isVisible }: { isVisible: boolean }) {
                         </div>
                         <div className="p-6 overflow-y-auto max-h-96">
                             {usageLogs.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-ink flex items-center justify-center">
-                                        <History className="w-8 h-8 text-text-tertiary" />
-                                    </div>
-                                    <p className="text-text-tertiary">暂无使用记录</p>
-                                </div>
+                                <EmptyState type="no-data" size="sm" />
                             ) : (
                                 <div className="space-y-3">
                                     {usageLogs.map((log: any) => (

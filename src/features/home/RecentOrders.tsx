@@ -11,6 +11,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, Badge } from '@/components';
 import SectionLoading from '@/components/loading/SectionLoading';
+import EmptyState from '@/components/EmptyState';
 import { getRecentOrders, type RecentOrder } from '@/services/homeService';
 import { formatDate } from '@/lib/utils';
 import { DollarSign, RefreshCw, CheckCircle, XCircle, LucideIcon } from 'lucide-react';
@@ -136,15 +137,14 @@ export default function RecentOrders({
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-text-primary font-display">最近订单</h2>
           </div>
-          <div className="text-center py-4">
-            <p className="text-sm text-text-secondary mb-3">暂无订单记录</p>
-            <button
-              onClick={() => router.push('/booking')}
-              className="text-sm text-accent hover:text-accent/80 font-medium"
-            >
-              立即预约穿线 →
-            </button>
-          </div>
+          <EmptyState
+            type="no-orders"
+            title="暂无订单记录"
+            description="预约你的第一次穿线服务吧"
+            actionLabel="立即预约穿线"
+            onAction={() => router.push('/booking')}
+            size="sm"
+          />
         </div>
       </Card>
     );

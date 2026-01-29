@@ -6,7 +6,7 @@ describe('buildReviewShareMessage', () => {
     const originalBaseUrl = process.env.NEXT_PUBLIC_APP_URL;
     process.env.NEXT_PUBLIC_APP_URL = 'https://lwstringstudio.li-wei.net';
 
-    const message = buildReviewShareMessage({ id: 'review-1', rating: 5 } as any, 'ABC123');
+    const message = buildReviewShareMessage({ rating: 5 }, 'ABC123');
 
     expect(message).toContain('https://lwstringstudio.li-wei.net/signup?ref=ABC123');
     expect(message).toContain('评分 5★');

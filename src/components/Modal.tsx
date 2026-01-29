@@ -70,19 +70,19 @@ export const Modal: React.FC<ModalProps> = ({
       <FocusTrap active={isOpen} restoreFocus>
         <div
           ref={modalRef}
-          className={`relative bg-white rounded-2xl shadow-xl w-full ${sizes[size]} max-h-[90vh] overflow-y-auto ${className}`}
+          className={`relative bg-white dark:bg-dark-elevated rounded-2xl shadow-xl w-full ${sizes[size]} max-h-[90vh] overflow-y-auto ${className}`}
           role="dialog"
           aria-modal="true"
           aria-labelledby={title ? 'modal-title' : undefined}
         >
           {title && (
-            <div className="px-6 py-4 border-b border-border-subtle">
-              <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
+            <div className="px-6 py-4 border-b border-border-subtle dark:border-gray-700">
+              <h2 id="modal-title" className="text-xl font-semibold text-text-primary dark:text-gray-100">
                 {title}
               </h2>
             </div>
           )}
-          <div className="px-6 py-4 text-text-secondary">
+          <div className="px-6 py-4 text-text-secondary dark:text-gray-400">
             {children}
           </div>
         </div>

@@ -3,13 +3,14 @@
  * GET /api/profile/badges - 获取当前用户的徽章列表
  */
 
-import { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
 import { getUserBadges, BADGE_CONFIG } from '@/server/services/referral.service';
 
-export async function GET(request: NextRequest) {
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
   try {
     const session = await auth();
     if (!session?.user?.id) {

@@ -10,6 +10,30 @@ export interface UserVoucherWithVoucher extends UserVoucher {
   voucher: Voucher;
 }
 
+export interface RedeemableVoucher {
+  id: string;
+  code: string;
+  name?: string | null;
+  discount_type?: 'percentage' | 'fixed';
+  discount_value?: number;
+  min_purchase?: number;
+  max_discount?: number | null;
+  points_cost?: number;
+  points_required?: number;
+  valid_from?: string;
+  valid_until?: string;
+  active?: boolean;
+  owned_count: number;
+  max_per_user: number;
+  can_redeem: boolean;
+  remaining_redemptions: number;
+  max_redemptions_per_user?: number;
+  type?: string;
+  value?: number;
+  minPurchase?: number;
+  pointsCost?: number;
+}
+
 /**
  * 获取用户优惠券
  */
@@ -119,9 +143,9 @@ export function validateVoucherForOrder(voucher: any, orderAmount: number): { va
 /**
  * 获取可兑换的优惠券（使用积分兑换）
  */
-export async function getRedeemableVouchers(): Promise<{ vouchers: Voucher[]; error: string | null }> {
+export async function getRedeemableVouchers(): Promise<{ vouchers: RedeemableVoucher[]; error: string | null }> {
   try {
-    const payload = await apiRequest<{ vouchers: Voucher[] }>(`/api/vouchers/redeemable`);
+    const payload = await apiRequest<{ vouchers: RedeemableVoucher[] }>(`/api/vouchers/redeemable`);
     return { vouchers: Array.isArray(payload?.vouchers) ? payload.vouchers : [], error: null };
   } catch (error: any) {
     return { vouchers: [], error: error.message || '获取可兑换优惠券失败' };
@@ -168,7 +192,7 @@ export function calculateDiscount(voucher: Voucher | UserVoucher | any, orderAmo
   
   // 计算折扣
   if (discountType === 'PERCENTAGE' || discountType === 'percentage' || discountType === 'percentage_off') {
-    let discount = (orderAmount * (typeof discountValue === 'object' ? discountValue.toNumber() : discountValue)) / 100;
+    const discount = (orderAmount * (typeof discountValue === 'object' ? discountValue.toNumber() : discountValue)) / 100;
     const maxDiscountValue = typeof maxDiscount === 'object' ? maxDiscount.toNumber() : maxDiscount;
     return maxDiscountValue ? Math.min(discount, maxDiscountValue) : discount;
   } else if (discountType === 'FIXED' || discountType === 'fixed' || discountType === 'fixed_amount') {
@@ -181,9 +205,9 @@ export function calculateDiscount(voucher: Voucher | UserVoucher | any, orderAmo
 /**
  * 获取所有可用优惠券
  */
-export async function getAvailableVouchers(): Promise<{ vouchers: Voucher[]; error: string | null }> {
+export async function getAvailableVouchers(): Promise<{ vouchers: RedeemableVoucher[]; error: string | null }> {
   try {
-    const payload = await apiRequest<{ vouchers: Voucher[] }>(`/api/vouchers/redeemable`);
+    const payload = await apiRequest<{ vouchers: RedeemableVoucher[] }>(`/api/vouchers/redeemable`);
     return { vouchers: payload?.vouchers || [], error: null };
   } catch (error: any) {
     return { vouchers: [], error: error.message || '获取可用优惠券失败' };

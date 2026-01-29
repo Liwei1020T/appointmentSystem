@@ -2,15 +2,13 @@
  * 管理员 - 获取所有用户 API
  * GET /api/admin/users
  */
-
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
-import { errorResponse, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
+import type { Prisma } from '@prisma/client';
 import { handleApiError } from '@/lib/api/handleApiError';
-
 export const dynamic = 'force-dynamic';
-
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
@@ -23,8 +21,7 @@ export async function GET(request: NextRequest) {
     // Support both `limit` and legacy `pageSize`
     const limit = parseInt(searchParams.get('limit') || searchParams.get('pageSize') || '20');
     const skip = (page - 1) * limit;
-
-    const where: any = {};
+    const where: Prisma.UserWhereInput = {};
     if (search) {
       where.OR = [
         { email: { contains: search, mode: 'insensitive' } },
@@ -43,7 +40,6 @@ export async function GET(request: NextRequest) {
       }
       // status === 'active' => no extra filter
     }
-
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where,
@@ -73,7 +69,6 @@ export async function GET(request: NextRequest) {
       }),
       prisma.user.count({ where }),
     ]);
-
     return successResponse({
       users,
       pagination: {

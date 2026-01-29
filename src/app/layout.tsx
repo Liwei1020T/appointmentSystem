@@ -6,6 +6,8 @@ import Navbar from '@/components/layout/Navbar'
 import RealtimeOrderProvider from '@/components/RealtimeOrderProvider'
 import ClientLayout from './ClientLayout'
 import { LocalBusinessJsonLd, WebSiteJsonLd } from '@/components/seo/JsonLd'
+import { ThemeProvider } from '@/components/ThemeProvider'
+import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration'
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -87,28 +89,37 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" suppressHydrationWarning>
       <head>
         {/* 结构化数据 (JSON-LD) 用于 Google 富媒体搜索结果 */}
         <LocalBusinessJsonLd />
         <WebSiteJsonLd />
+        {/* 防止主题切换时的闪烁 - 静态脚本，无用户输入 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme-preference');var r=t;if(!t||t==='system'){r=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'}document.documentElement.classList.add(r)}catch(e){}})()`,
+          }}
+        />
       </head>
       <body className={`${notoSans.variable} ${spaceGrotesk.variable} font-sans`}>
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-white focus:text-text-primary focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-md"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-white dark:focus:bg-dark-elevated focus:text-text-primary focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-md"
         >
           跳转到主要内容
         </a>
         <SessionProvider>
-          <RealtimeOrderProvider>
-            <ClientLayout>
-              <Navbar />
-              <main id="main-content" className="min-h-screen bg-ink">
-                {children}
-              </main>
-            </ClientLayout>
-          </RealtimeOrderProvider>
+          <ThemeProvider>
+            <RealtimeOrderProvider>
+              <ClientLayout>
+                <Navbar />
+                <main id="main-content" className="min-h-screen bg-ink dark:bg-dark">
+                  {children}
+                </main>
+              </ClientLayout>
+            </RealtimeOrderProvider>
+          </ThemeProvider>
+          <ServiceWorkerRegistration />
         </SessionProvider>
       </body>
     </html>

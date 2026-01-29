@@ -1,12 +1,10 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
-import { errorResponse, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { parseDateRangeFromSearchParams } from '@/lib/reporting';
 import { handleApiError } from '@/lib/api/handleApiError';
-
 export const dynamic = 'force-dynamic';
-
 /**
  * 管理员 - 利润分析
  *
@@ -22,13 +20,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
-
     const { start, end } = parseDateRangeFromSearchParams(request.nextUrl.searchParams, {
       defaultDays: 30,
     });
-
     const confirmedStatuses = ['success', 'completed'];
-
     const [orders, packagePayments] = await Promise.all([
       prisma.order.findMany({
         where: {
@@ -58,12 +53,9 @@ export async function GET(request: NextRequest) {
         },
       }),
     ]);
-
     // 订单聚合
     let orderRevenue = 0;
-    let orderCost = 0;
     let orderProfit = 0;
-
     const profitByString = new Map<
       string,
       {
@@ -74,16 +66,12 @@ export async function GET(request: NextRequest) {
         quantity: number;
       }
     >();
-
     for (const order of orders) {
       const revenue = Number(order.price ?? 0);
       const cost = Number(order.cost ?? 0);
       const profit = order.profit !== null && order.profit !== undefined ? Number(order.profit) : revenue - cost;
-
       orderRevenue += revenue;
-      orderCost += cost;
       orderProfit += profit;
-
       const stringId = order.stringId || 'unknown';
       const name = order.string ? `${order.string.brand} ${order.string.model}` : 'String';
       const current = profitByString.get(stringId) ?? {
@@ -99,11 +87,9 @@ export async function GET(request: NextRequest) {
       current.quantity += 1;
       profitByString.set(stringId, current);
     }
-
     // 套餐聚合
     const packageRevenue = packagePayments.reduce((sum, p) => sum + Number(p.amount ?? 0), 0);
     const packageProfit = packageRevenue;
-
     const profitByPackage = new Map<
       string,
       {
@@ -114,7 +100,6 @@ export async function GET(request: NextRequest) {
         quantity: number;
       }
     >();
-
     for (const payment of packagePayments) {
       const pid = payment.packageId || 'unknown';
       const revenue = Number(payment.amount ?? 0);
@@ -130,11 +115,9 @@ export async function GET(request: NextRequest) {
       current.quantity += 1;
       profitByPackage.set(pid, current);
     }
-
     const totalRevenue = orderRevenue + packageRevenue;
     const totalProfit = orderProfit + packageProfit;
     const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
-
     // 输出 profitByProduct（AdminReportsPage 使用）
     const profitByProduct = [
       ...Array.from(profitByString.values()).map((row) => ({
@@ -156,7 +139,6 @@ export async function GET(request: NextRequest) {
         margin: row.revenue > 0 ? 100 : 0,
       })),
     ];
-
     const profitByCategory = [
       {
         category: 'orders',
@@ -169,12 +151,10 @@ export async function GET(request: NextRequest) {
         margin: packageRevenue > 0 ? 100 : 0,
       },
     ];
-
     const topProfitableItems = profitByProduct
       .map((p) => ({ name: p.productName, profit: p.profit }))
       .sort((a, b) => b.profit - a.profit)
       .slice(0, 10);
-
     return successResponse({
       totalProfit: Number(totalProfit.toFixed(2)),
       profitMargin: Number(profitMargin.toFixed(2)),

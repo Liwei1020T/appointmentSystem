@@ -47,10 +47,10 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
           className={cn(
-            "flex items-center justify-between rounded-full border border-border-subtle px-4 h-14 transition-all duration-300",
+            "flex items-center justify-between rounded-full border border-border-subtle dark:border-gray-700 px-4 h-14 transition-all duration-300",
             isScrolled
-              ? "bg-white/90 backdrop-blur-md shadow-sm"
-              : "bg-white/70 backdrop-blur"
+              ? "bg-white/90 dark:bg-dark-elevated/90 backdrop-blur-md shadow-sm"
+              : "bg-white/70 dark:bg-dark-elevated/70 backdrop-blur"
           )}
         >
 
@@ -68,7 +68,7 @@ export default function Header() {
             <button
               key={link.name}
               onClick={() => scrollToSection(link.id)}
-              className="text-sm font-medium text-text-secondary hover:text-accent transition-colors relative group"
+              className="text-sm font-medium text-text-secondary dark:text-gray-400 hover:text-accent transition-colors relative group"
             >
               {link.name}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
@@ -80,7 +80,7 @@ export default function Header() {
         <div className="flex items-center gap-3">
           <Link
             href="/login"
-            className="text-sm font-medium text-text-secondary hover:text-text-primary px-3 py-2 transition-colors hidden sm:block"
+            className="text-sm font-medium text-text-secondary dark:text-gray-400 hover:text-text-primary dark:hover:text-gray-100 px-3 py-2 transition-colors hidden sm:block"
           >
             登录
           </Link>

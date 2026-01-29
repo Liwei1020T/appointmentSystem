@@ -29,7 +29,7 @@ export const Badge: React.FC<BadgeProps> = ({
     warning: 'bg-warning/12 text-warning border border-warning/20',
     error: 'bg-danger/12 text-danger border border-danger/20',
     info: 'bg-info/10 text-info border border-info/20',
-    neutral: 'bg-ink text-text-secondary border border-border-subtle',
+    neutral: 'bg-ink text-text-secondary border border-border-subtle dark:bg-gray-700 dark:text-gray-300',
     blue: 'bg-info/10 text-info border border-info/20'
   };
 

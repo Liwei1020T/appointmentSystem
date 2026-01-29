@@ -4,21 +4,16 @@
  *
  * Used by Admin User Management dashboard cards.
  */
-
-import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
-import { errorResponse, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
-
 export const dynamic = 'force-dynamic';
-
 function getStartOfDay(date: Date) {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
   return d;
 }
-
 function getStartOfWeek(date: Date) {
   const d = getStartOfDay(date);
   const day = d.getDay(); // 0..6 (Sun..Sat)
@@ -27,20 +22,16 @@ function getStartOfWeek(date: Date) {
   d.setDate(d.getDate() - (normalized - 1));
   return d;
 }
-
 function getStartOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
-
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     await requireAdmin();
-
     const now = new Date();
     const startOfDay = getStartOfDay(now);
     const startOfWeek = getStartOfWeek(now);
     const startOfMonth = getStartOfMonth(now);
-
     const [
       totalUsers,
       newUsersToday,
@@ -69,19 +60,15 @@ export async function GET(_request: NextRequest) {
         _count: { role: true },
       }),
     ]);
-
     const totalRevenue = Number(totalRevenueAgg._sum?.price ?? 0);
     const totalPointsDistributed = Number(totalPointsDistributedAgg._sum?.amount ?? 0);
-
     // Note: "blocked" is not modeled in current schema; keep as 0 for compatibility.
     const blockedUsers = 0;
     const activeUsers = Math.max(0, totalUsers - blockedUsers);
-
     const usersByRole = usersByRoleAgg.map((row) => ({
       role: row.role,
       count: row._count.role,
     }));
-
     // Return both camelCase + snake_case aliases to be resilient to mixed UI code.
     return successResponse({
       totalUsers,

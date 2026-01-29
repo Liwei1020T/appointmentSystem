@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
 
         // 如果有新获得的徽章，记录日志
         if (result.newBadges.length > 0) {
-          console.log(
+          console.info(
             `User ${referrer.id} earned new badges:`,
             result.newBadges.join(', ')
           );

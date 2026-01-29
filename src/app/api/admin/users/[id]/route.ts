@@ -13,7 +13,20 @@ import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
-function mapUserToPayload(user: any) {
+type UserRecord = {
+  id: string;
+  email: string | null;
+  phone: string | null;
+  fullName: string | null;
+  points: number;
+  role: string;
+  referralCode: string | null;
+  referredBy: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+function mapUserToPayload(user: UserRecord) {
   return {
     id: user.id,
     email: user.email,

@@ -5,7 +5,6 @@
 
 import { z } from 'zod';
 import { failResponse, okResponse } from '@/lib/api-response';
-import { isApiError } from '@/lib/api-errors';
 import { listFeaturedPackages } from '@/server/services/package.service';
 import { handleApiError } from '@/lib/api/handleApiError';
 

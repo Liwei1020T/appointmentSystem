@@ -1,6 +1,7 @@
 import React from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { MembershipTierId, getTierLabel } from '@/lib/membership';
+import EmptyState from '@/components/EmptyState';
 
 interface TierBenefit {
   description: string;
@@ -46,7 +47,6 @@ export default function MembershipCard({
   totalSpent,
   nextTier,
   spentProgress,
-  ordersProgress,
   spentTarget,
   benefits,
 }: MembershipCardProps) {
@@ -123,10 +123,17 @@ export default function MembershipCard({
               <span>{benefit.description}</span>
             </div>
           ))}
-          {benefits.length === 0 && (
-            <p className="text-sm text-gray-400 italic">暂无特殊权益</p>
-          )}
         </div>
+        {benefits.length === 0 && (
+          <div className="py-4">
+            <EmptyState
+              type="no-data"
+              title="暂无特殊权益"
+              description="继续消费升级会员等级解锁更多权益"
+              size="sm"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -38,11 +38,14 @@ export async function POST(
     }
 
     // Parse body safely (may be empty)
-    const body = await request.json().catch(() => ({}));
+    const rawBody = await request.json().catch(() => ({}));
+    const body =
+      typeof rawBody === 'object' && rawBody !== null
+        ? (rawBody as { type?: string; userIds?: unknown })
+        : {};
 
     const targetType: string =
-      (body as any).type ||
-      (Array.isArray((body as any).userIds) ? 'specific' : 'all');
+      body.type || (Array.isArray(body.userIds) ? 'specific' : 'all');
 
     const voucher = await prisma.voucher.findUnique({
       where: { id: voucherId },
@@ -83,7 +86,7 @@ export async function POST(
       });
       targetUserIds = users.map((u) => u.id);
     } else {
-      const rawUserIds: unknown = (body as any).userIds;
+      const rawUserIds: unknown = body.userIds;
       targetUserIds = Array.isArray(rawUserIds)
         ? rawUserIds.filter((id) => typeof id === 'string')
         : [];

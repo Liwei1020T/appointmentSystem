@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
@@ -79,10 +79,11 @@ export default function EditProfilePage() {
           avatar_url: data.avatar_url || '',
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '加载失败';
       setToast({
         show: true,
-        message: err.message || '加载失败',
+        message,
         type: 'error',
       });
     } finally {
@@ -153,10 +154,11 @@ export default function EditProfilePage() {
           router.back();
         }, 1000);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '更新失败';
       setToast({
         show: true,
-        message: err.message || '更新失败',
+        message,
         type: 'error',
       });
     } finally {

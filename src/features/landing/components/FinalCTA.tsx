@@ -10,7 +10,7 @@ export default function FinalCTA() {
   const router = useRouter();
 
   return (
-    <section className="py-24 bg-ink relative overflow-hidden">
+    <section className="py-24 bg-ink dark:bg-dark relative overflow-hidden">
       {/* Background */}
       <BreathingBackground className="opacity-70 scale-x-[-1]" />
 
@@ -24,10 +24,10 @@ export default function FinalCTA() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6 font-display">
+          <h2 className="text-4xl md:text-5xl font-bold text-text-primary dark:text-gray-100 mb-6 font-display">
             还在等什么？
           </h2>
-          <p className="text-xl text-text-secondary mb-10 max-w-2xl mx-auto">
+          <p className="text-xl text-text-secondary dark:text-gray-400 mb-10 max-w-2xl mx-auto">
             现在就注册你的账户，试一次你就知道什么叫稳。
             <br className="hidden md:block" />
             让你的每一拍杀球都更有力！
@@ -44,7 +44,7 @@ export default function FinalCTA() {
             <Button
               onClick={() => router.push('/login')}
               variant="secondary"
-              className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border border-border-subtle hover:bg-ink bg-white/80 backdrop-blur-sm"
+              className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border border-border-subtle dark:border-gray-700 hover:bg-ink dark:hover:bg-dark bg-white/80 dark:bg-dark-elevated/80 backdrop-blur-sm"
             >
               登录账户
             </Button>

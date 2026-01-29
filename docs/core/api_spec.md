@@ -1,8 +1,8 @@
 # 🔌 API Specification
 
-**String Service Platform — API Reference**  
-**Version:** 1.1  
-**Last Updated:** 2025-12-28  
+**String Service Platform — API Reference**
+**Version:** 2.0
+**Last Updated:** 2026-01-27
 **Backend:** Next.js Route Handlers (Prisma + PostgreSQL)
 
 ---
@@ -769,10 +769,52 @@ All authenticated endpoints require:
 - `GET /api/admin/reports/order-trends` → 订单趋势（按小时/周几/月，管理员）。  
 - `GET /api/admin/reports/export` → CSV 导出（管理员）。  
 - `GET /api/admin/stats` → 管理员仪表板快捷指标（today/month orders & revenue、low-stock count、pending orders、active packages，管理员）。
+- `GET /api/admin/users` → 用户列表（支持 search/role/page/limit，管理员）。
+- `GET /api/admin/users/:id` → 用户详情（管理员）。
+- `PATCH /api/admin/users/:id` → 更新用户信息（管理员）。
+- `POST /api/admin/users/:id/block` → 封禁/解封用户（管理员）。
+- `GET /api/admin/users/:id/orders` → 用户订单列表（管理员）。
+- `GET /api/admin/users/:id/packages` → 用户套餐列表（管理员）。
+- `POST /api/admin/users/:id/points` → 调整用户积分（管理员）。
+- `GET /api/admin/users/:id/points-log` → 用户积分明细（管理员）。
+- `POST /api/admin/users/:id/role` → 修改用户角色（管理员）。
+- `GET /api/admin/users/stats` → 用户统计（总数/活跃/新增趋势，管理员）。
+- `GET /api/admin/inventory` → 库存列表（支持 search/active/lowStock，管理员）。
+- `GET /api/admin/inventory/:id` → 库存详情（管理员）。
+- `POST /api/admin/inventory` → 添加库存项（管理员）。
+- `PATCH /api/admin/inventory/:id` → 更新库存项（管理员）。
+- `DELETE /api/admin/inventory/:id` → 删除库存项（管理员）。
+- `POST /api/admin/inventory/:id/stock` → 调整库存数量（管理员）。
+- `GET /api/admin/inventory/:id/logs` → 库存变更日志（管理员）。
+- `GET /api/admin/inventory/logs` → 全部库存日志（管理员）。
+- `POST /api/admin/inventory/restock` → 批量补货（管理员）。
+- `PATCH /api/admin/orders/:id` → 更新订单信息（管理员）。
+- `POST /api/admin/orders/:id/eta` → 设置订单预计完成时间（管理员）。
+- `POST /api/admin/reviews/:id/featured` → 切换精选状态（管理员）。
+- `GET /api/admin/vouchers/:id/users` → 持有指定优惠券的用户列表（管理员）。
+- `POST /api/admin/cron/order-automation` → 订单自动化任务（取消超时订单，管理员/Cron）。
+- `POST /api/admin/cron/package-renewal` → 套餐续期提醒任务（管理员/Cron）。
+- `POST /api/cron/cleanup-orders` → 清理过期订单草稿（Cron）。
 - `POST /api/reviews` → 提交订单评价（需要登录；仅允许评价自己的 completed 订单；奖励 10 积分并写入 `points_log`）。  
 - `GET /api/reviews/user` → 当前用户评价列表（需要登录；返回 `{ reviews: [...] }`）。  
 - `GET /api/reviews/order/:orderId` → 获取订单评价（需要登录；订单 owner 或管理员；返回 `{ review: ... | null }`）。  
-- `GET /api/reviews/featured` → 精选评价（公开；返回 array，用于首页轮播）。  
+- `GET /api/reviews/featured` → 精选评价（公开；返回 array，用于首页轮播）。
+- `GET /api/reviews` → 公开评价列表（支持 limit/offset，公开）。
+- `POST /api/reviews/:id/like` → 点赞评价（需登录）。
+- `GET /api/health` → 健康检查（返回服务状态，公开）。
+- `POST /api/upload` → 通用文件上传（multipart，需登录）。
+- `GET /api/stats` → 公开统计（总订单数/用户数/评价数，公开）。
+- `GET /api/user/stats` → 当前用户统计（需登录）。
+- `GET /api/profile/badges` → 用户徽章列表（需登录）。
+- `GET /api/profile/membership` → 会员信息（等级/进度/权益，需登录）。
+- `POST /api/auth/otp/request` → 请求 OTP 验证码（密码重置，公开）。
+- `POST /api/auth/password-reset/confirm` → 确认密码重置（公开）。
+- `GET /api/packages/featured` → 精选套餐（公开）。
+- `GET /api/packages/pending-payments` → 待支付套餐列表（需登录）。
+- `GET /api/packages/user/:id/usage` → 指定用户套餐使用记录（管理员）。
+- `POST /api/payments/tng/callback` → TNG 支付回调（签名验证）。
+- `GET /api/reviews/public` → 公开评价列表（公开）。
+- `GET /api/reviews/public/:id` → 公开评价详情（公开）。
 
 ---
 
@@ -1183,8 +1225,7 @@ All authenticated endpoints require:
 - All datetime fields use ISO 8601 format with timezone
 - All monetary amounts are in **MYR (RM)** with 2 decimal places
 - Pagination uses `limit` and `offset` parameters
-- Filtering uses PostgREST query syntax
-- File uploads (images) use Supabase Storage with public URLs
+- File uploads (images) use local storage in `/public/uploads/`
 
 ---
 

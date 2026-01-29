@@ -20,6 +20,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { confirmCashPayment, confirmPayment, getPendingPayments, rejectPayment } from '@/services/paymentService';
 import { formatAmount } from '@/lib/payment-helpers';
 import { Badge, Button, Card, Modal, Toast } from '@/components';
+import EmptyState from '@/components/EmptyState';
 import PageLoading from '@/components/loading/PageLoading';
 
 interface PaymentUser {
@@ -187,9 +188,7 @@ export default function PaymentVerificationPage() {
       </div>
 
       {payments.length === 0 ? (
-        <Card padding="lg" className="text-center">
-          <p className="text-text-tertiary">暂无待审核的支付</p>
-        </Card>
+        <EmptyState type="no-payments" />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {payments.map((payment) => {

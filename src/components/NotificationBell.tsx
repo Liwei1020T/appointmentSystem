@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { getUnreadCount } from '@/services/notificationService';
 
@@ -24,14 +24,24 @@ export default function NotificationBell({ onClick, userId, refreshTrigger = 0 }
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // 加载未读数量
-  const loadUnreadCount = useCallback(async () => {
-    const { count } = await getUnreadCount(userId);
-    setUnreadCount(count);
-    setLoading(false);
-  }, [userId]);
-
   useEffect(() => {
+    let active = true;
+
+    const loadUnreadCount = async () => {
+      try {
+        const { count } = await getUnreadCount(userId);
+        if (active) {
+          setUnreadCount(count);
+          setLoading(false);
+        }
+      } catch (error) {
+        // Silently handle errors to prevent crashes
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
     loadUnreadCount();
 
     // 轮询检查通知更新（替代 Supabase realtime）
@@ -40,9 +50,10 @@ export default function NotificationBell({ onClick, userId, refreshTrigger = 0 }
     }, 30000); // 每30秒检查一次
 
     return () => {
+      active = false;
       clearInterval(interval);
     };
-  }, [userId, loadUnreadCount, refreshTrigger]);
+  }, [userId, refreshTrigger]);
 
   return (
     <button

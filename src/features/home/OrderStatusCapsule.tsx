@@ -10,6 +10,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Badge, Button, Card } from '@/components';
 import SectionLoading from '@/components/loading/SectionLoading';
+import EmptyState from '@/components/EmptyState';
 import { formatDate } from '@/lib/utils';
 interface OrderSummary {
   id: string;
@@ -99,18 +100,16 @@ export default function OrderStatusCapsule({
   if (!order) {
     return (
       <Card>
-        <div className="p-5 space-y-2">
-          <p className="text-xs uppercase tracking-[0.2em] text-text-tertiary">订单进度</p>
-          <h2 className="text-lg font-bold text-text-primary font-display">暂无进行中的订单</h2>
-          <p className="text-sm text-text-secondary">创建新订单开始预约</p>
-          <Button
-            variant="primary"
+        <div className="p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-text-tertiary mb-3">订单进度</p>
+          <EmptyState
+            type="no-orders"
+            title="暂无进行中的订单"
+            description="创建新订单开始预约"
+            actionLabel="立即预约"
+            onAction={() => router.push('/booking')}
             size="sm"
-            className="mt-3 w-full sm:w-auto"
-            onClick={() => router.push('/booking')}
-          >
-            立即预约
-          </Button>
+          />
         </div>
       </Card>
     );

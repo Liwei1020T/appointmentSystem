@@ -13,6 +13,7 @@ import { getReferralLeaderboard } from '@/services/referralService';
 import type { LeaderboardEntry } from '@/services/referralService';
 import toast from 'react-hot-toast';
 import PageLoading from '@/components/loading/PageLoading';
+import EmptyState from '@/components/EmptyState';
 
 export default function ReferralLeaderboardPage() {
   const router = useRouter();
@@ -31,8 +32,9 @@ export default function ReferralLeaderboardPage() {
     try {
       const data = await getReferralLeaderboard(20);
       setLeaderboard(data || []);
-    } catch (err: any) {
-      setError(err?.message || '加载失败');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '加载失败';
+      setError(message);
       toast.error('获取排行榜失败');
     } finally {
       setLoading(false);
@@ -96,17 +98,7 @@ export default function ReferralLeaderboardPage() {
 
         {/* 排行榜列表 */}
         {leaderboard.length === 0 ? (
-          <div className="bg-ink-surface rounded-lg border border-border-subtle p-8 text-center">
-            <div className="bg-ink-elevated rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <Trophy className="w-8 h-8 text-text-tertiary" />
-            </div>
-            <h3 className="text-lg font-semibold text-text-primary mb-2">
-              暂无排行数据
-            </h3>
-            <p className="text-sm text-text-tertiary">
-              成为第一个邀请好友的用户吧！
-            </p>
-          </div>
+          <EmptyState type="no-referrals" />
         ) : (
           <div className="bg-ink-surface rounded-lg border border-border-subtle divide-y divide-border-subtle">
             {leaderboard.map((entry) => (
@@ -194,14 +186,3 @@ function getRankIcon(rank: number) {
 /**
  * 邮箱脱敏
  */
-function maskEmail(email: string): string {
-  const [localPart, domain] = email.split('@');
-  if (!domain) return email;
-
-  const maskedLocal =
-    localPart.length > 2
-      ? localPart.substring(0, 2) + '***'
-      : localPart + '***';
-
-  return `${maskedLocal}@${domain}`;
-}

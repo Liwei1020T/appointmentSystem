@@ -11,7 +11,7 @@
 'use client';
 
 import React, { useState, useEffect, useId } from 'react';
-import { Store, Truck, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import { Store, Truck, MapPin } from 'lucide-react';
 
 export type ServiceType = 'in_store' | 'pickup_delivery';
 

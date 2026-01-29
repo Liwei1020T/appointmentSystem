@@ -116,7 +116,7 @@ export default function PaymentPage({
           扫码支付
         </h1>
         <p className="text-text-tertiary">
-          请使用 Touch 'n Go 电子钱包扫描下方二维码完成支付
+          请使用 Touch &apos;n Go 电子钱包扫描下方二维码完成支付
         </p>
       </div>
 
