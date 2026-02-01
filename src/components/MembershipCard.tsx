@@ -23,9 +23,9 @@ interface MembershipCardProps {
 const TIER_COLORS = {
   SILVER: {
     bg: 'bg-gradient-to-br from-gray-100 to-gray-300',
-    text: 'text-gray-800',
+    text: 'text-text-primary',
     border: 'border-gray-200',
-    icon: 'text-gray-600',
+    icon: 'text-text-secondary',
   },
   GOLD: {
     bg: 'bg-gradient-to-br from-amber-100 to-amber-300',
@@ -110,13 +110,13 @@ export default function MembershipCard({
 
       {/* 权益列表 */}
       <div className="bg-white p-5">
-        <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
           <span className={`w-1.5 h-4 rounded-full ${colors.bg}`}></span>
           会员专属权益
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {benefits.map((benefit, index) => (
-            <div key={index} className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-100">
+            <div key={index} className="flex items-center gap-2 text-sm text-text-secondary bg-ink p-2 rounded-lg border border-border-subtle">
               <svg className={`w-4 h-4 ${colors.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>

@@ -1,12 +1,18 @@
 // API Response Types
 
-export interface ApiResponse<T = any> {
+export interface ApiErrorDetails {
+  fieldErrors?: Record<string, string[]>;
+  formErrors?: string[];
+  [key: string]: unknown;
+}
+
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: ApiErrorDetails;
   };
   message?: string;
 }

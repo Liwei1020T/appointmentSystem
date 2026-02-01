@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import FeaturedReviews from '@/components/FeaturedReviews';
 import HomeOnboarding from '@/components/HomeOnboarding';
+import EventCarousel from '@/components/EventCarousel';
 import QuickActions from './QuickActions';
 import RecentOrders from './RecentOrders';
 import PackageSummary from './PackageSummary';
@@ -123,6 +124,9 @@ export default function HomePage() {
       `}>
         {/* 快捷操作按钮 */}
         <QuickActions />
+
+        {/* 活动优惠轮播 */}
+        <EventCarousel />
 
         {/* 当前订单状态 */}
         <OrderStatusCapsule order={recentOrders[0] || null} loading={dataLoading} />

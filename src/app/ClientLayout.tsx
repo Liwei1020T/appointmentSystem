@@ -17,7 +17,7 @@ import {
   CalendarIcon,
   UserIcon,
   ClipboardListIcon,
-  StarIcon
+  GiftIcon
 } from 'lucide-react';
 import WhatsAppButton from '@/components/WhatsAppButton';
 
@@ -45,16 +45,16 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       active: pathname === '/booking',
     },
     {
+      icon: <GiftIcon className="w-full h-full" />,
+      label: '活动',
+      href: '/events',
+      active: pathname === '/events' || pathname?.startsWith('/events'),
+    },
+    {
       icon: <ClipboardListIcon className="w-full h-full" />,
       label: '订单',
       href: '/orders',
       active: pathname === '/orders' || pathname?.startsWith('/orders'),
-    },
-    {
-      icon: <StarIcon className="w-full h-full" />,
-      label: '评价',
-      href: '/reviews',
-      active: pathname === '/reviews' || pathname?.startsWith('/reviews'),
     },
     {
       icon: <UserIcon className="w-full h-full" />,

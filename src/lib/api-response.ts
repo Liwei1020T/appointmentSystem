@@ -44,7 +44,7 @@ export function successResponse<T>(data: T, message?: string) {
   });
 }
 
-export function errorResponse(message: string, status: number = 400, details?: any, code?: ApiErrorCode) {
+export function errorResponse(message: string, status: number = 400, details?: unknown, code?: ApiErrorCode) {
   let resolvedCode = code;
   let resolvedDetails = details;
 
@@ -77,7 +77,7 @@ export function notFoundResponse(message: string = '资源不存在') {
   return errorResponse(message, 404);
 }
 
-export function serverErrorResponse(message: string = '服务器错误', error?: any) {
+export function serverErrorResponse(message: string = '服务器错误', error?: unknown) {
   console.error('Server error:', error);
   return errorResponse(message, 500, process.env.NODE_ENV === 'development' ? error : undefined);
 }

@@ -231,3 +231,35 @@ export async function getMembershipDetails(): Promise<any> {
     return null;
   }
 }
+
+/**
+ * 用户徽章
+ */
+export interface UserBadge {
+  type: string;
+  name: string;
+  icon: string;
+  description: string;
+  earned: boolean;
+  earnedAt: string | null;
+}
+
+export interface BadgesData {
+  earnedBadges: UserBadge[];
+  allBadges: UserBadge[];
+  totalEarned: number;
+  totalAvailable: number;
+}
+
+/**
+ * 获取用户徽章
+ */
+export async function getUserBadges(): Promise<BadgesData | null> {
+  try {
+    const data = await apiRequest<BadgesData>('/api/profile/badges');
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch user badges:', error);
+    return null;
+  }
+}

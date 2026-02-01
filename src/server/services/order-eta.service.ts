@@ -282,17 +282,24 @@ export async function batchGetOrderEtaQueueMeta(
   // 批量获取队列位置
   const queuePositions = new Map<string, number>();
   if (pendingOrderIds.length > 0) {
-    // 获取这些订单之前的未完成订单数量
+    // 一次性获取所有未完成订单的创建时间
+    const allPendingOrders = await prisma.order.findMany({
+      where: {
+        status: { in: ['pending', 'in_progress'] },
+      },
+      select: { id: true, createdAt: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // 为每个订单计算队列位置
     for (const orderId of pendingOrderIds) {
       const order = orders.find(o => o.id === orderId);
       if (order) {
-        const position = await prisma.order.count({
-          where: {
-            status: { in: ['pending', 'in_progress'] },
-            createdAt: { lt: order.createdAt },
-          },
-        });
-        queuePositions.set(orderId, position + 1);
+        // 计算在此订单之前的订单数量
+        const position = allPendingOrders.findIndex(o => o.id === orderId) + 1;
+        if (position > 0) {
+          queuePositions.set(orderId, position);
+        }
       }
     }
   }

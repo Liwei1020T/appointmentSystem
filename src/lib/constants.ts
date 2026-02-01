@@ -37,4 +37,8 @@ export const ORDER_RULES = {
 export const POINTS = {
   // Percentage of order value awarded as points (e.g., 0.5 = 50%)
   REWARD_RATE: 0.5,
+  // Points awarded for submitting a review
+  REVIEW_REWARD: 10,
+  // Points awarded to new users when they register via referral
+  REFERRAL_SIGNUP_REWARD: 50,
 } as const;

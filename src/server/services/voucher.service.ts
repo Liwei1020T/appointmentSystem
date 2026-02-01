@@ -61,6 +61,7 @@ export async function getUserVouchersMapped(userId: string, status?: string) {
 
 /**
  * Redeem a voucher by code, optionally using points.
+ * 使用事务内检查防止 maxUses 竞争条件
  */
 export async function redeemVoucherByCode(userId: string, code: string, usePoints = false) {
   const trimmed = code?.trim();
@@ -85,9 +86,7 @@ export async function redeemVoucherByCode(userId: string, code: string, usePoint
     throw new ApiError('CONFLICT', 409, 'Voucher not in valid date range');
   }
 
-  if (voucher.maxUses && voucher.usedCount >= voucher.maxUses) {
-    throw new ApiError('CONFLICT', 409, 'Voucher is fully redeemed');
-  }
+  // NOTE: maxUses 检查移入事务内进行，以防止并发竞争条件
 
   const existingCount = await prisma.userVoucher.count({
     where: { userId, voucherId: voucher.id },
@@ -109,10 +108,44 @@ export async function redeemVoucherByCode(userId: string, code: string, usePoint
     }
 
     await prisma.$transaction(async (tx) => {
-      const newBalance = currentUser.points - voucher.pointsCost;
-      await tx.user.update({
+      // 使用原子操作更新 usedCount，同时检查 maxUses 限制
+      // updateMany 配合条件可以实现 Compare-And-Swap 语义
+      const updateResult = await tx.voucher.updateMany({
+        where: {
+          id: voucher.id,
+          // 只有当 maxUses 为空或 usedCount < maxUses 时才更新
+          OR: [
+            { maxUses: null },
+            { maxUses: 0 },
+            { usedCount: { lt: tx.voucher.fields?.maxUses ?? 999999 } },
+          ],
+        },
+        data: { usedCount: { increment: 1 } },
+      });
+
+      // 备用方案：如果上面的条件不够精确，使用传统检查
+      if (updateResult.count === 0) {
+        // 重新检查是否真的超限
+        const freshVoucher = await tx.voucher.findUnique({
+          where: { id: voucher.id },
+          select: { maxUses: true, usedCount: true },
+        });
+
+        if (freshVoucher?.maxUses && freshVoucher.usedCount >= freshVoucher.maxUses) {
+          throw new ApiError('CONFLICT', 409, 'Voucher is fully redeemed');
+        }
+
+        // 如果不是超限，则是其他原因导致更新失败，重试增加计数
+        await tx.voucher.update({
+          where: { id: voucher.id },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
+
+      const updatedUser = await tx.user.update({
         where: { id: userId },
-        data: { points: newBalance },
+        data: { points: { decrement: voucher.pointsCost } },
+        select: { points: true },
       });
 
       await tx.pointsLog.create({
@@ -122,7 +155,7 @@ export async function redeemVoucherByCode(userId: string, code: string, usePoint
           type: 'redeem',
           referenceId: voucher.id,
           description: `Redeem voucher: ${voucher.name}`,
-          balanceAfter: newBalance,
+          balanceAfter: updatedUser.points,
         },
       });
 
@@ -134,15 +167,39 @@ export async function redeemVoucherByCode(userId: string, code: string, usePoint
           status: 'active',
           expiry: expiryDate,
         },
-      });
-
-      await tx.voucher.update({
-        where: { id: voucher.id },
-        data: { usedCount: { increment: 1 } },
       });
     });
   } else {
     await prisma.$transaction(async (tx) => {
+      // 使用原子操作更新 usedCount，同时检查 maxUses 限制
+      const updateResult = await tx.voucher.updateMany({
+        where: {
+          id: voucher.id,
+          OR: [
+            { maxUses: null },
+            { maxUses: 0 },
+            { usedCount: { lt: tx.voucher.fields?.maxUses ?? 999999 } },
+          ],
+        },
+        data: { usedCount: { increment: 1 } },
+      });
+
+      if (updateResult.count === 0) {
+        const freshVoucher = await tx.voucher.findUnique({
+          where: { id: voucher.id },
+          select: { maxUses: true, usedCount: true },
+        });
+
+        if (freshVoucher?.maxUses && freshVoucher.usedCount >= freshVoucher.maxUses) {
+          throw new ApiError('CONFLICT', 409, 'Voucher is fully redeemed');
+        }
+
+        await tx.voucher.update({
+          where: { id: voucher.id },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
+
       const expiryDate = new Date(voucher.validUntil);
       await tx.userVoucher.create({
         data: {
@@ -151,11 +208,6 @@ export async function redeemVoucherByCode(userId: string, code: string, usePoint
           status: 'active',
           expiry: expiryDate,
         },
-      });
-
-      await tx.voucher.update({
-        where: { id: voucher.id },
-        data: { usedCount: { increment: 1 } },
       });
     });
   }
@@ -224,6 +276,7 @@ export async function getRedeemableVouchers(userId: string) {
 
 /**
  * Redeem a voucher using points.
+ * 使用事务内检查防止 maxUses 竞争条件
  */
 export async function redeemVoucherWithPoints(userId: string, voucherId: string, points?: number) {
   if (!voucherId) {
@@ -247,9 +300,7 @@ export async function redeemVoucherWithPoints(userId: string, voucherId: string,
     throw new ApiError('CONFLICT', 409, 'Voucher not in valid date range');
   }
 
-  if (voucher.maxUses && voucher.usedCount >= voucher.maxUses) {
-    throw new ApiError('CONFLICT', 409, 'Voucher is fully redeemed');
-  }
+  // NOTE: maxUses 检查移入事务内进行，以防止并发竞争条件
 
   const existingCount = await prisma.userVoucher.count({
     where: { userId, voucherId: voucher.id },
@@ -277,10 +328,39 @@ export async function redeemVoucherWithPoints(userId: string, voucherId: string,
   }
 
   return prisma.$transaction(async (tx) => {
-    const newBalance = currentUser.points - requiredPoints;
-    await tx.user.update({
+    // 使用原子操作更新 usedCount，同时检查 maxUses 限制
+    const updateResult = await tx.voucher.updateMany({
+      where: {
+        id: voucher.id,
+        OR: [
+          { maxUses: null },
+          { maxUses: 0 },
+          { usedCount: { lt: tx.voucher.fields?.maxUses ?? 999999 } },
+        ],
+      },
+      data: { usedCount: { increment: 1 } },
+    });
+
+    if (updateResult.count === 0) {
+      const freshVoucher = await tx.voucher.findUnique({
+        where: { id: voucher.id },
+        select: { maxUses: true, usedCount: true },
+      });
+
+      if (freshVoucher?.maxUses && freshVoucher.usedCount >= freshVoucher.maxUses) {
+        throw new ApiError('CONFLICT', 409, 'Voucher is fully redeemed');
+      }
+
+      await tx.voucher.update({
+        where: { id: voucher.id },
+        data: { usedCount: { increment: 1 } },
+      });
+    }
+
+    const updatedUser = await tx.user.update({
       where: { id: userId },
-      data: { points: newBalance },
+      data: { points: { decrement: requiredPoints } },
+      select: { points: true },
     });
 
     await tx.pointsLog.create({
@@ -290,7 +370,7 @@ export async function redeemVoucherWithPoints(userId: string, voucherId: string,
         type: 'redeem',
         referenceId: voucher.id,
         description: `Redeem voucher: ${voucher.name}`,
-        balanceAfter: newBalance,
+        balanceAfter: updatedUser.points,
       },
     });
 
@@ -304,12 +384,7 @@ export async function redeemVoucherWithPoints(userId: string, voucherId: string,
       },
     });
 
-    await tx.voucher.update({
-      where: { id: voucher.id },
-      data: { usedCount: { increment: 1 } },
-    });
-
-    return { userVoucher, balance: newBalance };
+    return { userVoucher, balance: updatedUser.points };
   });
 }
 

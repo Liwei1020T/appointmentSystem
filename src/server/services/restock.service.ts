@@ -7,7 +7,6 @@ import { prisma } from '@/lib/prisma';
 import { Decimal } from '@prisma/client/runtime/library';
 
 // 配置参数
-const LOW_STOCK_THRESHOLD = 5; // 低库存阈值
 const CRITICAL_STOCK_THRESHOLD = 2; // 紧急库存阈值
 const SALES_ANALYSIS_DAYS = 30; // 销售分析周期（天）
 const RESTOCK_BUFFER_DAYS = 14; // 补货缓冲天数
@@ -231,9 +230,9 @@ export async function getRestockSuggestions(): Promise<RestockSummary> {
     const totalSales = salesStats.get(string.id) || 0;
     const avgDailySales = totalSales / SALES_ANALYSIS_DAYS;
 
-    // 计算预计缺货天数
+    // 计算预计缺货天数，设置合理上限防止极小数导致极大结果
     const daysUntilStockout =
-      avgDailySales > 0 ? string.stock / avgDailySales : null;
+      avgDailySales > 0 ? Math.min(string.stock / avgDailySales, 365) : null;
 
     // 计算优先级
     const priority = calculatePriority(

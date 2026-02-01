@@ -16,6 +16,11 @@ export type SmsSendResult =
   | { success: true; provider: 'dev' }
   | { success: false; provider: 'twilio' | 'dev'; error: string };
 
+interface TwilioResponse {
+  sid?: string;
+  error_message?: string;
+}
+
 /**
  * Send an SMS message.
  *
@@ -58,10 +63,11 @@ export async function sendSms(to: string, body: string): Promise<SmsSendResult> 
       return { success: false, provider: 'twilio', error: text || 'Failed to send SMS' };
     }
 
-    const json: any = await res.json();
+    const json = await res.json() as TwilioResponse;
     return { success: true, provider: 'twilio', messageId: String(json.sid || '') };
-  } catch (error: any) {
-    return { success: false, provider: 'twilio', error: error?.message || 'Failed to send SMS' };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to send SMS';
+    return { success: false, provider: 'twilio', error: message };
   }
 }
 

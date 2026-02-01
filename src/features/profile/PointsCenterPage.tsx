@@ -29,7 +29,7 @@ import PageHeader from '@/components/layout/PageHeader';
 import PageLoading from '@/components/loading/PageLoading';
 import EmptyState from '@/components/EmptyState';
 import { getPointsBalance, getPointsHistory } from '@/services/pointsService';
-import { getRedeemableVouchers, redeemVoucherWithPoints, getUserVouchersForProfile, type RedeemableVoucher } from '@/services/voucherService';
+import { getRedeemableVouchers, redeemVoucherWithPoints, getUserVouchersForProfile, type RedeemableVoucher, type ProfileVoucher } from '@/services/voucherService';
 import { formatDate } from '@/lib/utils';
 
 // Types
@@ -51,20 +51,14 @@ interface AvailableVoucher extends RedeemableVoucher {
 
 interface UserVoucher {
   id: string;
-  voucher: {
-    id: string;
-    code: string;
-    name?: string;
-    discount_type?: string;
-    discount_value?: number;
-    min_purchase?: number;
-  };
+  code: string;
+  name: string;
+  discountType: string;
+  discountValue: number;
+  minPurchase: number;
+  maxDiscount: number | null;
   status: string;
-  used?: boolean;
-  expires_at?: string;
-  expiry?: string;
-  created_at?: string;
-  used_at?: string;
+  expiry: string | null;
 }
 
 type TabType = 'exchange' | 'my' | 'history';
@@ -227,9 +221,8 @@ function PointsCenterContent() {
   const getFilteredVouchers = () => {
     const now = new Date();
     return userVouchers.filter((v) => {
-      const used = v.used ?? v.status === 'used';
-      const expiresAt = v.expires_at || v.expiry;
-      const isExpired = expiresAt && new Date(expiresAt) <= now;
+      const used = v.status === 'used';
+      const isExpired = v.expiry && new Date(v.expiry) <= now;
 
       if (voucherFilter === 'available') return !used && !isExpired;
       if (voucherFilter === 'used') return used;
@@ -462,14 +455,11 @@ function PointsCenterContent() {
               ) : (
                 <div className="space-y-3">
                   {getFilteredVouchers().map((voucher) => {
-                    const v = voucher.voucher;
-                    if (!v) return null;
-                    const used = voucher.used ?? voucher.status === 'used';
-                    const expiresAt = voucher.expires_at || voucher.expiry;
-                    const isExpired = expiresAt && new Date(expiresAt) <= new Date();
+                    const used = voucher.status === 'used';
+                    const isExpired = voucher.expiry && new Date(voucher.expiry) <= new Date();
                     const isActive = !used && !isExpired;
-                    const discountType = v.discount_type || 'fixed';
-                    const discountValue = v.discount_value || 0;
+                    const discountType = voucher.discountType || 'fixed';
+                    const discountValue = voucher.discountValue || 0;
 
                     return (
                       <div
@@ -501,22 +491,22 @@ function PointsCenterContent() {
                         {/* Right: Info */}
                         <div className="flex-1 p-4 border-l border-dashed border-border-subtle">
                           <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-base font-bold text-text-primary">{v.name || v.code}</h3>
+                            <h3 className="text-base font-bold text-text-primary">{voucher.name || voucher.code}</h3>
                             <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${used ? 'bg-ink text-text-tertiary' : isExpired ? 'bg-danger/10 text-danger' : 'bg-accent/10 text-accent'
                               }`}>
                               {used ? '已使用' : isExpired ? '已过期' : '可用'}
                             </span>
                           </div>
 
-                          {v.min_purchase && v.min_purchase > 0 && (
-                            <p className="text-sm text-text-tertiary mb-2">满 RM {v.min_purchase} 可用</p>
+                          {voucher.minPurchase && voucher.minPurchase > 0 && (
+                            <p className="text-sm text-text-tertiary mb-2">满 RM {voucher.minPurchase} 可用</p>
                           )}
 
                           <div className="flex items-center gap-4 text-xs text-text-tertiary">
-                            {expiresAt && (
+                            {voucher.expiry && (
                               <div className="flex items-center gap-1">
                                 <Calendar className="w-3 h-3" />
-                                <span>有效期至 {formatDate(expiresAt)}</span>
+                                <span>有效期至 {formatDate(voucher.expiry)}</span>
                               </div>
                             )}
                           </div>

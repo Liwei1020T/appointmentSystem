@@ -237,50 +237,52 @@ export async function recordPaymentProof(params: {
     throw new ApiError('CONFLICT', 409, 'Payment already processed');
   }
 
-  await prisma.payment.update({
-    where: { id: paymentId },
-    data: {
-      metadata: {
-        ...(payment.metadata as any),
-        proofUrl,
-        receiptUrl: (payment.metadata as any)?.receiptUrl || proofUrl,
-        uploadedAt: new Date().toISOString(),
-      },
-      status: 'pending_verification',
-    },
-  });
-
-  const admins = await prisma.user.findMany({
-    where: { role: { in: Array.from(ADMIN_ROLES) } },
-    select: { id: true },
-  });
-
-  await Promise.all(
-    admins.map((admin) =>
-      prisma.notification.create({
-        data: {
-          userId: admin.id,
-          title: 'Payment proof uploaded',
-          message: payment.order
-            ? `Order #${payment.order.id.slice(0, 8)} uploaded a payment proof`
-            : `Package ${payment.package?.name || payment.packageId || ''} uploaded a payment proof`,
-          type: 'payment',
-          actionUrl: '/admin/payments',
-          read: false,
+  await prisma.$transaction(async (tx) => {
+    await tx.payment.update({
+      where: { id: paymentId },
+      data: {
+        metadata: {
+          ...(payment.metadata as any),
+          proofUrl,
+          receiptUrl: (payment.metadata as any)?.receiptUrl || proofUrl,
+          uploadedAt: new Date().toISOString(),
         },
-      })
-    )
-  );
+        status: 'pending_verification',
+      },
+    });
 
-  await prisma.notification.create({
-    data: {
-      userId,
-      title: 'Payment proof submitted',
-      message: 'Your payment proof has been submitted and is awaiting review.',
-      type: 'payment',
-      actionUrl: payment.orderId ? `/orders/${payment.orderId}` : '/profile/packages',
-      read: false,
-    },
+    const admins = await tx.user.findMany({
+      where: { role: { in: Array.from(ADMIN_ROLES) } },
+      select: { id: true },
+    });
+
+    await Promise.all(
+      admins.map((admin) =>
+        tx.notification.create({
+          data: {
+            userId: admin.id,
+            title: 'Payment proof uploaded',
+            message: payment.order
+              ? `Order #${payment.order.id.slice(0, 8)} uploaded a payment proof`
+              : `Package ${payment.package?.name || payment.packageId || ''} uploaded a payment proof`,
+            type: 'payment',
+            actionUrl: '/admin/payments',
+            read: false,
+          },
+        })
+      )
+    );
+
+    await tx.notification.create({
+      data: {
+        userId,
+        title: 'Payment proof submitted',
+        message: 'Your payment proof has been submitted and is awaiting review.',
+        type: 'payment',
+        actionUrl: payment.orderId ? `/orders/${payment.orderId}` : '/profile/packages',
+        read: false,
+      },
+    });
   });
 
   return { proofUrl };

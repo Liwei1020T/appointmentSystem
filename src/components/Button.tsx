@@ -51,13 +51,10 @@ export const Button: React.FC<ButtonProps> = ({
       bg-white text-text-primary
       border border-border-subtle
       hover:bg-ink hover:border-accent/40
-      dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600
-      dark:border-gray-600
     `.trim(),
     ghost: `
       bg-transparent text-text-secondary
       hover:bg-ink hover:text-text-primary
-      dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100
     `.trim(),
     danger: `
       bg-danger text-white

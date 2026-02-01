@@ -42,7 +42,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-ink dark:bg-dark text-text-primary dark:text-gray-100 font-sans selection:bg-accent/20 selection:text-accent">
+    <div className="min-h-screen bg-ink text-text-primary font-sans selection:bg-accent/20 selection:text-accent">
       <Header />
 
       <main>

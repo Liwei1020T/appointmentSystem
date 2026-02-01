@@ -34,6 +34,48 @@ export interface RedeemableVoucher {
   pointsCost?: number;
 }
 
+// 用于兼容多种命名格式的优惠券对象
+export interface VoucherLike {
+  id?: string;
+  code?: string;
+  discount_type?: string | null;
+  discountType?: string | null;
+  type?: string | null;
+  discount_value?: number | { toNumber(): number } | null;
+  discountValue?: number | { toNumber(): number } | null;
+  value?: number | { toNumber(): number } | null;
+  min_purchase?: number | { toNumber(): number } | null;
+  minPurchase?: number | { toNumber(): number } | null;
+  max_discount?: number | { toNumber(): number } | null;
+  maxDiscount?: number | { toNumber(): number } | null;
+  valid_until?: string | Date | null;
+  validUntil?: string | Date | null;
+  expiry?: string | Date | null;
+  expires_at?: string | null;
+  status?: string | null;
+  used_at?: string | Date | null;
+  usedAt?: string | Date | null;
+  voucher?: VoucherLike;
+}
+
+export interface ProfileVoucher {
+  id: string;
+  code: string;
+  name: string;
+  discountType: string;
+  discountValue: number;
+  minPurchase: number;
+  maxDiscount: number | null;
+  status: string;
+  expiry: string | null;
+}
+
+export interface RedeemResult {
+  success: boolean;
+  userVoucher?: UserVoucherWithVoucher;
+  message?: string;
+}
+
 /**
  * 获取用户优惠券
  */
@@ -58,12 +100,12 @@ export async function getUserVouchers(
  */
 export async function getUserVouchersForProfile(
   status?: 'active' | 'used' | 'expired'
-): Promise<{ vouchers?: any[]; error?: string }> {
+): Promise<{ vouchers?: ProfileVoucher[]; error?: string }> {
   try {
     const params = new URLSearchParams();
     params.set('mapped', 'true');
     if (status) params.set('status', status);
-    const payload = await apiRequest<{ vouchers: any[] }>(`/api/vouchers/user?${params.toString()}`);
+    const payload = await apiRequest<{ vouchers: ProfileVoucher[] }>(`/api/vouchers/user?${params.toString()}`);
     return { vouchers: payload?.vouchers || [] };
   } catch (error) {
     console.error('Error getting user vouchers for profile:', error);
@@ -77,8 +119,8 @@ export async function getUserVouchersForProfile(
 export async function redeemVoucher(
   code: string,
   usePoints = false
-): Promise<any> {
-  return apiRequest(`/api/vouchers/redeem`, {
+): Promise<RedeemResult> {
+  return apiRequest<RedeemResult>(`/api/vouchers/redeem`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code, usePoints }),
@@ -111,32 +153,36 @@ export async function validateVoucher(code: string): Promise<boolean> {
 /**
  * 验证优惠券是否可用于订单（根据对象和金额）
  */
-export function validateVoucherForOrder(voucher: any, orderAmount: number): { valid: boolean; error?: string } {
+export function validateVoucherForOrder(voucher: VoucherLike | null, orderAmount: number): { valid: boolean; error?: string } {
   if (!voucher) return { valid: false, error: '无效的优惠券' };
-  
+
   // 获取实际的 voucher 对象（可能嵌套在 UserVoucher 中）
   const actualVoucher = voucher.voucher || voucher;
-  
-  // 检查最低消费
-  const minPurchase = actualVoucher.min_purchase || actualVoucher.minPurchase || 0;
+
+  // 检查最低消费，处理 Decimal 类型
+  const minPurchaseRaw = actualVoucher.min_purchase || actualVoucher.minPurchase || 0;
+  const minPurchase = typeof minPurchaseRaw === 'object' && minPurchaseRaw !== null && 'toNumber' in minPurchaseRaw
+    ? minPurchaseRaw.toNumber()
+    : Number(minPurchaseRaw) || 0;
+
   if (orderAmount < minPurchase) {
     return { valid: false, error: `最低消费 RM${minPurchase}` };
   }
-  
+
   // 检查是否过期
   const expiry = voucher.expiry || voucher.expires_at || actualVoucher.validUntil || actualVoucher.valid_until;
   if (expiry) {
-    const expiryDate = new Date(expiry);
+    const expiryDate = expiry instanceof Date ? expiry : new Date(expiry);
     if (expiryDate < new Date()) {
       return { valid: false, error: '已过期' };
     }
   }
-  
+
   // 检查是否已使用
   if (voucher.status === 'used' || voucher.used_at || voucher.usedAt) {
     return { valid: false, error: '已使用' };
   }
-  
+
   return { valid: true };
 }
 
@@ -147,8 +193,9 @@ export async function getRedeemableVouchers(): Promise<{ vouchers: RedeemableVou
   try {
     const payload = await apiRequest<{ vouchers: RedeemableVoucher[] }>(`/api/vouchers/redeemable`);
     return { vouchers: Array.isArray(payload?.vouchers) ? payload.vouchers : [], error: null };
-  } catch (error: any) {
-    return { vouchers: [], error: error.message || '获取可兑换优惠券失败' };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : '获取可兑换优惠券失败';
+    return { vouchers: [], error: message };
   }
 }
 
@@ -158,16 +205,17 @@ export async function getRedeemableVouchers(): Promise<{ vouchers: RedeemableVou
 export async function redeemVoucherWithPoints(
   voucherId: string,
   points?: number
-): Promise<{ success: boolean; userVoucher?: any; error: string | null }> {
+): Promise<{ success: boolean; userVoucher?: UserVoucherWithVoucher; error: string | null }> {
   try {
-    const result = await apiRequest<{ userVoucher: any }>(`/api/vouchers/redeem-with-points`, {
+    const result = await apiRequest<{ userVoucher: UserVoucherWithVoucher }>(`/api/vouchers/redeem-with-points`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ voucherId, points }),
     });
     return { success: true, userVoucher: result.userVoucher, error: null };
-  } catch (error: any) {
-    return { success: false, error: error.message || '兑换失败' };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : '兑换失败';
+    return { success: false, error: message };
   }
 }
 
@@ -175,29 +223,40 @@ export async function redeemVoucherWithPoints(
  * 计算优惠券折扣金额
  * 支持传入 Voucher 或 UserVoucher
  */
-export function calculateDiscount(voucher: Voucher | UserVoucher | any, orderAmount: number): number {
+export function calculateDiscount(voucher: VoucherLike | Voucher | UserVoucher | null, orderAmount: number): number {
   if (!voucher) return 0;
-  
+
   // 如果是 UserVoucher，获取嵌套的 voucher 对象
-  const actualVoucher = (voucher as any).voucher || voucher;
-  
+  const actualVoucher = (voucher as VoucherLike).voucher || voucher;
+
   // 获取折扣类型和值（支持多种命名格式）
-  const discountType = actualVoucher.discount_type || actualVoucher.discountType || actualVoucher.type;
-  const discountValue = actualVoucher.discount_value || actualVoucher.discountValue || actualVoucher.value;
-  const maxDiscount = actualVoucher.max_discount || actualVoucher.maxDiscount;
-  const minPurchase = actualVoucher.min_purchase || actualVoucher.minPurchase || 0;
-  
-  // 检查最低消费
+  const v = actualVoucher as VoucherLike;
+  const discountType = v.discount_type || v.discountType || v.type;
+  const discountValueRaw = v.discount_value || v.discountValue || v.value;
+  const maxDiscountRaw = v.max_discount || v.maxDiscount;
+  const minPurchaseRaw = v.min_purchase || v.minPurchase || 0;
+
+  // 检查最低消费，处理 Decimal 类型
+  const minPurchase = typeof minPurchaseRaw === 'object' && minPurchaseRaw !== null && 'toNumber' in minPurchaseRaw
+    ? minPurchaseRaw.toNumber()
+    : Number(minPurchaseRaw) || 0;
+
   if (orderAmount < minPurchase) return 0;
-  
+
+  // 转换 Decimal 类型
+  const discountValue = typeof discountValueRaw === 'object' && discountValueRaw !== null && 'toNumber' in discountValueRaw
+    ? discountValueRaw.toNumber()
+    : (discountValueRaw as number) || 0;
+  const maxDiscount = typeof maxDiscountRaw === 'object' && maxDiscountRaw !== null && 'toNumber' in maxDiscountRaw
+    ? maxDiscountRaw.toNumber()
+    : (maxDiscountRaw as number | null);
+
   // 计算折扣
   if (discountType === 'PERCENTAGE' || discountType === 'percentage' || discountType === 'percentage_off') {
-    const discount = (orderAmount * (typeof discountValue === 'object' ? discountValue.toNumber() : discountValue)) / 100;
-    const maxDiscountValue = typeof maxDiscount === 'object' ? maxDiscount.toNumber() : maxDiscount;
-    return maxDiscountValue ? Math.min(discount, maxDiscountValue) : discount;
+    const discount = (orderAmount * discountValue) / 100;
+    return maxDiscount ? Math.min(discount, maxDiscount) : discount;
   } else if (discountType === 'FIXED' || discountType === 'fixed' || discountType === 'fixed_amount') {
-    const value = typeof discountValue === 'object' ? discountValue.toNumber() : discountValue;
-    return Math.min(value, orderAmount);
+    return Math.min(discountValue, orderAmount);
   }
   return 0;
 }
@@ -209,8 +268,9 @@ export async function getAvailableVouchers(): Promise<{ vouchers: RedeemableVouc
   try {
     const payload = await apiRequest<{ vouchers: RedeemableVoucher[] }>(`/api/vouchers/redeemable`);
     return { vouchers: payload?.vouchers || [], error: null };
-  } catch (error: any) {
-    return { vouchers: [], error: error.message || '获取可用优惠券失败' };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : '获取可用优惠券失败';
+    return { vouchers: [], error: message };
   }
 }
 
@@ -230,7 +290,7 @@ export interface VoucherStats {
  */
 export async function getVoucherStats(): Promise<VoucherStats> {
   try {
-    const payload = await apiRequest<any>(`/api/vouchers/stats`);
+    const payload = await apiRequest<VoucherStats>(`/api/vouchers/stats`);
     if (!payload) {
       return {
         totalVouchers: 0,
@@ -241,10 +301,10 @@ export async function getVoucherStats(): Promise<VoucherStats> {
       };
     }
     return {
-      totalVouchers: payload.totalVouchers || payload.total || 0,
-      usedVouchers: payload.usedVouchers || payload.used || 0,
-      expiredVouchers: payload.expiredVouchers || payload.expired || 0,
-      activeVouchers: payload.activeVouchers || payload.active || 0,
+      totalVouchers: payload.totalVouchers || 0,
+      usedVouchers: payload.usedVouchers || 0,
+      expiredVouchers: payload.expiredVouchers || 0,
+      activeVouchers: payload.activeVouchers || 0,
       totalSavings: payload.totalSavings || 0,
     };
   } catch (error) {

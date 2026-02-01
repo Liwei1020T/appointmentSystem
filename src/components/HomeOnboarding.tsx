@@ -29,7 +29,7 @@ const homePageSteps: TutorialStep[] = [
     targetSelector: '[href="/booking"]',
     position: 'top',
     icon: (
-      <div className="w-10 h-10 bg-accent-soft dark:bg-gray-700 rounded-xl flex items-center justify-center">
+      <div className="w-10 h-10 bg-accent-soft rounded-xl flex items-center justify-center">
         <Calendar className="w-5 h-5 text-accent" />
       </div>
     ),
@@ -41,7 +41,7 @@ const homePageSteps: TutorialStep[] = [
     targetSelector: '[href="/orders"]',
     position: 'top',
     icon: (
-      <div className="w-10 h-10 bg-accent-soft dark:bg-gray-700 rounded-xl flex items-center justify-center">
+      <div className="w-10 h-10 bg-accent-soft rounded-xl flex items-center justify-center">
         <Package className="w-5 h-5 text-accent" />
       </div>
     ),
@@ -53,7 +53,7 @@ const homePageSteps: TutorialStep[] = [
     targetSelector: '[href="/reviews"]',
     position: 'top',
     icon: (
-      <div className="w-10 h-10 bg-accent-soft dark:bg-gray-700 rounded-xl flex items-center justify-center">
+      <div className="w-10 h-10 bg-accent-soft rounded-xl flex items-center justify-center">
         <Star className="w-5 h-5 text-accent" />
       </div>
     ),
@@ -65,7 +65,7 @@ const homePageSteps: TutorialStep[] = [
     targetSelector: '[href="/profile"]',
     position: 'top',
     icon: (
-      <div className="w-10 h-10 bg-accent-soft dark:bg-gray-700 rounded-xl flex items-center justify-center">
+      <div className="w-10 h-10 bg-accent-soft rounded-xl flex items-center justify-center">
         <User className="w-5 h-5 text-accent" />
       </div>
     ),

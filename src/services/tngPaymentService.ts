@@ -14,43 +14,6 @@ export interface PaymentResult {
   transaction_id?: string;
 }
 
-export async function verifyTngPayment(
-  orderId: string,
-  transactionId: string
-): Promise<PaymentResult> {
-  try {
-    const response = await fetch('/api/payments/tng/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId, transactionId }),
-    });
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Failed to verify TNG payment:', error);
-    return {
-      orderId,
-      status: 'FAILED',
-      amount: 0,
-    };
-  }
-}
-
-export async function getTngQRCode(orderId: string, amount: number): Promise<string | null> {
-  try {
-    const response = await fetch('/api/payments/tng/qr', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId, amount }),
-    });
-    const data = await response.json();
-    return data.qrCode || null;
-  } catch (error) {
-    console.error('Failed to get TNG QR code:', error);
-    return null;
-  }
-}
-
 export interface TNGCallbackData {
   orderId: string;
   transactionId: string;
@@ -58,9 +21,26 @@ export interface TNGCallbackData {
   amount: number;
 }
 
+/**
+ * 处理 TNG 支付回调（供 webhook 使用）
+ */
 export async function handleTNGCallback(callbackData: TNGCallbackData): Promise<void> {
-  // Stub implementation - log for debugging
+  // 目前是手动支付流程，此函数为未来自动回调预留
   console.info('[TNG] Callback received:', callbackData);
+}
+
+export interface PaymentApiResponse {
+  orderId?: string;
+  order_id?: string;
+  transactionId?: string;
+  transaction_id?: string;
+  amount?: number;
+  status?: string;
+  payment_status?: string;
+  order?: {
+    id?: string;
+    price?: number;
+  };
 }
 
 /**
@@ -70,9 +50,9 @@ export async function getTNGPayment(
   paymentId: string
 ): Promise<{ payment: PaymentResult | null; error: string | null }> {
   try {
-    const payment = await apiRequest<any>(`/api/payments/${paymentId}`);
-    const orderId = payment.orderId || payment.order?.id || payment.order_id;
-    const transactionId = payment.transactionId || payment.transaction_id;
+    const payment = await apiRequest<PaymentApiResponse>(`/api/payments/${paymentId}`);
+    const orderId = payment.orderId || payment.order?.id || payment.order_id || '';
+    const transactionId = payment.transactionId || payment.transaction_id || '';
     const amount = Number(payment.amount ?? payment.order?.price ?? 0) || 0;
     const statusRaw = payment.status || payment.payment_status || 'pending';
     const status = String(statusRaw).toUpperCase() as PaymentResult['status'];
@@ -88,8 +68,9 @@ export async function getTNGPayment(
       },
       error: null,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to get TNG payment';
     console.error('Failed to get TNG payment:', error);
-    return { payment: null, error: error.message || 'Failed to get TNG payment' };
+    return { payment: null, error: message };
   }
 }

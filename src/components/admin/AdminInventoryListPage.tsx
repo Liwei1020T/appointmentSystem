@@ -23,7 +23,7 @@ import { Badge, Button, Card, Input, StatsCard, Tabs } from '@/components';
 import EmptyState from '@/components/EmptyState';
 import { SkeletonTable } from '@/components/Skeleton';
 import SectionLoading from '@/components/loading/SectionLoading';
-import { AlertTriangle, Boxes, Search, XCircle } from 'lucide-react';
+import { AlertTriangle, Boxes, Search, XCircle, Lightbulb } from 'lucide-react';
 
 export default function AdminInventoryListPage() {
   const router = useRouter();
@@ -168,7 +168,16 @@ export default function AdminInventoryListPage() {
             </Button>
             <h1 className="text-2xl font-bold text-text-primary mt-2">库存管理</h1>
           </div>
-          <Button onClick={handleAddNew}>+ 添加新球线</Button>
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => router.push('/admin/inventory/restock')}
+            >
+              <Lightbulb className="w-4 h-4 mr-2" />
+              补货建议
+            </Button>
+            <Button onClick={handleAddNew}>+ 添加新球线</Button>
+          </div>
         </div>
 
         {/* Stats */}

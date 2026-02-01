@@ -121,7 +121,7 @@ export default function OnboardingTutorial({
   const isLastStep = currentStep === steps.length - 1;
   const isFirstStep = currentStep === 0;
 
-  // Calculate tooltip position
+  // Calculate tooltip position - ensures tooltip stays within viewport
   const getTooltipStyle = (): React.CSSProperties => {
     if (!targetRect || step.position === 'center') {
       return {
@@ -134,39 +134,62 @@ export default function OnboardingTutorial({
 
     const padding = 16;
     const tooltipWidth = 320;
+    const tooltipHeight = 280; // Approximate height
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
 
-    switch (step.position || 'bottom') {
+    // Calculate horizontal position (always centered on target, clamped to viewport)
+    const centerX = targetRect.left + targetRect.width / 2;
+    const left = Math.max(padding, Math.min(centerX - tooltipWidth / 2, viewportWidth - tooltipWidth - padding));
+
+    // Determine vertical position based on available space
+    const spaceAbove = targetRect.top;
+    const spaceBelow = viewportHeight - targetRect.bottom;
+
+    // Default: try to show below the target
+    let preferredPosition: 'top' | 'bottom' | 'left' | 'right' | 'center' = step.position || 'bottom';
+
+    // If position is 'top' but not enough space above, switch to bottom
+    if (preferredPosition === 'top' && spaceAbove < tooltipHeight + padding) {
+      preferredPosition = spaceBelow > tooltipHeight + padding ? 'bottom' : 'center';
+    }
+    // If position is 'bottom' but not enough space below, switch to top or center
+    if (preferredPosition === 'bottom' && spaceBelow < tooltipHeight + padding) {
+      preferredPosition = spaceAbove > tooltipHeight + padding ? 'top' : 'center';
+    }
+
+    switch (preferredPosition) {
       case 'top':
         return {
           position: 'fixed',
-          bottom: window.innerHeight - targetRect.top + padding,
-          left: Math.max(padding, Math.min(targetRect.left + targetRect.width / 2 - tooltipWidth / 2, window.innerWidth - tooltipWidth - padding)),
+          top: Math.max(padding, targetRect.top - tooltipHeight - padding),
+          left,
         };
       case 'bottom':
         return {
           position: 'fixed',
-          top: targetRect.bottom + padding,
-          left: Math.max(padding, Math.min(targetRect.left + targetRect.width / 2 - tooltipWidth / 2, window.innerWidth - tooltipWidth - padding)),
+          top: Math.min(targetRect.bottom + padding, viewportHeight - tooltipHeight - padding),
+          left,
         };
       case 'left':
         return {
           position: 'fixed',
-          top: targetRect.top + targetRect.height / 2,
-          right: window.innerWidth - targetRect.left + padding,
-          transform: 'translateY(-50%)',
+          top: Math.max(padding, Math.min(targetRect.top + targetRect.height / 2 - tooltipHeight / 2, viewportHeight - tooltipHeight - padding)),
+          left: Math.max(padding, targetRect.left - tooltipWidth - padding),
         };
       case 'right':
         return {
           position: 'fixed',
-          top: targetRect.top + targetRect.height / 2,
-          left: targetRect.right + padding,
-          transform: 'translateY(-50%)',
+          top: Math.max(padding, Math.min(targetRect.top + targetRect.height / 2 - tooltipHeight / 2, viewportHeight - tooltipHeight - padding)),
+          left: Math.min(targetRect.right + padding, viewportWidth - tooltipWidth - padding),
         };
       default:
+        // Fallback to center
         return {
           position: 'fixed',
-          top: targetRect.bottom + padding,
-          left: Math.max(padding, targetRect.left),
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
         };
     }
   };
@@ -192,16 +215,16 @@ export default function OnboardingTutorial({
 
       {/* Tooltip */}
       <div
-        className="bg-white dark:bg-dark-elevated rounded-2xl shadow-lg p-5 w-80 max-w-[calc(100vw-32px)]"
+        className="bg-white rounded-2xl shadow-lg p-5 w-80 max-w-[calc(100vw-32px)] z-[10000]"
         style={getTooltipStyle()}
       >
         {/* Close button */}
         <button
           onClick={handleSkip}
-          className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full hover:bg-ink transition-colors"
           aria-label="关闭引导"
         >
-          <X className="w-4 h-4 text-text-tertiary dark:text-gray-400" />
+          <X className="w-4 h-4 text-text-tertiary" />
         </button>
 
         {/* Step indicator */}
@@ -214,7 +237,7 @@ export default function OnboardingTutorial({
                   ? 'w-6 bg-accent'
                   : index < currentStep
                   ? 'w-1.5 bg-accent/50'
-                  : 'w-1.5 bg-gray-200 dark:bg-gray-700'
+                  : 'w-1.5 bg-gray-200'
               }`}
             />
           ))}
@@ -224,15 +247,15 @@ export default function OnboardingTutorial({
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             {step.icon || (
-              <div className="w-10 h-10 bg-accent-soft dark:bg-gray-700 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-accent-soft rounded-xl flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-accent" />
               </div>
             )}
-            <h3 className="text-lg font-semibold text-text-primary dark:text-gray-100">
+            <h3 className="text-lg font-semibold text-text-primary">
               {step.title}
             </h3>
           </div>
-          <p className="text-sm text-text-secondary dark:text-gray-400 leading-relaxed">
+          <p className="text-sm text-text-secondary leading-relaxed">
             {step.description}
           </p>
         </div>
@@ -244,8 +267,8 @@ export default function OnboardingTutorial({
             disabled={isFirstStep}
             className={`flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
               isFirstStep
-                ? 'text-text-tertiary dark:text-gray-600 cursor-not-allowed'
-                : 'text-text-secondary dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                ? 'text-text-tertiary cursor-not-allowed'
+                : 'text-text-secondary hover:bg-ink'
             }`}
           >
             <ChevronLeft className="w-4 h-4" />
@@ -274,7 +297,7 @@ export default function OnboardingTutorial({
         <div className="mt-3 text-center">
           <button
             onClick={handleSkip}
-            className="text-xs text-text-tertiary dark:text-gray-500 hover:text-text-secondary dark:hover:text-gray-400"
+            className="text-xs text-text-tertiary hover:text-text-secondary"
           >
             跳过引导
           </button>

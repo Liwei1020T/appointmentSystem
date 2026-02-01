@@ -32,13 +32,25 @@ export class RateLimiter {
   private store: Map<string, RateLimitEntry> = new Map();
   private readonly interval: number;
   private readonly limit: number;
+  private cleanupInterval?: NodeJS.Timeout;
 
   constructor(options: RateLimitOptions) {
     this.interval = options.interval;
     this.limit = options.limit;
 
     // 定期清理过期条目，防止内存泄漏
-    setInterval(() => this.cleanup(), options.interval);
+    this.cleanupInterval = setInterval(() => this.cleanup(), options.interval);
+  }
+
+  /**
+   * 销毁限制器，清理定时器（防止内存泄漏）
+   */
+  destroy() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = undefined;
+    }
+    this.store.clear();
   }
 
   /**
@@ -84,6 +96,9 @@ export class RateLimiter {
    * 清理过期条目
    */
   private cleanup() {
+    // 防止 destroy() 后 interval 仍触发执行
+    if (!this.cleanupInterval) return;
+
     const now = Date.now();
     for (const [key, entry] of this.store.entries()) {
       if (now >= entry.resetAt) {
@@ -120,6 +135,16 @@ export const otpLimiter = new RateLimiter({
 export const apiLimiter = new RateLimiter({
   interval: 60 * 1000, // 1 分钟
   limit: 60,
+});
+
+/**
+ * 财务操作限制器
+ * 每分钟最多 10 次请求 (创建订单/购买套餐/取消订单)
+ * 防止订单轰炸和库存锁定攻击
+ */
+export const financialLimiter = new RateLimiter({
+  interval: 60 * 1000, // 1 分钟
+  limit: 10,
 });
 
 /**

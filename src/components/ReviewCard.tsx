@@ -1,17 +1,17 @@
 /**
  * 评价卡片组件 (Review Card Component)
- * 
- * 显示单条评价信息
+ *
+ * 显示单条评价信息，支持点赞交互
  */
 
 'use client';
 
 import React, { useState } from 'react';
-import { OrderReview } from '@/services/reviewService';
+import { OrderReview, toggleReviewLike } from '@/services/reviewService';
 import StarRating from '@/components/StarRating';
 import Card from '@/components/Card';
 import { formatDate } from '@/lib/utils';
-import { Share2 } from 'lucide-react';
+import { Share2, Heart } from 'lucide-react';
 import Toast from '@/components/Toast';
 import { buildReviewShareMessage } from '@/lib/share';
 import { useSession } from 'next-auth/react';
@@ -19,11 +19,20 @@ import { useSession } from 'next-auth/react';
 interface ReviewCardProps {
   review: OrderReview;
   showOrder?: boolean;  // 是否显示订单信息
+  showLikeButton?: boolean; // 是否显示点赞按钮
+  onLikeChange?: (reviewId: string, liked: boolean, likesCount: number) => void;
 }
 
-export default function ReviewCard({ review, showOrder = false }: ReviewCardProps) {
-  const { data: session } = useSession();
+export default function ReviewCard({ review, showOrder = false, showLikeButton = false, onLikeChange }: ReviewCardProps) {
+  const { data: session, status } = useSession();
   const referralCode = (session?.user as any)?.referral_code as string | undefined;
+  const currentUserId = session?.user?.id;
+
+  // 点赞状态
+  const [isLiked, setIsLiked] = useState(review.isLiked || review.is_liked || false);
+  const [likesCount, setLikesCount] = useState(review.likesCount || review.likes_count || 0);
+  const [likeLoading, setLikeLoading] = useState(false);
+
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
@@ -33,6 +42,59 @@ export default function ReviewCard({ review, showOrder = false }: ReviewCardProp
     message: '',
     type: 'success',
   });
+
+  // 判断是否可以点赞（不能给自己的评价点赞）
+  const isOwnReview = Boolean(currentUserId && (review.userId === currentUserId || review.user_id === currentUserId));
+  const canLike = showLikeButton && !isOwnReview && status === 'authenticated';
+
+  const handleLike = async () => {
+    if (likeLoading) return;
+
+    if (status !== 'authenticated') {
+      setToast({
+        show: true,
+        message: '请先登录后再点赞',
+        type: 'error',
+      });
+      return;
+    }
+
+    if (isOwnReview) {
+      setToast({
+        show: true,
+        message: '不能给自己的评价点赞',
+        type: 'error',
+      });
+      return;
+    }
+
+    setLikeLoading(true);
+
+    // 乐观更新
+    const newLiked = !isLiked;
+    const newCount = newLiked ? likesCount + 1 : likesCount - 1;
+    setIsLiked(newLiked);
+    setLikesCount(newCount);
+
+    const result = await toggleReviewLike(review.id);
+
+    if (result) {
+      setIsLiked(result.liked);
+      setLikesCount(result.likesCount);
+      onLikeChange?.(review.id, result.liked, result.likesCount);
+    } else {
+      // 回滚
+      setIsLiked(!newLiked);
+      setLikesCount(likesCount);
+      setToast({
+        show: true,
+        message: '操作失败，请稍后重试',
+        type: 'error',
+      });
+    }
+
+    setLikeLoading(false);
+  };
 
   const handleShare = async () => {
     if (!referralCode) {
@@ -84,7 +146,7 @@ export default function ReviewCard({ review, showOrder = false }: ReviewCardProp
         message: '分享内容已复制',
         type: 'success',
       });
-    } catch (error) {
+    } catch {
       setToast({
         show: true,
         message: '复制失败，请手动复制',
@@ -175,7 +237,7 @@ export default function ReviewCard({ review, showOrder = false }: ReviewCardProp
       )}
 
       {/* 有帮助数（可选） */}
-      {(review.helpful_count || 0) > 0 && (
+      {!showLikeButton && (review.helpful_count || 0) > 0 && (
         <div className="mt-3 pt-3 border-t border-border-subtle">
           <p className="text-xs text-text-tertiary">
             {review.helpful_count} 人觉得有帮助
@@ -183,16 +245,42 @@ export default function ReviewCard({ review, showOrder = false }: ReviewCardProp
         </div>
       )}
 
-      {referralCode && (
-        <div className="mt-3 pt-3 border-t border-border-subtle flex justify-end">
-          <button
-            type="button"
-            onClick={handleShare}
-            className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
-          >
-            <Share2 className="w-4 h-4" />
-            分享评价
-          </button>
+      {/* 点赞和分享操作栏 */}
+      {(showLikeButton || referralCode) && (
+        <div className="mt-3 pt-3 border-t border-border-subtle flex items-center justify-between">
+          {/* 点赞按钮 */}
+          {showLikeButton && (
+            <button
+              type="button"
+              onClick={handleLike}
+              disabled={likeLoading || isOwnReview}
+              className={`
+                inline-flex items-center gap-1.5 text-sm font-medium transition-colors
+                ${isLiked
+                  ? 'text-red-500'
+                  : 'text-text-tertiary hover:text-red-500'
+                }
+                ${(likeLoading || isOwnReview) ? 'opacity-50 cursor-not-allowed' : ''}
+              `}
+            >
+              <Heart
+                className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`}
+              />
+              <span>{likesCount}</span>
+            </button>
+          )}
+
+          {/* 分享按钮 */}
+          {referralCode && (
+            <button
+              type="button"
+              onClick={handleShare}
+              className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors ml-auto"
+            >
+              <Share2 className="w-4 h-4" />
+              分享评价
+            </button>
+          )}
         </div>
       )}
 

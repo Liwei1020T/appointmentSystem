@@ -6,6 +6,7 @@
 import { prisma } from '@/lib/prisma';
 import { MembershipTier, Prisma } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import { ApiError } from '@/lib/api-errors';
 
 // 等级规则配置
 const TIER_RULES = {
@@ -44,7 +45,7 @@ export async function checkAndUpgradeTier(userId: string): Promise<{
   });
 
   if (!user) {
-    throw new Error('User not found');
+    throw new ApiError('NOT_FOUND', 404, 'User not found');
   }
 
   // 重新计算统计数据（可选，为确保准确性这里重新计算）
@@ -74,15 +75,17 @@ export async function checkAndUpgradeTier(userId: string): Promise<{
   });
 
   // 判断目标等级
+  // NOTE: 用户必须同时满足消费金额和订单数量两个条件才能升级
+  // 例如：VIP 需要消费 >= 500 RM 且 订单数 >= 12
   let targetTier: MembershipTier = MembershipTier.SILVER;
 
   if (
-    totalSpent >= TIER_RULES.VIP.minSpent ||
+    totalSpent >= TIER_RULES.VIP.minSpent &&
     totalOrders >= TIER_RULES.VIP.minOrders
   ) {
     targetTier = MembershipTier.VIP;
   } else if (
-    totalSpent >= TIER_RULES.GOLD.minSpent ||
+    totalSpent >= TIER_RULES.GOLD.minSpent &&
     totalOrders >= TIER_RULES.GOLD.minOrders
   ) {
     targetTier = MembershipTier.GOLD;

@@ -26,8 +26,8 @@ export async function GET(request: Request) {
     }
 
     const limit = parsedQuery.data.limit ? Number(parsedQuery.data.limit) : 3;
-    if (!Number.isFinite(limit) || limit <= 0) {
-      return failResponse('UNPROCESSABLE_ENTITY', 'limit must be a positive number', 422);
+    if (!Number.isFinite(limit) || limit <= 0 || limit > 20) {
+      return failResponse('UNPROCESSABLE_ENTITY', 'limit must be between 1 and 20', 422);
     }
 
     const packages = await listFeaturedPackages(limit);

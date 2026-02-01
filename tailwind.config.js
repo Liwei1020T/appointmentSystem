@@ -1,6 +1,5 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -15,12 +14,6 @@ module.exports = {
           DEFAULT: '#F7F3EE',      // 页面背景 - paper
           elevated: '#FFFFFF',     // 卡片背景
           surface: '#FFFFFF',      // 表面/微调
-        },
-        // Dark Mode Colors
-        dark: {
-          DEFAULT: '#1a1a1a',      // 深色背景
-          elevated: '#2a2a2a',     // 深色卡片
-          surface: '#333333',      // 深色表面
         },
         border: {
           subtle: '#E6E1DA',       // paper edge

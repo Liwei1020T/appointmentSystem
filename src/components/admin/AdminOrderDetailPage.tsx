@@ -15,7 +15,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { getOrderById, updateOrderStatus, updateOrderPhotos } from '@/services/adminOrderService';
+import { getOrderById, updateOrderStatus } from '@/services/adminOrderService';
 import type { AdminOrder, OrderStatus } from '@/services/adminOrderService';
 import { Badge, Button, Card } from '@/components';
 import EmptyState from '@/components/EmptyState';

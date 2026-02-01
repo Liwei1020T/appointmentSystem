@@ -1,8 +1,8 @@
 # 🧩 UI Components Library
 
 **String Service Platform — Component Specification**
-**Version:** 2.1
-**Last Updated:** 2026-01-28
+**Version:** 2.2
+**Last Updated:** 2026-01-29
 **Framework:** React 18 + TypeScript + Tailwind CSS
 
 ---
@@ -272,6 +272,40 @@ const variants = {
 - 拟物化收据风格
 - 包含：锯齿边缘、点状引导线、双线合计、详细清单
 - 字体：金额使用 `font-mono`
+
+---
+
+### 14. EventCard
+
+活动卡片，支持促销和公告两种类型。
+
+**Props:**
+- `type: 'promotion' | 'announcement'`
+- `promotion?: PromotionEvent`
+- `announcement?: AnnouncementEvent`
+- `variant?: 'compact' | 'full'`
+
+**Usage:**
+```tsx
+// File: src/components/EventCard.tsx
+<EventCard type="promotion" promotion={promo} variant="compact" />
+<EventCard type="announcement" announcement={ann} variant="full" />
+```
+
+### 15. EventCarousel
+
+首页活动轮播组件，自动加载当前活动。
+
+**Features:**
+- 从 `/api/events/active` 自动获取数据
+- 可滑动轮播
+- 点击"查看全部"跳转 `/events`
+
+**Usage:**
+```tsx
+// File: src/components/EventCarousel.tsx
+<EventCarousel />
+```
 
 ---
 

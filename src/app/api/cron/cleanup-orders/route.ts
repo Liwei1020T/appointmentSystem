@@ -242,7 +242,11 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         console.error('[Cron] Error cancelling expired orders:', error);
         return NextResponse.json(
-            { error: 'Internal server error', details: String(error) },
+            {
+                error: 'Internal server error',
+                // 仅开发环境暴露详细错误，防止生产环境信息泄露
+                ...(process.env.NODE_ENV === 'development' ? { details: String(error) } : {})
+            },
             { status: 500 }
         );
     }

@@ -126,7 +126,7 @@ export default function AdminReviewsPage() {
       const list = await getAdminReviews();
       setReviews(list);
       setFilteredReviews(list);
-    } catch (error) {
+    } catch {
       setToast({
         show: true,
         message: '加载评价列表失败',
@@ -247,7 +247,7 @@ export default function AdminReviewsPage() {
 
       setShowReplyModal(false);
       loadReviews();
-    } catch (error) {
+    } catch {
       setToast({
         show: true,
         message: '回复失败',

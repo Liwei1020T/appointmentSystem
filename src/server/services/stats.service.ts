@@ -34,67 +34,6 @@ export async function getSystemStats() {
 }
 
 /**
- * Fetch admin KPI stats (daily/monthly).
- */
-export async function getAdminStats() {
-  const now = new Date();
-  const startOfDay = new Date(now);
-  startOfDay.setHours(0, 0, 0, 0);
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  const [todayOrders, todayRevenueAgg, monthOrders, monthRevenueAgg, lowStockCount, pendingOrders, activePackages] =
-    await Promise.all([
-      prisma.order.count({
-        where: {
-          createdAt: { gte: startOfDay },
-        },
-      }),
-      prisma.order.aggregate({
-        where: {
-          status: 'completed',
-          completedAt: { gte: startOfDay },
-        },
-        _sum: { price: true },
-      }),
-      prisma.order.count({
-        where: {
-          createdAt: { gte: startOfMonth },
-        },
-      }),
-      prisma.order.aggregate({
-        where: {
-          status: 'completed',
-          completedAt: { gte: startOfMonth },
-        },
-        _sum: { price: true },
-      }),
-      countLowStockItems(),
-      prisma.order.count({
-        where: {
-          status: 'pending',
-        },
-      }),
-      prisma.userPackage.count({
-        where: {
-          remaining: { gt: 0 },
-          expiry: { gt: now },
-          status: 'active',
-        },
-      }),
-    ]);
-
-  return {
-    todayOrders,
-    todayRevenue: todayRevenueAgg._sum.price || 0,
-    monthOrders,
-    monthRevenue: monthRevenueAgg._sum.price || 0,
-    activePackages,
-    lowStockItems: lowStockCount,
-    pendingOrders,
-  };
-}
-
-/**
  * Fetch admin dashboard stats + recent orders list.
  */
 export async function getAdminDashboardStats(recentOrdersLimit: number) {

@@ -17,7 +17,7 @@ interface GlobalErrorProps {
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
   return (
     <html lang="zh-CN">
-      <body className="bg-gray-50">
+      <body className="bg-ink">
         <div className="min-h-screen flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
             {/* 错误图标 */}
@@ -26,12 +26,12 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
             </div>
 
             {/* 错误标题 */}
-            <h1 className="text-xl font-bold text-gray-900 mb-2">
+            <h1 className="text-xl font-bold text-text-primary mb-2">
               系统出现错误
             </h1>
 
             {/* 错误描述 */}
-            <p className="text-gray-600 mb-6">
+            <p className="text-text-secondary mb-6">
               抱歉，系统发生了严重错误。请刷新页面重试。
             </p>
 
@@ -46,7 +46,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
 
             {/* 错误 ID */}
             {error.digest && (
-              <p className="text-xs text-gray-400 mt-4">
+              <p className="text-xs text-text-tertiary mt-4">
                 错误 ID: {error.digest}
               </p>
             )}

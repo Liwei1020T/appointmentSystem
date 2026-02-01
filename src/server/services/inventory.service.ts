@@ -98,35 +98,37 @@ export async function createInventoryItem(admin: AdminSnapshot, payload: Invento
   const stockValue = resolved.stock ?? 0;
   const minimumStockValue = resolved.minimumStock ?? 5;
 
-  const newItem = await prisma.stringInventory.create({
-    data: {
-      model: resolved.model,
-      brand: resolved.brand,
-      description: resolved.description,
-      costPrice: resolved.costPrice,
-      sellingPrice: resolved.sellingPrice,
-      stock: stockValue,
-      minimumStock: minimumStockValue,
-      color: resolved.color,
-      gauge: resolved.gauge,
-      imageUrl: resolved.imageUrl,
-      active: resolved.active ?? true,
-    },
-  });
-
-  if (stockValue > 0) {
-    await prisma.stockLog.create({
+  return prisma.$transaction(async (tx) => {
+    const newItem = await tx.stringInventory.create({
       data: {
-        stringId: newItem.id,
-        change: stockValue,
-        type: 'restock',
-        notes: 'Initial stock',
-        createdBy: admin.id,
+        model: resolved.model!,
+        brand: resolved.brand!,
+        description: resolved.description,
+        costPrice: resolved.costPrice!,
+        sellingPrice: resolved.sellingPrice!,
+        stock: stockValue,
+        minimumStock: minimumStockValue,
+        color: resolved.color,
+        gauge: resolved.gauge,
+        imageUrl: resolved.imageUrl,
+        active: resolved.active ?? true,
       },
     });
-  }
 
-  return newItem;
+    if (stockValue > 0) {
+      await tx.stockLog.create({
+        data: {
+          stringId: newItem.id,
+          change: stockValue,
+          type: 'restock',
+          notes: 'Initial stock',
+          createdBy: admin.id,
+        },
+      });
+    }
+
+    return newItem;
+  });
 }
 
 /**
@@ -179,6 +181,7 @@ export async function deleteInventoryItem(id: string) {
 
 /**
  * Adjust inventory stock and write a stock log entry (admin only).
+ * 使用乐观锁防止并发操作导致库存不一致
  */
 export async function adjustInventoryStock(
   admin: AdminSnapshot,
@@ -204,10 +207,27 @@ export async function adjustInventoryStock(
   }
 
   return prisma.$transaction(async (tx) => {
-    const updated = await tx.stringInventory.update({
-      where: { id },
-      data: { stock: { increment: payload.change } },
+    // 使用乐观锁更新库存：确保 version 未被其他事务修改
+    const updated = await tx.stringInventory.updateMany({
+      where: {
+        id,
+        version: string.version,
+        // 额外检查：确保库存足够（防止竞争条件下超卖）
+        ...(payload.change < 0 ? { stock: { gte: Math.abs(payload.change) } } : {}),
+      },
+      data: {
+        stock: { increment: payload.change },
+        version: { increment: 1 },
+      },
     });
+
+    // 如果没有更新任何行，说明存在并发冲突
+    if (updated.count === 0) {
+      throw new ApiError('CONFLICT', 409, 'Stock was modified by another operation. Please retry.');
+    }
+
+    // 获取更新后的记录
+    const updatedItem = await tx.stringInventory.findUnique({ where: { id } });
 
     await tx.stockLog.create({
       data: {
@@ -219,7 +239,7 @@ export async function adjustInventoryStock(
       },
     });
 
-    return updated;
+    return updatedItem;
   });
 }
 

@@ -3,7 +3,7 @@
  * 管理员订单管理功能
  */
 
-import { apiRequest, getApiErrorMessage } from '@/services/apiClient';
+import { apiRequest } from '@/services/apiClient';
 import { cachedRequest, invalidateRequestCacheByPrefix } from '@/services/requestCache';
 
 export type OrderStatus =
@@ -132,26 +132,6 @@ export async function updateOrderStatus(
   }
 }
 
-export async function assignOrderPhotographer(
-  orderId: string,
-  photographerId: string
-): Promise<boolean> {
-  try {
-    const response = await fetch(`/api/admin/orders/${orderId}/assign`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ photographerId }),
-    });
-    if (response.ok) {
-      invalidateRequestCacheByPrefix('admin:orders');
-    }
-    return response.ok;
-  } catch (error) {
-    console.error('Failed to assign photographer:', error);
-    return false;
-  }
-}
-
 export interface OrderStats {
   total: number;
   pending: number;
@@ -217,30 +197,6 @@ export async function searchOrders(query: string, filters?: {
       return { orders: [], total: 0, error: { message: error.message || 'Failed to search orders' } };
     }
   }, { ttlMs: 10000 });
-}
-
-/**
- * 更新订单照片
- */
-export async function updateOrderPhotos(
-  orderId: string,
-  photos: string[]
-): Promise<{ success: boolean; error: string | null }> {
-  try {
-    const response = await fetch(`/api/admin/orders/${orderId}/photos`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ photos }),
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      return { success: false, error: getApiErrorMessage(data, 'Failed to update order photos') };
-    }
-    invalidateRequestCacheByPrefix('admin:orders');
-    return { success: true, error: null };
-  } catch (error: any) {
-    return { success: false, error: error.message || 'Failed to update order photos' };
-  }
 }
 
 /**

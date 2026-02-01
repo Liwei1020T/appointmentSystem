@@ -13,7 +13,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 
 interface ImagePreviewProps {
@@ -39,6 +39,25 @@ export default function ImagePreview({
     setCurrentIndex(initialIndex);
   }, [initialIndex]);
 
+  const handlePrevious = useCallback(() => {
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+  }, [images.length]);
+
+  const handleNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+  }, [images.length]);
+
+  const handleDelete = useCallback(() => {
+    if (onDelete) {
+      onDelete(currentIndex);
+      if (images.length === 1) {
+        onClose();
+      } else if (currentIndex >= images.length - 1) {
+        setCurrentIndex((prev) => prev - 1);
+      }
+    }
+  }, [onDelete, currentIndex, images.length, onClose]);
+
   useEffect(() => {
     // 按 ESC 键关闭
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -60,28 +79,9 @@ export default function ImagePreview({
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, currentIndex]);
+  }, [isOpen, onClose, handlePrevious, handleNext]);
 
   if (!isOpen || images.length === 0) return null;
-
-  const handlePrevious = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
-  };
-
-  const handleDelete = () => {
-    if (onDelete) {
-      onDelete(currentIndex);
-      if (images.length === 1) {
-        onClose();
-      } else if (currentIndex >= images.length - 1) {
-        setCurrentIndex((prev) => prev - 1);
-      }
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-50 bg-ink/90 flex items-center justify-center">

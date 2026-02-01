@@ -1,8 +1,8 @@
 # 🗄️ Entity Relationship Diagram (ERD)
 
 **String Service Platform — Database Schema**
-**Version:** 2.0
-**Last Updated:** 2026-01-27
+**Version:** 2.1
+**Last Updated:** 2026-01-29
 **Database:** PostgreSQL 15 (Prisma ORM)
 
 > **Note:** This project uses Prisma ORM for database access. The schema is defined in `prisma/schema.prisma`. RLS policies mentioned in this document are for reference only and are not implemented (Prisma handles authorization at the application level).
@@ -36,7 +36,7 @@ This database schema supports the complete String Service Platform, including:
 - Notifications and analytics
 - Promotion campaigns and usage tracking
 
-**Total Tables:** 25 models (including NextAuth.js session tables)
+**Total Tables:** 26 models (including NextAuth.js session tables)
 
 ---
 
@@ -91,6 +91,8 @@ This database schema supports the complete String Service Platform, including:
 │                              MARKETING                                      │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  Promotion ──1:N──▶ PromotionUsage                                         │
+│                                                                             │
+│  Announcement (standalone)                                                  │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -568,6 +570,31 @@ Promotion usage log (per order/user).
 **Indexes:**
 - `idx_promotion_usage_promotion_id` on `promotion_id`
 - `idx_promotion_usage_user_id` on `user_id`
+
+---
+
+### 16. `announcements`
+
+System announcements for users (营业时间、活动通知等).
+
+| Column          | Type         | Constraints              | Description                              |
+|-----------------|--------------|--------------------------|------------------------------------------|
+| `id`            | `uuid`       | PRIMARY KEY              | Announcement ID                          |
+| `title`         | `text`       | NOT NULL                 | Title                                    |
+| `content`       | `text`       | NOT NULL                 | Content body                             |
+| `image_url`     | `text`       |                          | Optional image URL                       |
+| `link_url`      | `text`       |                          | Optional link URL                        |
+| `link_text`     | `text`       |                          | Optional link button text                |
+| `priority`      | `int`        | DEFAULT 0                | Display priority (higher = first)        |
+| `start_at`      | `timestamptz`| NOT NULL                 | Start time                               |
+| `end_at`        | `timestamptz`| NOT NULL                 | End time                                 |
+| `is_active`     | `boolean`    | DEFAULT true             | Active status                            |
+| `created_at`    | `timestamptz`| DEFAULT now()            | Creation timestamp                       |
+| `updated_at`    | `timestamptz`|                          | Last update timestamp                    |
+
+**Indexes:**
+- `idx_announcements_is_active` on `is_active`
+- `idx_announcements_start_end` on `(start_at, end_at)`
 
 ---
 

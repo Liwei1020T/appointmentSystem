@@ -128,18 +128,22 @@ export async function checkInProgressOrderWarnings(): Promise<{
 
   const warningOrders: string[] = [];
 
+  // 批量检查已存在的通知（避免 N+1）
+  const existingNotifications = await prisma.notification.findMany({
+    where: {
+      userId: { in: admins.map(a => a.id) },
+      title: { contains: '订单处理超时' },
+      actionUrl: { in: overdueOrders.map(o => `/admin/orders/${o.id}`) },
+      createdAt: { gt: warningDate },
+    },
+    select: { actionUrl: true },
+  });
+  const notifiedOrderUrls = new Set(existingNotifications.map(n => n.actionUrl));
+
   for (const order of overdueOrders) {
     // 检查是否已发送过提醒（避免重复）
-    const existingNotification = await prisma.notification.findFirst({
-      where: {
-        userId: admins[0]?.id,
-        title: { contains: '订单处理超时' },
-        actionUrl: `/admin/orders/${order.id}`,
-        createdAt: { gt: warningDate },
-      },
-    });
-
-    if (existingNotification) continue;
+    const orderUrl = `/admin/orders/${order.id}`;
+    if (notifiedOrderUrls.has(orderUrl)) continue;
 
     try {
       // 给所有管理员发送提醒
@@ -197,17 +201,21 @@ export async function sendPickupReminders(): Promise<{
 
   const remindedOrders: string[] = [];
 
+  // 批量检查已存在的提醒（避免 N+1）
+  const existingReminders = await prisma.notification.findMany({
+    where: {
+      userId: { in: completedOrders.map(o => o.userId) },
+      title: { contains: '取拍提醒' },
+      actionUrl: { in: completedOrders.map(o => `/orders/${o.id}`) },
+    },
+    select: { actionUrl: true },
+  });
+  const remindedOrderUrls = new Set(existingReminders.map(n => n.actionUrl));
+
   for (const order of completedOrders) {
     // 检查是否已发送过取拍提醒
-    const existingReminder = await prisma.notification.findFirst({
-      where: {
-        userId: order.userId,
-        title: { contains: '取拍提醒' },
-        actionUrl: `/orders/${order.id}`,
-      },
-    });
-
-    if (existingReminder) continue;
+    const orderUrl = `/orders/${order.id}`;
+    if (remindedOrderUrls.has(orderUrl)) continue;
 
     try {
       await prisma.notification.create({

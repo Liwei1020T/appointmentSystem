@@ -13,6 +13,7 @@ import {
   getUserOrders,
 } from '@/server/services/order.service';
 import { handleApiError } from '@/lib/api/handleApiError';
+import { financialLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,8 +65,8 @@ export async function GET(request: Request) {
     const limitValue = parseOptionalNumber(searchParams.get('limit'));
     const pageValue = parseOptionalNumber(searchParams.get('page'));
 
-    if (limitValue === null || (limitValue !== undefined && limitValue <= 0)) {
-      return failResponse('UNPROCESSABLE_ENTITY', 'limit must be a positive number', 422);
+    if (limitValue === null || (limitValue !== undefined && (limitValue <= 0 || limitValue > 100))) {
+      return failResponse('UNPROCESSABLE_ENTITY', 'limit must be between 1 and 100', 422);
     }
     if (pageValue === null || (pageValue !== undefined && pageValue <= 0)) {
       return failResponse('UNPROCESSABLE_ENTITY', 'page must be a positive number', 422);
@@ -86,6 +87,15 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const user = await requireAuth();
+
+    // 财务操作速率限制：防止订单轰炸
+    const clientIp = getClientIp(request);
+    const rateLimitKey = `order:${user.id}:${clientIp}`;
+    const rateLimitResult = financialLimiter.check(rateLimitKey);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult.resetAt);
+    }
+
     let body: unknown;
 
     try {

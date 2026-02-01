@@ -4,6 +4,18 @@ export interface ApiErrorPayload {
   details?: unknown;
 }
 
+interface ApiResponsePayload {
+  ok?: boolean;
+  success?: boolean;
+  data?: unknown;
+  error?: {
+    code?: string;
+    message?: string;
+    details?: unknown;
+  };
+  message?: string;
+}
+
 export class ApiClientError extends Error {
   status: number;
   code?: string;
@@ -17,7 +29,7 @@ export class ApiClientError extends Error {
   }
 }
 
-export function getApiErrorMessage(payload: any, fallback: string) {
+export function getApiErrorMessage(payload: ApiResponsePayload | null, fallback: string): string {
   if (!payload) return fallback;
   if (typeof payload.error === 'string') return payload.error;
   if (payload.error?.message) return payload.error.message;
@@ -34,7 +46,7 @@ export async function apiRequest<T>(input: RequestInfo, init?: RequestInit): Pro
     },
   });
 
-  let payload: any = null;
+  let payload: ApiResponsePayload | null = null;
   try {
     payload = await response.json();
   } catch {

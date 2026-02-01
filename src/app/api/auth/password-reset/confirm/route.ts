@@ -111,7 +111,8 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return errorResponse('手机号未注册');
+      // 使用通用错误消息防止用户枚举攻击
+      return errorResponse('手机号或验证码错误');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);

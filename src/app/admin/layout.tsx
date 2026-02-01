@@ -19,7 +19,10 @@ import {
   CreditCard,
   MessageSquare,
   Menu,
-  X
+  X,
+  Megaphone,
+  Gift,
+  Clock
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -70,6 +73,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       active: pathname.startsWith('/admin/reviews'),
     },
     {
+      icon: <Gift className="w-full h-full" />,
+      label: '营销活动',
+      href: '/admin/promotions',
+      active: pathname === '/admin/promotions',
+    },
+    {
+      icon: <Megaphone className="w-full h-full" />,
+      label: '公告管理',
+      href: '/admin/announcements',
+      active: pathname === '/admin/announcements',
+    },
+    {
       icon: <CreditCard className="w-full h-full" />,
       label: '支付审核',
       href: '/admin/payments',
@@ -80,6 +95,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       label: '报表分析',
       href: '/admin/reports',
       active: pathname === '/admin/reports',
+    },
+    {
+      icon: <Clock className="w-full h-full" />,
+      label: '任务监控',
+      href: '/admin/cron',
+      active: pathname === '/admin/cron',
     },
   ];
 

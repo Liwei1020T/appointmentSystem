@@ -8,8 +8,19 @@
     @apply antialiased;
   }
 
+  /* CSS Variables for consistent theming */
+  :root {
+    --bg-page: #F7F3EE;
+    --bg-surface: #FFFFFF;
+    --bg-elevated: #FFFFFF;
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --border-subtle: #E6E1DA;
+  }
+
   body {
-    @apply text-text-primary bg-ink;
+    @apply text-text-primary;
+    background-color: var(--bg-page);
     background-image:
       radial-gradient(1100px 520px at 8% -10%, rgba(15, 118, 110, 0.10), transparent 60%),
       radial-gradient(900px 520px at 92% 0%, rgba(132, 204, 22, 0.08), transparent 55%),
@@ -85,6 +96,38 @@
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
     border-radius: 6px;
+  }
+
+  /* Skeleton component styles */
+  .skeleton-base {
+    background-color: #E5E7EB; /* gray-200 */
+  }
+  .skeleton-pulse {
+    background-color: #E5E7EB;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .skeleton-shimmer {
+    background: linear-gradient(90deg, #E5E7EB 0%, #F3F4F6 50%, #E5E7EB 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* Header and surface component styles */
+  .surface-header {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-color: var(--border-subtle);
+  }
+  .surface-card {
+    background-color: var(--bg-surface);
+    border-color: var(--border-subtle);
+  }
+  .surface-nav {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-color: var(--border-subtle);
+  }
+  .surface-bottom {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-color: var(--border-subtle);
   }
 
   /* Gradient accent decorations */

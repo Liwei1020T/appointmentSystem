@@ -22,8 +22,63 @@ export function computeFinalPrice(order: {
   return Math.max(price - discount, 0);
 }
 
+export interface ReviewLike {
+  id: string;
+  orderId?: string;
+  order_id?: string;
+  userId?: string;
+  user_id?: string;
+  rating?: number | null;
+  comment?: string | null;
+  photos?: string[] | null;
+  images?: string[] | null;
+  image_urls?: string[] | null;
+  imageUrls?: string[] | null;
+  tags?: string[] | null;
+  isAnonymous?: boolean | null;
+  is_anonymous?: boolean | null;
+  serviceRating?: number | null;
+  service_rating?: number | null;
+  qualityRating?: number | null;
+  quality_rating?: number | null;
+  speedRating?: number | null;
+  speed_rating?: number | null;
+  helpfulCount?: number | null;
+  helpful_count?: number | null;
+  likesCount?: number | null;
+  likes_count?: number | null;
+  isLiked?: boolean | null;
+  is_liked?: boolean | null;
+  adminReply?: string | null;
+  admin_reply?: string | null;
+  adminReplyAt?: Date | string | null;
+  admin_reply_at?: Date | string | null;
+  adminReplyBy?: string | null;
+  admin_reply_by?: string | null;
+  createdAt?: Date | string | null;
+  created_at?: Date | string | null;
+  updatedAt?: Date | string | null;
+  updated_at?: Date | string | null;
+  order?: {
+    id: string;
+    price?: DecimalLike;
+    discount?: DecimalLike;
+    discountAmount?: DecimalLike;
+    string?: {
+      brand?: string;
+      model?: string;
+    } | null;
+  } | null;
+  user?: {
+    id: string;
+    fullName?: string | null;
+    full_name?: string | null;
+    email?: string | null;
+  } | null;
+}
+
 export function mapReviewToApiPayload(
-  review: any,
+  review: ReviewLike,
   options?: { includeOrder?: boolean; includeUser?: boolean; maskAnonymousUser?: boolean }
 ) {
   const includeOrder = options?.includeOrder ?? false;
@@ -72,8 +127,8 @@ export function mapReviewToApiPayload(
 
   return {
     id: review.id,
-    order_id: review.orderId ?? review.order_id,
-    user_id: review.userId ?? review.user_id,
+    order_id: review.orderId ?? review.order_id ?? '',
+    user_id: review.userId ?? review.user_id ?? '',
     rating,
     service_rating: serviceRating,
     quality_rating: qualityRating,
@@ -86,12 +141,26 @@ export function mapReviewToApiPayload(
     admin_reply: review?.adminReply ?? review?.admin_reply ?? null,
     admin_reply_at: review?.adminReplyAt
       ? new Date(review.adminReplyAt).toISOString()
-      : review?.admin_reply_at
-      ? new Date(review.admin_reply_at).toISOString()
+      : review?.admin_reply_at instanceof Date
+      ? review.admin_reply_at.toISOString()
+      : typeof review?.admin_reply_at === 'string'
+      ? review.admin_reply_at
       : null,
     admin_reply_by: review?.adminReplyBy ?? review?.admin_reply_by ?? null,
-    created_at: review?.createdAt ? new Date(review.createdAt).toISOString() : review?.created_at ?? null,
-    updated_at: review?.updatedAt ? new Date(review.updatedAt).toISOString() : review?.updated_at ?? null,
+    created_at: review?.createdAt
+      ? (review.createdAt instanceof Date ? review.createdAt.toISOString() : String(review.createdAt))
+      : review?.created_at instanceof Date
+      ? review.created_at.toISOString()
+      : typeof review?.created_at === 'string'
+      ? review.created_at
+      : null,
+    updated_at: review?.updatedAt
+      ? (review.updatedAt instanceof Date ? review.updatedAt.toISOString() : String(review.updatedAt))
+      : review?.updated_at instanceof Date
+      ? review.updated_at.toISOString()
+      : typeof review?.updated_at === 'string'
+      ? review.updated_at
+      : null,
     ...(orderPayload ? { order: orderPayload } : {}),
     ...(userPayload ? { user: userPayload } : {}),
   };

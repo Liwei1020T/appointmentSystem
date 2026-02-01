@@ -34,7 +34,7 @@ export default function NotificationBell({ onClick, userId, refreshTrigger = 0 }
           setUnreadCount(count);
           setLoading(false);
         }
-      } catch (error) {
+      } catch {
         // Silently handle errors to prevent crashes
         if (active) {
           setLoading(false);

@@ -138,6 +138,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -149,6 +150,7 @@ model Session {
   expires      DateTime @db.Timestamptz(6)
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("sessions")
 }
 
@@ -214,6 +216,9 @@ model StockLog {
 
   @@index([stringId])
   @@index([createdAt])
+  @@index([createdBy])
+  @@index([referenceId])
+  @@index([referenceId, type])
   @@map("stock_logs")
 }
 
@@ -259,9 +264,12 @@ model Order {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  @@index([stringId])
   // Composite indexes for common query patterns
   @@index([userId, status, createdAt])
   @@index([status, lastStatusChangeAt])
+  @@index([status, createdAt])
+  @@index([status, completedAt]) // 营收统计查询优化
   @@map("orders")
 }
 
@@ -300,6 +308,7 @@ model OrderItem {
   string StringInventory @relation(fields: [stringId], references: [id])
 
   @@index([orderId])
+  @@index([stringId])
   @@map("order_items")
 }
 
@@ -341,6 +350,8 @@ model Review {
   @@index([rating])
   @@index([createdAt])
   @@index([isFeatured])
+  @@index([rating, createdAt]) // 按评分筛选排序优化
+  @@index([isFeatured, createdAt]) // 精选评价时间排序优化
   @@map("reviews")
 }
 
@@ -384,6 +395,10 @@ model Payment {
   @@index([userId])
   @@index([status])
   @@index([transactionId])
+  @@index([orderId])
+  @@index([packageId])
+  @@index([status, createdAt])
+  @@index([userId, status, createdAt]) // 用户支付历史查询优化
   @@map("payments")
 }
 
@@ -433,10 +448,12 @@ model UserPackage {
   orders  Order[]
 
   @@index([userId])
+  @@index([packageId])
   @@index([status])
   @@index([expiry])
   // Composite index for finding active packages by user
   @@index([userId, status, expiry])
+  @@index([status, expiry]) // 全局到期查询优化（定时任务）
   @@map("user_packages")
 }
 
@@ -488,7 +505,9 @@ model UserVoucher {
   orders  Order[]
 
   @@index([userId])
+  @@index([voucherId])
   @@index([status])
+  @@index([userId, status, expiry]) // 活跃优惠券查询优化
   @@map("user_vouchers")
 }
 
@@ -620,5 +639,29 @@ model PromotionUsage {
 
   @@index([promotionId])
   @@index([userId])
+  @@index([orderId])
   @@map("promotion_usage")
+}
+
+// ============================================
+// ANNOUNCEMENTS (公告系统)
+// ============================================
+
+model Announcement {
+  id        String   @id @default(uuid()) @db.Uuid
+  title     String
+  content   String   @db.Text
+  imageUrl  String?  @map("image_url")
+  linkUrl   String?  @map("link_url")
+  linkText  String?  @map("link_text")
+  priority  Int      @default(0)
+  startAt   DateTime @map("start_at") @db.Timestamptz(6)
+  endAt     DateTime @map("end_at") @db.Timestamptz(6)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([isActive])
+  @@index([startAt, endAt])
+  @@map("announcements")
 }

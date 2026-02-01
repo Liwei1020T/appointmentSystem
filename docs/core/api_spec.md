@@ -1,8 +1,8 @@
 # 🔌 API Specification
 
 **String Service Platform — API Reference**
-**Version:** 2.0
-**Last Updated:** 2026-01-27
+**Version:** 2.1
+**Last Updated:** 2026-01-29
 **Backend:** Next.js Route Handlers (Prisma + PostgreSQL)
 
 ---
@@ -1000,6 +1000,142 @@ All authenticated endpoints require:
   "startAt": "2026-01-01T00:00:00.000Z",
   "endAt": "2026-01-31T23:59:59.000Z",
   "usageLimit": 100
+}
+```
+
+---
+
+### Admin Announcements (Route Handler)
+
+**Endpoint:** `GET /api/admin/announcements`
+**Auth Required:** Yes (Admin only)
+
+**Response:**
+```json
+{
+  "ok": true,
+  "data": {
+    "announcements": [
+      {
+        "id": "announcement-id",
+        "title": "春节营业时间调整",
+        "content": "春节期间营业时间...",
+        "imageUrl": null,
+        "linkUrl": null,
+        "linkText": null,
+        "priority": 0,
+        "startAt": "2026-01-25T00:00:00Z",
+        "endAt": "2026-02-10T23:59:59Z",
+        "isActive": true,
+        "createdAt": "2026-01-20T10:00:00Z"
+      }
+    ],
+    "summary": {
+      "activeCount": 2,
+      "endedCount": 5,
+      "totalCount": 7
+    }
+  }
+}
+```
+
+**Endpoint:** `POST /api/admin/announcements`
+**Auth Required:** Yes (Admin only)
+
+**Request Body:**
+```json
+{
+  "title": "春节营业时间调整",
+  "content": "春节期间营业时间为...",
+  "imageUrl": "https://...",
+  "linkUrl": "https://...",
+  "linkText": "了解更多",
+  "priority": 10,
+  "startAt": "2026-01-25T00:00:00.000Z",
+  "endAt": "2026-02-10T23:59:59.000Z"
+}
+```
+
+**Endpoint:** `PATCH /api/admin/announcements/{id}`
+**Auth Required:** Yes (Admin only)
+
+**Request Body:** (all fields optional)
+```json
+{
+  "title": "更新标题",
+  "content": "更新内容",
+  "isActive": false
+}
+```
+
+**Endpoint:** `DELETE /api/admin/announcements/{id}`
+**Auth Required:** Yes (Admin only)
+
+---
+
+### User Events (Route Handler)
+
+**Endpoint:** `GET /api/events/active`
+**Auth Required:** No
+
+获取当前生效的促销活动和公告。
+
+**Response:**
+```json
+{
+  "ok": true,
+  "data": {
+    "promotions": [
+      {
+        "id": "promo-id",
+        "name": "新年限时折扣",
+        "type": "FLASH_SALE",
+        "discountType": "PERCENTAGE",
+        "discountValue": "10",
+        "minPurchase": null,
+        "startAt": "2026-01-01T00:00:00Z",
+        "endAt": "2026-01-31T23:59:59Z"
+      }
+    ],
+    "announcements": [
+      {
+        "id": "announcement-id",
+        "title": "春节营业时间",
+        "content": "...",
+        "imageUrl": null,
+        "linkUrl": null,
+        "linkText": null,
+        "startAt": "2026-01-25T00:00:00Z",
+        "endAt": "2026-02-10T23:59:59Z"
+      }
+    ]
+  }
+}
+```
+
+**Endpoint:** `GET /api/events/history`
+**Auth Required:** No
+
+获取已结束的活动归档，支持分页。
+
+**Query Parameters:**
+- `page` - 页码，默认 1
+- `limit` - 每页数量，默认 10
+
+**Response:**
+```json
+{
+  "ok": true,
+  "data": {
+    "promotions": [...],
+    "announcements": [...],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "promotionsTotal": 5,
+      "announcementsTotal": 3
+    }
+  }
 }
 ```
 

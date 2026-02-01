@@ -5,13 +5,24 @@
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
-import { errorResponse, successResponse } from '@/lib/api-response';
+import { errorResponse, failResponse, successResponse } from '@/lib/api-response';
 import { isValidUUID } from '@/lib/utils';
 import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
+
+// 有效的角色列表
+const VALID_ROLES = ['user', 'admin', 'super_admin'] as const;
+
+const updateUserSchema = z.object({
+  email: z.string().email().optional(),
+  phone: z.string().min(8).max(20).optional(),
+  fullName: z.string().min(1).max(100).optional(),
+  role: z.enum(VALID_ROLES).optional(),
+});
 
 type UserRecord = {
   id: string;
@@ -81,20 +92,35 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
     const userId = params.id;
     if (!isValidUUID(userId)) return errorResponse('无效的用户ID', 400);
 
     const body = await request.json().catch(() => ({}));
-    const { email, phone, fullName, role } = body || {};
+
+    // 输入验证
+    const parsed = updateUserSchema.safeParse(body);
+    if (!parsed.success) {
+      return failResponse('UNPROCESSABLE_ENTITY', 'Validation failed', 422, parsed.error.flatten());
+    }
+
+    // 只有 super_admin 才能修改用户角色
+    if (parsed.data.role && admin.role !== 'super_admin') {
+      return failResponse('FORBIDDEN', '只有超级管理员可以修改用户角色', 403);
+    }
+
+    // 防止自己降级自己
+    if (parsed.data.role && userId === admin.id && parsed.data.role !== 'super_admin') {
+      return failResponse('FORBIDDEN', '不能降级自己的权限', 403);
+    }
 
     const updated = await prisma.user.update({
       where: { id: userId },
       data: {
-        ...(typeof email === 'string' ? { email } : {}),
-        ...(typeof phone === 'string' ? { phone } : {}),
-        ...(typeof fullName === 'string' ? { fullName } : {}),
-        ...(typeof role === 'string' ? { role } : {}),
+        ...(parsed.data.email ? { email: parsed.data.email } : {}),
+        ...(parsed.data.phone ? { phone: parsed.data.phone } : {}),
+        ...(parsed.data.fullName ? { fullName: parsed.data.fullName } : {}),
+        ...(parsed.data.role ? { role: parsed.data.role } : {}),
       },
       select: {
         id: true,

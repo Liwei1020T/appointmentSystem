@@ -1,10 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import { ApiError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
-import { mapReviewToApiPayload } from '@/lib/review-mapper';
+import { mapReviewToApiPayload, type ReviewLike } from '@/lib/review-mapper';
 import { isAdminRole } from '@/lib/roles';
-
-const REVIEW_REWARD_POINTS = 10;
+import { POINTS } from '@/lib/constants';
 
 function parseStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -21,11 +20,31 @@ function parseRating(value: unknown, fallback: number): number {
   return parsed;
 }
 
+export interface SubmitReviewBody {
+  order_id?: string;
+  orderId?: string;
+  rating: number;
+  comment: string;
+  images?: string[];
+  image_urls?: string[];
+  imageUrls?: string[];
+  photos?: string[];
+  tags?: string[];
+  is_anonymous?: boolean;
+  isAnonymous?: boolean;
+  service_rating?: number;
+  serviceRating?: number;
+  quality_rating?: number;
+  qualityRating?: number;
+  speed_rating?: number;
+  speedRating?: number;
+}
+
 /**
  * Submit a review for a completed order.
  */
-export async function submitReview(userId: string, body: any) {
-  const orderId: string = body.order_id || body.orderId;
+export async function submitReview(userId: string, body: SubmitReviewBody) {
+  const orderId = body.order_id || body.orderId || '';
   const rating = parseRating(body.rating, 0);
   const comment = String(body.comment ?? '').trim();
 
@@ -102,14 +121,14 @@ export async function submitReview(userId: string, body: any) {
 
     const updatedUser = await tx.user.update({
       where: { id: userId },
-      data: { points: { increment: REVIEW_REWARD_POINTS } },
+      data: { points: { increment: POINTS.REVIEW_REWARD } },
       select: { points: true },
     });
 
     await tx.pointsLog.create({
       data: {
         userId,
-        amount: REVIEW_REWARD_POINTS,
+        amount: POINTS.REVIEW_REWARD,
         type: 'review',
         referenceId: orderId,
         description: 'Review reward',
@@ -267,7 +286,7 @@ export async function getFeaturedReviews() {
   );
 }
 
-function mapPublicReview(review: any) {
+function mapPublicReview(review: ReviewLike) {
   const payload = mapReviewToApiPayload(review, {
     includeOrder: true,
     includeUser: true,
@@ -281,13 +300,127 @@ function mapPublicReview(review: any) {
   return payload;
 }
 
+export interface PublicReviewsOptions {
+  sort?: 'latest' | 'rating' | 'likes';
+  rating?: number;
+  page?: number;
+  limit?: number;
+  userId?: string;
+}
+
+export interface ReviewApiPayload {
+  id: string;
+  order_id?: string;
+  user_id?: string;
+  rating: number;
+  service_rating: number;
+  quality_rating: number;
+  speed_rating: number;
+  comment: string;
+  tags: string[];
+  images: string[];
+  is_anonymous: boolean;
+  helpful_count: number;
+  admin_reply: string | null;
+  admin_reply_at: string | null;
+  admin_reply_by: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  order?: {
+    id: string;
+    order_number: string;
+    final_price: number;
+    string?: {
+      brand?: string;
+      model?: string;
+    };
+  };
+  user?: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+  };
+  // For getPublicReviews with likes
+  likes_count?: number;
+  likesCount?: number;
+  is_liked?: boolean;
+  isLiked?: boolean;
+}
+
+export interface PublicReviewsResult {
+  reviews: ReviewApiPayload[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  summary: {
+    total: number;
+    byRating: Record<number, number>;
+  };
+}
+
 /**
  * Fetch public reviews for the "View all" page.
+ * Supports sorting, filtering, and pagination.
  */
-export async function getPublicReviews() {
+export async function getPublicReviews(options: PublicReviewsOptions = {}): Promise<PublicReviewsResult> {
+  const { sort = 'latest', rating, userId } = options;
+
+  // 安全的分页参数处理，防止无效值
+  const safePage = Math.max(1, Number(options.page) || 1);
+  const safeLimit = Math.min(100, Math.max(1, Number(options.limit) || 10));
+
+  // Build where clause
+  const where: { comment: { not: null }; rating?: number } = {
+    comment: { not: null },
+  };
+  if (rating && rating >= 1 && rating <= 5) {
+    where.rating = rating;
+  }
+
+  // Build orderBy
+  let orderBy: { rating?: 'desc'; createdAt?: 'desc'; likesCount?: 'desc' } | Array<{ rating?: 'desc'; createdAt?: 'desc'; likesCount?: 'desc' }>;
+  switch (sort) {
+    case 'rating':
+      orderBy = [{ rating: 'desc' }, { createdAt: 'desc' }];
+      break;
+    case 'likes':
+      orderBy = [{ likesCount: 'desc' }, { createdAt: 'desc' }];
+      break;
+    case 'latest':
+    default:
+      orderBy = { createdAt: 'desc' };
+  }
+
+  // Get total count and rating summary
+  const [totalCount, ratingGroups] = await Promise.all([
+    prisma.review.count({
+      where: { comment: { not: null } },
+    }),
+    prisma.review.groupBy({
+      by: ['rating'],
+      where: { comment: { not: null } },
+      _count: { rating: true },
+    }),
+  ]);
+
+  const byRating: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (const group of ratingGroups) {
+    byRating[group.rating] = group._count.rating;
+  }
+
+  // Get filtered count for pagination
+  const filteredCount = rating ? (byRating[rating] || 0) : totalCount;
+
+  // Fetch reviews with pagination
+  const skip = (safePage - 1) * safeLimit;
   const reviews = await prisma.review.findMany({
-    where: { comment: { not: null } },
-    orderBy: { createdAt: 'desc' },
+    where,
+    orderBy,
+    skip,
+    take: safeLimit,
     include: {
       user: { select: { id: true, fullName: true, email: true } },
       order: {
@@ -302,8 +435,40 @@ export async function getPublicReviews() {
     },
   });
 
+  // Filter by minimum comment length
   const filtered = reviews.filter((review) => String(review.comment || '').trim().length >= 10);
-  return filtered.map(mapPublicReview);
+
+  // Get liked review IDs for current user
+  let likedReviewIds = new Set<string>();
+  if (userId) {
+    likedReviewIds = await getUserLikedReviewIds(userId, filtered.map((r) => r.id));
+  }
+
+  // Map reviews with isLiked field
+  const mappedReviews = filtered.map((review) => {
+    const payload = mapPublicReview(review);
+    return {
+      ...payload,
+      likes_count: review.likesCount,
+      likesCount: review.likesCount,
+      is_liked: likedReviewIds.has(review.id),
+      isLiked: likedReviewIds.has(review.id),
+    };
+  });
+
+  return {
+    reviews: mappedReviews,
+    pagination: {
+      page: safePage,
+      limit: safeLimit,
+      total: filteredCount,
+      totalPages: Math.ceil(filteredCount / safeLimit),
+    },
+    summary: {
+      total: totalCount,
+      byRating,
+    },
+  };
 }
 
 /**

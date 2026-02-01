@@ -13,8 +13,9 @@ describe('parseValidityDays', () => {
     expect(parseValidityDays(14)).toBe(14);
   });
 
-  it('returns NaN for invalid numbers', () => {
-    const result = parseValidityDays('invalid');
-    expect(Number.isNaN(result as number)).toBe(true);
+  it('returns null for invalid numbers', () => {
+    // 修复：无效输入返回 null 而非 NaN，防止下游 NaN 污染
+    expect(parseValidityDays('invalid')).toBeNull();
+    expect(parseValidityDays('abc123')).toBeNull();
   });
 });

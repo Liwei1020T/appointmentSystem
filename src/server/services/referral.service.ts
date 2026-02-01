@@ -4,6 +4,8 @@
  */
 
 import { prisma } from '@/lib/prisma';
+import { ApiError } from '@/lib/api-errors';
+import { POINTS } from '@/lib/constants';
 
 // 阶梯式奖励配置
 export const REFERRAL_TIERS = [
@@ -101,30 +103,39 @@ export async function checkAndAwardBadges(
     { count: 25, badge: 'referral_gold' },
   ];
 
+  // 批量检查已有徽章（避免 N+1）
+  const existingBadges = await prisma.userBadge.findMany({
+    where: {
+      userId,
+      badgeType: { in: badgeThresholds.map(t => t.badge) },
+    },
+    select: { badgeType: true },
+  });
+  const existingBadgeTypes = new Set(existingBadges.map(b => b.badgeType));
+
   for (const threshold of badgeThresholds) {
     if (referralCount >= threshold.count) {
-      const existing = await prisma.userBadge.findUnique({
-        where: { userId_badgeType: { userId, badgeType: threshold.badge } },
-      });
-
-      if (!existing) {
-        await prisma.userBadge.create({
-          data: { userId, badgeType: threshold.badge },
-        });
-        newBadges.push(threshold.badge);
-
-        const badgeInfo = BADGE_CONFIG[threshold.badge];
-        if (badgeInfo) {
-          await prisma.notification.create({
-            data: {
-              userId,
-              type: 'system',
-              title: `🏆 获得新徽章：${badgeInfo.name}`,
-              message: badgeInfo.description,
-              actionUrl: '/profile/badges',
-            },
+      if (!existingBadgeTypes.has(threshold.badge)) {
+        await prisma.$transaction(async (tx) => {
+          await tx.userBadge.create({
+            data: { userId, badgeType: threshold.badge },
           });
-        }
+
+          const badgeInfo = BADGE_CONFIG[threshold.badge];
+          if (badgeInfo) {
+            await tx.notification.create({
+              data: {
+                userId,
+                type: 'system',
+                title: `🏆 获得新徽章：${badgeInfo.name}`,
+                message: badgeInfo.description,
+                actionUrl: '/profile/badges',
+              },
+            });
+          }
+        });
+
+        newBadges.push(threshold.badge);
       }
     }
   }
@@ -146,66 +157,73 @@ export async function processReferralReward(
 
   const tier = getReferralTier(newCount);
   const referrerPoints = tier.points;
-  const referredPoints = 50;
+  const referredPoints = POINTS.REFERRAL_SIGNUP_REWARD;
 
-  const referrer = await prisma.user.findUnique({
-    where: { id: referrerId },
-    select: { points: true },
-  });
-
-  if (!referrer) {
-    throw new Error('Referrer not found');
-  }
-
-  await prisma.$transaction([
-    prisma.user.update({
+  // 使用 transaction callback 确保 balanceAfter 准确
+  await prisma.$transaction(async (tx) => {
+    // 更新推荐人积分并获取更新后的余额
+    const updatedReferrer = await tx.user.update({
       where: { id: referrerId },
       data: { points: { increment: referrerPoints } },
-    }),
-    prisma.pointsLog.create({
+      select: { points: true },
+    });
+
+    // 更新被推荐人积分并获取更新后的余额
+    const updatedReferred = await tx.user.update({
+      where: { id: referredId },
+      data: { points: { increment: referredPoints } },
+      select: { points: true },
+    });
+
+    // 使用更新后的余额记录积分日志
+    await tx.pointsLog.create({
       data: {
         userId: referrerId,
         amount: referrerPoints,
         type: 'referral',
         referenceId: referredId,
         description: `推荐用户 ${referredPhone}（第 ${newCount} 位，${referrerPoints} 积分）`,
-        balanceAfter: referrer.points + referrerPoints,
+        balanceAfter: updatedReferrer.points,
       },
-    }),
-    prisma.pointsLog.create({
+    });
+
+    await tx.pointsLog.create({
       data: {
         userId: referredId,
         amount: referredPoints,
         type: 'referral',
         description: '注册奖励',
-        balanceAfter: referredPoints,
+        balanceAfter: updatedReferred.points,
       },
-    }),
-    prisma.referralLog.create({
+    });
+
+    await tx.referralLog.create({
       data: {
         referrerId,
         referredId,
         referralCode,
         rewardGiven: true,
       },
-    }),
-    prisma.notification.create({
+    });
+
+    await tx.notification.create({
       data: {
         userId: referrerId,
         type: 'system',
         title: '🎉 邀请奖励',
         message: `成功邀请第 ${newCount} 位用户，获得 ${referrerPoints} 积分！`,
       },
-    }),
-    prisma.notification.create({
+    });
+
+    await tx.notification.create({
       data: {
         userId: referredId,
         type: 'system',
         title: '🎁 注册奖励',
         message: `注册成功，获得 ${referredPoints} 积分`,
       },
-    }),
-  ]);
+    });
+  });
 
   const newBadges = await checkAndAwardBadges(referrerId, newCount);
 

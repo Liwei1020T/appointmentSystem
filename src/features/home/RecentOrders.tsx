@@ -67,7 +67,31 @@ export default function RecentOrders({
       setLoading(false);
       return;
     }
-    loadRecentOrders();
+
+    let mounted = true;
+
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const limit = maxItems ? (hideLatest ? maxItems + 1 : maxItems) : 3;
+        const data = await getRecentOrders(limit);
+        if (mounted && data) {
+          setOrders(data as RecentOrderWithItems[]);
+        }
+      } catch (error) {
+        console.error('Error loading recent orders:', error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      mounted = false;
+    };
   }, [hasExternalOrders, maxItems, hideLatest]);
 
   const loadRecentOrders = async () => {

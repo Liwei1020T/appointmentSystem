@@ -35,9 +35,9 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   };
 
   const animationStyles = {
-    shimmer: 'bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 bg-[length:200%_100%] animate-shimmer',
-    pulse: 'bg-gray-200 dark:bg-gray-700 animate-pulse',
-    none: 'bg-gray-200 dark:bg-gray-700',
+    shimmer: 'skeleton-shimmer',
+    pulse: 'skeleton-pulse',
+    none: 'skeleton-base',
   };
 
   const style: React.CSSProperties = {};
@@ -72,7 +72,7 @@ export const SkeletonText: React.FC<{ lines?: number; className?: string }> = ({
 );
 
 export const SkeletonCard: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`p-4 bg-ink-surface dark:bg-dark-elevated rounded-xl border border-border-subtle dark:border-gray-700 ${className}`}>
+  <div className={`p-4 bg-ink-surface rounded-xl border border-border-subtle ${className}`}>
     <Skeleton className="h-4 w-3/4 mb-3" />
     <Skeleton className="h-3 w-full mb-2" />
     <Skeleton className="h-3 w-2/3" />
@@ -94,7 +94,7 @@ export const SkeletonAvatar: React.FC<{ size?: 'sm' | 'md' | 'lg'; className?: s
 
 // 订单卡片骨架屏
 export const SkeletonOrderCard: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`bg-white dark:bg-dark-elevated rounded-xl border border-gray-100 dark:border-gray-700 p-4 ${className}`}>
+  <div className={`surface-card rounded-xl border border-border-subtle p-4 ${className}`}>
     <div className="flex items-center justify-between mb-3">
       <Skeleton className="h-5 w-24" />
       <Skeleton variant="rounded" className="h-6 w-16" />
@@ -109,7 +109,7 @@ export const SkeletonOrderCard: React.FC<{ className?: string }> = ({ className 
         <Skeleton className="h-4 w-2/5" />
       </div>
     </div>
-    <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+    <div className="flex items-center justify-between pt-3 border-t border-border-subtle">
       <Skeleton className="h-4 w-20" />
       <Skeleton variant="rounded" className="h-8 w-20" />
     </div>
@@ -130,7 +130,7 @@ export const SkeletonListItem: React.FC<{ className?: string }> = ({ className =
 
 // 套餐卡片骨架屏
 export const SkeletonPackageCard: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`bg-white dark:bg-dark-elevated rounded-xl border border-gray-100 dark:border-gray-700 p-5 ${className}`}>
+  <div className={`surface-card rounded-xl border border-border-subtle p-5 ${className}`}>
     <div className="flex items-center justify-between mb-4">
       <Skeleton className="h-6 w-28" />
       <Skeleton variant="rounded" className="h-5 w-12" />
@@ -157,7 +157,7 @@ export const SkeletonUserInfo: React.FC<{ className?: string }> = ({ className =
 
 // 统计卡片骨架屏
 export const SkeletonStatsCard: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`bg-white dark:bg-dark-elevated rounded-xl border border-gray-100 dark:border-gray-700 p-4 ${className}`}>
+  <div className={`surface-card rounded-xl border border-border-subtle p-4 ${className}`}>
     <div className="flex items-center gap-3 mb-3">
       <Skeleton variant="circular" className="w-10 h-10" />
       <Skeleton className="h-4 w-20" />
@@ -169,7 +169,7 @@ export const SkeletonStatsCard: React.FC<{ className?: string }> = ({ className 
 
 // 评价卡片骨架屏
 export const SkeletonReviewCard: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`bg-white dark:bg-dark-elevated rounded-xl border border-gray-100 dark:border-gray-700 p-4 ${className}`}>
+  <div className={`surface-card rounded-xl border border-border-subtle p-4 ${className}`}>
     <div className="flex items-center gap-3 mb-3">
       <Skeleton variant="circular" className="w-10 h-10" />
       <div className="flex-1">
@@ -210,9 +210,9 @@ export const SkeletonTable: React.FC<{ rows?: number; columns?: number; classNam
   columns = 5,
   className = '',
 }) => (
-  <div className={`bg-white dark:bg-dark-elevated rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden ${className}`}>
+  <div className={`surface-card rounded-xl border border-border-subtle overflow-hidden ${className}`}>
     <table className="w-full">
-      <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+      <thead className="bg-ink border-b border-border-subtle">
         <tr>
           {Array.from({ length: columns }).map((_, i) => (
             <th key={i} className="px-4 py-3 text-left">
@@ -221,7 +221,7 @@ export const SkeletonTable: React.FC<{ rows?: number; columns?: number; classNam
           ))}
         </tr>
       </thead>
-      <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+      <tbody className="divide-y divide-border-subtle">
         {Array.from({ length: rows }).map((_, i) => (
           <SkeletonTableRow key={i} columns={columns} />
         ))}
@@ -242,11 +242,11 @@ export const SkeletonDashboard: React.FC<{ className?: string }> = ({ className 
     </div>
     {/* 图表区域 */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="bg-white dark:bg-dark-elevated rounded-xl border border-gray-100 dark:border-gray-700 p-4">
+      <div className="surface-card rounded-xl border border-border-subtle p-4">
         <Skeleton className="h-6 w-28 mb-4" />
         <Skeleton variant="rounded" className="h-48 w-full" />
       </div>
-      <div className="bg-white dark:bg-dark-elevated rounded-xl border border-gray-100 dark:border-gray-700 p-4">
+      <div className="surface-card rounded-xl border border-border-subtle p-4">
         <Skeleton className="h-6 w-28 mb-4" />
         <Skeleton variant="rounded" className="h-48 w-full" />
       </div>
@@ -258,7 +258,7 @@ export const SkeletonDashboard: React.FC<{ className?: string }> = ({ className 
 export const SkeletonHomePage: React.FC<{ className?: string }> = ({ className = '' }) => (
   <div className={`space-y-6 ${className}`}>
     {/* 欢迎区 */}
-    <div className="bg-white/90 dark:bg-dark-elevated/90 border-b border-gray-100 dark:border-gray-700 p-5">
+    <div className="bg-white/90 border-b border-border-subtle p-5">
       <div className="flex items-center justify-between">
         <div className="space-y-2">
           <Skeleton className="h-7 w-48" />
@@ -283,7 +283,7 @@ export const SkeletonHomePage: React.FC<{ className?: string }> = ({ className =
     </div>
     {/* 权益信息 */}
     <div className="px-4">
-      <div className="bg-white dark:bg-dark-elevated rounded-xl border border-gray-100 dark:border-gray-700 p-4">
+      <div className="surface-card rounded-xl border border-border-subtle p-4">
         <Skeleton className="h-5 w-24 mb-4" />
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
@@ -320,7 +320,7 @@ export const SkeletonBookingPage: React.FC<{ className?: string }> = ({ classNam
     <div className="space-y-3">
       <Skeleton className="h-5 w-24 mb-2" />
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="bg-white dark:bg-dark-elevated rounded-xl border border-gray-100 dark:border-gray-700 p-4">
+        <div key={i} className="surface-card rounded-xl border border-border-subtle p-4">
           <div className="flex items-center gap-3">
             <Skeleton variant="rounded" className="w-16 h-16" />
             <div className="flex-1 space-y-2">
@@ -351,7 +351,7 @@ export const SkeletonOrderList: React.FC<{ count?: number; className?: string }>
 export const SkeletonProfilePage: React.FC<{ className?: string }> = ({ className = '' }) => (
   <div className={`space-y-6 ${className}`}>
     {/* 头像和基本信息 */}
-    <div className="bg-white dark:bg-dark-elevated rounded-xl border border-gray-100 dark:border-gray-700 p-6 text-center">
+    <div className="surface-card rounded-xl border border-border-subtle p-6 text-center">
       <Skeleton variant="circular" className="w-24 h-24 mx-auto mb-4" />
       <Skeleton className="h-6 w-32 mx-auto mb-2" />
       <Skeleton className="h-4 w-40 mx-auto mb-4" />
@@ -364,9 +364,9 @@ export const SkeletonProfilePage: React.FC<{ className?: string }> = ({ classNam
       <SkeletonStatsCard />
     </div>
     {/* 菜单列表 */}
-    <div className="bg-white dark:bg-dark-elevated rounded-xl border border-gray-100 dark:border-gray-700">
+    <div className="surface-card rounded-xl border border-border-subtle">
       {[1, 2, 3, 4, 5].map((i) => (
-        <SkeletonListItem key={i} className="border-b border-gray-50 dark:border-gray-700 last:border-b-0" />
+        <SkeletonListItem key={i} className="border-b border-border-subtle last:border-b-0" />
       ))}
     </div>
   </div>

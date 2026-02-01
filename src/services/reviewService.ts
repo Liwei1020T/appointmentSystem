@@ -5,6 +5,7 @@
 
 import { isValidUUID } from '@/lib/utils';
 import { apiRequest } from '@/services/apiClient';
+import type { ReviewLike } from '@/lib/review-mapper';
 
 // 待评价订单接口
 export interface PendingReviewOrder {
@@ -47,6 +48,10 @@ export interface OrderReview {
   updated_at?: Date | string;
   helpful_count?: number;
   helpfulCount?: number;
+  likesCount?: number;
+  likes_count?: number;
+  isLiked?: boolean;
+  is_liked?: boolean;
   user?: {
     id?: string;
     full_name?: string;
@@ -85,7 +90,7 @@ export interface SubmitReviewParams {
 }
 
 // Normalize any review payload (camelCase or snake_case) into a consistent shape.
-function normalizeReview(r: any): OrderReview {
+function normalizeReview(r: ReviewLike): OrderReview {
   const rating = Number(r?.rating ?? 0);
   const serviceRating = Number(r?.service_rating ?? r?.serviceRating ?? 0);
   const qualityRating = Number(r?.quality_rating ?? r?.qualityRating ?? 0);
@@ -94,13 +99,28 @@ function normalizeReview(r: any): OrderReview {
   const imageUrls = r?.images || r?.image_urls || r?.imageUrls || [];
   const createdAtValue = r?.created_at || r?.createdAt || new Date();
   const updatedAtValue = r?.updated_at || r?.updatedAt || new Date();
+  const likesCount = r?.likes_count ?? r?.likesCount ?? 0;
+  const isLiked = r?.is_liked ?? r?.isLiked ?? false;
+
+  // 转换 order 和 user 对象，移除 null 类型
+  const orderData = r?.order && typeof r.order === 'object' ? {
+    id: r.order.id,
+    string: r.order.string || undefined,
+  } : undefined;
+
+  const userData = r?.user && typeof r.user === 'object' ? {
+    id: r.user.id,
+    full_name: r.user.full_name ?? r.user.fullName ?? undefined,
+    fullName: r.user.fullName ?? r.user.full_name ?? undefined,
+    email: r.user.email ?? undefined,
+  } : undefined;
 
   return {
     id: r?.id || crypto.randomUUID(),
     orderId: r?.order_id || r?.orderId || '',
-    order_id: r?.order_id || r?.orderId,
+    order_id: r?.order_id || r?.orderId || '',
     userId: r?.user_id || r?.userId || '',
-    user_id: r?.user_id || r?.userId,
+    user_id: r?.user_id || r?.userId || '',
     rating,
     serviceRating: serviceRating || rating,
     service_rating: serviceRating || rating,
@@ -114,16 +134,20 @@ function normalizeReview(r: any): OrderReview {
     image_urls: Array.isArray(imageUrls) ? imageUrls : [],
     isAnonymous: r?.is_anonymous ?? r?.isAnonymous ?? false,
     is_anonymous: r?.is_anonymous ?? r?.isAnonymous ?? false,
-    adminReply: r?.admin_reply ?? r?.adminReply,
-    admin_reply: r?.admin_reply ?? r?.adminReply,
-    createdAt: new Date(createdAtValue),
-    created_at: createdAtValue,
-    updatedAt: new Date(updatedAtValue),
-    updated_at: updatedAtValue,
-    helpful_count: r?.helpful_count ?? r?.helpfulCount,
-    helpfulCount: r?.helpful_count ?? r?.helpfulCount,
-    order: r?.order,
-    user: r?.user,
+    adminReply: r?.admin_reply ?? r?.adminReply ?? undefined,
+    admin_reply: r?.admin_reply ?? r?.adminReply ?? undefined,
+    createdAt: createdAtValue instanceof Date ? createdAtValue : new Date(createdAtValue),
+    created_at: createdAtValue instanceof Date ? createdAtValue.toISOString() : String(createdAtValue),
+    updatedAt: updatedAtValue instanceof Date ? updatedAtValue : new Date(updatedAtValue),
+    updated_at: updatedAtValue instanceof Date ? updatedAtValue.toISOString() : String(updatedAtValue),
+    helpful_count: r?.helpful_count ?? r?.helpfulCount ?? 0,
+    helpfulCount: r?.helpful_count ?? r?.helpfulCount ?? 0,
+    likesCount,
+    likes_count: likesCount,
+    isLiked,
+    is_liked: isLiked,
+    order: orderData,
+    user: userData,
   };
 }
 
@@ -210,13 +234,66 @@ export async function getFeaturedReviews(): Promise<OrderReview[]> {
 /**
  * 获取公开评价（用于"查看全部"）
  */
-export async function getPublicReviews(): Promise<OrderReview[]> {
+export interface PublicReviewsParams {
+  sort?: 'latest' | 'rating' | 'likes';
+  rating?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface PublicReviewsResponse {
+  reviews: OrderReview[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  summary: {
+    total: number;
+    byRating: Record<number, number>;
+  };
+}
+
+export async function getPublicReviews(params: PublicReviewsParams = {}): Promise<PublicReviewsResponse> {
   try {
-    const payload = await apiRequest<any[]>(`/api/reviews/public`);
-    if (!Array.isArray(payload)) return [];
-    return payload.map(normalizeReview);
+    const searchParams = new URLSearchParams();
+    if (params.sort) searchParams.set('sort', params.sort);
+    if (params.rating) searchParams.set('rating', String(params.rating));
+    if (params.page) searchParams.set('page', String(params.page));
+    if (params.limit) searchParams.set('limit', String(params.limit));
+
+    const queryString = searchParams.toString();
+    const url = `/api/reviews/public${queryString ? `?${queryString}` : ''}`;
+
+    const payload = await apiRequest<any>(url);
+
+    return {
+      reviews: Array.isArray(payload.reviews) ? payload.reviews.map(normalizeReview) : [],
+      pagination: payload.pagination || { page: 1, limit: 10, total: 0, totalPages: 0 },
+      summary: payload.summary || { total: 0, byRating: {} },
+    };
   } catch {
-    return [];
+    return {
+      reviews: [],
+      pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
+      summary: { total: 0, byRating: {} },
+    };
+  }
+}
+
+/**
+ * 点赞/取消点赞评价
+ */
+export async function toggleReviewLike(reviewId: string): Promise<{ liked: boolean; likesCount: number } | null> {
+  if (!isValidUUID(reviewId)) return null;
+  try {
+    const result = await apiRequest<{ liked: boolean; likesCount: number }>(`/api/reviews/${reviewId}/like`, {
+      method: 'POST',
+    });
+    return result;
+  } catch {
+    return null;
   }
 }
 

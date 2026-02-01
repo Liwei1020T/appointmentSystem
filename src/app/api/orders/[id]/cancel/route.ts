@@ -8,6 +8,7 @@ import { requireAuth } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { cancelOrder } from '@/server/services/order.service';
 import { handleApiError } from '@/lib/api/handleApiError';
+import { financialLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,11 +17,20 @@ const paramsSchema = z.object({
 });
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     const user = await requireAuth();
+
+    // 财务操作速率限制：防止取消订单滥用
+    const clientIp = getClientIp(request);
+    const rateLimitKey = `order-cancel:${user.id}:${clientIp}`;
+    const rateLimitResult = financialLimiter.check(rateLimitKey);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult.resetAt);
+    }
+
     const parsedParams = paramsSchema.safeParse(params);
 
     if (!parsedParams.success) {

@@ -221,7 +221,7 @@ export default function ImageUploader({
     <div className="space-y-3">
       {/* 标签 */}
       {label && (
-        <label className="block text-sm font-medium text-text-secondary dark:text-gray-400">
+        <label className="block text-sm font-medium text-text-secondary">
           {label}
         </label>
       )}
@@ -234,8 +234,8 @@ export default function ImageUploader({
             flex flex-col items-center justify-center
             cursor-pointer transition-all
             ${isDragging
-              ? 'border-accent-border bg-ink-elevated dark:bg-dark-elevated'
-              : 'border-border-subtle dark:border-gray-700 hover:border-accent-border hover:bg-ink dark:hover:bg-gray-800'
+              ? 'border-accent-border bg-ink-elevated'
+              : 'border-border-subtle hover:border-accent-border hover:bg-ink'
             }
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
@@ -244,11 +244,11 @@ export default function ImageUploader({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <Upload className="w-12 h-12 text-text-tertiary dark:text-gray-500 mb-3" />
-          <p className="text-text-secondary dark:text-gray-400 font-medium mb-1">
+          <Upload className="w-12 h-12 text-text-tertiary mb-3" />
+          <p className="text-text-secondary font-medium mb-1">
             {hint.replace('{max}', maxFiles.toString())}
           </p>
-          <p className="text-sm text-text-tertiary dark:text-gray-500">
+          <p className="text-sm text-text-tertiary">
             支持 JPG、PNG、WebP、GIF（最大5MB）
           </p>
         </div>
@@ -260,7 +260,7 @@ export default function ImageUploader({
           {images.map((image, index) => (
             <div
               key={index}
-              className="relative aspect-square rounded-lg overflow-hidden border border-border-subtle dark:border-gray-700 group"
+              className="relative aspect-square rounded-lg overflow-hidden border border-border-subtle group"
             >
               {/* 图片 - 使用原生 img 因为支持 blob URLs */}
               <img
@@ -272,7 +272,7 @@ export default function ImageUploader({
 
               {/* 上传中遮罩 */}
               {image.uploading && (
-                <div className="absolute inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                   <LoadingSpinner size="md" tone="inverse" className="w-8 h-8" />
                 </div>
               )}
@@ -300,7 +300,7 @@ export default function ImageUploader({
 
       {/* 图片数量提示 */}
       {images.length > 0 && (
-        <p className="text-sm text-text-tertiary dark:text-gray-500">
+        <p className="text-sm text-text-tertiary">
           已选择 {images.length} / {maxFiles} 张图片
         </p>
       )}

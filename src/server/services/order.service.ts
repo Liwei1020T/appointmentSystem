@@ -238,13 +238,31 @@ export async function createOrder(user: UserSnapshot, payload: CreateOrderPayloa
   const estimatedCompletionAt = await calculateEstimatedCompletion();
 
   const order = await prisma.$transaction(async (tx) => {
+    // 使用 optimistic locking 防止库存竞争
+    const currentString = await tx.stringInventory.findUnique({
+      where: { id: stringId },
+      select: { stock: true, version: true },
+    });
+
+    if (!currentString || currentString.stock < INVENTORY.DEDUCT_ON_CREATE) {
+      throw new ApiError('CONFLICT', 409, 'Insufficient stock');
+    }
+
+    // 更新库存，使用 version 字段进行乐观锁
     const stockResult = await tx.stringInventory.updateMany({
-      where: { id: stringId, stock: { gte: INVENTORY.DEDUCT_ON_CREATE } },
-      data: { stock: { decrement: INVENTORY.DEDUCT_ON_CREATE } },
+      where: {
+        id: stringId,
+        stock: { gte: INVENTORY.DEDUCT_ON_CREATE },
+        version: currentString.version,
+      },
+      data: {
+        stock: { decrement: INVENTORY.DEDUCT_ON_CREATE },
+        version: { increment: 1 },
+      },
     });
 
     if (stockResult.count === 0) {
-      throw new ApiError('CONFLICT', 409, 'Insufficient stock');
+      throw new ApiError('CONFLICT', 409, '库存已被其他订单占用，请重试');
     }
 
     const newOrder = await tx.order.create({
@@ -489,7 +507,8 @@ export async function createOrderWithPackage(user: UserSnapshot, payload: Create
 export async function createMultiRacketOrder(user: UserSnapshot, payload: CreateMultiRacketOrderPayload) {
   const { items, usePackage, packageId, voucherId, notes, serviceType, pickupAddress } = payload;
 
-  if (!items || items.length === 0) {
+  // 验证 items 是数组且不为空
+  if (!Array.isArray(items) || items.length === 0) {
     throw new ApiError('BAD_REQUEST', 400, 'At least one racket is required');
   }
 
@@ -633,10 +652,22 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
       },
     });
 
+    // 批量获取库存 version 信息（用于 optimistic locking）
+    const stringVersions = await tx.stringInventory.findMany({
+      where: { id: { in: items.map((item) => item.stringId) } },
+      select: { id: true, stock: true, version: true },
+    });
+    const versionMap = new Map(stringVersions.map((s) => [s.id, s]));
+
     for (let i = 0; i < items.length; i += 1) {
       const item = items[i];
       const string = stringMap.get(item.stringId)!;
       const itemPrice = usePackage ? 0 : itemPrices[i];
+      const stringVersion = versionMap.get(item.stringId);
+
+      if (!stringVersion || stringVersion.stock < INVENTORY.DEDUCT_ON_CREATE) {
+        throw new ApiError('CONFLICT', 409, `Insufficient stock for ${string.brand} ${string.model}`);
+      }
 
       await (tx as any).orderItem.create({
         data: {
@@ -653,12 +684,19 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
       });
 
       const stockResult = await tx.stringInventory.updateMany({
-        where: { id: item.stringId, stock: { gte: INVENTORY.DEDUCT_ON_CREATE } },
-        data: { stock: { decrement: INVENTORY.DEDUCT_ON_CREATE } },
+        where: {
+          id: item.stringId,
+          stock: { gte: INVENTORY.DEDUCT_ON_CREATE },
+          version: stringVersion.version,
+        },
+        data: {
+          stock: { decrement: INVENTORY.DEDUCT_ON_CREATE },
+          version: { increment: 1 },
+        },
       });
 
       if (stockResult.count === 0) {
-        throw new ApiError('CONFLICT', 409, `Insufficient stock for ${string.brand} ${string.model}`);
+        throw new ApiError('CONFLICT', 409, `库存已被其他订单占用：${string.brand} ${string.model}`);
       }
 
       await tx.stockLog.create({
@@ -894,13 +932,30 @@ export async function completeOrder(admin: AdminSnapshot, orderId: string, admin
 
   await prisma.$transaction(async (tx) => {
     if (!isMultiRacketOrder && order.stringId && order.string) {
+      // 获取当前 version（optimistic locking）
+      const currentString = await tx.stringInventory.findUnique({
+        where: { id: order.stringId },
+        select: { stock: true, version: true },
+      });
+
+      if (!currentString || currentString.stock < stockToDeduct) {
+        throw new ApiError('CONFLICT', 409, 'Insufficient stock for completion');
+      }
+
       const stockResult = await tx.stringInventory.updateMany({
-        where: { id: order.stringId, stock: { gte: stockToDeduct } },
-        data: { stock: { decrement: stockToDeduct } },
+        where: {
+          id: order.stringId,
+          stock: { gte: stockToDeduct },
+          version: currentString.version,
+        },
+        data: {
+          stock: { decrement: stockToDeduct },
+          version: { increment: 1 },
+        },
       });
 
       if (stockResult.count === 0) {
-        throw new ApiError('CONFLICT', 409, `Insufficient stock`);
+        throw new ApiError('CONFLICT', 409, '库存已被其他订单占用，请重试');
       }
 
       await tx.stockLog.create({
@@ -916,10 +971,11 @@ export async function completeOrder(admin: AdminSnapshot, orderId: string, admin
       });
     }
 
-    const newBalance = order.user.points + pointsPerOrder;
-    await tx.user.update({
+    // 使用 increment 并获取更新后的实际余额，确保 balanceAfter 准确
+    const updatedUser = await tx.user.update({
       where: { id: order.userId },
-      data: { points: newBalance },
+      data: { points: { increment: pointsPerOrder } },
+      select: { points: true },
     });
 
     await tx.pointsLog.create({
@@ -929,7 +985,7 @@ export async function completeOrder(admin: AdminSnapshot, orderId: string, admin
         type: 'order',
         referenceId: orderId,
         description: `订单完成奖励：订单总额 RM${orderTotalAmount.toFixed(2)} × ${POINTS.REWARD_RATE * 100}% × ${multiplier}倍 = ${pointsPerOrder} 积分`,
-        balanceAfter: newBalance,
+        balanceAfter: updatedUser.points,
       },
     });
 

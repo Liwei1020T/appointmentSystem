@@ -29,7 +29,27 @@ export function generateOtpCode(): string {
  * @returns sha256 hex hash
  */
 export function hashOtpCode(code: string): string {
-  const secret = process.env.OTP_SECRET || process.env.NEXTAUTH_SECRET || 'dev-secret';
+  const secret = process.env.OTP_SECRET || process.env.NEXTAUTH_SECRET;
+
+  // 生产环境必须配置 OTP_SECRET 或 NEXTAUTH_SECRET
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'SECURITY ERROR: OTP_SECRET or NEXTAUTH_SECRET must be configured in production. ' +
+          'Generate with: openssl rand -base64 32'
+      );
+    }
+    // 开发环境使用弱密钥并输出警告
+    console.warn(
+      '⚠️  WARNING: Using weak OTP secret in development. ' +
+        'Set OTP_SECRET or NEXTAUTH_SECRET for production.'
+    );
+    return crypto
+      .createHash('sha256')
+      .update(`dev-secret-not-for-production:${String(code || '').trim()}`)
+      .digest('hex');
+  }
+
   return crypto
     .createHash('sha256')
     .update(`${secret}:${String(code || '').trim()}`)

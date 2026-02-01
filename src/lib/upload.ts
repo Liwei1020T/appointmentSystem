@@ -112,7 +112,16 @@ export async function deleteFile(filePath: string): Promise<boolean> {
  */
 export async function getFileInfo(filePath: string) {
   try {
-    const fullPath = path.join(process.cwd(), 'public', filePath);
+    // 防止路径遍历攻击
+    const sanitizedPath = filePath.replace(/^[\\/]+/, '');
+    const uploadRoot = getUploadRoot();
+    const fullPath = path.resolve(process.cwd(), 'public', sanitizedPath);
+
+    // 只允许访问 upload 目录内的文件
+    if (!isPathWithin(uploadRoot, fullPath)) {
+      return { exists: false };
+    }
+
     const stats = await fs.stat(fullPath);
     return {
       exists: true,

@@ -1,16 +1,23 @@
 /**
  * 我的评价页面 (My Reviews Page)
- * 
- * 显示用户已提交的评价和待评价订单
+ *
+ * 显示全部评价、用户已提交的评价和待评价订单
  * 设计风格：活力橙 + 玻璃拟态 + 呼吸感设计
  */
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { MessageSquare, Clock, Star, ChevronRight, Sparkles } from 'lucide-react';
-import { getUserReviews, getPendingReviewOrders, OrderReview, PendingReviewOrder } from '@/services/reviewService';
+import { MessageSquare, Clock, Star, ChevronRight, Sparkles, Users, SlidersHorizontal } from 'lucide-react';
+import {
+  getUserReviews,
+  getPendingReviewOrders,
+  getPublicReviews,
+  OrderReview,
+  PendingReviewOrder,
+  PublicReviewsResponse,
+} from '@/services/reviewService';
 import ReviewCard from '@/components/ReviewCard';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
@@ -20,7 +27,8 @@ import { formatDate } from '@/lib/utils';
 import PageHeader from '@/components/layout/PageHeader';
 import SectionLoading from '@/components/loading/SectionLoading';
 
-type TabType = 'submitted' | 'pending';
+type TabType = 'all' | 'submitted' | 'pending';
+type SortType = 'latest' | 'rating' | 'likes';
 
 export default function MyReviewsPage() {
   const router = useRouter();
@@ -28,8 +36,19 @@ export default function MyReviewsPage() {
   const [pendingOrders, setPendingOrders] = useState<PendingReviewOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<TabType>('submitted');
+  const [activeTab, setActiveTab] = useState<TabType>('all');
   const [isVisible, setIsVisible] = useState(false);
+
+  // 全部评价状态
+  const [publicReviews, setPublicReviews] = useState<OrderReview[]>([]);
+  const [publicLoading, setPublicLoading] = useState(false);
+  const [publicSummary, setPublicSummary] = useState<{ total: number; byRating: Record<number, number> }>({
+    total: 0,
+    byRating: {},
+  });
+  const [publicPagination, setPublicPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  const [sortBy, setSortBy] = useState<SortType>('latest');
+  const [filterRating, setFilterRating] = useState<number | undefined>(undefined);
 
   // 页面进入动画
   useEffect(() => {
@@ -39,16 +58,13 @@ export default function MyReviewsPage() {
     }
   }, [loading]);
 
-  // 加载数据
-  const loadData = async () => {
+  // 加载我的评价数据
+  const loadMyData = async () => {
     setLoading(true);
     setError('');
 
     try {
-      const [reviewsList, pendingList] = await Promise.all([
-        getUserReviews(),
-        getPendingReviewOrders(),
-      ]);
+      const [reviewsList, pendingList] = await Promise.all([getUserReviews(), getPendingReviewOrders()]);
       setReviews(Array.isArray(reviewsList) ? reviewsList : []);
       setPendingOrders(Array.isArray(pendingList) ? pendingList : []);
     } catch (err: unknown) {
@@ -61,29 +77,85 @@ export default function MyReviewsPage() {
     }
   };
 
-  useEffect(() => {
-    loadData();
+  // 加载全部评价
+  // NOTE: 参数都显式传递，不依赖闭包中的 sortBy
+  const loadPublicReviews = useCallback(async (page = 1, sort: SortType = 'latest', rating?: number) => {
+    setPublicLoading(true);
+    try {
+      const result: PublicReviewsResponse = await getPublicReviews({
+        page,
+        limit: 10,
+        sort,
+        rating,
+      });
+      setPublicReviews(result.reviews);
+      setPublicSummary(result.summary);
+      setPublicPagination(result.pagination);
+    } catch (err) {
+      console.error('Failed to load public reviews:', err);
+    } finally {
+      setPublicLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadMyData();
+    loadPublicReviews(1, 'latest', undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 切换排序
+  const handleSortChange = (newSort: SortType) => {
+    setSortBy(newSort);
+    loadPublicReviews(1, newSort, filterRating);
+  };
+
+  // 切换筛选
+  const handleFilterChange = (rating?: number) => {
+    setFilterRating(rating);
+    loadPublicReviews(1, sortBy, rating);
+  };
+
+  // 加载更多
+  const loadMore = () => {
+    if (publicPagination.page < publicPagination.totalPages) {
+      loadPublicReviews(publicPagination.page + 1, sortBy, filterRating);
+    }
+  };
+
+  // 点赞回调
+  const handleLikeChange = (reviewId: string, liked: boolean, likesCount: number) => {
+    setPublicReviews((prev) =>
+      prev.map((r) => (r.id === reviewId ? { ...r, isLiked: liked, likesCount } : r))
+    );
+  };
 
   // 标签选项
   const tabFilters: { value: TabType; label: string; icon: React.ReactNode; count?: number }[] = [
+    { value: 'all', label: '全部评价', icon: <Users className="w-4 h-4" />, count: publicSummary.total },
     { value: 'submitted', label: '已提交', icon: <MessageSquare className="w-4 h-4" />, count: reviews.length },
     { value: 'pending', label: '待评价', icon: <Clock className="w-4 h-4" />, count: pendingOrders.length },
   ];
 
+  // 排序选项
+  const sortOptions: { value: SortType; label: string }[] = [
+    { value: 'latest', label: '最新' },
+    { value: 'rating', label: '评分最高' },
+    { value: 'likes', label: '最多点赞' },
+  ];
+
   return (
     <div className="min-h-screen bg-ink">
-      <PageHeader
-        title="我的评价"
-        subtitle="查看您的服务评价记录"
-      />
+      <PageHeader title="我的评价" subtitle="查看您的服务评价记录" />
 
       {/* 内容区 */}
-      <div className={`
+      <div
+        className={`
         max-w-2xl mx-auto p-4 space-y-5
         transition-all duration-700 ease-out
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
-      `}>
+      `}
+      >
         {/* 现代分段式标签栏 - Segmented Control Tabs */}
         <div className="bg-ink-surface rounded-xl p-1.5 shadow-sm border border-border-subtle">
           <div className="flex gap-1">
@@ -91,17 +163,19 @@ export default function MyReviewsPage() {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 flex items-center justify-center gap-2 ${activeTab === tab.value
-                  ? 'bg-accent-soft text-accent shadow-sm'
-                  : 'text-text-tertiary hover:text-text-secondary hover:bg-ink'
-                  }`}
+                className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                  activeTab === tab.value
+                    ? 'bg-accent-soft text-accent shadow-sm'
+                    : 'text-text-tertiary hover:text-text-secondary hover:bg-ink'
+                }`}
               >
                 {tab.icon}
-                <span>{tab.label}</span>
-                <span className={`px-1.5 py-0.5 rounded-full text-xs ${activeTab === tab.value
-                  ? 'bg-accent/20 text-accent'
-                  : 'bg-ink text-text-tertiary'
-                  }`}>
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span
+                  className={`px-1.5 py-0.5 rounded-full text-xs ${
+                    activeTab === tab.value ? 'bg-accent/20 text-accent' : 'bg-ink text-text-tertiary'
+                  }`}
+                >
                   {tab.count}
                 </span>
               </button>
@@ -109,16 +183,106 @@ export default function MyReviewsPage() {
           </div>
         </div>
 
+        {/* 全部评价 Tab */}
+        {activeTab === 'all' && (
+          <>
+            {/* 排序和筛选 */}
+            <div className="space-y-3">
+              {/* 排序 */}
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-text-tertiary" />
+                <span className="text-sm text-text-secondary">排序:</span>
+                <div className="flex gap-1.5">
+                  {sortOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => handleSortChange(opt.value)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        sortBy === opt.value
+                          ? 'bg-accent text-white'
+                          : 'bg-white text-text-secondary hover:bg-ink-surface'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 筛选 */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Star className="w-4 h-4 text-text-tertiary" />
+                <span className="text-sm text-text-secondary">筛选:</span>
+                <button
+                  onClick={() => handleFilterChange(undefined)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    !filterRating
+                      ? 'bg-accent text-white'
+                      : 'bg-white text-text-secondary hover:bg-ink-surface'
+                  }`}
+                >
+                  全部
+                </button>
+                {[5, 4, 3, 2, 1].map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => handleFilterChange(r)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      filterRating === r
+                        ? 'bg-accent text-white'
+                        : 'bg-white text-text-secondary hover:bg-ink-surface'
+                    }`}
+                  >
+                    {r}星 ({publicSummary.byRating[r] || 0})
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 评价列表 */}
+            {publicLoading && publicReviews.length === 0 ? (
+              <SectionLoading label="加载评价..." minHeightClassName="min-h-[240px]" />
+            ) : publicReviews.length > 0 ? (
+              <div className="space-y-4">
+                {publicReviews.map((review, index) => (
+                  <div
+                    key={review.id}
+                    className="animate-fade-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <ReviewCard
+                      review={review}
+                      showLikeButton
+                      onLikeChange={handleLikeChange}
+                    />
+                  </div>
+                ))}
+
+                {/* 加载更多 */}
+                {publicPagination.page < publicPagination.totalPages && (
+                  <div className="text-center pt-2">
+                    <Button variant="secondary" onClick={loadMore} loading={publicLoading}>
+                      加载更多
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <EmptyState type="no-reviews" title="暂无评价" description="还没有用户发布评价" />
+            )}
+          </>
+        )}
+
         {/* 加载状态 */}
-        {loading && (
+        {loading && activeTab !== 'all' && (
           <SectionLoading label="加载评价..." minHeightClassName="min-h-[240px]" />
         )}
 
         {/* 错误提示 */}
-        {error && !loading && (
+        {error && !loading && activeTab !== 'all' && (
           <Card className="p-6 text-center bg-white border border-border-subtle shadow-sm">
             <p className="text-danger mb-4">{error}</p>
-            <Button onClick={loadData}>重试</Button>
+            <Button onClick={loadMyData}>重试</Button>
           </Card>
         )}
 
@@ -154,11 +318,7 @@ export default function MyReviewsPage() {
             {pendingOrders.length > 0 ? (
               <div className="space-y-4">
                 {pendingOrders.map((order, index) => (
-                  <PendingReviewTicket
-                    key={order.id}
-                    order={order}
-                    index={index}
-                  />
+                  <PendingReviewTicket key={order.id} order={order} index={index} />
                 ))}
               </div>
             ) : (
