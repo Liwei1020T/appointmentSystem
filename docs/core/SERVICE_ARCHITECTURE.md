@@ -1,8 +1,8 @@
 # Service Architecture
 
 **String Service Platform — Service Layer Documentation**
-**Version:** 1.0
-**Last Updated:** 2026-01-27
+**Version:** 2.0
+**Last Updated:** 2026-02-01
 
 ---
 
@@ -14,27 +14,51 @@ The service layer provides a clean abstraction between API routes and the databa
 
 ## Architecture
 
+本项目采用 **双层服务架构**，将客户端 API 调用与服务端业务逻辑清晰分离：
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      API Routes                              │
-│              (src/app/api/**/route.ts)                       │
+│                    React Components                          │
+│                  (src/features/**/*.tsx)                     │
+│                  (src/components/**/*.tsx)                   │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      Services                                │
-│                  (src/services/*.ts)                         │
+│              Client Services (API Client Layer)              │
+│                    (src/services/*.ts)                       │
+│                                                              │
+│  职责：封装 HTTP 请求，调用 API 路由                          │
+│  运行环境：浏览器                                             │
 │                                                              │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-│  │   Order     │  │   Payment   │  │   User      │         │
-│  │   Service   │  │   Service   │  │   Service   │         │
+│  │ orderService│  │paymentService│ │profileService│         │
+│  │ fetch(API)  │  │  fetch(API) │  │  fetch(API) │         │
 │  └─────────────┘  └─────────────┘  └─────────────┘         │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                         HTTP Request
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      API Routes                              │
+│              (src/app/api/**/route.ts)                       │
+│                                                              │
+│  职责：请求验证、认证检查、调用服务端服务                       │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│            Server Services (Business Logic Layer)            │
+│               (src/server/services/*.ts)                     │
+│                                                              │
+│  职责：业务逻辑、数据库操作、事务处理                          │
+│  运行环境：服务器 (Node.js)                                   │
 │                                                              │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-│  │   Voucher   │  │   Points    │  │  Inventory  │         │
-│  │   Service   │  │   Service   │  │   Service   │         │
+│  │order.service│  │payment.service│ │profile.service│       │
+│  │  Prisma     │  │   Prisma    │  │   Prisma    │         │
 │  └─────────────┘  └─────────────┘  └─────────────┘         │
-│                                                              │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -57,59 +81,182 @@ The service layer provides a clean abstraction between API routes and the databa
 
 ---
 
+## 双层服务架构说明
+
+### 为什么采用双层架构？
+
+| 层级 | 目录 | 职责 | 运行环境 |
+|------|------|------|----------|
+| **Client Services** | `src/services/` | 封装 HTTP 请求 | 浏览器 |
+| **Server Services** | `src/server/services/` | 业务逻辑 + 数据库操作 | Node.js 服务器 |
+
+### 请求流程示例
+
+以获取订单详情为例：
+
+```
+1. [浏览器] OrderDetailPage 组件调用 getOrderById(orderId)
+                    ↓
+2. [浏览器] src/services/orderService.ts
+           → fetch('/api/orders/' + orderId)
+                    ↓
+3. [服务器] src/app/api/orders/[id]/route.ts
+           → 验证认证 → 调用 getOrderById(userId, orderId)
+                    ↓
+4. [服务器] src/server/services/order.service.ts
+           → prisma.order.findUnique({ where: { id: orderId } })
+                    ↓
+5. [数据库] PostgreSQL 返回订单数据
+```
+
+### 代码示例对比
+
+**Client Service (src/services/orderService.ts)**
+```typescript
+// 封装 HTTP 请求，运行在浏览器
+export async function getOrderById(orderId: string): Promise<Order> {
+  return apiRequest<Order>(`/api/orders/${orderId}`);
+}
+```
+
+**Server Service (src/server/services/order.service.ts)**
+```typescript
+// 业务逻辑 + 数据库操作，运行在服务器
+export async function getOrderById(userId: string, orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId, userId },
+    include: orderDetailInclude,
+  });
+
+  if (!order) {
+    throw new ApiError('ORDER_NOT_FOUND', 404, '订单不存在');
+  }
+
+  return order;
+}
+```
+
+### 命名约定
+
+| 层级 | 文件命名 | 示例 |
+|------|----------|------|
+| Client Services | camelCase | `orderService.ts`, `paymentService.ts` |
+| Server Services | kebab-case + `.service` | `order.service.ts`, `payment.service.ts` |
+
+### 使用规则
+
+1. **React 组件** 只能调用 `src/services/` 中的客户端服务
+2. **API 路由** 只能调用 `src/server/services/` 中的服务端服务
+3. **服务端服务** 可以相互调用，但应避免循环依赖
+4. **客户端服务** 不能直接导入 Prisma 或其他服务端模块
+
+---
+
 ## Service Catalog
 
-### Core Business Services
+### Client Services (src/services/)
+
+> 运行在浏览器，封装 HTTP 请求
+
+#### 核心业务服务
 
 | Service | File | Description |
 |---------|------|-------------|
-| `orderService` | orderService.ts | Order creation, retrieval, cancellation |
-| `paymentService` | paymentService.ts | Payment processing, verification |
-| `inventoryService` | inventoryService.ts | String inventory management |
-| `packageService` | packageService.ts | Package purchase and usage |
-| `voucherService` | voucherService.ts | Voucher redemption and application |
-| `pointsService` | pointsService.ts | Points earning and redemption |
-| `reviewService` | reviewService.ts | Review submission and display |
-| `referralService` | referralService.ts | Referral tracking and rewards |
+| `orderService` | orderService.ts | 订单 API 调用封装 |
+| `paymentService` | paymentService.ts | 支付 API 调用封装 |
+| `packageService` | packageService.ts | 套餐 API 调用封装 |
+| `voucherService` | voucherService.ts | 优惠券 API 调用封装 |
+| `pointsService` | pointsService.ts | 积分 API 调用封装 |
+| `reviewService` | reviewService.ts | 评价 API 调用封装 |
+| `referralService` | referralService.ts | 推荐 API 调用封装 |
+| `inventoryService` | inventoryService.ts | 库存 API 调用封装 |
 
-### User Services
-
-| Service | File | Description |
-|---------|------|-------------|
-| `authService` | authService.ts | User authentication |
-| `profileService` | profileService.ts | Profile management |
-| `notificationService` | notificationService.ts | Notification delivery |
-
-### Admin Services
+#### 用户服务
 
 | Service | File | Description |
 |---------|------|-------------|
-| `adminOrderService` | adminOrderService.ts | Admin order management |
-| `adminUserService` | adminUserService.ts | User management |
-| `adminPackageService` | adminPackageService.ts | Package CRUD |
-| `adminVoucherService` | adminVoucherService.ts | Voucher CRUD |
-| `adminStatsService` | adminStatsService.ts | Dashboard statistics |
-| `adminReportsService` | adminReportsService.ts | Report generation |
-| `adminAuthService` | adminAuthService.ts | Admin authentication |
+| `authService` | authService.ts | 用户认证 |
+| `profileService` | profileService.ts | 个人资料 |
+| `notificationService` | notificationService.ts | 通知服务 |
 
-### Support Services
+#### 管理端服务
 
 | Service | File | Description |
 |---------|------|-------------|
-| `imageUploadService` | imageUploadService.ts | Image upload handling |
-| `orderPhotosService` | orderPhotosService.ts | Order photo management |
-| `tngPaymentService` | tngPaymentService.ts | TNG-specific payment |
-| `completeOrderService` | completeOrderService.ts | Order completion logic |
-| `homeService` | homeService.ts | Homepage data |
-| `webPushService` | webPushService.ts | Push notifications |
-| `realtimeService` | realtimeService.ts | Real-time updates |
+| `adminOrderService` | adminOrderService.ts | 管理端订单 API |
+| `adminUserService` | adminUserService.ts | 用户管理 API |
+| `adminPackageService` | adminPackageService.ts | 套餐管理 API |
+| `adminVoucherService` | adminVoucherService.ts | 优惠券管理 API |
+| `adminStatsService` | adminStatsService.ts | 统计数据 API |
+| `adminReportsService` | adminReportsService.ts | 报表 API |
+| `adminAuthService` | adminAuthService.ts | 管理员认证 |
 
-### Utility Services
+#### 支持服务
 
 | Service | File | Description |
 |---------|------|-------------|
-| `apiClient` | apiClient.ts | HTTP client wrapper |
-| `requestCache` | requestCache.ts | Request deduplication |
+| `imageUploadService` | imageUploadService.ts | 图片上传 |
+| `orderPhotosService` | orderPhotosService.ts | 订单照片 |
+| `tngPaymentService` | tngPaymentService.ts | TNG 支付 |
+| `completeOrderService` | completeOrderService.ts | 订单完成 |
+| `homeService` | homeService.ts | 首页数据 |
+| `webPushService` | webPushService.ts | 推送通知 |
+| `realtimeService` | realtimeService.ts | 实时更新 |
+
+#### 工具服务
+
+| Service | File | Description |
+|---------|------|-------------|
+| `apiClient` | apiClient.ts | HTTP 客户端封装 |
+| `requestCache` | requestCache.ts | 请求去重缓存 |
+
+---
+
+### Server Services (src/server/services/)
+
+> 运行在服务器，包含业务逻辑和数据库操作
+
+#### 核心业务服务
+
+| Service | File | Description |
+|---------|------|-------------|
+| `order.service` | order.service.ts | 订单创建、查询、取消、完成 |
+| `payment.service` | payment.service.ts | 支付处理、验证、退款 |
+| `package.service` | package.service.ts | 套餐购买、使用、查询 |
+| `voucher.service` | voucher.service.ts | 优惠券兑换、应用、恢复 |
+| `points.service` | points.service.ts | 积分发放、扣减、计算 |
+| `review.service` | review.service.ts | 评价创建、查询、统计 |
+| `referral.service` | referral.service.ts | 推荐追踪、奖励发放 |
+| `inventory.service` | inventory.service.ts | 库存管理、扣减、日志 |
+| `membership.service` | membership.service.ts | 会员等级计算、升级 |
+
+#### 订单相关服务
+
+| Service | File | Description |
+|---------|------|-------------|
+| `order-automation.service` | order-automation.service.ts | 订单自动化流程 |
+| `order-eta.service` | order-eta.service.ts | 预计完成时间计算 |
+| `order-photos.service` | order-photos.service.ts | 订单照片处理 |
+| `order-status.service` | order-status.service.ts | 订单状态变更 |
+
+#### 管理端服务
+
+| Service | File | Description |
+|---------|------|-------------|
+| `admin-order.service` | admin-order.service.ts | 管理端订单操作 |
+| `admin-package.service` | admin-package.service.ts | 套餐 CRUD |
+
+#### 其他服务
+
+| Service | File | Description |
+|---------|------|-------------|
+| `analytics.service` | analytics.service.ts | 数据分析 |
+| `notification.service` | notification.service.ts | 通知发送 |
+| `profile.service` | profile.service.ts | 用户资料 |
+| `promotion.service` | promotion.service.ts | 促销活动 |
+| `restock.service` | restock.service.ts | 补货管理 |
+| `stats.service` | stats.service.ts | 统计计算 |
+| `welcome.service` | welcome.service.ts | 首单欢迎逻辑 |
 
 ---
 
