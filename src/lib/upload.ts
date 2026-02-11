@@ -46,6 +46,15 @@ const IMAGE_MAGIC_VALIDATORS: Record<string, (buffer: Buffer) => boolean> = {
     buffer[11] === 0x50,
 };
 
+function normalizePathForComparison(pathValue: string) {
+  return pathValue
+    .replace(/\\+/g, '/')
+    .replace(/^[\\/]+/, '')
+    .replace(/[\\/]+$/, '');
+}
+
+const NORMALIZED_UPLOAD_DIR = normalizePathForComparison(UPLOAD_DIR);
+
 function getUploadRoot() {
   return path.resolve(process.cwd(), 'public', UPLOAD_DIR);
 }
@@ -53,6 +62,28 @@ function getUploadRoot() {
 function isPathWithin(basePath: string, targetPath: string) {
   const normalizedBase = basePath.endsWith(path.sep) ? basePath : `${basePath}${path.sep}`;
   return targetPath === basePath || targetPath.startsWith(normalizedBase);
+}
+
+export function normalizeStoredUploadPath(rawPath: string) {
+  const sanitizedPath = normalizePathForComparison(rawPath);
+
+  if (!sanitizedPath) {
+    return '';
+  }
+
+  if (!NORMALIZED_UPLOAD_DIR) {
+    return sanitizedPath;
+  }
+
+  if (sanitizedPath === NORMALIZED_UPLOAD_DIR) {
+    return '';
+  }
+
+  if (sanitizedPath.startsWith(`${NORMALIZED_UPLOAD_DIR}/`)) {
+    return sanitizedPath.slice(NORMALIZED_UPLOAD_DIR.length + 1);
+  }
+
+  return sanitizedPath;
 }
 
 export function validateImageMagicBytes(buffer: Buffer, mimeType: string) {
@@ -95,7 +126,7 @@ export async function saveFile(
   // 生成文件名
   const ext = mimeType.split('/')[1] || 'jpg';
   const filename = `${randomUUID()}.${ext}`;
-  const safeFolder = folder.replace(/^[\\/]+/, '').replace(/\\+/g, '/');
+  const safeFolder = normalizePathForComparison(folder);
   const uploadRoot = getUploadRoot();
   const uploadPath = path.resolve(uploadRoot, safeFolder);
 
@@ -141,9 +172,13 @@ export async function saveFile(
  */
 export async function deleteFile(filePath: string): Promise<boolean> {
   try {
-    const sanitizedPath = filePath.replace(/^[\\/]+/, '');
+    const relativePath = normalizeStoredUploadPath(filePath);
+    if (!relativePath) {
+      throw new Error('Invalid delete path');
+    }
+
     const uploadRoot = getUploadRoot();
-    const fullPath = path.resolve(process.cwd(), 'public', sanitizedPath);
+    const fullPath = path.resolve(uploadRoot, relativePath);
 
     if (!isPathWithin(uploadRoot, fullPath)) {
       throw new Error('Invalid delete path');
@@ -162,10 +197,14 @@ export async function deleteFile(filePath: string): Promise<boolean> {
  */
 export async function getFileInfo(filePath: string) {
   try {
-    // 防止路径遍历攻击
-    const sanitizedPath = filePath.replace(/^[\\/]+/, '');
+    // 防止路径遍历攻击并将路径统一到 upload 根目录
+    const relativePath = normalizeStoredUploadPath(filePath);
+    if (!relativePath) {
+      return { exists: false };
+    }
+
     const uploadRoot = getUploadRoot();
-    const fullPath = path.resolve(process.cwd(), 'public', sanitizedPath);
+    const fullPath = path.resolve(uploadRoot, relativePath);
 
     // 只允许访问 upload 目录内的文件
     if (!isPathWithin(uploadRoot, fullPath)) {
