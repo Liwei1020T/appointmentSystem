@@ -9,17 +9,31 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['node_modules', '.next', 'dist', '.worktrees', '**/._*'], // Ignore macOS AppleDouble files.
+    exclude: [
+      'node_modules',
+      'dist',
+      '.next',
+      '.worktrees',
+      '**/.next/**',
+      '**/.worktrees/**',
+      '**/standalone/**',
+      '**/._*',
+    ], // Ignore build/worktree artifacts and macOS AppleDouble files.
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
+        '.worktrees/',
         '.next/',
+        '**/.worktrees/**',
+        '**/.next/**',
+        '**/standalone/**',
         'prisma/',
         '**/*.d.ts',
         '**/*.config.*',
         '**/types/**',
+        '**/._*',
       ],
     },
   },
