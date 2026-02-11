@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CreditCard, X, Smartphone, Banknote, CheckCircle } from 'lucide-react';
 import TngQRCodeDisplay from '@/components/TngQRCodeDisplay';
 import PaymentReceiptUploader from '@/components/PaymentReceiptUploader';
@@ -30,12 +30,18 @@ interface OrderPaymentSectionProps {
   onCancel?: () => void;
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export default function OrderPaymentSection({
   orderId,
   amount,
   paymentId: existingPaymentId,
   existingReceipt,
-  paymentStatus,
   onPaymentSuccess,
   onCancel,
 }: OrderPaymentSectionProps) {
@@ -54,13 +60,7 @@ export default function OrderPaymentSection({
     }
   }, [existingPaymentId, existingReceipt]);
 
-  useEffect(() => {
-    if (paymentMethod === 'tng' && !paymentId && !creatingPayment) {
-      createPaymentRecord();
-    }
-  }, [paymentMethod, paymentId, creatingPayment]);
-
-  const createPaymentRecord = async () => {
+  const createPaymentRecord = useCallback(async () => {
     if (paymentMethod !== 'tng') return;
     setCreatingPayment(true);
     setCreatePaymentError(null);
@@ -82,7 +82,13 @@ export default function OrderPaymentSection({
     } finally {
       setCreatingPayment(false);
     }
-  };
+  }, [amount, orderId, paymentMethod]);
+
+  useEffect(() => {
+    if (paymentMethod === 'tng' && !paymentId && !creatingPayment) {
+      createPaymentRecord();
+    }
+  }, [paymentMethod, paymentId, creatingPayment, createPaymentRecord]);
 
   const handleCashPayment = async () => {
     setProcessingCash(true);
@@ -101,9 +107,9 @@ export default function OrderPaymentSection({
       } else {
         window.location.reload();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ 现金支付错误:', error);
-      toast.error(error.message || '现金支付失败');
+      toast.error(getErrorMessage(error, '现金支付失败'));
     } finally {
       setProcessingCash(false);
     }

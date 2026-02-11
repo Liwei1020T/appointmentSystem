@@ -58,11 +58,60 @@ export interface OrderWithDetails
   createdAt: Date | string;
   updatedAt?: Date | string;
   paymentStatus?: string;
-  string?: any;
-  payments?: any[];
-  packageUsed?: any;
-  voucherUsed?: any;
-  items?: any[];
+  use_package?: boolean;
+  service_type?: ServiceType;
+  pickup_address?: string | null;
+  string?: {
+    id?: string;
+    brand?: string;
+    model?: string;
+    specification?: string | null;
+    gauge?: string | null;
+    color?: string | null;
+  } | null;
+  payments?: Array<{
+    id?: string;
+    status?: string;
+    payment_status?: string;
+    provider?: string;
+    payment_method?: string;
+    method?: string;
+    amount?: number | string;
+    createdAt?: Date | string | null;
+    created_at?: Date | string | null;
+    updatedAt?: Date | string | null;
+    updated_at?: Date | string | null;
+  }>;
+  packageUsed?: {
+    id?: string;
+    remaining?: number;
+    expiresAt?: Date | string | null;
+    expires_at?: Date | string | null;
+    package?: {
+      id?: string;
+      name?: string | null;
+    } | null;
+  } | null;
+  voucherUsed?: {
+    id?: string;
+    code?: string | null;
+    name?: string | null;
+    voucher?: {
+      id?: string;
+      name?: string | null;
+      code?: string | null;
+    } | null;
+  } | null;
+  items?: Array<{
+    id?: string;
+    stringId?: string;
+    tensionVertical?: number | null;
+    tensionHorizontal?: number | null;
+    racketBrand?: string | null;
+    racketModel?: string | null;
+    racketPhoto?: string | null;
+    notes?: string | null;
+  }>;
 }
 
 /**

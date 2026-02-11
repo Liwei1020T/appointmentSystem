@@ -4,6 +4,7 @@ import { parseJson } from '@/lib/validation';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { createPayment } from '@/server/services/payment.service';
 import { handleApiError } from '@/lib/api/handleApiError';
+import { financialLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +23,13 @@ const bodySchema = z
 export async function POST(request: Request) {
   try {
     const user = await requireAuth();
+    const clientIp = getClientIp(request);
+    const rateLimitKey = `payment:create:${user.id}:${clientIp}`;
+    const rateLimitResult = financialLimiter.check(rateLimitKey);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult.resetAt);
+    }
+
     const parsed = await parseJson(request, bodySchema);
 
     if (!parsed.ok) {

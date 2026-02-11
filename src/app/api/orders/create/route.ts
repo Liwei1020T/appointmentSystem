@@ -8,6 +8,7 @@ import { requireAuth } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { createOrderWithPackage } from '@/server/services/order.service';
 import { handleApiError } from '@/lib/api/handleApiError';
+import { financialLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,6 +35,13 @@ const createOrderSchema = z
 export async function POST(request: Request) {
   try {
     const user = await requireAuth();
+    const clientIp = getClientIp(request);
+    const rateLimitKey = `order:create:${user.id}:${clientIp}`;
+    const rateLimitResult = financialLimiter.check(rateLimitKey);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult.resetAt);
+    }
+
     let body: unknown;
 
     try {

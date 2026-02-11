@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
+import { AppError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 
 export type InventoryPayload = {
@@ -70,12 +70,12 @@ export async function listAdminInventory() {
  */
 export async function getInventoryItem(id: string) {
   if (!isValidUUID(id)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid inventory id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid inventory id');
   }
 
   const item = await prisma.stringInventory.findUnique({ where: { id } });
   if (!item) {
-    throw new ApiError('NOT_FOUND', 404, 'String not found');
+    throw new AppError('NOT_FOUND', 404, 'String not found');
   }
 
   return item;
@@ -88,11 +88,11 @@ export async function createInventoryItem(admin: AdminSnapshot, payload: Invento
   const resolved = resolvePayload(payload);
 
   if (!resolved.model || !resolved.brand) {
-    throw new ApiError('BAD_REQUEST', 400, 'Model and brand are required');
+    throw new AppError('BAD_REQUEST', 400, 'Model and brand are required');
   }
 
   if (!resolved.costPrice || !resolved.sellingPrice) {
-    throw new ApiError('BAD_REQUEST', 400, 'Cost price and selling price are required');
+    throw new AppError('BAD_REQUEST', 400, 'Cost price and selling price are required');
   }
 
   const stockValue = resolved.stock ?? 0;
@@ -136,7 +136,7 @@ export async function createInventoryItem(admin: AdminSnapshot, payload: Invento
  */
 export async function updateInventoryItem(id: string, payload: InventoryPayload) {
   if (!isValidUUID(id)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid inventory id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid inventory id');
   }
 
   const resolved = resolvePayload(payload);
@@ -165,12 +165,12 @@ export async function updateInventoryItem(id: string, payload: InventoryPayload)
  */
 export async function deleteInventoryItem(id: string) {
   if (!isValidUUID(id)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid inventory id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid inventory id');
   }
 
   const orderCount = await prisma.order.count({ where: { stringId: id } });
   if (orderCount > 0) {
-    throw new ApiError('CONFLICT', 409, 'Inventory item has related orders');
+    throw new AppError('CONFLICT', 409, 'Inventory item has related orders');
   }
 
   await prisma.stockLog.deleteMany({ where: { stringId: id } });
@@ -189,21 +189,21 @@ export async function adjustInventoryStock(
   payload: { change: number; type?: string; reason?: string }
 ) {
   if (!isValidUUID(id)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid inventory id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid inventory id');
   }
 
   if (!Number.isFinite(payload.change) || payload.change === 0) {
-    throw new ApiError('BAD_REQUEST', 400, 'Change must be non-zero');
+    throw new AppError('BAD_REQUEST', 400, 'Change must be non-zero');
   }
 
   const string = await prisma.stringInventory.findUnique({ where: { id } });
   if (!string) {
-    throw new ApiError('NOT_FOUND', 404, 'Inventory item not found');
+    throw new AppError('NOT_FOUND', 404, 'Inventory item not found');
   }
 
   const newStock = string.stock + payload.change;
   if (newStock < 0) {
-    throw new ApiError('CONFLICT', 409, `Insufficient stock (${string.stock})`);
+    throw new AppError('CONFLICT', 409, `Insufficient stock (${string.stock})`);
   }
 
   return prisma.$transaction(async (tx) => {
@@ -223,7 +223,7 @@ export async function adjustInventoryStock(
 
     // 如果没有更新任何行，说明存在并发冲突
     if (updated.count === 0) {
-      throw new ApiError('CONFLICT', 409, 'Stock was modified by another operation. Please retry.');
+      throw new AppError('CONFLICT', 409, 'Stock was modified by another operation. Please retry.');
     }
 
     // 获取更新后的记录

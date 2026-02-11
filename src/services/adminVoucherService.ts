@@ -60,38 +60,94 @@ export interface Voucher {
   max_redemptions_per_user?: number;
 }
 
-export function normalizeVoucher(raw: any): Voucher {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return fallback;
+}
+
+function toOptionalNumber(value: unknown): number | undefined {
+  if (value === null || value === undefined) return undefined;
+  const parsed = toNumber(value, Number.NaN);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function toNullableNumber(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  const parsed = toNumber(value, Number.NaN);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function toBoolean(value: unknown, fallback = false): boolean {
+  return typeof value === 'boolean' ? value : fallback;
+}
+
+function toDate(value: unknown): Date | undefined {
+  if (value instanceof Date) return value;
+  if (typeof value === 'string' || typeof value === 'number') {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+  return undefined;
+}
+
+export function normalizeVoucher(raw: unknown): Voucher {
   // Normalize API voucher payload to expose both camelCase and snake_case fields for UI compatibility
-  if (!raw) return raw;
-  const validFrom = raw.validFrom || raw.valid_from;
-  const validUntil = raw.validUntil || raw.valid_until;
-  const minPurchaseValue = raw.minPurchase ?? raw.min_purchase ?? 0;
-  const pointsCostValue = raw.pointsCost ?? raw.points_cost ?? 0;
-  const maxUsesValue = raw.maxUses ?? raw.usage_limit ?? null;
-  const isAutoIssue = raw.isAutoIssue ?? raw.is_auto_issue ?? false;
-  const isFirstOrderOnly = raw.isFirstOrderOnly ?? raw.is_first_order_only ?? false;
-  const validityDays = raw.validityDays ?? raw.validity_days ?? null;
+  const source = isRecord(raw) ? raw : {};
+  const validFrom = source.validFrom ?? source.valid_from;
+  const validUntil = source.validUntil ?? source.valid_until;
+  const minPurchaseValue = source.minPurchase ?? source.min_purchase ?? 0;
+  const pointsCostValue = source.pointsCost ?? source.points_cost ?? 0;
+  const maxUsesValue = source.maxUses ?? source.usage_limit ?? null;
+  const isAutoIssue = toBoolean(source.isAutoIssue ?? source.is_auto_issue, false);
+  const isFirstOrderOnly = toBoolean(source.isFirstOrderOnly ?? source.is_first_order_only, false);
+  const validityDays = toNullableNumber(source.validityDays ?? source.validity_days);
+  const rawCode = typeof source.code === 'string' ? source.code : '';
+  const createdAt = toDate(source.createdAt ?? source.created_at);
+  const updatedAt = toDate(source.updatedAt ?? source.updated_at);
+  const maxRedemptionsPerUser = toNumber(
+    source.maxRedemptionsPerUser ?? source.max_redemptions_per_user ?? 1,
+    1
+  );
+
+  const validFromValue =
+    validFrom instanceof Date || typeof validFrom === 'string' ? validFrom : undefined;
+  const validUntilValue =
+    validUntil instanceof Date || typeof validUntil === 'string' ? validUntil : undefined;
 
   return {
-    ...raw,
-    id: raw.id,
-    code: raw.code?.toUpperCase?.() || raw.code,
-    name: raw.name,
-    type: raw.type,
-    value: Number(raw.value ?? 0),
+    ...source,
+    id: typeof source.id === 'string' ? source.id : '',
+    code: rawCode.toUpperCase(),
+    name: typeof source.name === 'string' ? source.name : '',
+    type: typeof source.type === 'string' ? source.type : 'fixed_amount',
+    value: toNumber(source.value, 0),
     minPurchase: Number(minPurchaseValue ?? 0),
     min_purchase: Number(minPurchaseValue ?? 0),
-    maxUses: maxUsesValue,
-    usage_limit: maxUsesValue,
+    maxUses: toOptionalNumber(maxUsesValue),
+    usage_limit: toOptionalNumber(maxUsesValue),
     pointsCost: Number(pointsCostValue ?? 0),
     points_cost: Number(pointsCostValue ?? 0),
-    validFrom,
-    valid_from: validFrom,
-    validUntil,
-    valid_until: validUntil,
-    active: raw.active ?? raw.isActive ?? raw.is_active,
-    maxRedemptionsPerUser: raw.maxRedemptionsPerUser ?? raw.max_redemptions_per_user ?? 1,
-    max_redemptions_per_user: raw.maxRedemptionsPerUser ?? raw.max_redemptions_per_user ?? 1,
+    validFrom: validFromValue,
+    valid_from: validFromValue,
+    validUntil: validUntilValue,
+    valid_until: validUntilValue,
+    active: toBoolean(source.active ?? source.isActive ?? source.is_active, true),
+    maxRedemptionsPerUser,
+    max_redemptions_per_user: maxRedemptionsPerUser,
     isAutoIssue,
     is_auto_issue: isAutoIssue,
     isFirstOrderOnly,
@@ -99,10 +155,10 @@ export function normalizeVoucher(raw: any): Voucher {
     validityDays,
     validity_days: validityDays,
     // 时间字段双向映射
-    createdAt: raw.createdAt || raw.created_at,
-    created_at: raw.createdAt || raw.created_at,
-    updatedAt: raw.updatedAt || raw.updated_at,
-    updated_at: raw.updatedAt || raw.updated_at,
+    createdAt,
+    created_at: createdAt,
+    updatedAt,
+    updated_at: updatedAt,
   };
 }
 
@@ -130,7 +186,7 @@ export async function getAllVouchers(filters?: GetVouchersFilter): Promise<{ vou
         return { vouchers: [], data: [], error: getApiErrorMessage(result, 'Failed to fetch vouchers') };
       }
       const vouchers = Array.isArray(result?.data)
-        ? (result.data as any[]).map(normalizeVoucher)
+        ? (result.data as unknown[]).map((item) => normalizeVoucher(item))
         : [];
       return { vouchers, data: vouchers, error: null };
     } catch (error) {

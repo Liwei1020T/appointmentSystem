@@ -145,7 +145,7 @@ export async function validateVoucher(code: string): Promise<boolean> {
     return vouchers.some(
       (v) => v.voucher.code.toUpperCase() === code.toUpperCase()
     );
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }

@@ -15,6 +15,7 @@ import { Check, X, Image as ImageIcon, AlertCircle, ExternalLink } from 'lucide-
 import { toast } from 'sonner';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { AppImage } from '@/components/AppImage';
 
 interface PaymentReceiptVerifierProps {
   receiptUrl?: string | null;
@@ -26,12 +27,19 @@ interface PaymentReceiptVerifierProps {
   onVerify: (approved: boolean, notes?: string) => Promise<void>;
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export default function PaymentReceiptVerifier({
   receiptUrl,
   paymentStatus,
-  paymentId,
+  paymentId: _paymentId,
   verifiedAt,
-  verifiedBy,
+  verifiedBy: _verifiedBy,
   adminNotes,
   onVerify,
 }: PaymentReceiptVerifierProps) {
@@ -73,8 +81,8 @@ export default function PaymentReceiptVerifier({
           await onVerify(approved, notes.trim() || undefined);
           toast.success(`收据已${action}`);
           setNotes('');
-        } catch (error: any) {
-          toast.error(`${action}失败：` + error.message);
+        } catch (error: unknown) {
+          toast.error(`${action}失败：${getErrorMessage(error, '请稍后重试')}`);
         } finally {
           setVerifying(false);
           setConfirmDialogState(prev => ({ ...prev, isOpen: false }));
@@ -114,9 +122,11 @@ export default function PaymentReceiptVerifier({
         </div>
 
         <div className="relative">
-          <img
+          <AppImage
             src={receiptUrl}
             alt="Payment Receipt"
+            width={1200}
+            height={800}
             className="w-full cursor-pointer rounded-lg border border-border-subtle object-contain"
             style={{ maxHeight: '400px' }}
             onClick={() => setShowImageModal(true)}
@@ -223,9 +233,11 @@ export default function PaymentReceiptVerifier({
           onClick={() => setShowImageModal(false)}
         >
           <div className="relative max-h-[90vh] max-w-[90vw]">
-            <img
+            <AppImage
               src={receiptUrl}
               alt="Payment Receipt"
+              width={1600}
+              height={1000}
               className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
               onClick={(e) => e.stopPropagation()}
             />

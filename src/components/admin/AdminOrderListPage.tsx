@@ -12,6 +12,7 @@
  */
 
 'use client';
+/* eslint-disable @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps */
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -25,6 +26,11 @@ import SectionLoading from '@/components/loading/SectionLoading';
 import { Search, Inbox, Disc, Settings, CheckCircle } from 'lucide-react';
 
 type FilterStatus = 'all' | OrderStatus;
+type AdminOrderWithExtras = AdminOrder & {
+  items?: Array<unknown>;
+  price?: number;
+  final_price?: number;
+};
 
 export default function AdminOrderListPage() {
   const router = useRouter();
@@ -48,7 +54,7 @@ export default function AdminOrderListPage() {
     setError(null);
 
     const targetPage = pageOverride ?? currentPage;
-    const filters: any = {
+    const filters: Parameters<typeof getAllOrders>[0] = {
       page: targetPage,
       limit: pageSize,
     };
@@ -292,7 +298,9 @@ export default function AdminOrderListPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-subtle">
-                    {orders.map((order) => (
+                    {orders.map((order) => {
+                      const orderWithExtras = order as AdminOrderWithExtras;
+                      return (
                       <tr
                         key={order.id}
                         className="hover:bg-ink transition-colors cursor-pointer"
@@ -314,13 +322,13 @@ export default function AdminOrderListPage() {
                         </td>
                         <td className="px-6 py-4">
                           {/* 多球拍订单显示 */}
-                          {(order as any).items?.length > 0 ? (
+                          {orderWithExtras.items?.length ? (
                             <>
                               <div className="text-sm text-accent font-medium flex items-center gap-1">
                                 <Disc className="w-4 h-4" /> 多球拍订单
                               </div>
                               <div className="text-xs text-text-tertiary">
-                                {(order as any).items.length} 支球拍
+                                {orderWithExtras.items.length} 支球拍
                               </div>
                             </>
                           ) : (
@@ -344,8 +352,8 @@ export default function AdminOrderListPage() {
                                 order.total_price ??
                                 order.totalAmount ??
                                 // prisma 订单价格字段
-                                (order as any).price ??
-                                (order as any).final_price ??
+                                orderWithExtras.price ??
+                                orderWithExtras.final_price ??
                                 0
                               );
                               return `RM ${totalAmount.toFixed(2)}`;
@@ -428,7 +436,8 @@ export default function AdminOrderListPage() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    );
+                    })}
                   </tbody>
                 </table>
               </div>

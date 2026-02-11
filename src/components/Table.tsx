@@ -2,7 +2,7 @@ import React from 'react';
 import EmptyState from '@/components/EmptyState';
 
 export interface Column<T> {
-  key: string;
+  key: keyof T;
   header: string;
   render?: (item: T) => React.ReactNode;
   align?: 'left' | 'center' | 'right';
@@ -36,7 +36,7 @@ export function Table<T>({
           <tr className="border-b border-border-subtle">
             {columns.map(col => (
               <th 
-                key={col.key} 
+                key={String(col.key)} 
                 className={`
                   px-4 py-3 text-sm font-semibold text-text-secondary
                   ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'}
@@ -67,13 +67,13 @@ export function Table<T>({
               >
                 {columns.map(col => (
                   <td 
-                    key={col.key} 
+                    key={String(col.key)} 
                     className={`
                       px-4 py-3 text-sm text-text-secondary
                       ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'}
                     `}
                   >
-                    {col.render ? col.render(item) : (item as any)[col.key]}
+                    {col.render ? col.render(item) : (item[col.key] as React.ReactNode)}
                   </td>
                 ))}
               </tr>

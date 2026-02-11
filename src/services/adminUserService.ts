@@ -24,10 +24,60 @@ export interface User {
   referred_by?: string;
   avatar?: string;
   avatar_url?: string;
-  createdAt: Date;
-  created_at?: Date;
-  updatedAt?: Date;
-  updated_at?: Date;
+  createdAt: Date | string;
+  created_at?: Date | string;
+  updatedAt?: Date | string;
+  updated_at?: Date | string;
+}
+
+interface UserListItemPayload {
+  id?: string;
+  email?: string;
+  fullName?: string;
+  full_name?: string;
+  phone?: string;
+  points?: number | string | null;
+  role?: string;
+  referralCode?: string;
+  referral_code?: string;
+  referredBy?: string;
+  referred_by?: string;
+  createdAt?: Date | string;
+  created_at?: Date | string;
+  updatedAt?: Date | string;
+  updated_at?: Date | string;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
+function normalizeUserFromPayload(user: UserListItemPayload): User {
+  const fullName = user.fullName ?? user.full_name ?? '';
+  const referralCode = user.referralCode ?? user.referral_code;
+  const referredBy = user.referredBy ?? user.referred_by;
+  const createdAt = user.createdAt ?? user.created_at ?? new Date();
+  const updatedAt = user.updatedAt ?? user.updated_at;
+
+  return {
+    id: user.id ?? '',
+    email: user.email ?? '',
+    phone: user.phone,
+    points: Number(user.points ?? 0) || 0,
+    role: user.role ?? 'customer',
+    referralCode,
+    referral_code: referralCode,
+    referredBy,
+    referred_by: referredBy,
+    fullName,
+    full_name: fullName,
+    createdAt,
+    created_at: createdAt,
+    updatedAt,
+    updated_at: updatedAt,
+    isBlocked: false,
+    is_blocked: false,
+  };
 }
 
 export async function getAllUsers(filters?: {
@@ -54,32 +104,15 @@ export async function getAllUsers(filters?: {
         return { users: [], totalCount: 0, error: getApiErrorMessage(data, 'Failed to fetch users') };
       }
       const payload = data?.data ?? data;
-      const rawUsers = Array.isArray(payload?.users) ? payload.users : [];
-      const normalizedUsers: User[] = rawUsers.map((u: any) => ({
-        id: u.id,
-        email: u.email,
-        phone: u.phone,
-        points: Number(u.points ?? 0) || 0,
-        role: u.role,
-        referralCode: u.referralCode,
-        referral_code: u.referralCode,
-        referredBy: u.referredBy,
-        referred_by: u.referredBy,
-        fullName: u.fullName,
-        full_name: u.fullName,
-        createdAt: u.createdAt,
-        created_at: u.createdAt,
-        updatedAt: u.updatedAt,
-        updated_at: u.updatedAt,
-        // Not modeled yet
-        isBlocked: false,
-        is_blocked: false,
-      }));
+      const rawUsers = Array.isArray(payload?.users)
+        ? (payload.users as UserListItemPayload[])
+        : [];
+      const normalizedUsers: User[] = rawUsers.map(normalizeUserFromPayload);
 
       const totalCount = Number(payload?.pagination?.total ?? payload?.total ?? 0) || 0;
       return { users: normalizedUsers, totalCount, error: null };
-    } catch (error: any) {
-      return { users: [], totalCount: 0, error: error.message || 'Failed to fetch users' };
+    } catch (error: unknown) {
+      return { users: [], totalCount: 0, error: getErrorMessage(error, 'Failed to fetch users') };
     }
   }, { ttlMs: 15000 });
 }
@@ -114,8 +147,8 @@ export async function getUserById(userId: string): Promise<{ user: User | null; 
       is_blocked: Boolean(u.isBlocked ?? u.is_blocked ?? false),
     };
     return { user: normalized, error: null };
-  } catch (error: any) {
-    return { user: null, error: error.message || 'Failed to fetch user' };
+  } catch (error: unknown) {
+    return { user: null, error: getErrorMessage(error, 'Failed to fetch user') };
   }
 }
 
@@ -199,8 +232,8 @@ export async function getUserOrders(userId: string, filters?: {
     }
     const payload = data?.data ?? data;
     return { data: payload?.data || [], total: payload?.total || 0, error: null };
-  } catch (error: any) {
-    return { data: [], total: 0, error: error.message || 'Failed to fetch user orders' };
+  } catch (error: unknown) {
+    return { data: [], total: 0, error: getErrorMessage(error, 'Failed to fetch user orders') };
   }
 }
 
@@ -236,8 +269,8 @@ export async function getUserPackages(userId: string): Promise<{ data: UserPacka
     }
     const payload = data?.data ?? data;
     return { data: payload?.data || payload || [], error: null };
-  } catch (error: any) {
-    return { data: [], error: error.message || 'Failed to fetch user packages' };
+  } catch (error: unknown) {
+    return { data: [], error: getErrorMessage(error, 'Failed to fetch user packages') };
   }
 }
 
@@ -271,8 +304,8 @@ export async function getUserVouchers(userId: string): Promise<{ data: UserVouch
     }
     const payload = data?.data ?? data;
     return { data: payload?.data || payload || [], error: null };
-  } catch (error: any) {
-    return { data: [], error: error.message || 'Failed to fetch user vouchers' };
+  } catch (error: unknown) {
+    return { data: [], error: getErrorMessage(error, 'Failed to fetch user vouchers') };
   }
 }
 
@@ -317,8 +350,8 @@ export async function getUserPointsLog(userId: string, filters?: {
     }
     const payload = data?.data ?? data;
     return { data: payload?.data || [], total: payload?.total || 0, error: null };
-  } catch (error: any) {
-    return { data: [], total: 0, error: error.message || 'Failed to fetch points log' };
+  } catch (error: unknown) {
+    return { data: [], total: 0, error: getErrorMessage(error, 'Failed to fetch points log') };
   }
 }
 
@@ -339,8 +372,8 @@ export async function updateUserPoints(userId: string, points: number, reason: s
     const payload = data?.data ?? data;
     invalidateRequestCacheByPrefix('admin:users');
     return { success: true, newBalance: payload?.newBalance, error: null };
-  } catch (error: any) {
-    return { success: false, error: error.message || 'Failed to update user points' };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error, 'Failed to update user points') };
   }
 }
 
@@ -360,8 +393,8 @@ export async function updateUserRole(userId: string, role: string): Promise<{ su
     }
     invalidateRequestCacheByPrefix('admin:users');
     return { success: true, error: null };
-  } catch (error: any) {
-    return { success: false, error: error.message || 'Failed to update user role' };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error, 'Failed to update user role') };
   }
 }
 
@@ -381,8 +414,8 @@ export async function blockUser(userId: string, blocked: boolean, reason?: strin
     }
     invalidateRequestCacheByPrefix('admin:users');
     return { success: true, error: null };
-  } catch (error: any) {
-    return { success: false, error: error.message || 'Failed to update user block status' };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error, 'Failed to update user block status') };
   }
 }
 
@@ -451,7 +484,7 @@ export async function getUserStats(): Promise<{ data: UserStats; error: string |
         }, 
         error: null 
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { 
         data: { 
           totalUsers: 0, 
@@ -463,7 +496,7 @@ export async function getUserStats(): Promise<{ data: UserStats; error: string |
           blockedUsers: 0, 
           usersByRole: [] 
         }, 
-        error: error.message || 'Failed to fetch user stats' 
+        error: getErrorMessage(error, 'Failed to fetch user stats') 
       };
     }
   }, { ttlMs: 20000 });

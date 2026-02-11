@@ -19,6 +19,13 @@ interface PaymentPageProps {
   onProofUploaded?: () => void;
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export default function PaymentPage({
   paymentId,
   amount,
@@ -65,8 +72,8 @@ export default function PaymentPage({
       if (onProofUploaded) {
         onProofUploaded();
       }
-    } catch (err: any) {
-      setError(err.message || '上传失败，请重试');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, '上传失败，请重试'));
     } finally {
       setUploading(false);
     }

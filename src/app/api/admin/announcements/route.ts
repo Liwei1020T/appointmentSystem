@@ -20,6 +20,14 @@ const createAnnouncementSchema = z.object({
   endAt: z.string().datetime(),
 });
 
+function hasJsonResponse(error: unknown): error is { json: () => Response } {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+  const maybeJson = (error as { json?: unknown }).json;
+  return typeof maybeJson === 'function';
+}
+
 export async function GET() {
   try {
     await requireAdmin();
@@ -46,8 +54,8 @@ export async function GET() {
         totalCount: announcements.length,
       },
     });
-  } catch (error: any) {
-    if (error?.json) return error.json();
+  } catch (error: unknown) {
+    if (hasJsonResponse(error)) return error.json();
     console.error('[Admin Announcements] Error:', error);
     return serverErrorResponse('获取公告列表失败', error);
   }
@@ -98,8 +106,8 @@ export async function POST(request: Request) {
     });
 
     return okResponse(announcement);
-  } catch (error: any) {
-    if (error?.json) return error.json();
+  } catch (error: unknown) {
+    if (hasJsonResponse(error)) return error.json();
     console.error('[Admin Announcements] Create error:', error);
     return serverErrorResponse('创建公告失败', error);
   }

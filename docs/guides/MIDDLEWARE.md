@@ -8,7 +8,7 @@
 
 ## Overview
 
-The middleware (`src/middleware.ts`) provides route protection, authentication verification, and security headers for all incoming requests.
+The middleware (`src/middleware.ts`) provides route protection, authentication verification, API CSRF validation, and security headers for all incoming requests.
 
 ---
 
@@ -92,7 +92,31 @@ The middleware injects the following security headers:
 | `X-Content-Type-Options` | `nosniff` | Prevent MIME sniffing |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | Control referrer info |
 | `X-XSS-Protection` | `1; mode=block` | XSS filter |
+| `Content-Security-Policy` | `default-src 'self'; ...` | Restrict executable/content sources |
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Disable features |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` (prod only) | Force HTTPS in browsers |
+
+---
+
+## API CSRF Protection
+
+For non-idempotent API requests (`POST`, `PUT`, `PATCH`, `DELETE`), middleware verifies request origin:
+
+- Allow when `Origin` or `Referer` matches current site origin
+- Allow when origin is listed in `CSRF_TRUSTED_ORIGINS`
+- Allow for exempt machine-to-machine paths:
+  - `/api/cron/*`
+  - `/api/health`
+  - `/api/payments/tng/callback`
+- Reject otherwise with `403` and JSON body:
+
+```json
+{
+  "success": false,
+  "message": "CSRF validation failed",
+  "reason": "origin_mismatch"
+}
+```
 
 ---
 
@@ -101,8 +125,8 @@ The middleware injects the following security headers:
 ```typescript
 export const config = {
   matcher: [
-    // Skip static files and API routes
-    '/((?!_next/static|_next/image|favicon.ico|api/).*)',
+    // Skip static assets only
+    '/((?!_next/static|_next/image|favicon.ico|images|uploads|sw.js|manifest.json).*)',
   ],
 };
 ```
@@ -111,7 +135,9 @@ export const config = {
 - `/_next/static/*` - Static assets
 - `/_next/image/*` - Image optimization
 - `/favicon.ico` - Favicon
-- `/api/*` - API routes (have their own auth)
+- `/images/*` - Public image assets
+- `/uploads/*` - Public upload assets
+- `/sw.js` - Service worker file
 
 ---
 

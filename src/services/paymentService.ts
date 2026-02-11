@@ -5,6 +5,7 @@
 
 import { apiRequest } from '@/services/apiClient';
 import { cachedRequest, invalidateRequestCacheByPrefix, type RequestCacheOptions } from '@/services/requestCache';
+import { AppError } from '@/lib/api-errors';
 
 export type PaymentMethod = 'tng' | 'fpx' | 'cash' | 'manual' | 'card';
 
@@ -12,11 +13,225 @@ export interface PaymentProof {
   file: File;
 }
 
+interface PendingPaymentsPayload {
+  payments?: unknown;
+  pagination?: {
+    page?: unknown;
+    limit?: unknown;
+    total?: unknown;
+    totalPages?: unknown;
+  } | null;
+}
+
+export interface PaymentRecord {
+  id: string;
+  amount: number;
+  status: string;
+  provider: string;
+  metadata?: Record<string, unknown>;
+  createdAt?: string;
+  user?: {
+    id: string;
+    fullName: string | null;
+    email: string;
+    phone: string | null;
+  };
+  order?: {
+    id: string;
+    string: {
+      brand: string;
+      model: string;
+    } | null;
+  } | null;
+  package?: {
+    id: string;
+    name: string;
+    times: number;
+    validityDays: number;
+    price: number;
+  } | null;
+}
+
+export interface PendingPaymentsResult {
+  payments: PendingPayment[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface PaymentDetail {
+  id: string;
+  amount: number;
+  status: string;
+  provider: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface PendingPayment {
+  id: string;
+  amount: number;
+  status: string;
+  provider: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string | Date;
+  user: {
+    id: string;
+    fullName: string | null;
+    email: string;
+    phone: string | null;
+  };
+  order: {
+    id: string;
+    string: {
+      brand: string;
+      model: string;
+    } | null;
+  } | null;
+  package: {
+    id: string;
+    name: string;
+    times: number;
+    validityDays: number;
+    price: number | string;
+  } | null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function toString(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value : fallback;
+}
+
+function toNullableString(value: unknown): string | null {
+  return typeof value === 'string' ? value : null;
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return fallback;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === 'string' && error) {
+    return error;
+  }
+
+  if (isRecord(error) && typeof error.message === 'string' && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
+function normalizePaymentDetail(value: unknown): PaymentDetail | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  return {
+    id: toString(value.id),
+    amount: toNumber(value.amount),
+    status: toString(value.status),
+    provider: toString(value.provider),
+    metadata: isRecord(value.metadata) ? value.metadata : undefined,
+  };
+}
+
+function normalizePendingPayment(value: unknown): PendingPayment | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const user = isRecord(value.user)
+    ? {
+        id: toString(value.user.id),
+        fullName: toNullableString(value.user.fullName),
+        email: toString(value.user.email),
+        phone: toNullableString(value.user.phone),
+      }
+    : {
+        id: '',
+        fullName: null,
+        email: '',
+        phone: null,
+      };
+
+  const orderString = isRecord(value.order) && isRecord(value.order.string)
+    ? {
+        brand: toString(value.order.string.brand),
+        model: toString(value.order.string.model),
+      }
+    : null;
+
+  const order = isRecord(value.order)
+    ? {
+        id: toString(value.order.id),
+        string: orderString,
+      }
+    : null;
+
+  const pkg = isRecord(value.package)
+    ? {
+        id: toString(value.package.id),
+        name: toString(value.package.name),
+        times: toNumber(value.package.times),
+        validityDays: toNumber(value.package.validityDays),
+        price: toNumber(value.package.price),
+      }
+    : null;
+
+  return {
+    id: toString(value.id),
+    amount: toNumber(value.amount),
+    status: toString(value.status),
+    provider: toString(value.provider),
+    metadata: isRecord(value.metadata) ? value.metadata : undefined,
+    createdAt: toString(value.createdAt),
+    user,
+    order,
+    package: pkg,
+  };
+}
+
+function normalizePendingPaymentList(value: unknown): PendingPayment[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => normalizePendingPayment(item))
+    .filter((item): item is PendingPayment => item !== null);
+}
+
 /**
  * 获取支付详情
  */
-export async function getPayment(paymentId: string): Promise<any> {
-  return apiRequest(`/api/payments/${paymentId}`);
+export async function getPayment(paymentId: string): Promise<PaymentDetail> {
+  const payload = await apiRequest<unknown>(`/api/payments/${paymentId}`);
+  const payment = normalizePaymentDetail(payload);
+  if (!payment) {
+    throw new AppError('INTERNAL_ERROR', 500, 'Invalid payment payload');
+  }
+  return payment;
 }
 
 /**
@@ -37,7 +252,11 @@ export async function uploadPaymentProof(
   const data = await response.json().catch(() => null);
 
   if (!response.ok || data?.ok === false) {
-    throw new Error(data?.error?.message || data?.error || 'Failed to upload payment proof');
+    throw new AppError(
+      'BAD_REQUEST',
+      response.status || 400,
+      data?.error?.message || data?.error || 'Failed to upload payment proof'
+    );
   }
 
   return data?.data?.proofUrl || data?.proofUrl;
@@ -50,11 +269,23 @@ export async function getPendingPayments(
   page = 1,
   limit = 20,
   options?: RequestCacheOptions
-): Promise<any> {
+): Promise<PendingPaymentsResult> {
   const cacheKey = `admin:payments:pending:${page}:${limit}`;
   return cachedRequest(
     cacheKey,
-    () => apiRequest(`/api/admin/payments/pending?page=${page}&limit=${limit}`),
+    async () => {
+      const payload = await apiRequest<PendingPaymentsPayload>(`/api/admin/payments/pending?page=${page}&limit=${limit}`);
+
+      return {
+        payments: normalizePendingPaymentList(payload.payments),
+        pagination: {
+          page: toNumber(payload.pagination?.page, page),
+          limit: toNumber(payload.pagination?.limit, limit),
+          total: toNumber(payload.pagination?.total),
+          totalPages: toNumber(payload.pagination?.totalPages, 1),
+        },
+      };
+    },
     { ttlMs: 10000, skipCache: options?.skipCache }
   );
 }
@@ -149,24 +380,24 @@ export async function createPayment(
     });
     const id = payment?.id || null;
     return { paymentId: id, payment: id ? { id } : null, error: null };
-  } catch (error: any) {
-    return { paymentId: null, payment: null, error: error.message || 'Failed to create payment' };
+  } catch (error: unknown) {
+    return { paymentId: null, payment: null, error: getErrorMessage(error, 'Failed to create payment') };
   }
 }
 
 /**
  * 创建现金支付记录
  */
-export async function createCashPayment(orderId: string, amount: number): Promise<{ payment: any; error: string | null }> {
+export async function createCashPayment(orderId: string, amount: number): Promise<{ payment: PaymentDetail | null; error: string | null }> {
   try {
-    const payment = await apiRequest(`/api/payments/cash`, {
+    const payment = await apiRequest<unknown>(`/api/payments/cash`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId, amount }),
     });
-    return { payment, error: null };
-  } catch (error: any) {
-    return { payment: null, error: error.message || '现金支付处理失败' };
+    return { payment: normalizePaymentDetail(payment), error: null };
+  } catch (error: unknown) {
+    return { payment: null, error: getErrorMessage(error, '现金支付处理失败') };
   }
 }
 
@@ -191,8 +422,8 @@ export async function uploadPaymentReceipt(
     }
 
     return { url: null, error: '请先上传收据并传入 URL' };
-  } catch (error: any) {
-    return { url: null, error: error.message || 'Failed to upload receipt' };
+  } catch (error: unknown) {
+    return { url: null, error: getErrorMessage(error, 'Failed to upload receipt') };
   }
 }
 
@@ -221,8 +452,8 @@ export async function verifyPaymentReceipt(
       await rejectPayment(paymentId, notes || 'Receipt review failed');
     }
     return { success: true, error: null };
-  } catch (error: any) {
-    return { success: false, error: error.message || 'Failed to verify receipt' };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error, 'Failed to verify receipt') };
   }
 }
 

@@ -123,7 +123,6 @@ export default function OrderTimeline({
   currentStatus,
   createdAt,
   updatedAt,
-  completedAt,
   cancelledAt,
   hasPayment = false,
   paymentStatus = 'pending',

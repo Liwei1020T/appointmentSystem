@@ -6,30 +6,25 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Card } from '@/components';
 import SectionLoading from '@/components/loading/SectionLoading';
-import { getUserPackageSummary } from '@/services/packageService';
+import { getUserPackageSummary, type UserPackageWithPackage } from '@/services/packageService';
 import { getVoucherStats } from '@/services/voucherService';
-import { UserPackage } from '@/types';
 
 export default function PackageSummary() {
   const router = useRouter();
   const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
   const [totalRemaining, setTotalRemaining] = useState(0);
-  const [packages, setPackages] = useState<UserPackage[]>([]);
+  const [packages, setPackages] = useState<UserPackageWithPackage[]>([]);
   const [couponsCount, setCouponsCount] = useState(0);
   const [points, setPoints] = useState(0);
   const [showAllPackages, setShowAllPackages] = useState(false);
 
-  useEffect(() => {
-    loadBenefitsData();
-  }, []);
-
-  const loadBenefitsData = async () => {
+  const loadBenefitsData = useCallback(async () => {
     setLoading(true);
 
     try {
@@ -49,22 +44,28 @@ export default function PackageSummary() {
       setCouponsCount(voucherStats.activeVouchers || 0);
 
       // 积分（从 session 获取）
-      if (session?.user) {
-        setPoints((session.user as any).points || 0);
-      }
+      setPoints(session?.user?.points || 0);
     } catch (error) {
       console.error('Error loading benefits data:', error);
     }
 
     setLoading(false);
-  };
+  }, [session?.user?.points]);
 
+  useEffect(() => {
+    void loadBenefitsData();
+  }, [loadBenefitsData]);
+
+
+  const getPackageExpiry = (pkg: UserPackageWithPackage): string | Date | null =>
+    pkg.expires_at ?? pkg.expiresAt ?? pkg.expiry ?? null;
 
   // 计算最近过期的套餐
   const nearestExpiry = packages.length > 0
     ? packages
-      .filter(pkg => pkg.expires_at)
-      .sort((a, b) => new Date(a.expires_at!).getTime() - new Date(b.expires_at!).getTime())[0]
+      .map((pkg) => ({ expiry: getPackageExpiry(pkg) }))
+      .filter((entry): entry is { expiry: string | Date } => Boolean(entry.expiry))
+      .sort((a, b) => new Date(a.expiry).getTime() - new Date(b.expiry).getTime())[0]?.expiry ?? null
     : null;
 
   if (loading) {
@@ -108,7 +109,7 @@ export default function PackageSummary() {
             <p className="text-xs text-text-tertiary mt-0.5">套餐剩余</p>
             {nearestExpiry && (
               <p className="text-[10px] text-warning mt-1">
-                {Math.ceil((new Date(nearestExpiry.expires_at!).getTime() - Date.now()) / (1000 * 60 * 60 * 24))}天后到期
+                {Math.ceil((new Date(nearestExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24))}天后到期
               </p>
             )}
           </div>

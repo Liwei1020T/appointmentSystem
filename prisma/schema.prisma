@@ -115,6 +115,8 @@ model OtpCode {
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@unique([phone, purpose])
+  @@index([phone])
+  @@index([phone, expiresAt])
   @@index([expiresAt])
   @@index([createdAt])
   @@map("otp_codes")
@@ -215,6 +217,7 @@ model StockLog {
   createdByUser User?           @relation(fields: [createdBy], references: [id])
 
   @@index([stringId])
+  @@index([stringId, createdAt])
   @@index([createdAt])
   @@index([createdBy])
   @@index([referenceId])
@@ -270,6 +273,7 @@ model Order {
   @@index([status, lastStatusChangeAt])
   @@index([status, createdAt])
   @@index([status, completedAt]) // 营收统计查询优化
+  @@index([createdAt, userId]) // 活跃用户统计查询优化
   @@map("orders")
 }
 
@@ -397,6 +401,7 @@ model Payment {
   @@index([transactionId])
   @@index([orderId])
   @@index([packageId])
+  @@index([provider, status])
   @@index([status, createdAt])
   @@index([userId, status, createdAt]) // 用户支付历史查询优化
   @@map("payments")
@@ -547,8 +552,11 @@ model ReferralLog {
   referrer User @relation("Referrer", fields: [referrerId], references: [id])
   referred User @relation("Referred", fields: [referredId], references: [id])
 
+  @@unique([referredId])
   @@index([referrerId])
   @@index([referredId])
+  @@index([referralCode])
+  @@index([referredId, rewardGiven])
   @@map("referral_logs")
 }
 
@@ -639,6 +647,7 @@ model PromotionUsage {
 
   @@index([promotionId])
   @@index([userId])
+  @@index([userId, createdAt])
   @@index([orderId])
   @@map("promotion_usage")
 }

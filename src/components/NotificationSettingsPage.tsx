@@ -31,11 +31,11 @@ export default function NotificationSettingsPage() {
 
   useEffect(() => {
     if (session?.user?.id) {
-      loadPreferences(session.user.id);
+      loadPreferences();
     }
   }, [session?.user?.id]);
 
-  const loadPreferences = async (userId: string) => {
+  const loadPreferences = async () => {
     setLoading(true);
     const { data: prefs } = await getNotificationPreferences();
     setPreferences(prefs);

@@ -32,9 +32,9 @@ export default function HomePage() {
   const isAuthenticated = !!session;
   const loading = status === 'loading';
 
-  const [stats, setStats] = useState<UserStats | null>(null);
+  const [_stats, setStats] = useState<UserStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
-  const [featuredPackages, setFeaturedPackages] = useState<FeaturedPackage[]>([]);
+  const [_featuredPackages, setFeaturedPackages] = useState<FeaturedPackage[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -62,6 +62,7 @@ export default function HomePage() {
     if (user) {
       loadHomeData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadHomeData = async () => {

@@ -7,6 +7,25 @@ import { getApiErrorMessage } from '@/services/apiClient';
 
 export * from './authService';
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === 'string' && error) {
+    return error;
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const { message } = error as { message?: unknown };
+    if (typeof message === 'string' && message) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
 /**
  * 管理员登录
  */
@@ -25,7 +44,7 @@ export async function adminLogin(
       return { success: false, error: getApiErrorMessage(data, 'Admin login failed') };
     }
     return { success: true, error: null };
-  } catch (error: any) {
-    return { success: false, error: error.message || 'Admin login failed' };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error, 'Admin login failed') };
   }
 }

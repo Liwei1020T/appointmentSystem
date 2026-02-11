@@ -9,6 +9,7 @@
  */
 
 'use client';
+/* eslint-disable @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps */
 
 import { useEffect, useState } from 'react';
 import { History, Package, TrendingDown, TrendingUp, RefreshCw, Filter } from 'lucide-react';

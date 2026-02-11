@@ -10,6 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import PageHeader from '@/components/layout/PageHeader';
 import { Card } from '@/components';
+import { AppImage } from '@/components/AppImage';
 import ImagePreview from '@/components/ImagePreview';
 import StarRating from '@/components/StarRating';
 import SectionLoading from '@/components/loading/SectionLoading';
@@ -121,11 +122,12 @@ export default function ReviewDetailPage() {
                       className="group w-full h-24 overflow-hidden rounded-lg border border-border-subtle"
                       aria-label={`查看评价图片 ${index + 1}`}
                     >
-                      <img
+                      <AppImage
                         src={url}
                         alt={`review-${index}`}
+                        width={320}
+                        height={240}
                         loading="lazy"
-                        decoding="async"
                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
                       />
                     </button>

@@ -8,6 +8,7 @@
  */
 
 'use client';
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -24,10 +25,33 @@ import {
 import { Badge, Button, Card, Input, StatsCard } from '@/components';
 import EmptyState from '@/components/EmptyState';
 import PageLoading from '@/components/loading/PageLoading';
+import { AppImage } from '@/components/AppImage';
 import { AlertTriangle } from 'lucide-react';
 
 interface AdminInventoryDetailPageProps {
   stringId: string;
+}
+
+interface InventoryDetailFormData {
+  name: string;
+  brand: string;
+  cost_price: number;
+  selling_price: number;
+  stock_quantity: number;
+  minimum_stock: number;
+  description: string;
+  imageUrl: string;
+  isRecommended: boolean;
+  elasticity: string;
+  durability: string;
+  control: string;
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
 }
 
 export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDetailPageProps) {
@@ -42,7 +66,7 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<InventoryDetailFormData>({
     name: '',
     brand: '',
     cost_price: 0,
@@ -96,17 +120,17 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
         selling_price: Number(fetchedString.sellingPrice),
         stock_quantity: fetchedString.stock,
         minimum_stock: fetchedString.minimumStock,
-        description: (fetchedString as any).description || '',
+        description: fetchedString.description || '',
         imageUrl: fetchedString.imageUrl || '',
-        isRecommended: (fetchedString as any).isRecommended || false,
-        elasticity: (fetchedString as any).elasticity || '',
-        durability: (fetchedString as any).durability || '',
-        control: (fetchedString as any).control || '',
+        isRecommended: fetchedString.isRecommended || false,
+        elasticity: fetchedString.elasticity || '',
+        durability: fetchedString.durability || '',
+        control: fetchedString.control || '',
       });
 
       setLoading(false);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load string');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to load string'));
       setLoading(false);
     }
   };
@@ -121,7 +145,10 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
   };
 
   // Handle form field change
-  const handleFieldChange = (field: string, value: any) => {
+  const handleFieldChange = <K extends keyof InventoryDetailFormData>(
+    field: K,
+    value: InventoryDetailFormData[K]
+  ) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -144,12 +171,12 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
         elasticity: formData.elasticity || null,
         durability: formData.durability || null,
         control: formData.control || null,
-      } as any);
+      });
 
       setString(updatedString);
       setSuccessMessage('保存成功！');
-    } catch (err: any) {
-      setError(err.message || '保存失败');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, '保存失败'));
     } finally {
       setSaving(false);
     }
@@ -404,9 +431,11 @@ export default function AdminInventoryDetailPage({ stringId }: AdminInventoryDet
                   {formData.imageUrl && (
                     <div className="mt-2 flex items-center gap-3">
                       <div className="w-16 h-16 rounded-lg overflow-hidden bg-ink-surface border border-border-subtle">
-                        <img
+                        <AppImage
                           src={formData.imageUrl}
                           alt="预览"
+                          width={64}
+                          height={64}
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = 'none';

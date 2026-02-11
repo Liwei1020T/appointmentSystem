@@ -27,12 +27,12 @@ export function useTheme() {
 }
 
 // No-op component - returns null
-export function ThemeToggle({ className: _className = '' }: { className?: string }) {
+export function ThemeToggle() {
   return null;
 }
 
 // No-op component - returns null
-export function ThemeSelector({ className: _className = '' }: { className?: string }) {
+export function ThemeSelector() {
   return null;
 }
 

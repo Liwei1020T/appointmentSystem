@@ -33,13 +33,84 @@ export interface UpdateProfileParams {
   address?: string;
 }
 
-export async function getUserProfile(userId?: string): Promise<{ profile?: UserProfile; error?: any }> {
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
+interface UserStatsPayload {
+  totalOrders?: number;
+  pendingOrders?: number;
+  completedOrders?: number;
+  activePackages?: number;
+  remainingPackageCount?: number;
+  availableVouchers?: number;
+  points?: number;
+  totalSpent?: number;
+  membership?: MembershipTierInfo;
+}
+
+export interface PointsLogItem {
+  id?: string;
+  amount?: number;
+  type?: string;
+  description?: string;
+  createdAt?: string | Date;
+  created_at?: string | Date;
+  balanceAfter?: number;
+  balance_after?: number;
+}
+
+interface PointsResponsePayload {
+  balance?: number | string | null;
+  logs?: unknown;
+}
+
+export interface ReferralsSummary {
+  referralCode?: string | null;
+  referrals: Array<{
+    id: string;
+    createdAt?: string | null;
+    rewardGiven?: boolean | null;
+    referred?: {
+      fullName?: string | null;
+      createdAt?: string | null;
+    } | null;
+  }>;
+  stats?: {
+    totalReferrals?: number;
+    totalRewards?: number;
+    totalPointsEarned?: number;
+  };
+}
+
+export interface MembershipDetails {
+  currentTier: MembershipTierId;
+  points: number;
+  totalSpent: number;
+  totalOrders: number;
+  benefits: Array<{ description?: string | null; isActive?: boolean | null }>;
+  progress: {
+    nextTier: MembershipTierId | null;
+    spentProgress: number;
+    ordersProgress: number;
+    spentTarget: number;
+    ordersTarget: number;
+  };
+}
+
+function normalizePointsResponse(payload: PointsResponsePayload | null | undefined): { balance: number; logs: PointsLogItem[] } {
+  const balance = Number(payload?.balance ?? 0) || 0;
+  const logs = Array.isArray(payload?.logs) ? (payload.logs as PointsLogItem[]) : [];
+  return { balance, logs };
+}
+
+export async function getUserProfile(_userId?: string): Promise<{ profile?: UserProfile; error?: string }> {
   try {
     const profile = await apiRequest<UserProfile>(`/api/profile`);
     return { profile };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to fetch user profile:', error);
-    return { error };
+    return { error: getErrorMessage(error, '加载失败') };
   }
 }
 
@@ -72,9 +143,9 @@ export async function changePassword(
       body: JSON.stringify({ currentPassword, newPassword }),
     });
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to change password:', error);
-    return { success: false, error: error.message || 'Network error' };
+    return { success: false, error: getErrorMessage(error, 'Network error') };
   }
 }
 
@@ -89,9 +160,9 @@ export async function updateProfile(data: UpdateProfileParams): Promise<{ succes
       body: JSON.stringify(data),
     });
     return { success: true, error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to update profile:', error);
-    return { success: false, error: error.message || 'Network error' };
+    return { success: false, error: getErrorMessage(error, 'Network error') };
   }
 }
 
@@ -146,7 +217,7 @@ export async function getUserStats(): Promise<UserStats> {
         nextTier: null,
       };
   try {
-    const data = await apiRequest<any>(`/api/user/stats`);
+    const data = await apiRequest<UserStatsPayload>(`/api/user/stats`);
     const membership = data?.membership || fallbackMembership;
 
     return {
@@ -185,9 +256,9 @@ export async function generateReferralCode(): Promise<{ code: string; error: str
       method: 'POST',
     });
     return { code: result.code, error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to generate referral code:', error);
-    return { code: '', error: error.message || 'Network error' };
+    return { code: '', error: getErrorMessage(error, 'Network error') };
   }
 }
 
@@ -208,23 +279,29 @@ export async function logout(): Promise<{ success: boolean }> {
 /**
  * 获取用户积分信息
  */
-export async function getPoints(): Promise<{ balance: number; logs: any[] }> {
-  return apiRequest(`/api/points`);
+export async function getPoints(): Promise<{ balance: number; logs: PointsLogItem[] }> {
+  const payload = await apiRequest<PointsResponsePayload>(`/api/points`);
+  return normalizePointsResponse(payload);
 }
 
 /**
  * 获取推荐记录
  */
-export async function getReferrals(): Promise<any> {
-  return apiRequest(`/api/referrals`);
+export async function getReferrals(): Promise<ReferralsSummary> {
+  const payload = await apiRequest<ReferralsSummary>(`/api/referrals`);
+  return {
+    referralCode: payload?.referralCode ?? null,
+    referrals: Array.isArray(payload?.referrals) ? payload.referrals : [],
+    stats: payload?.stats,
+  };
 }
 
 /**
  * 获取会员详情
  */
-export async function getMembershipDetails(): Promise<any> {
+export async function getMembershipDetails(): Promise<MembershipDetails | null> {
   try {
-    const data = await apiRequest('/api/profile/membership');
+    const data = await apiRequest<MembershipDetails>('/api/profile/membership');
     return data;
   } catch (error) {
     console.error('Failed to fetch membership details:', error);

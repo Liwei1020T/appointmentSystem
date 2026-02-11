@@ -15,12 +15,19 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Button, Input, Card, Toast, Checkbox } from '@/components';
+import { Button, Input, Toast, Checkbox } from '@/components';
 import { getSession } from 'next-auth/react';
 import { signIn } from '@/services/authService';
 import { isAdminRole } from '@/lib/roles';
 import { normalizeMyPhone, validatePhone } from '@/lib/utils';
 import BrandLogo from '@/components/BrandLogo';
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -134,14 +141,14 @@ export default function LoginPage() {
       // 延迟跳转，让用户看到成功提示
       setTimeout(async () => {
         const session = await getSession();
-        const role = (session?.user as any)?.role;
+        const role = session?.user?.role;
         const nextPath = isAdminRole(role) ? '/admin/dashboard' : '/dashboard';
         router.push(nextPath);
       }, 1500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setToast({
         show: true,
-        message: err.message || '手机号或密码错误',
+        message: getErrorMessage(err, '手机号或密码错误'),
         type: 'error',
       });
       setLoading(false);

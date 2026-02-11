@@ -94,21 +94,6 @@ export default function RecentOrders({
     };
   }, [hasExternalOrders, maxItems, hideLatest]);
 
-  const loadRecentOrders = async () => {
-    setLoading(true);
-    try {
-      const limit = maxItems ? (hideLatest ? maxItems + 1 : maxItems) : 3;
-      const data = await getRecentOrders(limit);
-      if (data) {
-        setOrders(data as RecentOrderWithItems[]);
-      }
-    } catch (error) {
-      console.error('Error loading recent orders:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleOrderClick = (orderId: string) => {
     router.push(`/orders/${orderId}`);
   };
@@ -128,7 +113,7 @@ export default function RecentOrders({
 
   // 获取订单显示名称
   const getOrderName = (order: RecentOrderWithItems) => {
-    const items = (order as any).items;
+    const items = order.items;
     if (items && items.length > 1) {
       return `多球拍订单 (${items.length}支)`;
     }
@@ -218,7 +203,7 @@ export default function RecentOrders({
                     {getOrderName(order)}
                   </p>
                   <p className="text-xs text-text-tertiary mt-0.5">
-                    #{order.id.slice(0, 6).toUpperCase()} · {formatDate(order.created_at || (order as any).createdAt)}
+                    #{order.id.slice(0, 6).toUpperCase()} · {formatDate(order.created_at || order.createdAt)}
                   </p>
                 </div>
 

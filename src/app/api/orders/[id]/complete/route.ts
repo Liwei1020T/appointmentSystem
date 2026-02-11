@@ -8,6 +8,7 @@ import { requireAdmin } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { completeOrder } from '@/server/services/order.service';
 import { handleApiError } from '@/lib/api/handleApiError';
+import { financialLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,13 @@ export async function POST(
 ) {
   try {
     const admin = await requireAdmin();
+    const clientIp = getClientIp(request);
+    const rateLimitKey = `order:complete:${admin.id}:${clientIp}`;
+    const rateLimitResult = financialLimiter.check(rateLimitKey);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult.resetAt);
+    }
+
     const parsedParams = paramsSchema.safeParse(params);
 
     if (!parsedParams.success) {

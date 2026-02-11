@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
+import { AppError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
+import type { Package, User, UserPackage } from '@prisma/client';
 
 type PackageFilters = {
   status?: 'active' | 'inactive' | 'all';
@@ -29,18 +30,23 @@ type PurchaseFilters = {
   limit?: number;
 };
 
-function normalizePackage(pkg: any) {
+type UserPackageWithRelations = UserPackage & {
+  user?: Pick<User, 'id' | 'fullName' | 'email' | 'phone'>;
+  package?: Pick<Package, 'id' | 'name' | 'times' | 'price'>;
+};
+
+function normalizePackage(pkg: Package) {
   return {
     ...pkg,
     validity_days: pkg.validityDays,
     created_at: pkg.createdAt,
     updated_at: pkg.updatedAt,
     image_url: pkg.imageUrl,
-    original_price: pkg.originalPrice,
+    original_price: (pkg as Package & { originalPrice?: unknown }).originalPrice,
   };
 }
 
-function normalizeUserPackage(record: any) {
+function normalizeUserPackage(record: UserPackageWithRelations) {
   return {
     ...record,
     created_at: record.createdAt,
@@ -92,12 +98,12 @@ export async function listAdminPackages(filters: PackageFilters) {
 
 export async function getAdminPackageById(packageId: string) {
   if (!isValidUUID(packageId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid package id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid package id');
   }
 
   const pkg = await prisma.package.findUnique({ where: { id: packageId } });
   if (!pkg) {
-    throw new ApiError('NOT_FOUND', 404, 'Package not found');
+    throw new AppError('NOT_FOUND', 404, 'Package not found');
   }
 
   return normalizePackage(pkg);
@@ -121,7 +127,7 @@ export async function createAdminPackage(payload: PackageCreateInput) {
 
 export async function updateAdminPackage(packageId: string, payload: PackageUpdateInput) {
   if (!isValidUUID(packageId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid package id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid package id');
   }
 
   const pkg = await prisma.package.update({
@@ -146,7 +152,7 @@ export async function setAdminPackageStatus(packageId: string, active: boolean) 
 
 export async function deleteAdminPackage(packageId: string) {
   if (!isValidUUID(packageId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid package id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid package id');
   }
 
   const [userPackageCount, paymentCount] = await Promise.all([
@@ -155,7 +161,7 @@ export async function deleteAdminPackage(packageId: string) {
   ]);
 
   if (userPackageCount > 0 || paymentCount > 0) {
-    throw new ApiError('CONFLICT', 409, 'Package has existing purchases and cannot be deleted');
+    throw new AppError('CONFLICT', 409, 'Package has existing purchases and cannot be deleted');
   }
 
   await prisma.package.delete({ where: { id: packageId } });
@@ -174,10 +180,10 @@ export async function listPackagePurchases(filters: PurchaseFilters) {
     const start = filters.startDate ? new Date(filters.startDate) : undefined;
     const end = filters.endDate ? new Date(filters.endDate) : undefined;
     if (start && Number.isNaN(start.getTime())) {
-      throw new ApiError('BAD_REQUEST', 400, 'Invalid startDate');
+      throw new AppError('BAD_REQUEST', 400, 'Invalid startDate');
     }
     if (end && Number.isNaN(end.getTime())) {
-      throw new ApiError('BAD_REQUEST', 400, 'Invalid endDate');
+      throw new AppError('BAD_REQUEST', 400, 'Invalid endDate');
     }
     where.createdAt = {
       ...(start ? { gte: start } : {}),

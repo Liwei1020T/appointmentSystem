@@ -25,6 +25,14 @@ interface PackageCardProps {
   averagePrice?: number; // 单次平均价格（仅在 originalPrice 未设置时作为后备）
 }
 
+type PackageTag = keyof typeof TAG_CONFIG;
+
+interface PackageCardMeta {
+  isPopular?: boolean | null;
+  tag?: PackageTag | null;
+  isFirstOrderOnly?: boolean | null;
+}
+
 export default function PackageCard({
   package: pkg,
   onPurchase,
@@ -32,6 +40,7 @@ export default function PackageCard({
   showSavings = true,
   averagePrice = 35,
 }: PackageCardProps) {
+  const packageMeta = pkg as Package & PackageCardMeta;
   const price = Number(pkg.price);
   const pricePerTime = price / pkg.times;
   // 优先使用数据库中的 originalPrice，否则用 averagePrice 计算
@@ -40,12 +49,12 @@ export default function PackageCard({
   const savingsPercentage = savings > 0 ? ((savings / originalPrice) * 100).toFixed(0) : '0';
 
   // 使用数据库字段判断是否为"英雄"卡片，优先用 isPopular，否则用 tag 或 times
-  const isHero = (pkg as any).isPopular === true || (pkg as any).tag === 'most_popular' || pkg.times === 10;
+  const isHero = packageMeta.isPopular === true || packageMeta.tag === 'most_popular' || pkg.times === 10;
 
   // 获取标签配置（优先用数据库 tag，否则根据 isPopular 显示"最受欢迎"）
-  const tagKey = (pkg as any).tag || ((pkg as any).isPopular ? 'most_popular' : null);
+  const tagKey = packageMeta.tag || (packageMeta.isPopular ? 'most_popular' : null);
   const tagConfig = tagKey ? TAG_CONFIG[tagKey] : null;
-  const isFirstOrderOnly = (pkg as any).isFirstOrderOnly === true;
+  const isFirstOrderOnly = packageMeta.isFirstOrderOnly === true;
 
   // Feature list for the card
   const features = [

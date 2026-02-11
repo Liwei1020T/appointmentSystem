@@ -12,6 +12,7 @@
  */
 
 'use client';
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -20,21 +21,70 @@ import type { AdminOrder, OrderStatus } from '@/services/adminOrderService';
 import { Badge, Button, Card } from '@/components';
 import EmptyState from '@/components/EmptyState';
 import PageLoading from '@/components/loading/PageLoading';
-import OrderPhotosUploader from '@/components/admin/OrderPhotosUploader';
 import OrderPhotosUpload from '@/components/OrderPhotosUpload';
 import PaymentReceiptVerifier from '@/components/admin/PaymentReceiptVerifier';
 import AdminOrderProgress from '@/components/admin/AdminOrderProgress';
-import { confirmCashPayment, confirmPayment, verifyPaymentReceipt } from '@/services/paymentService';
+import { verifyPaymentReceipt } from '@/services/paymentService';
 import { completeOrder } from '@/services/completeOrderService';
 import { toast } from 'sonner';
 import { CreditCard, Banknote, CheckCircle, X, FileText } from 'lucide-react';
+import { AppImage } from '@/components/AppImage';
+import {
+  getErrorMessage,
+  getStringDate,
+  mapAdminStatusToProgressStatus,
+  pickRelevantPayment,
+  type OrderPaymentLike,
+} from '@/lib/orderDetailUtils';
+
+interface AdminOrderDetailItem {
+  id?: string;
+  price?: number | string;
+  notes?: string;
+  tensionVertical?: number;
+  tension_vertical?: number;
+  tensionHorizontal?: number;
+  tension_horizontal?: number;
+  racketPhoto?: string;
+  racket_photo?: string;
+  racketBrand?: string;
+  racket_brand?: string;
+  racketModel?: string;
+  racket_model?: string;
+  string?: {
+    brand?: string;
+    model?: string;
+  };
+}
+
+type AdminOrderDetailData = AdminOrder & {
+  price?: number | string;
+  final_price?: number | string;
+  createdAt?: Date | string;
+  created_at?: Date | string;
+  updatedAt?: Date | string;
+  updated_at?: Date | string;
+  completedAt?: Date | string;
+  completed_at?: Date | string;
+  cancelledAt?: Date | string;
+  cancelled_at?: Date | string;
+  estimatedCompletionAt?: Date | string | null;
+  estimated_completion_at?: Date | string | null;
+  queuePosition?: number | null;
+  items?: AdminOrderDetailItem[];
+  payments?: OrderPaymentLike[];
+  payment?: (OrderPaymentLike & { method?: string }) | null;
+  tension?: number;
+  tension_vertical?: number;
+  tension_horizontal?: number;
+};
 
 export default function AdminOrderDetailPage() {
   const router = useRouter();
   const params = useParams();
   const orderId = params?.id as string;
 
-  const [order, setOrder] = useState<AdminOrder | null>(null);
+  const [order, setOrder] = useState<AdminOrderDetailData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
@@ -53,24 +103,7 @@ export default function AdminOrderDetailPage() {
    * - 之前直接取 `payments[0]` 会导致展示到旧记录/非当前记录，进而出现“支付方式 -”等信息缺失。
    */
   const payment = (() => {
-    const direct = (order as any)?.payment;
-    if (direct) return direct;
-
-    const payments = ((order as any)?.payments ?? []) as any[];
-    if (!Array.isArray(payments) || payments.length === 0) return null;
-
-    // 优先：排除 failed；按 createdAt/created_at/updatedAt/updated_at 倒序选择最新
-    const ranked = payments
-      .filter((p) => p && p.status !== 'failed')
-      .sort((a, b) => {
-        const aTime =
-          new Date(a.updatedAt ?? a.updated_at ?? a.createdAt ?? a.created_at ?? 0).getTime() || 0;
-        const bTime =
-          new Date(b.updatedAt ?? b.updated_at ?? b.createdAt ?? b.created_at ?? 0).getTime() || 0;
-        return bTime - aTime;
-      });
-
-    return ranked[0] ?? payments[0];
+    return pickRelevantPayment(order);
   })();
 
   /**
@@ -80,7 +113,9 @@ export default function AdminOrderDetailPage() {
    */
   const isPaymentConfirmed = (() => {
     if (!payment) return false;
-    const candidates = [payment.status, payment.payment_status].filter(Boolean).map((s: string) => String(s).toLowerCase());
+    const candidates = [payment.status, payment.payment_status]
+      .filter(Boolean)
+      .map((status) => String(status).toLowerCase());
     return candidates.some((s: string) => ['success', 'completed', 'paid'].includes(s));
   })();
 
@@ -152,8 +187,8 @@ export default function AdminOrderDetailPage() {
         // 重新加载订单数据
         await loadOrder();
       }
-    } catch (err: any) {
-      toast.error(err.message || '完成订单失败');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, '完成订单失败'));
     } finally {
       setCompleting(false);
     }
@@ -221,6 +256,16 @@ export default function AdminOrderDetailPage() {
   }
 
   const nextStatuses = getNextStatus(order.status);
+  const orderItems = Array.isArray(order.items) ? order.items : [];
+  const orderTensionVertical = order.tension_vertical ?? order.tension;
+  const orderTensionHorizontal = order.tension_horizontal ?? order.tension;
+  const progressStatus = mapAdminStatusToProgressStatus(order.status);
+  const progressCreatedAt = getStringDate(order.createdAt ?? order.created_at) ?? '';
+  const progressUpdatedAt = getStringDate(order.updatedAt ?? order.updated_at);
+  const progressCompletedAt = getStringDate(order.completedAt ?? order.completed_at);
+  const progressCancelledAt = getStringDate(order.cancelledAt ?? order.cancelled_at);
+  const progressEstimatedCompletionAt = getStringDate(order.estimatedCompletionAt ?? order.estimated_completion_at) ?? null;
+  const paymentMetadata = (payment?.metadata ?? {}) as Record<string, unknown>;
 
   return (
     <div className="min-h-screen bg-ink">
@@ -267,16 +312,16 @@ export default function AdminOrderDetailPage() {
             {/* Order Info - 支持多球拍订单 */}
             <Card padding="lg">
               <h2 className="text-lg font-semibold text-text-primary mb-4">
-                {(order as any).items?.length > 0
-                  ? `订单信息 (${(order as any).items.length} 支球拍)`
+                {orderItems.length > 0
+                  ? `订单信息 (${orderItems.length} 支球拍)`
                   : '订单信息'
                 }
               </h2>
 
               {/* 多球拍订单 */}
-              {(order as any).items?.length > 0 ? (
+              {orderItems.length > 0 ? (
                 <div className="space-y-4">
-                  {(order as any).items.map((item: any, index: number) => (
+                  {orderItems.map((item, index: number) => (
                     <div
                       key={item.id || index}
                       className="bg-ink-elevated rounded-lg p-4 border border-border-subtle"
@@ -285,11 +330,13 @@ export default function AdminOrderDetailPage() {
                         {/* 球拍照片 */}
                         {(item.racketPhoto || item.racket_photo) && (
                           <div className="flex-shrink-0">
-                            <img
-                              src={item.racketPhoto || item.racket_photo}
+                            <AppImage
+                              src={(item.racketPhoto || item.racket_photo) ?? ''}
                               alt={`球拍 ${index + 1}`}
+                              width={96}
+                              height={96}
                               className="w-24 h-24 rounded-lg object-cover border border-border-subtle cursor-pointer hover:opacity-90 transition-opacity"
-                              onClick={() => setPreviewPhoto(item.racketPhoto || item.racket_photo)}
+                              onClick={() => setPreviewPhoto((item.racketPhoto || item.racket_photo) ?? null)}
                             />
                           </div>
                         )}
@@ -348,7 +395,7 @@ export default function AdminOrderDetailPage() {
                     <span className="text-text-secondary">总计</span>
                     <span className="text-lg font-bold text-accent font-mono">
                       {(() => {
-                        const total = (order as any).items.reduce((sum: number, item: any) =>
+                        const total = orderItems.reduce((sum: number, item) =>
                           sum + Number(item.price || 0), 0
                         );
                         return `RM ${total.toFixed(2)}`;
@@ -375,7 +422,7 @@ export default function AdminOrderDetailPage() {
                         const price = Number(
                           order.total_price ??
                           order.totalAmount ??
-                          (order as any).price ??
+                          order.price ??
                           order.string?.price ??
                           0
                         );
@@ -391,7 +438,7 @@ export default function AdminOrderDetailPage() {
                         const match = order.notes?.match(/\[竖\/横分拉:\s*(\d+)\/(\d+)\s*LBS\]/);
                         if (match) return `${match[1]} lbs`;
 
-                        const v = (order as any).tension_vertical ?? (order as any).tension ?? order.tension;
+                        const v = orderTensionVertical;
                         return v ? `${v} lbs` : '-';
                       })()}
                     </div>
@@ -403,7 +450,7 @@ export default function AdminOrderDetailPage() {
                         const match = order.notes?.match(/\[竖\/横分拉:\s*(\d+)\/(\d+)\s*LBS\]/);
                         if (match) return `${match[2]} lbs`;
 
-                        const h = (order as any).tension_horizontal ?? (order as any).tension ?? order.tension;
+                        const h = orderTensionHorizontal;
                         return h ? `${h} lbs` : '-';
                       })()}
                     </div>
@@ -461,7 +508,7 @@ export default function AdminOrderDetailPage() {
                     <span className="text-text-secondary">球线价格</span>
                     <span className="font-medium text-text-primary font-mono">
                       RM {(() => {
-                        const price = order.string?.price ?? (order as any).price ?? (order as any).final_price ?? 0;
+                        const price = order.string?.price ?? order.price ?? order.final_price ?? 0;
                         return Number(price).toFixed(2);
                       })()}
                     </span>
@@ -479,7 +526,7 @@ export default function AdminOrderDetailPage() {
                         const totalAmount = Number(
                           order.total_price ??
                           order.totalAmount ??
-                          (order as any).final_price ??
+                          order.final_price ??
                           payment?.amount ??
                           0
                         );
@@ -500,10 +547,13 @@ export default function AdminOrderDetailPage() {
                 <PaymentReceiptVerifier
                   receiptUrl={payment.receipt_url || ''}
                   paymentStatus={payment.payment_status || payment.status || 'pending'}
-                  paymentId={payment.id}
-                  verifiedAt={(payment.metadata as any)?.verifiedAt || null}
-                  adminNotes={(payment.metadata as any)?.adminNotes || ''}
+                  paymentId={payment.id || ''}
+                  verifiedAt={(paymentMetadata.verifiedAt as string | null | undefined) || null}
+                  adminNotes={(paymentMetadata.adminNotes as string | undefined) || ''}
                   onVerify={async (approved, notes) => {
+                    if (!payment.id) {
+                      throw new Error('缺少支付记录 ID');
+                    }
                     const { error } = await verifyPaymentReceipt(
                       payment.id,
                       approved,
@@ -543,13 +593,13 @@ export default function AdminOrderDetailPage() {
             {/* Progress Management */}
             <AdminOrderProgress
               orderId={order.id}
-              currentStatus={order.status as any}
-              createdAt={String((order as any).createdAt || order.created_at || '')}
-              updatedAt={(order as any).updatedAt || (order as any).updated_at ? String((order as any).updatedAt || (order as any).updated_at) : undefined}
-              completedAt={(order as any).completedAt || (order as any).completed_at ? String((order as any).completedAt || (order as any).completed_at) : undefined}
-              cancelledAt={(order as any).cancelledAt || (order as any).cancelled_at ? String((order as any).cancelledAt || (order as any).cancelled_at) : undefined}
-              estimatedCompletionAt={(order as any).estimatedCompletionAt || (order as any).estimated_completion_at || null}
-              queuePosition={(order as any).queuePosition || null}
+              currentStatus={progressStatus}
+              createdAt={progressCreatedAt}
+              updatedAt={progressUpdatedAt}
+              completedAt={progressCompletedAt}
+              cancelledAt={progressCancelledAt}
+              estimatedCompletionAt={progressEstimatedCompletionAt}
+              queuePosition={order.queuePosition || null}
               onStatusUpdate={loadOrder}
             />
 
@@ -712,9 +762,11 @@ export default function AdminOrderDetailPage() {
             >
               <X className="w-5 h-5" /> 关闭
             </button>
-            <img
+            <AppImage
               src={previewPhoto}
               alt="球拍照片预览"
+              width={1600}
+              height={1000}
               className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
               onClick={(e) => e.stopPropagation()}
             />

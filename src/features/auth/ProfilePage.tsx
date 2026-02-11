@@ -20,6 +20,13 @@ import { updateProfile, updatePassword } from '@/services/authService';
 import { normalizeMyPhone, validatePassword, validatePhone } from '@/lib/utils';
 import { isAdminRole } from '@/lib/roles';
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const { data: session, status, update } = useSession();
@@ -146,7 +153,7 @@ export default function ProfilePage() {
       if (error) {
         setToast({
           show: true,
-          message: typeof error === 'string' ? error : (error as any)?.message || '更新失败 (Update failed)',
+          message: error || '更新失败 (Update failed)',
           type: 'error',
         });
         setLoading(false);
@@ -163,10 +170,10 @@ export default function ProfilePage() {
       });
       setEditMode(false);
       setLoading(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setToast({
         show: true,
-        message: err.message || '更新失败 (Update failed)',
+        message: getErrorMessage(err, '更新失败 (Update failed)'),
         type: 'error',
       });
       setLoading(false);
@@ -219,10 +226,10 @@ export default function ProfilePage() {
       setChangePasswordMode(false);
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setLoading(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setToast({
         show: true,
-        message: err.message || '修改失败 (Update failed)',
+        message: getErrorMessage(err, '修改失败 (Update failed)'),
         type: 'error',
       });
       setLoading(false);

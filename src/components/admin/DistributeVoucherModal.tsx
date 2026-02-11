@@ -38,6 +38,12 @@ interface User {
   phone?: string;
 }
 
+type TierOption = 'bronze' | 'silver' | 'gold' | 'platinum';
+
+function isTierOption(value: string): value is TierOption {
+  return value === 'bronze' || value === 'silver' || value === 'gold' || value === 'platinum';
+}
+
 export default function DistributeVoucherModal({
   voucherId,
   voucherCode,
@@ -47,7 +53,7 @@ export default function DistributeVoucherModal({
   const [loading, setLoading] = useState(false);
   const [distributionType, setDistributionType] = useState<'all' | 'specific' | 'tier'>('all');
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-  const [selectedTier, setSelectedTier] = useState<'bronze' | 'silver' | 'gold' | 'platinum'>('bronze');
+  const [selectedTier, setSelectedTier] = useState<TierOption>('bronze');
   const [searchTerm, setSearchTerm] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
@@ -111,7 +117,7 @@ export default function DistributeVoucherModal({
       target = { type: 'tier', tier: selectedTier };
     }
 
-    const { success, count, error } = await distributeVoucher(voucherId, target);
+    const { success: _success, count, error } = await distributeVoucher(voucherId, target);
 
     if (error) {
       alert(`分发失败: ${error}`);
@@ -283,7 +289,12 @@ export default function DistributeVoucherModal({
               </label>
               <select
                 value={selectedTier}
-                onChange={(e) => setSelectedTier(e.target.value as any)}
+                onChange={(e) => {
+                  const nextTier = e.target.value;
+                  if (isTierOption(nextTier)) {
+                    setSelectedTier(nextTier);
+                  }
+                }}
                 className="w-full h-11 px-3 rounded-lg border bg-ink-surface text-text-primary border-border-subtle focus:outline-none focus:ring-2 focus:ring-accent-border focus:ring-offset-2 focus:ring-offset-ink"
               >
                 <option value="bronze">青铜会员</option>

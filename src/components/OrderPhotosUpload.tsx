@@ -9,6 +9,7 @@
 
 import React, { useEffect, useState } from 'react';
 import ImageUploader from '@/components/ImageUploader';
+import { AppImage } from '@/components/AppImage';
 import Toast from '@/components/Toast';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { UploadResult } from '@/services/imageUploadService';
@@ -34,11 +35,19 @@ const PHOTO_TYPES = [
   { value: 'other', label: '其他', color: 'bg-ink-elevated text-text-secondary' },
 ];
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export default function OrderPhotosUpload({
   orderId,
   existingPhotos,
   onUploadSuccess,
 }: OrderPhotosUploadProps) {
+  const existingPhotosLength = existingPhotos?.length ?? 0;
   const [photos, setPhotos] = useState<OrderPhoto[]>(existingPhotos ?? []);
   const [selectedType, setSelectedType] = useState<string>('after');
   const [caption, setCaption] = useState<string>('');
@@ -89,7 +98,7 @@ export default function OrderPhotosUpload({
     } else {
       loadExisting();
     }
-  }, [orderId, existingPhotos ? existingPhotos.length : 0]);
+  }, [orderId, existingPhotos, existingPhotosLength]);
 
   // 上传照片到数据库
   const savePhotoToDatabase = async (photoUrl: string) => {
@@ -125,10 +134,10 @@ export default function OrderPhotosUpload({
       if (onUploadSuccess) {
         onUploadSuccess();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setToast({
         show: true,
-        message: error.message || '保存照片失败',
+        message: getErrorMessage(error, '保存照片失败'),
         type: 'error',
       });
     } finally {
@@ -155,10 +164,10 @@ export default function OrderPhotosUpload({
             message: '照片已删除',
             type: 'success',
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
           setToast({
             show: true,
-            message: error.message || '删除失败',
+            message: getErrorMessage(error, '删除失败'),
             type: 'error',
           });
         } finally {
@@ -285,9 +294,11 @@ export default function OrderPhotosUpload({
                   className="relative group rounded-lg overflow-hidden border border-border-subtle"
                 >
                   {/* 照片 */}
-                  <img
+                  <AppImage
                     src={photo.photo_url}
                     alt={photo.caption || '订单照片'}
+                    width={640}
+                    height={384}
                     className="w-full h-48 object-cover"
                   />
 

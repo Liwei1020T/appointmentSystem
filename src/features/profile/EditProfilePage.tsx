@@ -66,7 +66,7 @@ export default function EditProfilePage() {
       if (error) {
         setToast({
           show: true,
-          message: error?.message || error || '加载失败',
+          message: error || '加载失败',
           type: 'error',
         });
       } else if (data) {

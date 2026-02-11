@@ -4,6 +4,7 @@
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { errorResponse, successResponse } from '@/lib/api-response';
@@ -11,18 +12,27 @@ import { handleApiError } from '@/lib/api/handleApiError';
 
 export const dynamic = 'force-dynamic';
 
+const ALLOWED_ROLES = ['customer', 'admin'] as const;
+
+const updateRoleSchema = z.object({
+  role: z.enum([...ALLOWED_ROLES, 'user']).transform((val) =>
+    val === 'user' ? 'customer' : val
+  ),
+});
+
 async function handleUpdateRole(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const userId = params.id;
   const body = await request.json();
-  const { role } = body;
 
-  const normalizedRole = role === 'user' ? 'customer' : role;
-  if (!normalizedRole || typeof normalizedRole !== 'string') {
-    return errorResponse('无效的角色');
+  const parsed = updateRoleSchema.safeParse(body);
+  if (!parsed.success) {
+    return errorResponse('无效的角色，允许值：customer, admin', 400);
   }
+
+  const normalizedRole = parsed.data.role;
 
   const user = await prisma.user.update({
     where: { id: userId },

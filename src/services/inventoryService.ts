@@ -19,6 +19,25 @@ export interface LowStockAlert {
   minimumStock: number;
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === 'string' && error) {
+    return error;
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const { message } = error as { message?: unknown };
+    if (typeof message === 'string' && message) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
 /**
  * Fetch inventory list from public endpoint.
  */
@@ -105,10 +124,28 @@ export async function getBrands(): Promise<{ brands?: string[]; error?: string }
   }, { ttlMs: 60000 });
 }
 
+export interface UpdateStringInput {
+  model?: string;
+  brand?: string;
+  description?: string | null;
+  costPrice?: number | string;
+  sellingPrice?: number | string;
+  stock?: number;
+  minimumStock?: number;
+  color?: string | null;
+  gauge?: string | null;
+  imageUrl?: string | null;
+  isRecommended?: boolean;
+  elasticity?: string | null;
+  durability?: string | null;
+  control?: string | null;
+  active?: boolean;
+}
+
 /**
  * Update a string inventory record (admin).
  */
-export async function updateString(id: string, data: Partial<StringInventory>): Promise<StringInventory> {
+export async function updateString(id: string, data: UpdateStringInput): Promise<StringInventory> {
   const result = await apiRequest<StringInventory>(`/api/admin/inventory/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -165,17 +202,17 @@ export async function adjustStock(params: AdjustStockParams): Promise<AdjustStoc
     invalidateRequestCacheByPrefix('admin:inventory');
     invalidateRequestCacheByPrefix('admin:dashboard');
     return { string: result, error: null };
-  } catch (err: any) {
-    return { string: null, error: err.message || 'Failed to adjust stock' };
+  } catch (error: unknown) {
+    return { string: null, error: getErrorMessage(error, 'Failed to adjust stock') };
   }
 }
 
 /**
  * Fetch stock logs for a specific string.
  */
-export async function getStockLogs(stringId: string): Promise<any[]> {
+export async function getStockLogs(stringId: string): Promise<StockLog[]> {
   try {
-    return await apiRequest<any[]>(`/api/admin/inventory/${stringId}/logs`);
+    return await apiRequest<StockLog[]>(`/api/admin/inventory/${stringId}/logs`);
   } catch {
     return [];
   }
@@ -190,8 +227,8 @@ export async function deleteString(id: string): Promise<{ success: boolean; erro
     invalidateRequestCacheByPrefix('admin:inventory');
     invalidateRequestCacheByPrefix('admin:dashboard');
     return { success: true, error: null };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'Failed to delete string' };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error, 'Failed to delete string') };
   }
 }
 
@@ -242,8 +279,8 @@ export async function getAllStrings(params?: GetAllStringsParams): Promise<GetAl
     }
 
     return { strings, total, error: null };
-  } catch (err: any) {
-    return { strings: [], total: 0, error: err.message || 'Failed to fetch strings' };
+  } catch (error: unknown) {
+    return { strings: [], total: 0, error: getErrorMessage(error, 'Failed to fetch strings') };
   }
 }
 
@@ -453,8 +490,8 @@ export async function getStockHistory(
 
     const logs = await apiRequest<StockHistoryEntry[]>(url);
     return { history: logs, logs, data: logs, error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to fetch stock history:', error);
-    return { history: [], logs: [], data: [], error: error.message || 'Failed to fetch stock history' };
+    return { history: [], logs: [], data: [], error: getErrorMessage(error, 'Failed to fetch stock history') };
   }
 }

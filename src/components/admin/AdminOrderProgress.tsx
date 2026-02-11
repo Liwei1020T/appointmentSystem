@@ -9,9 +9,11 @@
  */
 
 'use client';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import React, { useState } from 'react';
 import { Clock, CheckCircle, AlertCircle, PlayCircle, XCircle, Timer, Edit3, RotateCcw } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { updateOrderStatus, updateOrderEta } from '@/services/adminOrderService';
 import { completeOrder } from '@/services/completeOrderService';
@@ -35,7 +37,7 @@ type ProgressStep = {
   label: string;
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   description: string;
-  icon: any;
+  icon: LucideIcon;
   color: string;
   bgColor: string;
   action?: {
@@ -44,6 +46,16 @@ type ProgressStep = {
     confirmMessage?: string;
   };
 };
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  if (typeof error === 'string' && error) {
+    return error;
+  }
+  return fallback;
+}
 
 export default function AdminOrderProgress({
   orderId,
@@ -208,8 +220,8 @@ export default function AdminOrderProgress({
           onStatusUpdate?.();
         }
       }
-    } catch (err: any) {
-      toast.error(err.message || '操作失败');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, '操作失败'));
     } finally {
       setUpdating(false);
       setActiveAction(null);
@@ -269,8 +281,8 @@ export default function AdminOrderProgress({
         setShowEtaModal(false);
         onStatusUpdate?.();
       }
-    } catch (err: any) {
-      toast.error(err.message || '更新失败');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, '更新失败'));
     } finally {
       setSavingEta(false);
     }
@@ -288,8 +300,8 @@ export default function AdminOrderProgress({
         setShowEtaModal(false);
         onStatusUpdate?.();
       }
-    } catch (err: any) {
-      toast.error(err.message || '操作失败');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, '操作失败'));
     } finally {
       setSavingEta(false);
     }

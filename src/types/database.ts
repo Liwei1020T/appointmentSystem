@@ -30,6 +30,7 @@ export interface StringInventory {
   minimumStock?: number;
   color?: string | null;
   gauge?: string | null;
+  description?: string | null;
   image_url?: string | null;
   imageUrl?: string | null;
   specification?: string | null;
@@ -149,7 +150,7 @@ export interface Payment {
   verified_by?: string;
   verified_at?: string;
   admin_notes?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }

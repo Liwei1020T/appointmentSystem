@@ -1,15 +1,13 @@
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
+import { AppError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { Prisma, User } from '@prisma/client';
 import { INVENTORY, ORDER_RULES, POINTS, PRICING } from '@/lib/constants';
 import { assertFirstOrderVoucherEligibility } from './welcome.service';
 import {
   calculateEstimatedCompletion,
-  getOrderQueuePosition,
   batchGetOrderEtaQueueMeta,
   getOrderEtaQueueMeta,
-  type EtaQueueMeta,
 } from './order-eta.service';
 import { calculatePointsMultiplier, checkAndUpgradeTier } from './membership.service';
 
@@ -57,6 +55,8 @@ export interface CreateMultiRacketOrderPayload {
 type UserSnapshot = Pick<User, 'id' | 'role' | 'fullName'>;
 
 type AdminSnapshot = UserSnapshot;
+type UserPackageWithPackage = Prisma.UserPackageGetPayload<{ include: { package: true } }>;
+type UserVoucherWithVoucher = Prisma.UserVoucherGetPayload<{ include: { voucher: true } }>;
 
 // Define type-safe includes
 const orderListInclude = {
@@ -149,7 +149,7 @@ export async function getUserOrders(
 
 export async function getOrderById(userId: string, orderId: string) {
   if (!isValidUUID(orderId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid order id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid order id');
   }
 
   const order = await prisma.order.findFirst({
@@ -158,7 +158,7 @@ export async function getOrderById(userId: string, orderId: string) {
   });
 
   if (!order) {
-    throw new ApiError('NOT_FOUND', 404, 'Order not found');
+    throw new AppError('NOT_FOUND', 404, 'Order not found');
   }
 
   // 获取标准化的 ETA 队列元数据
@@ -182,7 +182,7 @@ export async function createOrder(user: UserSnapshot, payload: CreateOrderPayloa
   const notes = payload.notes ?? '';
 
   if (!stringId || !Number.isFinite(tension) || finalPrice === undefined) {
-    throw new ApiError('BAD_REQUEST', 400, 'Missing required fields');
+    throw new AppError('BAD_REQUEST', 400, 'Missing required fields');
   }
 
   const string = await prisma.stringInventory.findUnique({
@@ -190,11 +190,11 @@ export async function createOrder(user: UserSnapshot, payload: CreateOrderPayloa
   });
 
   if (!string) {
-    throw new ApiError('NOT_FOUND', 404, 'String not found');
+    throw new AppError('NOT_FOUND', 404, 'String not found');
   }
 
   if (string.stock <= 0) {
-    throw new ApiError('CONFLICT', 409, 'Insufficient stock');
+    throw new AppError('CONFLICT', 409, 'Insufficient stock');
   }
 
   let packageUsed = null;
@@ -210,7 +210,7 @@ export async function createOrder(user: UserSnapshot, payload: CreateOrderPayloa
     });
 
     if (!availablePackage) {
-      throw new ApiError('CONFLICT', 409, 'No available package');
+      throw new AppError('CONFLICT', 409, 'No available package');
     }
 
     packageUsed = availablePackage;
@@ -228,7 +228,7 @@ export async function createOrder(user: UserSnapshot, payload: CreateOrderPayloa
     });
 
     if (!userVoucher) {
-      throw new ApiError('CONFLICT', 409, 'Voucher not available');
+      throw new AppError('CONFLICT', 409, 'Voucher not available');
     }
 
     await assertFirstOrderVoucherEligibility(user.id, !!userVoucher.voucher?.isFirstOrderOnly);
@@ -245,7 +245,7 @@ export async function createOrder(user: UserSnapshot, payload: CreateOrderPayloa
     });
 
     if (!currentString || currentString.stock < INVENTORY.DEDUCT_ON_CREATE) {
-      throw new ApiError('CONFLICT', 409, 'Insufficient stock');
+      throw new AppError('CONFLICT', 409, 'Insufficient stock');
     }
 
     // 更新库存，使用 version 字段进行乐观锁
@@ -262,7 +262,7 @@ export async function createOrder(user: UserSnapshot, payload: CreateOrderPayloa
     });
 
     if (stockResult.count === 0) {
-      throw new ApiError('CONFLICT', 409, '库存已被其他订单占用，请重试');
+      throw new AppError('CONFLICT', 409, '库存已被其他订单占用，请重试');
     }
 
     const newOrder = await tx.order.create({
@@ -354,11 +354,11 @@ export async function createOrderWithPackage(user: UserSnapshot, payload: Create
   const { stringId, tension, usePackage, packageId, voucherId, notes } = payload;
 
   if (!stringId || !tension) {
-    throw new ApiError('BAD_REQUEST', 400, 'Missing required fields');
+    throw new AppError('BAD_REQUEST', 400, 'Missing required fields');
   }
 
   if (tension < ORDER_RULES.MIN_TENSION || tension > ORDER_RULES.MAX_TENSION) {
-    throw new ApiError('UNPROCESSABLE_ENTITY', 422, `Tension must be between ${ORDER_RULES.MIN_TENSION} and ${ORDER_RULES.MAX_TENSION}`);
+    throw new AppError('UNPROCESSABLE_ENTITY', 422, `Tension must be between ${ORDER_RULES.MIN_TENSION} and ${ORDER_RULES.MAX_TENSION}`);
   }
 
   const string = await prisma.stringInventory.findUnique({
@@ -366,14 +366,14 @@ export async function createOrderWithPackage(user: UserSnapshot, payload: Create
   });
 
   if (!string) {
-    throw new ApiError('NOT_FOUND', 404, 'String not found');
+    throw new AppError('NOT_FOUND', 404, 'String not found');
   }
 
   if (string.stock < INVENTORY.DEDUCT_ON_COMPLETE) {
-    throw new ApiError('CONFLICT', 409, 'Insufficient stock');
+    throw new AppError('CONFLICT', 409, 'Insufficient stock');
   }
 
-  let packageUsed: any = null;
+  let packageUsed: UserPackageWithPackage | null = null;
   let basePrice: number = PRICING.DEFAULT_BASE_PRICE;
 
   if (usePackage && packageId) {
@@ -389,14 +389,14 @@ export async function createOrderWithPackage(user: UserSnapshot, payload: Create
     });
 
     if (!packageUsed) {
-      throw new ApiError('CONFLICT', 409, 'Package not available');
+      throw new AppError('CONFLICT', 409, 'Package not available');
     }
 
     basePrice = 0;
   }
 
   let discount = 0;
-  let voucherUsed: any = null;
+  let voucherUsed: UserVoucherWithVoucher | null = null;
 
   if (voucherId) {
     voucherUsed = await prisma.userVoucher.findFirst({
@@ -410,13 +410,13 @@ export async function createOrderWithPackage(user: UserSnapshot, payload: Create
     });
 
     if (!voucherUsed) {
-      throw new ApiError('CONFLICT', 409, 'Voucher not available');
+      throw new AppError('CONFLICT', 409, 'Voucher not available');
     }
 
     const voucher = voucherUsed.voucher;
     const now = new Date();
     if (now < new Date(voucher.validFrom) || now > new Date(voucher.validUntil)) {
-      throw new ApiError('CONFLICT', 409, 'Voucher not valid');
+      throw new AppError('CONFLICT', 409, 'Voucher not valid');
     }
 
     await assertFirstOrderVoucherEligibility(user.id, !!voucher.isFirstOrderOnly);
@@ -425,11 +425,11 @@ export async function createOrderWithPackage(user: UserSnapshot, payload: Create
     const minPurchase = Number(voucher.minPurchase);
 
     if (!Number.isFinite(voucherValue) || voucherValue <= 0) {
-      throw new ApiError('UNPROCESSABLE_ENTITY', 422, 'Invalid voucher value');
+      throw new AppError('UNPROCESSABLE_ENTITY', 422, 'Invalid voucher value');
     }
 
     if (!Number.isNaN(minPurchase) && basePrice < minPurchase) {
-      throw new ApiError('UNPROCESSABLE_ENTITY', 422, `Minimum purchase RM ${minPurchase.toFixed(2)}`);
+      throw new AppError('UNPROCESSABLE_ENTITY', 422, `Minimum purchase RM ${minPurchase.toFixed(2)}`);
     }
 
     if (voucher.type === 'percentage') {
@@ -509,27 +509,27 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
 
   // 验证 items 是数组且不为空
   if (!Array.isArray(items) || items.length === 0) {
-    throw new ApiError('BAD_REQUEST', 400, 'At least one racket is required');
+    throw new AppError('BAD_REQUEST', 400, 'At least one racket is required');
   }
 
   for (let i = 0; i < items.length; i += 1) {
     const item = items[i];
     if (!item.stringId) {
-      throw new ApiError('BAD_REQUEST', 400, `Racket ${i + 1} missing string`);
+      throw new AppError('BAD_REQUEST', 400, `Racket ${i + 1} missing string`);
     }
     if (!item.racketPhoto) {
-      throw new ApiError('BAD_REQUEST', 400, `Racket ${i + 1} missing photo`);
+      throw new AppError('BAD_REQUEST', 400, `Racket ${i + 1} missing photo`);
     }
     if (item.tensionVertical < ORDER_RULES.MIN_TENSION || item.tensionVertical > ORDER_RULES.MAX_TENSION) {
-      throw new ApiError('UNPROCESSABLE_ENTITY', 422, `Racket ${i + 1} vertical tension must be ${ORDER_RULES.MIN_TENSION}-${ORDER_RULES.MAX_TENSION}`);
+      throw new AppError('UNPROCESSABLE_ENTITY', 422, `Racket ${i + 1} vertical tension must be ${ORDER_RULES.MIN_TENSION}-${ORDER_RULES.MAX_TENSION}`);
     }
     if (item.tensionHorizontal < ORDER_RULES.MIN_TENSION || item.tensionHorizontal > ORDER_RULES.MAX_TENSION) {
-      throw new ApiError('UNPROCESSABLE_ENTITY', 422, `Racket ${i + 1} horizontal tension must be ${ORDER_RULES.MIN_TENSION}-${ORDER_RULES.MAX_TENSION}`);
+      throw new AppError('UNPROCESSABLE_ENTITY', 422, `Racket ${i + 1} horizontal tension must be ${ORDER_RULES.MIN_TENSION}-${ORDER_RULES.MAX_TENSION}`);
     }
     // Enforce cross/main tension difference within the allowed range.
     const diff = item.tensionHorizontal - item.tensionVertical;
     if (diff < ORDER_RULES.MIN_TENSION_DIFF || diff > ORDER_RULES.MAX_TENSION_DIFF) {
-      throw new ApiError(
+      throw new AppError(
         'UNPROCESSABLE_ENTITY',
         422,
         `Racket ${i + 1} tension difference must be ${ORDER_RULES.MIN_TENSION_DIFF}-${ORDER_RULES.MAX_TENSION_DIFF} lbs`
@@ -546,10 +546,10 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
   for (const item of items) {
     const string = stringMap.get(item.stringId);
     if (!string) {
-      throw new ApiError('NOT_FOUND', 404, `String not found: ${item.stringId}`);
+      throw new AppError('NOT_FOUND', 404, `String not found: ${item.stringId}`);
     }
     if (string.stock <= 0) {
-      throw new ApiError('CONFLICT', 409, `Insufficient stock for ${string.brand} ${string.model}`);
+      throw new AppError('CONFLICT', 409, `Insufficient stock for ${string.brand} ${string.model}`);
     }
   }
 
@@ -562,7 +562,7 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
     totalPrice += price;
   }
 
-  let packageUsed: any = null;
+  let packageUsed: UserPackageWithPackage | null = null;
   const racketCount = items.length;
 
   if (usePackage && packageId) {
@@ -578,7 +578,7 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
     });
 
     if (!packageUsed) {
-      throw new ApiError('CONFLICT', 409, `Package usage requires ${racketCount} remaining`);
+      throw new AppError('CONFLICT', 409, `Package usage requires ${racketCount} remaining`);
     }
 
     totalPrice = 0;
@@ -586,7 +586,7 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
   }
 
   let discount = 0;
-  let voucherUsed: any = null;
+  let voucherUsed: UserVoucherWithVoucher | null = null;
 
   if (voucherId && !usePackage) {
     voucherUsed = await prisma.userVoucher.findFirst({
@@ -600,13 +600,13 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
     });
 
     if (!voucherUsed) {
-      throw new ApiError('CONFLICT', 409, 'Voucher not available');
+      throw new AppError('CONFLICT', 409, 'Voucher not available');
     }
 
     const voucher = voucherUsed.voucher;
     const now = new Date();
     if (now < new Date(voucher.validFrom) || now > new Date(voucher.validUntil)) {
-      throw new ApiError('CONFLICT', 409, 'Voucher not valid');
+      throw new AppError('CONFLICT', 409, 'Voucher not valid');
     }
 
     await assertFirstOrderVoucherEligibility(user.id, !!voucher.isFirstOrderOnly);
@@ -615,7 +615,7 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
     const minPurchase = Number(voucher.minPurchase);
 
     if (totalPrice < minPurchase) {
-      throw new ApiError('UNPROCESSABLE_ENTITY', 422, `Minimum purchase RM ${minPurchase.toFixed(2)}`);
+      throw new AppError('UNPROCESSABLE_ENTITY', 422, `Minimum purchase RM ${minPurchase.toFixed(2)}`);
     }
 
     if (voucher.type === 'percentage') {
@@ -666,10 +666,10 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
       const stringVersion = versionMap.get(item.stringId);
 
       if (!stringVersion || stringVersion.stock < INVENTORY.DEDUCT_ON_CREATE) {
-        throw new ApiError('CONFLICT', 409, `Insufficient stock for ${string.brand} ${string.model}`);
+        throw new AppError('CONFLICT', 409, `Insufficient stock for ${string.brand} ${string.model}`);
       }
 
-      await (tx as any).orderItem.create({
+      await tx.orderItem.create({
         data: {
           orderId: newOrder.id,
           stringId: item.stringId,
@@ -696,7 +696,7 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
       });
 
       if (stockResult.count === 0) {
-        throw new ApiError('CONFLICT', 409, `库存已被其他订单占用：${string.brand} ${string.model}`);
+        throw new AppError('CONFLICT', 409, `库存已被其他订单占用：${string.brand} ${string.model}`);
       }
 
       await tx.stockLog.create({
@@ -778,7 +778,7 @@ export async function createMultiRacketOrder(user: UserSnapshot, payload: Create
 
 export async function cancelOrder(user: UserSnapshot, orderId: string) {
   if (!isValidUUID(orderId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid order id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid order id');
   }
 
   const order = await prisma.order.findFirst({
@@ -787,11 +787,11 @@ export async function cancelOrder(user: UserSnapshot, orderId: string) {
   });
 
   if (!order) {
-    throw new ApiError('NOT_FOUND', 404, 'Order not found');
+    throw new AppError('NOT_FOUND', 404, 'Order not found');
   }
 
   if (order.status !== 'pending') {
-    throw new ApiError('UNPROCESSABLE_ENTITY', 422, 'Only pending orders can be cancelled');
+    throw new AppError('UNPROCESSABLE_ENTITY', 422, 'Only pending orders can be cancelled');
   }
 
   await prisma.$transaction(async (tx) => {
@@ -801,7 +801,7 @@ export async function cancelOrder(user: UserSnapshot, orderId: string) {
     });
 
     if (updated.count === 0) {
-      throw new ApiError('UNPROCESSABLE_ENTITY', 422, 'Only pending orders can be cancelled');
+      throw new AppError('UNPROCESSABLE_ENTITY', 422, 'Only pending orders can be cancelled');
     }
 
     if (order.payments.length > 0) {
@@ -829,7 +829,7 @@ export async function cancelOrder(user: UserSnapshot, orderId: string) {
       }
     }
 
-    // Restore any vouchers that were marked as used during order creation.
+    // Restore vouchers that were marked as used during order creation.
     await tx.userVoucher.updateMany({
       where: { orderId, status: 'used' },
       data: { status: 'active', usedAt: null, orderId: null },
@@ -883,7 +883,7 @@ export async function cancelOrder(user: UserSnapshot, orderId: string) {
 
 export async function completeOrder(admin: AdminSnapshot, orderId: string, adminNotes?: string) {
   if (!isValidUUID(orderId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid order id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid order id');
   }
 
   const order = await prisma.order.findUnique({
@@ -892,28 +892,28 @@ export async function completeOrder(admin: AdminSnapshot, orderId: string, admin
   });
 
   if (!order) {
-    throw new ApiError('NOT_FOUND', 404, 'Order not found');
+    throw new AppError('NOT_FOUND', 404, 'Order not found');
   }
 
   if (order.status === 'completed') {
-    throw new ApiError('CONFLICT', 409, 'Order already completed');
+    throw new AppError('CONFLICT', 409, 'Order already completed');
   }
 
   if (order.status !== 'in_progress') {
-    throw new ApiError('UNPROCESSABLE_ENTITY', 422, 'Only in-progress orders can be completed');
+    throw new AppError('UNPROCESSABLE_ENTITY', 422, 'Only in-progress orders can be completed');
   }
 
   const isMultiRacketOrder = (order.items && order.items.length > 0);
 
   if (!isMultiRacketOrder && (!order.stringId || !order.string)) {
-    throw new ApiError('CONFLICT', 409, 'Order missing string');
+    throw new AppError('CONFLICT', 409, 'Order missing string');
   }
 
   const stockToDeduct = INVENTORY.DEDUCT_ON_COMPLETE;
 
   if (!isMultiRacketOrder) {
     if (order.string && order.string.stock < stockToDeduct) {
-      throw new ApiError('CONFLICT', 409, `Insufficient stock for completion`);
+      throw new AppError('CONFLICT', 409, `Insufficient stock for completion`);
     }
   }
 
@@ -939,7 +939,7 @@ export async function completeOrder(admin: AdminSnapshot, orderId: string, admin
       });
 
       if (!currentString || currentString.stock < stockToDeduct) {
-        throw new ApiError('CONFLICT', 409, 'Insufficient stock for completion');
+        throw new AppError('CONFLICT', 409, 'Insufficient stock for completion');
       }
 
       const stockResult = await tx.stringInventory.updateMany({
@@ -955,7 +955,7 @@ export async function completeOrder(admin: AdminSnapshot, orderId: string, admin
       });
 
       if (stockResult.count === 0) {
-        throw new ApiError('CONFLICT', 409, '库存已被其他订单占用，请重试');
+        throw new AppError('CONFLICT', 409, '库存已被其他订单占用，请重试');
       }
 
       await tx.stockLog.create({

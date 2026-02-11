@@ -24,6 +24,13 @@ import { createOrder } from '@/services/orderService';
 import { getUserStats, type MembershipTierInfo } from '@/services/profileService';
 import PageHeader from '@/components/layout/PageHeader';
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export default function BookingFlow() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -40,7 +47,7 @@ export default function BookingFlow() {
   const [usePackage, setUsePackage] = useState(false);
   const [selectedVoucher, setSelectedVoucher] = useState<UserVoucher | null>(null);
   const [notes, setNotes] = useState('');
-  const [recommendedTension, setRecommendedTension] = useState<number | null>(null);
+  const [recommendedTension, _setRecommendedTension] = useState<number | null>(null);
 
   // UI 状态
   const [step, setStep] = useState(1); // 1: 选球线, 2: 拉力, 3: 优惠, 4: 确认
@@ -239,10 +246,10 @@ export default function BookingFlow() {
           router.push(`/orders/${order.id}`);
         }, 1500);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setToast({
         show: true,
-        message: err.message || '预约失败，请重试',
+        message: getErrorMessage(err, '预约失败，请重试'),
         type: 'error',
       });
       setLoading(false);

@@ -11,6 +11,7 @@ import { Camera, X } from 'lucide-react';
 import { uploadImage } from '@/services/imageUploadService';
 import { toast } from 'sonner';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
+import { AppImage } from '@/components/AppImage';
 
 interface RacketPhotoUploaderProps {
     value?: string;
@@ -18,6 +19,13 @@ interface RacketPhotoUploaderProps {
     onRemove?: () => void;
     disabled?: boolean;
     index?: number;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+    if (error instanceof Error && error.message) {
+        return error.message;
+    }
+    return fallback;
 }
 
 export default function RacketPhotoUploader({
@@ -84,9 +92,9 @@ export default function RacketPhotoUploader({
                 setUploadError(null);
                 toast.success('球拍照片上传成功');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to upload racket photo:', error);
-            toast.error('上传失败');
+            toast.error(getErrorMessage(error, '上传失败'));
             setPreviewUrl(null);
             setUploadError('上传失败，请重试');
         } finally {
@@ -183,11 +191,12 @@ export default function RacketPhotoUploader({
                 </div>
             ) : (
                 <div className="relative rounded-xl overflow-hidden border border-border-subtle bg-ink-elevated">
-                    <img
+                    <AppImage
                         src={previewUrl}
                         alt="球拍照片"
+                        width={800}
+                        height={320}
                         className="w-full h-40 object-cover"
-                        decoding="async"
                     />
                     {!disabled && (
                         <div className="absolute top-2 right-2 flex items-center gap-2">

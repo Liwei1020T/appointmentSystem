@@ -7,9 +7,9 @@
 
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { subscribeToUserOrders, RealtimeSubscription } from '@/services/realtimeService';
+import { subscribeToUserOrders, type OrderUpdateData } from '@/services/realtimeService';
 import {
   getOrderStatusNotification,
   showBrowserNotification,
@@ -46,13 +46,38 @@ interface RealtimeOrderProviderProps {
   children: React.ReactNode;
 }
 
+interface SupabaseOrderUpdatePayload {
+  eventType?: 'INSERT' | 'UPDATE' | 'DELETE' | string;
+  old?: { id?: string; status?: string };
+  new?: { id?: string; status?: string };
+}
+
+interface UserOrdersUpdatePayload {
+  orders: OrderUpdateData[];
+}
+
+function isSupabaseOrderUpdatePayload(payload: unknown): payload is SupabaseOrderUpdatePayload {
+  return typeof payload === 'object' && payload !== null && 'eventType' in payload;
+}
+
+function isUserOrdersUpdatePayload(payload: unknown): payload is UserOrdersUpdatePayload {
+  if (!payload || typeof payload !== 'object') return false;
+  return Array.isArray((payload as { orders?: unknown }).orders);
+}
+
+function toNotificationStatus(status: string | null | undefined): OrderStatus {
+  if (status === 'cancelled') return 'cancelled';
+  if (status === 'completed' || status === 'picked_up') return 'completed';
+  if (status === 'in_progress' || status === 'received') return 'in_progress';
+  return 'pending';
+}
+
 /**
  * 实时订单 Provider 组件
  */
 export default function RealtimeOrderProvider({ children }: RealtimeOrderProviderProps) {
   const { data: session } = useSession();
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [channel, setChannel] = useState<RealtimeSubscription | null>(null);
   const [lastNotification, setLastNotification] = useState<OrderNotificationMessage | null>(null);
   const [toast, setToast] = useState<{
     show: boolean;
@@ -63,16 +88,19 @@ export default function RealtimeOrderProvider({ children }: RealtimeOrderProvide
     message: '',
     type: 'info',
   });
+  const lastKnownStatusRef = useRef<Record<string, string>>({});
 
   // 处理订单状态更新
-  const handleOrderUpdate = useCallback((payload: any) => {
-    const { eventType, old, new: newData } = payload;
+  const handleOrderUpdate = useCallback((payload: UserOrdersUpdatePayload | SupabaseOrderUpdatePayload) => {
+    if (isSupabaseOrderUpdatePayload(payload)) {
+      const { eventType, old, new: newData } = payload;
+      if (eventType !== 'UPDATE' || !newData?.id || !newData.status || old?.status === newData.status) {
+        return;
+      }
 
-    // 仅处理状态变化
-    if (eventType === 'UPDATE' && old.status !== newData.status) {
       const notification = getOrderStatusNotification(
-        old.status as OrderStatus,
-        newData.status as OrderStatus,
+        toNotificationStatus(old?.status),
+        toNotificationStatus(newData.status),
         newData.id,
         '订单' // 全局通知使用简单描述
       );
@@ -97,6 +125,44 @@ export default function RealtimeOrderProvider({ children }: RealtimeOrderProvide
 
       // 浏览器通知
       showBrowserNotification(notification);
+      lastKnownStatusRef.current[newData.id] = newData.status;
+      return;
+    }
+
+    if (!isUserOrdersUpdatePayload(payload)) {
+      return;
+    }
+
+    for (const update of payload.orders) {
+      const previousStatus = lastKnownStatusRef.current[update.orderId];
+      lastKnownStatusRef.current[update.orderId] = update.status;
+
+      if (!previousStatus || previousStatus === update.status) {
+        continue;
+      }
+
+      const notification = getOrderStatusNotification(
+        toNotificationStatus(previousStatus),
+        toNotificationStatus(update.status),
+        update.orderId,
+        '订单'
+      );
+
+      setLastNotification(notification);
+
+      const toastType = notification.type === 'error'
+        ? 'error'
+        : notification.type === 'success'
+          ? 'success'
+          : 'info';
+      setToast({
+        show: true,
+        message: notification.message,
+        type: toastType,
+      });
+
+      playNotificationSound(toastType);
+      showBrowserNotification(notification);
     }
   }, []);
 
@@ -105,7 +171,6 @@ export default function RealtimeOrderProvider({ children }: RealtimeOrderProvide
     const userId = session?.user?.id;
     if (userId) {
       const subscription = subscribeToUserOrders(userId, handleOrderUpdate);
-      setChannel(subscription);
       setIsConnected(true);
 
       return () => {

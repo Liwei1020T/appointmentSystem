@@ -18,6 +18,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Upload, X } from 'lucide-react';
 import { uploadImage, UploadOptions, UploadResult } from '@/services/imageUploadService';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
+import { AppImage } from '@/components/AppImage';
 
 interface ImageUploaderProps {
   uploadOptions: Omit<UploadOptions, 'fileName'>;
@@ -63,11 +64,12 @@ export default function ImageUploader({
 
   // Cleanup blob URLs on unmount to prevent memory leaks
   useEffect(() => {
+    const blobUrls = blobUrlsRef.current;
     return () => {
-      blobUrlsRef.current.forEach((url) => {
+      blobUrls.forEach((url) => {
         URL.revokeObjectURL(url);
       });
-      blobUrlsRef.current.clear();
+      blobUrls.clear();
     };
   }, []);
 
@@ -263,9 +265,11 @@ export default function ImageUploader({
               className="relative aspect-square rounded-lg overflow-hidden border border-border-subtle group"
             >
               {/* 图片 - 使用原生 img 因为支持 blob URLs */}
-              <img
+              <AppImage
                 src={image.url}
                 alt={`预览 ${index + 1}`}
+                width={320}
+                height={320}
                 className="w-full h-full object-cover"
                 loading="lazy"
               />

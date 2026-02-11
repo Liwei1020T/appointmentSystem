@@ -19,6 +19,13 @@ import { signIn, signUp } from '@/services/authService';
 import { normalizeMyPhone, validatePassword, validatePhone } from '@/lib/utils';
 import BrandLogo from '@/components/BrandLogo';
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export default function SignupPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -136,10 +143,10 @@ export default function SignupPage() {
       setTimeout(() => {
         router.push('/');
       }, 1500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setToast({
         show: true,
-        message: err.message || '注册失败 (Registration failed)',
+        message: getErrorMessage(err, '注册失败 (Registration failed)'),
         type: 'error',
       });
       setLoading(false);

@@ -440,12 +440,13 @@ const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
 | `FeaturedReviews` | FeaturedReviews.tsx | Reviews carousel |
 | `ImagePreview` | ImagePreview.tsx | Image zoom modal |
 | `ImageUploader` | ImageUploader.tsx | General image upload |
+| `AppImage` | AppImage.tsx | Next.js Image wrapper (`unoptimized` by default) |
 | `InviteCard` | InviteCard.tsx | Referral invite UI |
 | `MembershipCard` | MembershipCard.tsx | Membership status display |
 | `NotificationBell` | NotificationBell.tsx | Header notification icon |
 | `NotificationItem` | NotificationItem.tsx | Single notification |
 | `NotificationPanel` | NotificationPanel.tsx | Notification dropdown |
-| `OptimizedImage` | OptimizedImage.tsx | Next.js Image wrapper |
+| `OptimizedImage` | OptimizedImage.tsx | Lazy-load image with skeleton/error state |
 | `OrderPaymentSection` | OrderPaymentSection.tsx | Payment options |
 | `OrderPhotosDisplay` | OrderPhotosDisplay.tsx | Photo gallery viewer |
 | `OrderStatusBadge` | OrderStatusBadge.tsx | Order status indicator |

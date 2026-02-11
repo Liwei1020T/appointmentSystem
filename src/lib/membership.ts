@@ -70,7 +70,7 @@ export function getTierForSpend(totalSpent: number): MembershipTierDefinition {
 }
 
 /**
- * Returns the next tier definition above the current spend (if any).
+ * Returns the next tier definition above the current spend (if available).
  */
 export function getNextTierAfterSpend(totalSpent: number): MembershipTierDefinition | null {
   const safeSpend = Math.max(0, totalSpent);

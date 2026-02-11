@@ -15,6 +15,7 @@
  */
 
 'use client';
+/* eslint-disable @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps */
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -190,12 +191,14 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
     return `¥${amount.toFixed(2)}`;
   }
 
-  function formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('zh-CN');
+  function formatDate(dateValue?: string | Date | null): string {
+    if (!dateValue) return '-';
+    return new Date(dateValue).toLocaleDateString('zh-CN');
   }
 
-  function formatDateTime(dateString: string): string {
-    return new Date(dateString).toLocaleString('zh-CN');
+  function formatDateTime(dateValue?: string | Date | null): string {
+    if (!dateValue) return '-';
+    return new Date(dateValue).toLocaleString('zh-CN');
   }
 
   function getStatusBadge(status: string) {
@@ -404,12 +407,12 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
               )}
               <div className="flex justify-between py-2 border-b">
                 <span className="text-text-secondary">注册时间</span>
-                <span className="text-sm">{formatDateTime(user.created_at || user.createdAt as any)}</span>
+                <span className="text-sm">{formatDateTime(user.created_at || user.createdAt)}</span>
               </div>
               {(user.updated_at || user.updatedAt) && (
                 <div className="flex justify-between py-2">
                   <span className="text-text-secondary">更新时间</span>
-                  <span className="text-sm">{formatDateTime((user.updated_at || user.updatedAt) as any)}</span>
+                  <span className="text-sm">{formatDateTime(user.updated_at || user.updatedAt)}</span>
                 </div>
               )}
             </div>
@@ -474,7 +477,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
                             )}
                           </td>
                           <td className="px-4 py-3 text-right text-sm text-text-secondary">
-                            {formatDate((order.created_at || order.createdAt) as any)}
+                            {formatDate(order.created_at || order.createdAt)}
                           </td>
                         </tr>
                       );
@@ -496,7 +499,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
                   <div key={log.id} className="flex justify-between items-center py-2 border-b">
                     <div>
                       <div className="font-medium">{log.source || log.reason || '-'}</div>
-                      <div className="text-sm text-text-tertiary">{formatDateTime((log.created_at || log.createdAt) as any)}</div>
+                      <div className="text-sm text-text-tertiary">{formatDateTime(log.created_at || log.createdAt)}</div>
                     </div>
                     <div className={`font-bold ${(log.amount || log.points || 0) > 0 ? 'text-success' : 'text-danger'}`}>
                       {(log.amount || log.points || 0) > 0 ? '+' : ''}{log.amount || log.points || 0}
@@ -551,7 +554,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
                       剩余: {pkg.remaining || pkg.remainingSessions || 0} / {pkg.package?.times || pkg.totalSessions || 0}
                     </div>
                     <div className="text-xs text-text-tertiary mt-1">
-                      到期: {formatDate((pkg.expiry || pkg.expiryDate) as any)}
+                      到期: {formatDate(pkg.expiry || pkg.expiryDate)}
                     </div>
                   </div>
                 ))}
@@ -579,7 +582,7 @@ export default function AdminUserDetailPage({ userId }: AdminUserDetailPageProps
                     </div>
                     {(voucher.used_at || voucher.usedAt) && (
                       <div className="text-xs text-text-tertiary mt-1">
-                        使用: {formatDate((voucher.used_at || voucher.usedAt) as any)}
+                        使用: {formatDate(voucher.used_at || voucher.usedAt)}
                       </div>
                     )}
                   </div>

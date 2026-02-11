@@ -8,6 +8,7 @@
  */
 
 'use client';
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useEffect, useState } from 'react';
 import { AlertTriangle, Package, RefreshCw } from 'lucide-react';

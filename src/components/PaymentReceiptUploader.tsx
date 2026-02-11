@@ -14,9 +14,10 @@
 
 import React, { useState, useRef } from 'react';
 import { Upload, Image as ImageIcon, X, Check, AlertCircle } from 'lucide-react';
-import { uploadImage, deleteImage } from '@/services/imageUploadService';
+import { uploadImage } from '@/services/imageUploadService';
 import { toast } from 'sonner';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
+import { AppImage } from '@/components/AppImage';
 
 interface PaymentReceiptUploaderProps {
   paymentId: string;
@@ -29,6 +30,13 @@ interface PaymentReceiptUploaderProps {
   existingReceiptUrl?: string;
   onUploadSuccess: (receiptUrl: string) => void;
   onUploadError?: (error: string) => void;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
 }
 
 export default function PaymentReceiptUploader({
@@ -89,10 +97,10 @@ export default function PaymentReceiptUploader({
         toast.success('收据上传成功');
         onUploadSuccess(url);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to upload receipt:', error);
       toast.error('上传失败');
-      onUploadError?.(error.message);
+      onUploadError?.(getErrorMessage(error, '上传失败'));
       setPreviewUrl(null);
     } finally {
       setUploading(false);
@@ -203,9 +211,11 @@ export default function PaymentReceiptUploader({
         // 预览区域
         <div className="space-y-4">
           <div className="relative rounded-lg border border-border-subtle bg-ink-elevated p-4">
-            <img
+            <AppImage
               src={previewUrl}
               alt="Payment Receipt"
+              width={1200}
+              height={1200}
               className="mx-auto max-h-96 rounded-lg object-contain"
             />
             

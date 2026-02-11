@@ -5,6 +5,7 @@
  */
 
 'use client';
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -12,6 +13,7 @@ import { CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import { Button, Card } from '@/components';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
 import { getTNGPayment } from '@/services/tngPaymentService';
+import type { PaymentResult } from '@/services/tngPaymentService';
 
 export default function PaymentResultPage() {
   const router = useRouter();
@@ -20,7 +22,7 @@ export default function PaymentResultPage() {
 
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<'success' | 'failed' | 'pending' | null>(null);
-  const [payment, setPayment] = useState<any>(null);
+  const [payment, setPayment] = useState<PaymentResult | null>(null);
 
   useEffect(() => {
     if (paymentId) {
@@ -45,7 +47,12 @@ export default function PaymentResultPage() {
       }
 
       setPayment(data);
-      setStatus(data.status?.toLowerCase() as 'success' | 'failed' | 'pending');
+      const normalizedStatus = data.status?.toLowerCase();
+      if (normalizedStatus === 'success' || normalizedStatus === 'failed' || normalizedStatus === 'pending') {
+        setStatus(normalizedStatus);
+      } else {
+        setStatus('pending');
+      }
       setLoading(false);
     } catch (error) {
       console.error('Failed to check payment status:', error);
@@ -94,16 +101,16 @@ export default function PaymentResultPage() {
             <div className="bg-ink-elevated rounded-lg p-4 mb-6 space-y-2 text-sm text-text-secondary">
               <div className="flex justify-between">
                 <span>订单编号</span>
-                <span className="font-medium text-text-primary">{payment.order_id}</span>
+                <span className="font-medium text-text-primary">{payment.orderId}</span>
               </div>
               <div className="flex justify-between">
                 <span>支付金额</span>
                 <span className="font-medium text-text-primary">RM {Number(payment.amount).toFixed(2)}</span>
               </div>
-              {payment.transaction_id && (
+              {payment.transactionId && (
                 <div className="flex justify-between">
                   <span>交易单号</span>
-                  <span className="font-medium text-text-primary text-xs">{payment.transaction_id}</span>
+                  <span className="font-medium text-text-primary text-xs">{payment.transactionId}</span>
                 </div>
               )}
             </div>
@@ -112,7 +119,7 @@ export default function PaymentResultPage() {
           {/* Actions */}
           <div className="space-y-3">
             <Button
-              onClick={() => router.push(`/orders/${payment?.order_id}`)}
+              onClick={() => router.push(`/orders/${payment?.orderId}`)}
               variant="primary"
               fullWidth
             >
@@ -155,7 +162,7 @@ export default function PaymentResultPage() {
             <div className="bg-ink-elevated rounded-lg p-4 mb-6 space-y-2 text-sm text-text-secondary">
               <div className="flex justify-between">
                 <span>订单编号</span>
-                <span className="font-medium text-text-primary">{payment.order_id}</span>
+                <span className="font-medium text-text-primary">{payment.orderId}</span>
               </div>
               <div className="flex justify-between">
                 <span>应付金额</span>
@@ -167,7 +174,7 @@ export default function PaymentResultPage() {
           {/* Actions */}
           <div className="space-y-3">
             <Button
-              onClick={() => router.push(`/orders/${payment?.order_id}`)}
+              onClick={() => router.push(`/orders/${payment?.orderId}`)}
               variant="primary"
               fullWidth
             >

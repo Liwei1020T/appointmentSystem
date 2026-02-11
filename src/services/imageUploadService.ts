@@ -22,6 +22,25 @@ export interface UploadOptions {
   maxHeight?: number;
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === 'string' && error) {
+    return error;
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const { message } = error as { message?: unknown };
+    if (typeof message === 'string' && message) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
 /**
  * 上传单个图片文件
  * 支持两种调用方式:
@@ -83,10 +102,10 @@ export async function uploadImage(
       success: true,
       url: resolvedUrl,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || 'Upload failed',
+      error: getErrorMessage(error, 'Upload failed'),
     };
   }
 }

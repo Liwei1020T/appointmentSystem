@@ -7,9 +7,8 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import {
     Package as PackageIcon,
     ShoppingBag,
@@ -20,13 +19,14 @@ import {
     TrendingDown,
     History,
     Sparkles,
-    ChevronRight,
 } from 'lucide-react';
 import {
     getAvailablePackages,
     getUserPackages,
     Package,
     UserPackageWithPackage,
+    PendingPackagePayment,
+    PackageUsageRecord,
     getPackageUsage,
     getPendingPackagePayments,
 } from '@/services/packageService';
@@ -35,8 +35,12 @@ import Card from '@/components/Card';
 import Button from '@/components/Button';
 import EmptyState from '@/components/EmptyState';
 import SectionLoading from '@/components/loading/SectionLoading';
-import { formatDate, calculateDaysRemaining } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import PageHeader from '@/components/layout/PageHeader';
+
+function getErrorMessage(error: unknown, fallback = '加载失败'): string {
+    return error instanceof Error && error.message ? error.message : fallback;
+}
 
 // --- 子组件: 购买列表 ---
 function PurchaseTab({ isVisible }: { isVisible: boolean }) {
@@ -68,7 +72,7 @@ function PurchaseTab({ isVisible }: { isVisible: boolean }) {
 
     if (packages.length === 0) return <EmptyState type="no-packages" />;
 
-    const hasFirstOrderOffer = packages.some((pkg) => (pkg as any).isFirstOrderOnly);
+    const hasFirstOrderOffer = packages.some((pkg) => pkg.isFirstOrderOnly === true);
 
     return (
         <div className="space-y-8">
@@ -166,12 +170,12 @@ function PurchaseTab({ isVisible }: { isVisible: boolean }) {
 function MyPackagesTab({ isVisible }: { isVisible: boolean }) {
     const router = useRouter();
     const [packages, setPackages] = useState<UserPackageWithPackage[]>([]);
-    const [pending, setPending] = useState<any[]>([]);
+    const [pending, setPending] = useState<PendingPackagePayment[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [showExpired, setShowExpired] = useState(false);
     const [selectedPackage, setSelectedPackage] = useState<UserPackageWithPackage | null>(null);
-    const [usageLogs, setUsageLogs] = useState<any[]>([]);
+    const [usageLogs, setUsageLogs] = useState<PackageUsageRecord[]>([]);
     const [showUsageHistory, setShowUsageHistory] = useState(false);
 
     useEffect(() => {
@@ -184,8 +188,8 @@ function MyPackagesTab({ isVisible }: { isVisible: boolean }) {
 
                 const p = await getPendingPackagePayments();
                 setPending(p);
-            } catch (e: any) {
-                setError(e.message || '加载失败');
+            } catch (e: unknown) {
+                setError(getErrorMessage(e, '加载失败'));
             }
             setLoading(false);
         };
@@ -193,11 +197,12 @@ function MyPackagesTab({ isVisible }: { isVisible: boolean }) {
     }, []);
 
     // 获取过期时间（兼容多种字段名）
-    const getExpiry = (pkg: any) => pkg.expiry ?? pkg.expiry_date ?? pkg.expires_at ?? pkg.expiresAt ?? null;
+    const getExpiry = (pkg: UserPackageWithPackage): string | Date | null =>
+        pkg.expiry ?? pkg.expires_at ?? pkg.expiresAt ?? pkg.expiry_date ?? null;
 
     // 检查套餐是否有效
     const isValid = (pkg: UserPackageWithPackage) => {
-        if ((pkg as any).remaining <= 0) return false;
+        if (pkg.remaining <= 0) return false;
         const exp = getExpiry(pkg);
         return !exp || new Date(exp).getTime() > Date.now();
     };
@@ -216,7 +221,7 @@ function MyPackagesTab({ isVisible }: { isVisible: boolean }) {
         try {
             const { usage } = await getPackageUsage(pkg.id);
             setUsageLogs(usage || []);
-        } catch (e) {
+        } catch {
             setUsageLogs([]);
         }
         setShowUsageHistory(true);
@@ -225,7 +230,7 @@ function MyPackagesTab({ isVisible }: { isVisible: boolean }) {
     const current = packages.filter(isValid);
     const expired = packages.filter(p => !isValid(p));
     const activeList = showExpired ? expired : current;
-    const totalRemaining = current.reduce((sum, pkg) => sum + ((pkg as any).remaining || 0), 0);
+    const totalRemaining = current.reduce((sum, pkg) => sum + (pkg.remaining || 0), 0);
 
     if (loading) return <SectionLoading label="加载套餐..." minHeightClassName="min-h-[240px]" />;
 
@@ -367,8 +372,8 @@ function MyPackagesTab({ isVisible }: { isVisible: boolean }) {
             {activeList.length > 0 ? (
                 <div className="space-y-4">
                     {activeList.map((pkg, index) => {
-                        const packageInfo = (pkg as any).package;
-                        const remaining = (pkg as any).remaining || 0;
+                        const packageInfo = pkg.package;
+                        const remaining = pkg.remaining || 0;
                         const total = packageInfo?.times || remaining;
                         const usedTimes = Math.max(total - remaining, 0);
                         const usagePercentage = total > 0 ? Math.round((usedTimes / total) * 100) : 0;
@@ -395,7 +400,7 @@ function MyPackagesTab({ isVisible }: { isVisible: boolean }) {
                                                     {packageInfo?.name || '套餐'}
                                                 </h3>
                                                 <p className="text-sm text-text-tertiary">
-                                                    购买于 {formatDate((pkg as any).created_at || (pkg as any).createdAt)}
+                                                    购买于 {formatDate(pkg.created_at || pkg.createdAt)}
                                                 </p>
                                             </div>
                                         </div>
@@ -539,7 +544,7 @@ function MyPackagesTab({ isVisible }: { isVisible: boolean }) {
                         <div className="p-6 border-b border-border-subtle flex items-center justify-between bg-gradient-to-r from-accent/10 to-white">
                             <div>
                                 <h3 className="text-xl font-bold text-text-primary">使用记录</h3>
-                                <p className="text-sm text-text-tertiary">{(selectedPackage as any).package?.name}</p>
+                                <p className="text-sm text-text-tertiary">{selectedPackage.package?.name}</p>
                             </div>
                             <button
                                 onClick={() => setShowUsageHistory(false)}
@@ -553,7 +558,7 @@ function MyPackagesTab({ isVisible }: { isVisible: boolean }) {
                                 <EmptyState type="no-data" size="sm" />
                             ) : (
                                 <div className="space-y-3">
-                                    {usageLogs.map((log: any) => (
+                                    {usageLogs.map((log) => (
                                         <div
                                             key={log.id}
                                             className="flex items-center justify-between p-4 bg-ink rounded-xl border border-border-subtle hover:bg-ink/80 transition-colors"

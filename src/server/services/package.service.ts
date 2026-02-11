@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
+import { AppError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { User } from '@prisma/client';
 
@@ -116,7 +116,7 @@ export async function buyPackage(
   const { packageId, paymentMethod = 'tng' } = payload;
 
   if (!packageId || !isValidUUID(packageId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid package id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid package id');
   }
 
   const normalizedProvider = paymentMethod === 'cash' ? 'cash' : 'tng';
@@ -126,22 +126,22 @@ export async function buyPackage(
   });
 
   if (!packageData) {
-    throw new ApiError('NOT_FOUND', 404, 'Package not found');
+    throw new AppError('NOT_FOUND', 404, 'Package not found');
   }
 
   if (!packageData.active) {
-    throw new ApiError('CONFLICT', 409, 'Package is inactive');
+    throw new AppError('CONFLICT', 409, 'Package is inactive');
   }
 
   if (packageData.isFirstOrderOnly) {
     const eligible = await isUserEligibleForFirstOrderPackage(user.id);
     if (!eligible) {
-      throw new ApiError('CONFLICT', 409, '首单特价仅限首次下单用户');
+      throw new AppError('CONFLICT', 409, '首单特价仅限首次下单用户');
     }
   }
 
   if (Number(packageData.price) <= 0) {
-    throw new ApiError('UNPROCESSABLE_ENTITY', 422, 'Invalid package price');
+    throw new AppError('UNPROCESSABLE_ENTITY', 422, 'Invalid package price');
   }
 
   const baseAmount = Number(packageData.price);
@@ -197,6 +197,9 @@ export async function listPendingPackagePayments(userId: string) {
   });
 
   return pendingPayments.map((payment) => ({
+    ...(typeof payment.metadata === 'object' && payment.metadata !== null
+      ? { metadata: payment.metadata }
+      : {}),
     id: payment.id,
     packageId: payment.packageId,
     packageName: payment.package?.name || 'Package',
@@ -205,7 +208,13 @@ export async function listPendingPackagePayments(userId: string) {
     amount: Number(payment.amount),
     status: payment.status,
     provider: payment.provider,
-    receiptUrl: (payment.metadata as any)?.receiptUrl,
+    receiptUrl:
+      typeof payment.metadata === 'object' &&
+      payment.metadata !== null &&
+      'receiptUrl' in payment.metadata &&
+      typeof (payment.metadata as Record<string, unknown>).receiptUrl === 'string'
+        ? (payment.metadata as Record<string, string>).receiptUrl
+        : undefined,
     createdAt: payment.createdAt.toISOString(),
   }));
 }
@@ -215,7 +224,7 @@ export async function listPendingPackagePayments(userId: string) {
  */
 export async function listPackageUsage(userId: string, userPackageId: string) {
   if (!isValidUUID(userPackageId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid user package id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid user package id');
   }
 
   const pkg = await prisma.userPackage.findFirst({
@@ -223,7 +232,7 @@ export async function listPackageUsage(userId: string, userPackageId: string) {
   });
 
   if (!pkg) {
-    throw new ApiError('NOT_FOUND', 404, 'Package not found');
+    throw new AppError('NOT_FOUND', 404, 'Package not found');
   }
 
   const orders = await prisma.order.findMany({

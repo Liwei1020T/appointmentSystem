@@ -4,7 +4,6 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
 
 export function calculateLtv(totalRevenue: number, userCount: number) {
   if (!userCount) return 0;

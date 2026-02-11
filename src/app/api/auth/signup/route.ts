@@ -13,6 +13,7 @@ import { handleApiError } from '@/lib/api/handleApiError';
 import { authLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 import { issueWelcomeVouchers } from '@/server/services/welcome.service';
 import { processReferralReward } from '@/server/services/referral.service';
+import { AppError } from '@/lib/api-errors';
 
 /**
  * Generate a unique 6-digit numeric referral code.
@@ -32,7 +33,7 @@ async function generateUniqueReferralCode6Digits(): Promise<string> {
     });
     if (!existing) return code;
   }
-  throw new Error('Unable to generate unique referral code');
+  throw new AppError('INTERNAL_ERROR', 500, 'Unable to generate unique referral code');
 }
 
 export async function POST(request: NextRequest) {

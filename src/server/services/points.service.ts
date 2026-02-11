@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
+import { AppError } from '@/lib/api-errors';
 
 interface PointsHistoryOptions {
   type?: string;
@@ -99,7 +99,7 @@ export async function getPointsStats(userId: string) {
 export async function redeemPoints(userId: string, points: number, reason?: string) {
   const normalized = Number(points);
   if (!Number.isFinite(normalized) || normalized <= 0) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid points amount');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid points amount');
   }
 
   return prisma.$transaction(async (tx) => {
@@ -109,11 +109,11 @@ export async function redeemPoints(userId: string, points: number, reason?: stri
     });
 
     if (!user) {
-      throw new ApiError('NOT_FOUND', 404, 'User not found');
+      throw new AppError('NOT_FOUND', 404, 'User not found');
     }
 
     if (user.points < normalized) {
-      throw new ApiError('CONFLICT', 409, 'Insufficient points balance');
+      throw new AppError('CONFLICT', 409, 'Insufficient points balance');
     }
 
     const updated = await tx.user.update({

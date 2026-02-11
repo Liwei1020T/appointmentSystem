@@ -30,6 +30,44 @@ interface VoucherSelectorProps {
   onSelect: (voucher: UserVoucher | null) => void;
 }
 
+interface GroupedVoucherItem extends UserVoucherWithVoucher {
+  valid: boolean;
+  error?: string;
+  lackAmount: number;
+  discountAmount: number;
+  isNew?: boolean;
+}
+
+function normalizeVoucherType(type: string | null | undefined): 'fixed' | 'percentage' {
+  return type === 'percentage' ? 'percentage' : 'fixed';
+}
+
+function toUserVoucher(voucher: GroupedVoucherItem): UserVoucher {
+  return {
+    id: voucher.id,
+    user_id: voucher.userId,
+    voucher_id: voucher.voucherId,
+    status: (voucher.status as UserVoucher['status']) || 'active',
+    used_at: voucher.usedAt ? voucher.usedAt.toISOString() : undefined,
+    order_id: voucher.orderId || undefined,
+    expiry: voucher.expiry.toISOString(),
+    created_at: voucher.createdAt.toISOString(),
+    expires_at: voucher.expiry.toISOString(),
+    used: voucher.status === 'used',
+    voucher: voucher.voucher
+      ? {
+          id: voucher.voucher.id,
+          code: voucher.voucher.code,
+          name: voucher.voucher.name,
+          discount_type: normalizeVoucherType(voucher.voucher.type),
+          discount_value: Number(voucher.voucher.value ?? 0),
+          min_purchase: Number(voucher.voucher.minPurchase ?? 0),
+          max_discount: null,
+        }
+      : undefined,
+  };
+}
+
 export default function VoucherSelector({ orderAmount, selectedVoucher, onSelect }: VoucherSelectorProps) {
   const [vouchers, setVouchers] = useState<UserVoucherWithVoucher[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,21 +99,24 @@ export default function VoucherSelector({ orderAmount, selectedVoucher, onSelect
 
   // 优惠券分组逻辑
   const groupedVouchers = useMemo(() => {
-    const available: any[] = [];
-    const unavailable: any[] = [];
+    const available: GroupedVoucherItem[] = [];
+    const unavailable: GroupedVoucherItem[] = [];
 
     vouchers.forEach(v => {
       const { valid, error } = validateVoucherForOrder(v, orderAmount);
       const voucherData = v.voucher;
       const minPurchase = Number(voucherData?.minPurchase || 0);
       const lackAmount = Math.max(0, minPurchase - orderAmount);
+      const record = v as unknown as Record<string, unknown>;
+      const isNew = record.isNew === true || record.is_new === true;
 
-      const item = {
+      const item: GroupedVoucherItem = {
         ...v,
         valid,
         error,
         lackAmount,
-        discountAmount: calculateDiscount(v, orderAmount)
+        discountAmount: calculateDiscount(v, orderAmount),
+        isNew,
       };
 
       if (valid) {
@@ -234,7 +275,7 @@ export default function VoucherSelector({ orderAmount, selectedVoucher, onSelect
                 return (
                   <div
                     key={v.id}
-                    onClick={() => isAvailable && setTempSelectedVoucher(v)}
+                    onClick={() => isAvailable && setTempSelectedVoucher(toUserVoucher(v))}
                     className={`
                       relative group border rounded-2xl transition-all duration-300 overflow-hidden
                       ${isSelected ? 'border-accent ring-1 ring-accent/30 bg-accent/[0.02] shadow-sm' : 'border-border-subtle bg-white hover:border-accent/30 hover:shadow-card'}

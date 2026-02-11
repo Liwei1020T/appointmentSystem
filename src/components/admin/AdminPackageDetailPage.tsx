@@ -7,6 +7,7 @@
  */
 
 'use client';
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -66,7 +67,10 @@ export default function AdminPackageDetailPage({ packageId }: AdminPackageDetail
     if (Number.isNaN(numeric)) return 'RM 0.00';
     return `RM ${numeric.toFixed(2)}`;
   };
-  const formatDate = (date: string) => new Date(date).toLocaleString('zh-CN');
+  const formatDate = (date?: string | Date) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleString('zh-CN');
+  };
 
   if (loading) {
     return <PageLoading surface="dark" />;
@@ -92,10 +96,7 @@ export default function AdminPackageDetailPage({ packageId }: AdminPackageDetail
     );
   }
 
-  const totalRevenue = purchases.reduce(
-    (sum, p) => sum + Number((p as any)?.package?.price ?? 0),
-    0
-  );
+  const totalRevenue = purchases.reduce((sum, purchase) => sum + Number(purchase.package?.price ?? 0), 0);
   const activePurchases = purchases.filter(p => p.remaining > 0 && new Date(p.expiry) > new Date());
 
   return (
@@ -135,13 +136,13 @@ export default function AdminPackageDetailPage({ packageId }: AdminPackageDetail
                 <div>
                   <p className="text-sm text-text-tertiary">套餐价格</p>
                   <p className="text-xl font-bold text-accent font-mono">
-                    {formatCurrency((pkg as any).price)}
+                    {formatCurrency(pkg.price)}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-text-tertiary">平均每次</p>
                   <p className="text-xl font-bold text-success font-mono">
-                    {formatCurrency(Number((pkg as any).price ?? 0) / pkg.times)}
+                    {formatCurrency(pkg.times > 0 ? Number(pkg.price ?? 0) / pkg.times : 0)}
                   </p>
                 </div>
               </div>

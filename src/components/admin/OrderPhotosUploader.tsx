@@ -13,10 +13,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Camera, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Camera, X, Image as ImageIcon } from 'lucide-react';
 import { uploadOrderImage, deleteImage, UploadResult } from '@/services/imageUploadService';
 import ImagePreview from '@/components/ImagePreview';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
+import { AppImage } from '@/components/AppImage';
 
 interface OrderPhotosUploaderProps {
   orderId: string;
@@ -133,9 +134,11 @@ export default function OrderPhotosUploader({
     index: number;
   }) => (
     <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-border-subtle group cursor-pointer">
-      <img
+      <AppImage
         src={url}
         alt={`${type === 'before' ? '穿线前' : '穿线后'} ${index + 1}`}
+        width={320}
+        height={320}
         className="w-full h-full object-cover"
         onClick={() => handleOpenPreview(type, index)}
       />

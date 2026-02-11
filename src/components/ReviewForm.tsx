@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { submitReview, SubmitReviewParams, OrderReview } from '@/services/reviewService';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
@@ -184,7 +184,7 @@ export default function ReviewForm({ orderId, onSuccess, onCancel }: ReviewFormP
     if (error) {
       setToast({
         show: true,
-        message: typeof error === 'string' ? error : (error as any)?.message || '提交评价失败',
+        message: error || '提交评价失败',
         type: 'error',
       });
       setSubmitting(false);

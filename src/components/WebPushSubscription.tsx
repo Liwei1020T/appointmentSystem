@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Bell, BellOff, Send, CheckCircle, Bell as BellIcon, BellOff as BellOffIcon, Info, AlertTriangle } from 'lucide-react';
+import { Bell, BellOff, CheckCircle, AlertTriangle } from 'lucide-react';
 import {
   isWebPushSupported,
   getNotificationPermission,
@@ -21,6 +21,16 @@ import {
   sendTestNotification
 } from '@/services/webPushService';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  if (typeof error === 'string' && error) {
+    return error;
+  }
+  return fallback;
+}
 
 export default function WebPushSubscription() {
   const [supported, setSupported] = useState(false);
@@ -63,9 +73,9 @@ export default function WebPushSubscription() {
       } else {
         throw new Error('订阅失败');
       }
-    } catch (err: any) {
-      setError(err.message || '订阅失败');
-      console.error('Subscribe error:', err);
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, '订阅失败'));
+      console.error('Subscribe error:', error);
     } finally {
       setLoading(false);
     }
@@ -83,9 +93,9 @@ export default function WebPushSubscription() {
       } else {
         throw new Error('取消订阅失败');
       }
-    } catch (err: any) {
-      setError(err.message || '取消订阅失败');
-      console.error('Unsubscribe error:', err);
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, '取消订阅失败'));
+      console.error('Unsubscribe error:', error);
     } finally {
       setLoading(false);
     }
@@ -102,9 +112,9 @@ export default function WebPushSubscription() {
       } else {
         throw new Error('发送测试通知失败');
       }
-    } catch (err: any) {
-      setError(err.message || '发送失败');
-      console.error('Test notification error:', err);
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, '发送失败'));
+      console.error('Test notification error:', error);
     } finally {
       setLoading(false);
     }

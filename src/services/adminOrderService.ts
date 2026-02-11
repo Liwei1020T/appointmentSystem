@@ -75,6 +75,55 @@ export interface AdminOrder {
   total_price?: number;
 }
 
+interface AdminOrderListPayload {
+  orders?: unknown;
+  pagination?: {
+    total?: unknown;
+  } | null;
+}
+
+interface UpdateOrderEtaPayload {
+  order?: AdminOrder;
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return fallback;
+}
+
+function normalizeOrderList(value: unknown): AdminOrder[] {
+  return Array.isArray(value) ? (value as AdminOrder[]) : [];
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === 'string' && error) {
+    return error;
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const { message } = error as { message?: unknown };
+    if (typeof message === 'string' && message) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
 export async function getAllOrders(filters?: {
   status?: string;
   startDate?: string;
@@ -91,13 +140,17 @@ export async function getAllOrders(filters?: {
 
   return cachedRequest(cacheKey, async () => {
     try {
-      const payload = await apiRequest<{ orders: AdminOrder[]; pagination?: { total?: number } }>(
+      const payload = await apiRequest<AdminOrderListPayload>(
         `/api/admin/orders?${query}`
       );
-      return { orders: payload.orders || [], total: payload.pagination?.total || 0, error: null };
-    } catch (error: any) {
+      return {
+        orders: normalizeOrderList(payload.orders),
+        total: toNumber(payload.pagination?.total),
+        error: null,
+      };
+    } catch (error: unknown) {
       console.error('Failed to fetch orders:', error);
-      return { orders: [], total: 0, error: { message: error.message || 'Failed to fetch orders' } };
+      return { orders: [], total: 0, error: { message: getErrorMessage(error, 'Failed to fetch orders') } };
     }
   }, { ttlMs: 10000 });
 }
@@ -106,9 +159,9 @@ export async function getOrderById(orderId: string): Promise<{ order: AdminOrder
   try {
     const order = await apiRequest<AdminOrder>(`/api/admin/orders/${orderId}`);
     return { order, error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to fetch order:', error);
-    return { order: null, error: { message: error.message || 'Failed to fetch order' } };
+    return { order: null, error: { message: getErrorMessage(error, 'Failed to fetch order') } };
   }
 }
 
@@ -126,9 +179,9 @@ export async function updateOrderStatus(
     invalidateRequestCacheByPrefix('admin:orders');
     invalidateRequestCacheByPrefix('admin:dashboard');
     return { order, error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to update order status:', error);
-    return { order: null, error: { message: error.message || 'Failed to update order status' } };
+    return { order: null, error: { message: getErrorMessage(error, 'Failed to update order status') } };
   }
 }
 
@@ -162,9 +215,9 @@ export async function getOrderStats(filters?: {
   return cachedRequest(cacheKey, async () => {
     try {
       const stats = await apiRequest<OrderStats>(`/api/admin/orders/stats?${query}`);
-      return { stats: stats as OrderStats, error: null };
-    } catch (error: any) {
-      return { stats: null, error: error.message || 'Failed to fetch order stats' };
+      return { stats, error: null };
+    } catch (error: unknown) {
+      return { stats: null, error: getErrorMessage(error, 'Failed to fetch order stats') };
     }
   }, { ttlMs: 10000 });
 }
@@ -189,12 +242,16 @@ export async function searchOrders(query: string, filters?: {
 
   return cachedRequest(cacheKey, async () => {
     try {
-      const payload = await apiRequest<{ orders: AdminOrder[]; pagination?: { total?: number } }>(
+      const payload = await apiRequest<AdminOrderListPayload>(
         `/api/admin/orders?${queryString}`
       );
-      return { orders: payload.orders || [], total: payload.pagination?.total || 0, error: null };
-    } catch (error: any) {
-      return { orders: [], total: 0, error: { message: error.message || 'Failed to search orders' } };
+      return {
+        orders: normalizeOrderList(payload.orders),
+        total: toNumber(payload.pagination?.total),
+        error: null,
+      };
+    } catch (error: unknown) {
+      return { orders: [], total: 0, error: { message: getErrorMessage(error, 'Failed to search orders') } };
     }
   }, { ttlMs: 10000 });
 }
@@ -209,15 +266,15 @@ export async function updateOrderEta(
   estimatedCompletionAt: string | null
 ): Promise<{ order: AdminOrder | null; error: { message: string } | null }> {
   try {
-    const payload = await apiRequest<{ order: AdminOrder }>(`/api/admin/orders/${orderId}/eta`, {
+    const payload = await apiRequest<UpdateOrderEtaPayload>(`/api/admin/orders/${orderId}/eta`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ estimatedCompletionAt }),
     });
     invalidateRequestCacheByPrefix('admin:orders');
-    return { order: payload.order, error: null };
-  } catch (error: any) {
+    return { order: payload.order ?? null, error: null };
+  } catch (error: unknown) {
     console.error('Failed to update order ETA:', error);
-    return { order: null, error: { message: error.message || 'Failed to update order ETA' } };
+    return { order: null, error: { message: getErrorMessage(error, 'Failed to update order ETA') } };
   }
 }

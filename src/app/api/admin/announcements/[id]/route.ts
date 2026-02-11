@@ -23,6 +23,14 @@ const updateAnnouncementSchema = z.object({
 
 type Params = { params: Promise<{ id: string }> };
 
+function hasJsonResponse(error: unknown): error is { json: () => Response } {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+  const maybeJson = (error as { json?: unknown }).json;
+  return typeof maybeJson === 'function';
+}
+
 export async function PATCH(request: Request, { params }: Params) {
   try {
     await requireAdmin();
@@ -81,8 +89,8 @@ export async function PATCH(request: Request, { params }: Params) {
     });
 
     return okResponse(announcement);
-  } catch (error: any) {
-    if (error?.json) return error.json();
+  } catch (error: unknown) {
+    if (hasJsonResponse(error)) return error.json();
     console.error('[Admin Announcements] Update error:', error);
     return serverErrorResponse('更新公告失败', error);
   }
@@ -106,8 +114,8 @@ export async function DELETE(request: Request, { params }: Params) {
     });
 
     return okResponse({ success: true });
-  } catch (error: any) {
-    if (error?.json) return error.json();
+  } catch (error: unknown) {
+    if (hasJsonResponse(error)) return error.json();
     console.error('[Admin Announcements] Delete error:', error);
     return serverErrorResponse('删除公告失败', error);
   }

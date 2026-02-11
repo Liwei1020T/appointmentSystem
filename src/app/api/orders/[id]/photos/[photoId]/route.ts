@@ -8,6 +8,7 @@ import { requireAdmin } from '@/lib/server-auth';
 import { failResponse, okResponse } from '@/lib/api-response';
 import { deleteOrderPhoto } from '@/server/services/order-photos.service';
 import { handleApiError } from '@/lib/api/handleApiError';
+import { apiLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,11 +18,18 @@ const paramsSchema = z.object({
 });
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: { id: string; photoId: string } }
 ) {
   try {
     const admin = await requireAdmin();
+    const clientIp = getClientIp(request);
+    const rateLimitKey = `order-photo:delete:${admin.id}:${clientIp}`;
+    const rateLimitResult = apiLimiter.check(rateLimitKey);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult.resetAt);
+    }
+
     const parsedParams = paramsSchema.safeParse(params);
 
     if (!parsedParams.success) {

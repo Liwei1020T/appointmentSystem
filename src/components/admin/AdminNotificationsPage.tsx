@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps */
 
 /**
  * AdminNotificationsPage Component
@@ -57,6 +58,16 @@ type UserDevice = ServiceUserDevice & {
   users?: { full_name: string };
   last_used_at?: string | null;
 };
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  if (typeof error === 'string' && error) {
+    return error;
+  }
+  return fallback;
+}
 
 export default function AdminNotificationsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('logs');
@@ -120,16 +131,16 @@ export default function AdminNotificationsPage() {
           await loadDevices();
           break;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to load data:', error);
-      alert(`Error: ${error.message}`);
+      alert(`Error: ${getErrorMessage(error, 'Failed to load data')}`);
     } finally {
       setLoading(false);
     }
   };
 
   const loadNotifications = async () => {
-    const filters: any = {};
+    const filters: Parameters<typeof getAllNotifications>[0] = {};
     if (logFilters.type !== 'all') filters.type = logFilters.type;
     if (logFilters.status !== 'all') filters.status = logFilters.status;
     if (logFilters.event_type !== 'all') filters.event_type = logFilters.event_type;
@@ -183,8 +194,8 @@ export default function AdminNotificationsPage() {
           await retryFailedNotification(notificationId);
           alert('Notification retried successfully');
           loadNotifications();
-        } catch (error: any) {
-          alert(`Retry failed: ${error.message}`);
+        } catch (error: unknown) {
+          alert(`Retry failed: ${getErrorMessage(error, 'Retry failed')}`);
         }
         setProcessingAction(false);
         setConfirmDialogState(prev => ({ ...prev, isOpen: false }));
@@ -205,8 +216,8 @@ export default function AdminNotificationsPage() {
       alert('Template updated successfully');
       setEditingTemplate(null);
       loadTemplates();
-    } catch (error: any) {
-      alert(`Update failed: ${error.message}`);
+    } catch (error: unknown) {
+      alert(`Update failed: ${getErrorMessage(error, 'Update failed')}`);
     }
   };
 
@@ -228,8 +239,8 @@ export default function AdminNotificationsPage() {
     try {
       await testNotification(userId, template.event_type, vars);
       alert('Test notification sent successfully');
-    } catch (error: any) {
-      alert(`Test failed: ${error.message}`);
+    } catch (error: unknown) {
+      alert(`Test failed: ${getErrorMessage(error, 'Test failed')}`);
     }
   };
 

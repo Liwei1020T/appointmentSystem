@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import SectionLoading from '@/components/loading/SectionLoading';
 import EmptyState from '@/components/EmptyState';
 import { OptimizedImage } from '@/components/OptimizedImage';
@@ -38,11 +38,7 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
   const [showLightbox, setShowLightbox] = useState<boolean>(false);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
 
-  useEffect(() => {
-    loadPhotos();
-  }, [orderId]);
-
-  const loadPhotos = async () => {
+  const loadPhotos = useCallback(async () => {
     setLoading(true);
 
     try {
@@ -54,33 +50,37 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
     }
 
     setLoading(false);
-  };
+  }, [orderId]);
+
+  useEffect(() => {
+    loadPhotos();
+  }, [loadPhotos]);
 
   const openLightbox = (index: number) => {
     setCurrentIndex(index);
     setShowLightbox(true);
   };
 
-  const nextPhoto = () => {
+  const nextPhoto = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % photos.length);
-  };
+  }, [photos.length]);
 
-  const prevPhoto = () => {
+  const prevPhoto = useCallback(() => {
     setCurrentIndex((prev) => (prev - 1 + photos.length) % photos.length);
-  };
+  }, [photos.length]);
 
-  const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'ArrowLeft') prevPhoto();
     if (e.key === 'ArrowRight') nextPhoto();
     if (e.key === 'Escape') setShowLightbox(false);
-  };
+  }, [nextPhoto, prevPhoto]);
 
   useEffect(() => {
     if (showLightbox) {
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
     }
-  }, [showLightbox]);
+  }, [showLightbox, handleKeyDown]);
 
   if (loading) {
     return (
@@ -177,7 +177,7 @@ export default function OrderPhotosDisplay({ orderId }: OrderPhotosDisplayProps)
 
           {/* 照片展示 */}
           <div className="max-w-6xl max-h-screen p-4 flex flex-col items-center justify-center">
-            <img
+            <OptimizedImage
               src={photos[currentIndex].photo_url}
               alt={photos[currentIndex].caption || '订单照片'}
               className="max-w-full max-h-[80vh] object-contain rounded-lg"

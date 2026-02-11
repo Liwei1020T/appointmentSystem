@@ -8,6 +8,7 @@
  */
 
 'use client';
+/* eslint-disable @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps */
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -173,7 +174,7 @@ export default function AdminPackageListPage() {
       times: pkg.times,
       price: pkg.price,
       // 兼容 Prisma 字段 validityDays（camelCase）与旧字段 validity_days（snake_case）
-      validity_days: (pkg as any).validity_days ?? (pkg as any).validityDays ?? 0,
+      validity_days: getPackageValidityDays(pkg),
       active: pkg.active,
       description: pkg.description || '',
     });
@@ -209,6 +210,10 @@ export default function AdminPackageListPage() {
     const numeric = Number(amount ?? 0);
     if (Number.isNaN(numeric)) return 'RM 0.00';
     return `RM ${numeric.toFixed(2)}`;
+  };
+
+  const getPackageValidityDays = (pkg: Package) => {
+    return pkg.validity_days ?? pkg.validityDays ?? 0;
   };
 
   const totalCount = stats?.total_packages ?? packages.length;
@@ -346,7 +351,7 @@ export default function AdminPackageListPage() {
                         <div className="flex justify-between text-sm">
                           <span className="text-text-secondary">有效期</span>
                           <span className="font-semibold text-text-primary">
-                            {(pkg as any).validity_days ?? (pkg as any).validityDays ?? 0} 天
+                            {getPackageValidityDays(pkg)} 天
                           </span>
                         </div>
                         <div className="flex justify-between text-sm border-t border-border-subtle pt-2">

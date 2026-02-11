@@ -26,16 +26,36 @@ import {
     LucideIcon,
 } from 'lucide-react';
 
+interface OrderSummaryPayment {
+    status?: string;
+    provider?: string;
+}
+
+interface OrderSummaryItem {
+    id?: string;
+}
+
+type MoneyLike = number | string | { toNumber(): number };
+
+function toMoneyNumber(value: MoneyLike | null | undefined): number {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'object' && 'toNumber' in value) {
+        return value.toNumber();
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
 interface OrderSummaryCardProps {
     order: {
         id: string;
         status: string;
-        final_price?: number;
-        price?: number;
+        final_price?: MoneyLike;
+        price?: MoneyLike;
         use_package?: boolean;
-        items?: any[];
-        payments?: any[];
-        string?: { brand?: string; model?: string };
+        items?: OrderSummaryItem[];
+        payments?: OrderSummaryPayment[];
+        string?: { brand?: string; model?: string } | null;
     };
     hasReview: boolean;
     onPayClick: () => void;
@@ -61,8 +81,8 @@ export default function OrderSummaryCard({
     const router = useRouter();
 
     // 支付状态判断（需要放在 status 判断之前）
-    const hasCompletedPayment = order.payments?.some((p: any) =>
-        p.status === 'completed' || p.status === 'success'
+    const hasCompletedPayment = order.payments?.some(
+        (payment) => payment?.status === 'completed' || payment?.status === 'success'
     ) || false;
 
     // 根据支付状态确定显示的状态
@@ -74,11 +94,11 @@ export default function OrderSummaryCard({
     const status = displayStatus;
     const StatusIcon = status.icon;
     const racketCount = order.items?.length || 1;
-    const finalAmount = Number(order.final_price ?? order.price ?? 0);
+    const finalAmount = toMoneyNumber(order.final_price ?? order.price);
 
 
-    const hasPendingPayment = order.payments?.some((p: any) => p.status === 'pending') || false;
-    const hasPendingVerification = order.payments?.some((p: any) => p.status === 'pending_verification') || false;
+    const hasPendingPayment = order.payments?.some((payment) => payment?.status === 'pending') || false;
+    const hasPendingVerification = order.payments?.some((payment) => payment?.status === 'pending_verification') || false;
     const paymentProvider = order.payments?.[0]?.provider;
 
     // 支付状态配置 - 使用 Lucide 图标

@@ -56,6 +56,10 @@ function parseOptionalNumber(value: string | null) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 export async function GET(request: Request) {
   try {
     const user = await requireAuth();
@@ -104,7 +108,7 @@ export async function POST(request: Request) {
       return handleApiError(error);
     }
 
-    if (body && typeof body === 'object' && Array.isArray((body as any).items)) {
+    if (isRecord(body) && Array.isArray(body.items)) {
       const parsed = createMultiSchema.safeParse(body);
       if (!parsed.success) {
         return failResponse('UNPROCESSABLE_ENTITY', 'Validation failed', 422, parsed.error.flatten());

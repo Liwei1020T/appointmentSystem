@@ -15,6 +15,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { AppImage } from '@/components/AppImage';
 
 interface ImagePreviewProps {
   images: string[];
@@ -115,9 +116,11 @@ export default function ImagePreview({
 
       {/* 图片显示 */}
       <div className="max-w-7xl max-h-[90vh] w-full px-16">
-        <img
+        <AppImage
           src={images[currentIndex]}
           alt={`图片 ${currentIndex + 1}`}
+          width={1600}
+          height={1000}
           className="w-full h-full object-contain"
         />
       </div>
@@ -155,9 +158,11 @@ export default function ImagePreview({
                 }
               `}
             >
-              <img
+              <AppImage
                 src={img}
                 alt={`缩略图 ${index + 1}`}
+                width={128}
+                height={128}
                 className="w-full h-full object-cover"
               />
             </button>

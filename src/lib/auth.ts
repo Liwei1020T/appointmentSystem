@@ -9,16 +9,33 @@
 
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import type { Adapter } from "next-auth/adapters";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 import { isValidMyPhone, toMyCanonicalPhone } from "@/lib/phone";
 import { normalizeMyPhone } from "@/lib/utils";
 
+type AuthUserRecord = Record<string, unknown>;
+
+function isAuthUserRecord(value: unknown): value is AuthUserRecord {
+  return typeof value === "object" && value !== null;
+}
+
+function getStringField(record: AuthUserRecord, key: string): string | undefined {
+  const value = record[key];
+  return typeof value === "string" ? value : undefined;
+}
+
+function getNumberField(record: AuthUserRecord, key: string): number | undefined {
+  const value = record[key];
+  return typeof value === "number" ? value : undefined;
+}
+
 export const { auth, handlers, signIn, signOut } = NextAuth({
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   trustHost: true,
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: PrismaAdapter(prisma) as Adapter,
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -94,7 +111,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           full_name: user.fullName || undefined,
           referral_code: user.referralCode || undefined,
           points: user.points ?? 0,
-        } as any;
+        };
       },
     }),
   ],
@@ -108,14 +125,16 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
+      if (user && isAuthUserRecord(user)) {
+        const userId = getStringField(user, "id");
+        const role = getStringField(user, "role");
+        if (userId) token.id = userId;
+        if (role) token.role = role;
         // Extended fields for client UI convenience
-        token.phone = (user as any).phone ?? token.phone;
-        token.full_name = (user as any).full_name ?? token.full_name;
-        token.referral_code = (user as any).referral_code ?? token.referral_code;
-        token.points = (user as any).points ?? token.points;
+        token.phone = getStringField(user, "phone") ?? token.phone;
+        token.full_name = getStringField(user, "full_name") ?? token.full_name;
+        token.referral_code = getStringField(user, "referral_code") ?? token.referral_code;
+        token.points = getNumberField(user, "points") ?? token.points;
       }
       return token;
     },
@@ -144,13 +163,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         });
 
         session.user.role = String(dbUser?.role || token.role || "user");
-        (session.user as any).email = dbUser?.email ?? null;
-        (session.user as any).name = dbUser?.fullName ?? session.user.name ?? null;
-        (session.user as any).full_name = dbUser?.fullName ?? null;
-        (session.user as any).phone = dbUser?.phone ?? null;
-        (session.user as any).referral_code = dbUser?.referralCode ?? null;
-        (session.user as any).points = dbUser?.points ?? 0;
-        (session.user as any).created_at = dbUser?.createdAt ?? null;
+        session.user.email = dbUser?.email ?? session.user.email ?? "";
+        session.user.name = dbUser?.fullName ?? session.user.name ?? undefined;
+        session.user.full_name = dbUser?.fullName ?? undefined;
+        session.user.phone = dbUser?.phone ?? undefined;
+        session.user.referral_code = dbUser?.referralCode ?? undefined;
+        session.user.points = dbUser?.points ?? 0;
+        session.user.created_at = dbUser?.createdAt ?? undefined;
       }
       return session;
     },

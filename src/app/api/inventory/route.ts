@@ -1,6 +1,8 @@
 /**
  * Public inventory API
  * GET /api/inventory
+ *
+ * NOTE: 此端点为公开访问（预约流程需要），但过滤掉成本价、库存数量等敏感字段
  */
 
 import { z } from 'zod';
@@ -27,7 +29,26 @@ export async function GET(request: Request) {
 
     const activeOnly = parsedQuery.data.active !== 'false';
     const inventory = await listInventory(activeOnly);
-    return okResponse(inventory);
+
+    // 过滤掉敏感字段（成本价、精确库存数量、最低库存、版本号）
+    const publicInventory = inventory.map((item) => ({
+      id: item.id,
+      model: item.model,
+      brand: item.brand,
+      description: item.description,
+      sellingPrice: item.sellingPrice,
+      color: item.color,
+      gauge: item.gauge,
+      imageUrl: item.imageUrl,
+      isRecommended: item.isRecommended,
+      elasticity: item.elasticity,
+      durability: item.durability,
+      control: item.control,
+      active: item.active,
+      inStock: item.stock > 0,
+    }));
+
+    return okResponse(publicInventory);
   } catch (error) {
     return handleApiError(error);
   }

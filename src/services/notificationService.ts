@@ -56,7 +56,7 @@ export interface NotificationLog {
   body: string;
   status: 'pending' | 'sent' | 'failed' | 'delivered';
   error_message?: string | null;
-  provider_response?: any;
+  provider_response?: unknown;
   created_at: string;
   sent_at?: string | null;
 }
@@ -104,6 +104,47 @@ export interface NotificationData {
    */
   notifications: Notification[];
   unreadCount: number;
+}
+
+type ApiWithOptionalData<T> = T | { data?: T };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function unwrapOptionalData<T>(payload: ApiWithOptionalData<T> | unknown): T | null {
+  if (isRecord(payload) && 'data' in payload) {
+    return ((payload as { data?: T }).data ?? null) as T | null;
+  }
+
+  return (payload ?? null) as T | null;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function toStringValue(value: unknown, fallback = ''): string {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  return fallback;
+}
+
+function toStringOrNull(value: unknown): string | null {
+  if (typeof value === 'string') return value;
+  return null;
+}
+
+function isNotificationStats(value: unknown): value is NotificationStats {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.total_sent === 'number' &&
+    typeof value.total_failed === 'number' &&
+    typeof value.sms_count === 'number' &&
+    typeof value.push_count === 'number' &&
+    typeof value.delivery_rate === 'number' &&
+    Array.isArray(value.by_event)
+  );
 }
 
 /**
@@ -169,11 +210,22 @@ export function formatNotificationTime(dateInput: string | Date): string {
 /**
  * Convert backend notifications into the UI's legacy-friendly shape.
  */
-function normalizeNotification(raw: any) {
-  const read = Boolean(raw?.read ?? raw?.is_read ?? false);
-  const createdAt = raw?.createdAt ?? raw?.created_at ?? new Date().toISOString();
+export function normalizeNotification(raw: unknown): Notification {
+  const data = isRecord(raw) ? raw : {};
+  const read = Boolean(data.read ?? data.is_read ?? false);
+  const createdAt = (data.createdAt ?? data.created_at ?? new Date().toISOString()) as string | Date;
+  const actionUrl = toStringOrNull(data.actionUrl) ?? toStringOrNull(data.action_url);
+
   return {
-    ...raw,
+    id: toStringValue(data.id),
+    userId: toStringValue(data.userId ?? data.user_id),
+    user_id: toStringValue(data.user_id, toStringValue(data.userId)),
+    title: toStringValue(data.title),
+    message: toStringValue(data.message),
+    type: toStringValue(data.type, 'system'),
+    actionUrl,
+    action_url: actionUrl,
+    priority: toStringOrNull(data.priority),
     read,
     createdAt,
     is_read: read,
@@ -228,6 +280,7 @@ export async function markAllAsRead(): Promise<void> {
  * 获取未读通知数量
  */
 export async function getUnreadCount(userId?: string): Promise<{ count: number }> {
+  void userId;
   const data = await getNotifications(true);
   return { count: data.unreadCount };
 }
@@ -255,11 +308,16 @@ export async function retryFailedNotification(notificationId: string): Promise<v
  */
 export async function getNotificationStats(days = 7): Promise<{ data: NotificationStats | null; error: string | null }> {
   try {
-    const result = await apiRequest<any>(`/api/admin/notifications/stats?days=${days}`);
-    const payload = (result as any)?.data ?? result;
-    return { data: payload as NotificationStats, error: null };
-  } catch (error: any) {
-    return { data: null, error: error.message };
+    const result = await apiRequest<ApiWithOptionalData<NotificationStats>>(`/api/admin/notifications/stats?days=${days}`);
+    const payload = unwrapOptionalData(result);
+
+    if (!payload || !isNotificationStats(payload)) {
+      return { data: null, error: 'Invalid notification stats payload' };
+    }
+
+    return { data: payload, error: null };
+  } catch (error: unknown) {
+    return { data: null, error: getErrorMessage(error, '获取通知统计失败') };
   }
 }
 
@@ -280,11 +338,11 @@ export async function getAllNotifications(filters?: {
     if (filters?.event_type) params.append('event_type', filters.event_type);
     if (filters?.date_from) params.append('date_from', filters.date_from);
     if (filters?.date_to) params.append('date_to', filters.date_to);
-    const result = await apiRequest<any>(`/api/admin/notifications?${params.toString()}`);
-    const payload = (result as any)?.data ?? result;
+    const result = await apiRequest<ApiWithOptionalData<NotificationLog[]>>(`/api/admin/notifications?${params.toString()}`);
+    const payload = unwrapOptionalData(result);
     return { data: Array.isArray(payload) ? payload : [], error: null };
-  } catch (error: any) {
-    return { data: [], error: error.message };
+  } catch (error: unknown) {
+    return { data: [], error: getErrorMessage(error, '获取通知记录失败') };
   }
 }
 
@@ -293,11 +351,11 @@ export async function getAllNotifications(filters?: {
  */
 export async function getAllTemplates(): Promise<{ data: NotificationTemplate[]; error: string | null }> {
   try {
-    const result = await apiRequest<any>('/api/admin/notifications/templates');
-    const payload = (result as any)?.data ?? result;
+    const result = await apiRequest<ApiWithOptionalData<NotificationTemplate[]>>('/api/admin/notifications/templates');
+    const payload = unwrapOptionalData(result);
     return { data: Array.isArray(payload) ? payload : [], error: null };
-  } catch (error: any) {
-    return { data: [], error: error.message };
+  } catch (error: unknown) {
+    return { data: [], error: getErrorMessage(error, '获取通知模板失败') };
   }
 }
 
@@ -321,7 +379,7 @@ export async function updateTemplate(
 export async function testNotification(
   userId: string,
   eventType: string,
-  variables: Record<string, any>
+  variables: Record<string, unknown>
 ): Promise<void> {
   await apiRequest(`/api/admin/notifications/test`, {
     method: 'POST',
@@ -336,11 +394,11 @@ export async function testNotification(
 export async function getUserDevices(userId?: string): Promise<{ data: UserDevice[]; error: string | null }> {
   try {
     const params = userId ? `?userId=${userId}` : '';
-    const result = await apiRequest<any>(`/api/admin/notifications/devices${params}`);
-    const payload = (result as any)?.data ?? result;
+    const result = await apiRequest<ApiWithOptionalData<UserDevice[]>>(`/api/admin/notifications/devices${params}`);
+    const payload = unwrapOptionalData(result);
     return { data: Array.isArray(payload) ? payload : [], error: null };
-  } catch (error: any) {
-    return { data: [], error: error.message };
+  } catch (error: unknown) {
+    return { data: [], error: getErrorMessage(error, '获取设备列表失败') };
   }
 }
 
@@ -378,6 +436,7 @@ export async function getNotificationPreferences(): Promise<{ data: Notification
  * NOTE: Mock implementation. Backend endpoint for user preferences is planned for future release.
  */
 export async function updateNotificationPreferences(prefs: Partial<NotificationPreferences>): Promise<{ success: boolean; error: string | null }> {
+  void prefs;
   // Mock success until backend endpoint is implemented
   return { success: true, error: null };
 }

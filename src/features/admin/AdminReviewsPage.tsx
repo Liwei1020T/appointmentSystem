@@ -21,6 +21,7 @@ import ImagePreview from '@/components/ImagePreview';
 import StarRating from '@/components/StarRating';
 import Modal from '@/components/Modal';
 import Toast from '@/components/Toast';
+import { AppImage } from '@/components/AppImage';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { getAdminReviewStats, getAdminReviews, replyReview } from '@/services/reviewService';
 import { 
@@ -286,6 +287,15 @@ export default function AdminReviewsPage() {
   };
 
   const detailImages = getReviewImages(detailReview);
+  const ratingCountMap: Record<1 | 2 | 3 | 4 | 5, number> | null = stats
+    ? {
+        1: stats.rating_1,
+        2: stats.rating_2,
+        3: stats.rating_3,
+        4: stats.rating_4,
+        5: stats.rating_5,
+      }
+    : null;
 
   if (loading) {
     return <PageLoading surface="dark" />;
@@ -373,8 +383,8 @@ export default function AdminReviewsPage() {
               评分分布
             </h3>
             <div className="space-y-2">
-              {[5, 4, 3, 2, 1].map((rating) => {
-                const count = (stats as any)[`rating_${rating}`];
+              {([5, 4, 3, 2, 1] as const).map((rating) => {
+                const count = ratingCountMap ? ratingCountMap[rating] : 0;
                 const percentage =
                   stats.total_reviews > 0
                     ? (count / stats.total_reviews) * 100
@@ -687,9 +697,11 @@ export default function AdminReviewsPage() {
                       }}
                       className="group w-full h-24 overflow-hidden rounded-lg border border-border-subtle bg-ink-elevated/70"
                     >
-                      <img
+                      <AppImage
                         src={url}
                         alt={`review-${index + 1}`}
+                        width={320}
+                        height={240}
                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
                       />
                     </button>

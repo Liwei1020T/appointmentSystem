@@ -72,7 +72,7 @@ const statusMeta: Record<
 };
 
 const getOrderTitle = (order: OrderSummary) => {
-  const items = (order as any).items;
+  const items = order.items;
   if (Array.isArray(items) && items.length > 1) {
     return `多球拍订单 · ${items.length} 支`;
   }
@@ -123,7 +123,7 @@ export default function OrderStatusCapsule({
     actionLabel: '查看详情',
   };
 
-  const createdAt = order.created_at || (order as any).createdAt;
+  const createdAt = order.created_at || order.createdAt;
   const actionUrl = statusKey === 'pending'
     ? `/orders/${order.id}?action=pay`
     : `/orders/${order.id}`;

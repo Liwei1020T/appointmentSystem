@@ -6,6 +6,13 @@ import { buildDayKeys, parseDateRangeFromSearchParams, toDayKey } from '@/lib/re
 
 export const dynamic = 'force-dynamic';
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 /**
  * 管理员 - 导出报表（CSV）
  *
@@ -278,8 +285,8 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': `attachment; filename="${filename}"`,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Export report error:', error);
-    return errorResponse(error.message || 'Failed to export report', 500);
+    return errorResponse(getErrorMessage(error, 'Failed to export report'), 500);
   }
 }

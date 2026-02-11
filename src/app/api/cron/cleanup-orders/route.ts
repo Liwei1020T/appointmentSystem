@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
                 data: { status: 'cancelled' },
             });
 
-            // Restore any vouchers that were marked used during order creation.
+            // Restore vouchers that were marked used during order creation.
             const restoredVouchers = await tx.userVoucher.updateMany({
                 where: { orderId: { in: cancelledOrderIds }, status: 'used' },
                 data: { status: 'active', usedAt: null, orderId: null },

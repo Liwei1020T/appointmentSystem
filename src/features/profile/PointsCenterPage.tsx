@@ -29,7 +29,7 @@ import PageHeader from '@/components/layout/PageHeader';
 import PageLoading from '@/components/loading/PageLoading';
 import EmptyState from '@/components/EmptyState';
 import { getPointsBalance, getPointsHistory } from '@/services/pointsService';
-import { getRedeemableVouchers, redeemVoucherWithPoints, getUserVouchersForProfile, type RedeemableVoucher, type ProfileVoucher } from '@/services/voucherService';
+import { getRedeemableVouchers, redeemVoucherWithPoints, getUserVouchersForProfile, type RedeemableVoucher } from '@/services/voucherService';
 import { formatDate } from '@/lib/utils';
 
 // Types

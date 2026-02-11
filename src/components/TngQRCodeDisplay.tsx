@@ -28,7 +28,6 @@ export default function TngQRCodeDisplay({ amount, orderId }: TngQRCodeDisplayPr
   // Configuration - can be set via environment variables
   const qrCodeUrl = process.env.NEXT_PUBLIC_TNG_QR_PATH || '/images/tng-qr-code.png';
   const merchantPhone = process.env.NEXT_PUBLIC_MERCHANT_PHONE || '01X-XXXX-XXXX';
-  const merchantName = process.env.NEXT_PUBLIC_MERCHANT_NAME || 'LW String Studio';
 
   // Check if QR code image exists
   useEffect(() => {

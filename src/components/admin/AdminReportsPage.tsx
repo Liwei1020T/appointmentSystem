@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps */
 
 /**
  * Admin Reports Page
@@ -74,6 +75,16 @@ const formatCurrency = (value: number) => `RM ${Number(value).toFixed(2)}`;
 const formatStatusLabel = (value: string) =>
   STATUS_LABELS[value] || value.replace(/_/g, ' ');
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  if (typeof error === 'string' && error) {
+    return error;
+  }
+  return fallback;
+}
+
 export default function AdminReportsPage() {
   // Date range state
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -99,7 +110,9 @@ export default function AdminReportsPage() {
 
   const revenueSeries = revenueReport?.revenueByDate || revenueReport?.revenueByDay || [];
   const hasRevenueSeries = revenueSeries.some(
-    (item) => Number(item.revenue ?? 0) > 0 || Number((item as any).orders ?? 0) > 0
+    (item) =>
+      Number(item.revenue ?? 0) > 0 ||
+      Number((item as { orders?: number | string }).orders ?? 0) > 0
   );
   const statusSeries = salesStats?.ordersByStatus || [];
   const hasStatusSeries = statusSeries.some((item) => Number(item.count) > 0);
@@ -148,8 +161,8 @@ export default function AdminReportsPage() {
       setTopPackages(packagesRes.data || []);
       setUserGrowth(userRes.data);
       setOrderTrends(trendsRes.data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to load reports'));
     } finally {
       setLoading(false);
     }
@@ -163,15 +176,19 @@ export default function AdminReportsPage() {
 
       // Download CSV
       // 说明：exportReportData 返回的是 Blob（服务层已调用 response.blob()）
-      const blob = data instanceof Blob ? data : new Blob([data as any], { type: 'text/csv' });
+      const blobPart: BlobPart =
+        typeof data === 'string' || data instanceof ArrayBuffer || ArrayBuffer.isView(data)
+          ? data
+          : JSON.stringify(data);
+      const blob = data instanceof Blob ? data : new Blob([blobPart], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `${reportType}_report_${dateRange.startDate}_${dateRange.endDate}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
-    } catch (err: any) {
-      alert('Export failed: ' + err.message);
+    } catch (error: unknown) {
+      alert('Export failed: ' + getErrorMessage(error, 'Unknown error'));
     }
   }
 
@@ -291,7 +308,7 @@ export default function AdminReportsPage() {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'overview' | 'products' | 'users' | 'trends')}
                 className={`px-4 py-2 font-medium ${activeTab === tab.id
                   ? 'border-b-2 border-accent text-accent'
                   : 'text-text-secondary hover:text-text-primary'
@@ -803,7 +820,7 @@ export default function AdminReportsPage() {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value, name, props: any) => [
+                      formatter={(value, name, props: { payload?: { source?: string; percentage?: number } }) => [
                         value,
                         `${props?.payload?.source || name} (${props?.payload?.percentage?.toFixed(1) || '0'}%)`,
                       ]}

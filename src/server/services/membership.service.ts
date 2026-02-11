@@ -4,9 +4,9 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { MembershipTier, Prisma } from '@prisma/client';
+import { MembershipTier } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
-import { ApiError } from '@/lib/api-errors';
+import { AppError } from '@/lib/api-errors';
 
 // 等级规则配置
 const TIER_RULES = {
@@ -45,7 +45,7 @@ export async function checkAndUpgradeTier(userId: string): Promise<{
   });
 
   if (!user) {
-    throw new ApiError('NOT_FOUND', 404, 'User not found');
+    throw new AppError('NOT_FOUND', 404, 'User not found');
   }
 
   // 重新计算统计数据（可选，为确保准确性这里重新计算）

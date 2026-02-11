@@ -5,13 +5,12 @@
 
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
-import { failResponse } from '@/lib/api-response';
+import { AppError } from '@/lib/api-errors';
 import { isAdminRole } from '@/lib/roles';
 
 export async function getCurrentUser() {
   const session = await auth();
-  
+
   if (!session?.user?.id) {
     return null;
   }
@@ -34,13 +33,11 @@ export async function getCurrentUser() {
 
 export async function requireAuth() {
   const user = await getCurrentUser();
-  
+
   if (!user) {
-    const error = new ApiError('UNAUTHORIZED', 401, 'Unauthorized');
-    (error as any).json = () => failResponse('UNAUTHORIZED', '未登录', 401);
-    throw error;
+    throw new AppError('UNAUTHORIZED', 401, '未登录');
   }
-  
+
   return user;
 }
 
@@ -51,13 +48,11 @@ export async function requireUser() {
 
 export async function requireAdmin() {
   const user = await requireAuth();
-  
+
   if (!isAdminRole(user.role)) {
-    const error = new ApiError('FORBIDDEN', 403, 'Forbidden');
-    (error as any).json = () => failResponse('FORBIDDEN', '需要管理员权限', 403);
-    throw error;
+    throw new AppError('FORBIDDEN', 403, '需要管理员权限');
   }
-  
+
   return user;
 }
 

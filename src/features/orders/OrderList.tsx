@@ -11,13 +11,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { getUserOrders, OrderWithDetails } from '@/services/orderService';
-import { subscribeToUserOrders, RealtimeSubscription } from '@/services/realtimeService';
+import { subscribeToUserOrders, type OrderUpdateData } from '@/services/realtimeService';
 import {
   getOrderStatusNotification,
   showBrowserNotification,
   playNotificationSound,
   OrderStatus as OrderStatusType
 } from '@/lib/orderNotificationHelper';
+import { getErrorMessage, resolveServiceType } from '@/lib/orderDetailUtils';
 import { OrderStatus } from '@/components/OrderStatusBadge';
 import OrderStatusBadge from '@/components/OrderStatusBadge';
 import { Badge } from '@/components/Badge';
@@ -34,27 +35,57 @@ interface OrderListProps {
   initialStatus?: OrderStatus;
 }
 
+interface SupabaseOrderUpdatePayload {
+  eventType?: 'INSERT' | 'UPDATE' | 'DELETE' | string;
+  old?: { id?: string; status?: string };
+  new?: { id?: string; status?: string; updatedAt?: string; updated_at?: string };
+}
+
+interface UserOrdersUpdatePayload {
+  orders: OrderUpdateData[];
+}
+
+function isSupabaseOrderUpdatePayload(payload: unknown): payload is SupabaseOrderUpdatePayload {
+  return typeof payload === 'object' && payload !== null && 'eventType' in payload;
+}
+
+function isUserOrdersUpdatePayload(payload: unknown): payload is UserOrdersUpdatePayload {
+  if (!payload || typeof payload !== 'object') return false;
+  const maybeOrders = (payload as { orders?: unknown }).orders;
+  return Array.isArray(maybeOrders);
+}
+
+function toNotificationStatus(status: string | null | undefined): OrderStatusType {
+  if (status === 'cancelled') return 'cancelled';
+  if (status === 'completed' || status === 'picked_up') return 'completed';
+  if (status === 'in_progress' || status === 'received') return 'in_progress';
+  return 'pending';
+}
+
+function getOrderItemCount(order: OrderWithDetails): number {
+  return Array.isArray(order.items) ? order.items.length : 0;
+}
+
 const resolvePaymentFlags = (order: OrderWithDetails) => {
-  const payments = order.payments ?? [];
+  const payments = Array.isArray(order.payments) ? order.payments : [];
   const hasCompletedPayment = payments.some(
-    (p: any) => p.status === 'completed' || p.status === 'success'
+    (payment) => payment.status === 'completed' || payment.status === 'success'
   );
   const hasActualPendingPayment = payments.some(
-    (p: any) =>
-      p.status === 'pending' &&
-      p.provider !== 'pending' &&
-      p.provider !== 'manual'
+    (payment) =>
+      payment.status === 'pending' &&
+      payment.provider !== 'pending' &&
+      payment.provider !== 'manual'
   );
   const hasPendingCashPayment = payments.some(
-    (p: any) => p.status === 'pending' && p.provider === 'cash'
+    (payment) => payment.status === 'pending' && payment.provider === 'cash'
   );
   const hasPendingTngVerification = payments.some(
-    (p: any) =>
-      p.status === 'pending_verification' && p.provider === 'tng'
+    (payment) =>
+      payment.status === 'pending_verification' && payment.provider === 'tng'
   );
   const finalAmount = Number(order.finalPrice ?? order.price ?? 0);
-  const usePackage =
-    !!(order.usePackage || (order as any).use_package);
+  const usePackage = Boolean(order.usePackage ?? order.use_package);
   const needsPayment =
     order.status === 'pending' &&
     !hasCompletedPayment &&
@@ -80,7 +111,7 @@ const getOrderNextAction = (order: OrderWithDetails) => {
     hasPendingTngVerification,
     hasActualPendingPayment,
   } = resolvePaymentFlags(order);
-  const isPickup = (order as any).serviceType === 'pickup_delivery' || (order as any).service_type === 'pickup_delivery';
+  const isPickup = resolveServiceType(order) === 'pickup_delivery';
 
   if (order.status === 'cancelled') {
     return { label: '已取消', tone: 'danger' as const };
@@ -107,13 +138,6 @@ const getOrderNextAction = (order: OrderWithDetails) => {
     return { label: '付款处理中', tone: 'info' as const };
   }
   return { label: '处理中', tone: 'neutral' as const };
-};
-
-const chipToneStyles: Record<'success' | 'warning' | 'info' | 'neutral', string> = {
-  success: 'bg-success/10 text-success border border-success/40',
-  warning: 'bg-warning/10 text-warning border border-warning/40',
-  info: 'bg-info/10 text-info border border-info/40',
-  neutral: 'bg-ink-surface text-text-secondary border border-border-subtle',
 };
 
 const getEtaIcon = (tone: 'success' | 'warning' | 'info' | 'neutral') => {
@@ -164,7 +188,6 @@ export default function OrderList({ initialStatus }: OrderListProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [activeStatus, setActiveStatus] = useState<OrderStatus | 'all'>(initialStatus || 'all');
-  const [realtimeChannel, setRealtimeChannel] = useState<RealtimeSubscription | null>(null);
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
@@ -188,50 +211,54 @@ export default function OrderList({ initialStatus }: OrderListProps) {
   ];
 
   // 加载订单数据
-  const loadOrders = async (status?: OrderStatus) => {
+  const loadOrders = useCallback(async (status?: OrderStatus) => {
     setLoading(true);
     setError('');
 
     try {
       const { data, error: err } = await getUserOrders(status);
       if (err) {
-        setError((err as any)?.message || err || '加载订单失败');
+        setError(getErrorMessage(err, '加载订单失败'));
         setOrders([]);
       } else {
         setOrders(data || []);
       }
-    } catch (err: any) {
-      setError(err.message || '加载订单失败');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, '加载订单失败'));
       setOrders([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // 处理订单实时更新
-  const handleOrderUpdate = useCallback((payload: any) => {
-    const { eventType, old, new: newData } = payload;
+  const handleOrderUpdate = useCallback((payload: UserOrdersUpdatePayload | SupabaseOrderUpdatePayload) => {
+    if (isSupabaseOrderUpdatePayload(payload)) {
+      const { eventType, old, new: newData } = payload;
 
-    if (eventType === 'UPDATE') {
-      setOrders((prevOrders) => {
-        // 找到被更新的订单
-        const updatedOrders = prevOrders.map((order) => {
-          if (order.id === newData.id) {
-            // 检查状态是否变化
-            if (old.status !== newData.status) {
-              // 显示通知
+      if (eventType === 'UPDATE' && newData?.id && typeof newData.status === 'string') {
+        const updatedOrderId = newData.id;
+        const nextStatus = newData.status;
+        const nextUpdatedAt = newData.updatedAt ?? newData.updated_at;
+        let shouldRefresh = false;
+        const scopedStatus = activeStatus === 'all' ? undefined : activeStatus;
+
+        setOrders((prevOrders) => {
+          const updatedOrders = prevOrders.map((order) => {
+            if (order.id !== newData.id) return order;
+
+            if (old?.status && old.status !== newData.status) {
               const orderInfo = order.string
-                ? `${order.string.brand} ${order.string.model}`
+                ? `${order.string.brand ?? ''} ${order.string.model ?? ''}`.trim()
                 : '订单';
 
               const notification = getOrderStatusNotification(
-                old.status as OrderStatusType,
-                newData.status as OrderStatusType,
-                newData.id,
-                orderInfo
+                toNotificationStatus(old.status),
+                toNotificationStatus(nextStatus),
+                updatedOrderId,
+                orderInfo || '订单'
               );
 
-              // 显示 Toast 通知
               const toastType =
                 notification.type === 'error'
                   ? 'error'
@@ -244,43 +271,107 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                 type: toastType,
               });
 
-              // 播放通知音效
               playNotificationSound(toastType);
-
-              // 显示浏览器通知（如果已授权）
               showBrowserNotification(notification);
             }
 
-            // 更新订单数据
-            return { ...order, ...newData };
-          }
-          return order;
+            const nextOrder: OrderWithDetails = {
+              ...order,
+              status: nextStatus,
+              ...(nextUpdatedAt ? { updatedAt: nextUpdatedAt } : {}),
+            };
+
+            if (
+              scopedStatus &&
+              (order.status === scopedStatus || nextOrder.status === scopedStatus) &&
+              order.status !== nextOrder.status
+            ) {
+              shouldRefresh = true;
+            }
+
+            return nextOrder;
+          });
+
+          return scopedStatus ? updatedOrders.filter((order) => order.status === scopedStatus) : updatedOrders;
         });
 
-        // 根据当前筛选条件过滤订单
-        if (activeStatus === 'all') {
-          return updatedOrders;
-        } else {
-          return updatedOrders.filter((o) => o.status === activeStatus);
+        if (shouldRefresh) {
+          void loadOrders(scopedStatus);
         }
-      });
-    } else if (eventType === 'INSERT') {
-      // 新订单插入
-      loadOrders(activeStatus === 'all' ? undefined : activeStatus);
-    } else if (eventType === 'DELETE') {
-      // 订单被删除
-      setOrders((prevOrders) =>
-        prevOrders.filter((order) => order.id !== old.id)
-      );
+        return;
+      }
+
+      if (eventType === 'INSERT' || eventType === 'DELETE') {
+        void loadOrders(activeStatus === 'all' ? undefined : activeStatus);
+      }
+      return;
     }
-  }, [activeStatus]);
+
+    if (!isUserOrdersUpdatePayload(payload)) {
+      return;
+    }
+
+    const updateMap = new Map(payload.orders.map((order) => [order.orderId, order]));
+    const scopedStatus = activeStatus === 'all' ? undefined : activeStatus;
+    let shouldRefresh = false;
+
+    setOrders((prevOrders) => {
+      const knownOrderIds = new Set(prevOrders.map((order) => order.id));
+      if (payload.orders.some((item) => !knownOrderIds.has(item.orderId))) {
+        shouldRefresh = true;
+      }
+
+      return prevOrders.map((order) => {
+        const nextUpdate = updateMap.get(order.id);
+        if (!nextUpdate || nextUpdate.status === order.status) {
+          return order;
+        }
+
+        shouldRefresh = true;
+
+        const orderInfo = order.string
+          ? `${order.string.brand ?? ''} ${order.string.model ?? ''}`.trim()
+          : '订单';
+
+        const notification = getOrderStatusNotification(
+          toNotificationStatus(order.status),
+          toNotificationStatus(nextUpdate.status),
+          order.id,
+          orderInfo || '订单'
+        );
+
+        const toastType =
+          notification.type === 'error'
+            ? 'error'
+            : notification.type === 'success'
+              ? 'success'
+              : 'info';
+        setToast({
+          show: true,
+          message: notification.message,
+          type: toastType,
+        });
+        playNotificationSound(toastType);
+        showBrowserNotification(notification);
+
+        return {
+          ...order,
+          status: nextUpdate.status,
+          updatedAt: nextUpdate.updatedAt,
+        };
+      });
+    });
+
+    if (shouldRefresh) {
+      void loadOrders(scopedStatus);
+    }
+  }, [activeStatus, loadOrders]);
 
   // 初始化实时订阅
   useEffect(() => {
     const userId = session?.user?.id;
     if (userId) {
       const subscription = subscribeToUserOrders(userId, handleOrderUpdate);
-      setRealtimeChannel(subscription);
 
       // 清理函数：取消订阅
       return () => {
@@ -291,8 +382,8 @@ export default function OrderList({ initialStatus }: OrderListProps) {
 
   // 初次加载
   useEffect(() => {
-    loadOrders(activeStatus === 'all' ? undefined : activeStatus);
-  }, [activeStatus]);
+    void loadOrders(activeStatus === 'all' ? undefined : activeStatus);
+  }, [activeStatus, loadOrders]);
 
   // 处理状态筛选切换
   const handleStatusChange = (status: OrderStatus | 'all') => {
@@ -399,16 +490,10 @@ export default function OrderList({ initialStatus }: OrderListProps) {
             };
 
             const config = statusConfig[order.status] || statusConfig.pending;
-            const isMultiRacket = (order as any).items?.length > 0;
+            const itemCount = getOrderItemCount(order);
+            const isMultiRacket = itemCount > 0;
             const nextAction = getOrderNextAction(order);
             const nextActionChips = getOrderNextActionChips(order);
-            const actionToneMap = {
-              success: 'bg-success/10 text-success border border-success/40',
-              warning: 'bg-warning/10 text-warning border border-warning/40',
-              info: 'bg-info/10 text-info border border-info/40',
-              neutral: 'bg-ink/70 text-text-secondary border border-border-subtle',
-              danger: 'bg-danger/10 text-danger border border-danger/40',
-            };
 
             return (
               <div
@@ -450,7 +535,7 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                             多球拍订单
                           </h3>
                           <p className="text-sm text-text-secondary mt-0.5">
-                            {(order as any).items.length} 支球拍
+                            {itemCount} 支球拍
                           </p>
                         </>
                       ) : (
@@ -478,7 +563,7 @@ export default function OrderList({ initialStatus }: OrderListProps) {
                     </p>
                     <p className="font-semibold text-text-primary">
                       {isMultiRacket
-                        ? `${(order as any).items.length} 支`
+                        ? `${itemCount} 支`
                         : `${order.tension || '-'} 磅`
                       }
                     </p>

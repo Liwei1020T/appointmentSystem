@@ -42,15 +42,34 @@ export interface PointsStats {
   total_spent?: number;
 }
 
-export async function getPointsBalance(userId?: string): Promise<{ balance: number; error: string | null }> {
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === 'string' && error) {
+    return error;
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const { message } = error as { message?: unknown };
+    if (typeof message === 'string' && message) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
+export async function getPointsBalance(_userId?: string): Promise<{ balance: number; error: string | null }> {
   try {
     const payload = await apiRequest<{ balance?: number; points?: number }>(`/api/points`);
     const rawBalance = payload?.balance ?? payload?.points ?? 0;
     const balance = Number.isFinite(Number(rawBalance)) ? Number(rawBalance) : 0;
     return { balance, error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to fetch points balance:', error);
-    return { balance: 0, error: error.message || '获取积分余额失败' };
+    return { balance: 0, error: getErrorMessage(error, '获取积分余额失败') };
   }
 }
 
@@ -65,13 +84,13 @@ export async function getPointsHistory(
     const data = await apiRequest<{ logs?: PointsLog[] }>(`/api/points/history?${params.toString()}`);
     const payload = data?.logs ?? [];
     return { logs: Array.isArray(payload) ? payload : [], error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to fetch points history:', error);
-    return { logs: [], error: error.message || '获取积分记录失败' };
+    return { logs: [], error: getErrorMessage(error, '获取积分记录失败') };
   }
 }
 
-export async function getPointsStats(userId: string): Promise<PointsStats> {
+export async function getPointsStats(_userId: string): Promise<PointsStats> {
   try {
     const payload = await apiRequest<PointsStats>(`/api/points/stats`);
     return {

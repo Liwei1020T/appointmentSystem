@@ -4,7 +4,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
+import { AppError } from '@/lib/api-errors';
 
 /**
  * 为新用户发放欢迎礼包（自动发放的优惠券）
@@ -111,7 +111,7 @@ export async function assertFirstOrderVoucherEligibility(
 
   const isFirstOrder = await isUserFirstOrder(userId);
   if (!isFirstOrder) {
-    throw new ApiError('UNPROCESSABLE_ENTITY', 422, '此优惠券仅限首单使用');
+    throw new AppError('UNPROCESSABLE_ENTITY', 422, '此优惠券仅限首单使用');
   }
 }
 

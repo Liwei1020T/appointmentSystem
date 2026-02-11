@@ -99,7 +99,7 @@ export default function ProfilePage() {
       ]);
 
       if (profileResult.error) {
-        setError(profileResult.error?.message || profileResult.error);
+        setError(profileResult.error);
       } else {
         setProfile(profileResult.profile || null);
       }

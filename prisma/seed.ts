@@ -4,7 +4,7 @@
  * 运行: npx prisma db seed
  */
 
-import { PrismaClient } from '.prisma/client';
+import { MembershipTier, PrismaClient } from '.prisma/client';
 import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -252,7 +252,13 @@ async function main() {
   console.log(`✓ 创建 ${vouchers.length} 个优惠券`);
 
   // 6. 创建会员权益 (Tier Benefits)
-  const benefits = [
+  const benefits: Array<{
+    tier: MembershipTier;
+    benefitType: string;
+    benefitValue: string;
+    description: string;
+    isActive: boolean;
+  }> = [
     {
       tier: 'SILVER',
       benefitType: 'points_multiplier',
@@ -305,7 +311,7 @@ async function main() {
     // 这里我们先查询是否存在，不存在则创建
     const existing = await prisma.tierBenefit.findFirst({
       where: {
-        tier: benefit.tier as any,
+        tier: benefit.tier,
         benefitType: benefit.benefitType,
       },
     });
@@ -313,7 +319,7 @@ async function main() {
     if (!existing) {
       await prisma.tierBenefit.create({
         data: {
-          tier: benefit.tier as any,
+          tier: benefit.tier,
           benefitType: benefit.benefitType,
           benefitValue: benefit.benefitValue,
           description: benefit.description,

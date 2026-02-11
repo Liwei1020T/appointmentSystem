@@ -8,16 +8,16 @@ declare module 'next-auth' {
       name?: string | null;
       role: string;
       // Extended fields
-      full_name?: string;
-      fullName?: string;
+      full_name?: string | null;
+      fullName?: string | null;
       phone?: string | null;
-      avatar?: string;
-      avatar_url?: string;
-      referral_code?: string;
-      referralCode?: string;
+      avatar?: string | null;
+      avatar_url?: string | null;
+      referral_code?: string | null;
+      referralCode?: string | null;
       points?: number;
-      created_at?: string | Date;
-      createdAt?: string | Date;
+      created_at?: string | Date | null;
+      createdAt?: string | Date | null;
     };
   }
 
@@ -27,23 +27,23 @@ declare module 'next-auth' {
     name?: string | null;
     role: string;
     // Extended fields
-    full_name?: string;
-    fullName?: string;
+    full_name?: string | null;
+    fullName?: string | null;
     phone?: string | null;
-    avatar?: string;
-    avatar_url?: string;
-    referral_code?: string;
-    referralCode?: string;
+    avatar?: string | null;
+    avatar_url?: string | null;
+    referral_code?: string | null;
+    referralCode?: string | null;
     points?: number;
-    created_at?: string | Date;
-    createdAt?: string | Date;
+    created_at?: string | Date | null;
+    createdAt?: string | Date | null;
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
-    id: string;
-    role: string;
+    id?: string;
+    role?: string;
     // Extended fields
     full_name?: string;
     phone?: string;

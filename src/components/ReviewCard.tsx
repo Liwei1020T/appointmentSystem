@@ -25,7 +25,7 @@ interface ReviewCardProps {
 
 export default function ReviewCard({ review, showOrder = false, showLikeButton = false, onLikeChange }: ReviewCardProps) {
   const { data: session, status } = useSession();
-  const referralCode = (session?.user as any)?.referral_code as string | undefined;
+  const referralCode = session?.user?.referral_code || session?.user?.referralCode || undefined;
   const currentUserId = session?.user?.id;
 
   // 点赞状态
@@ -127,8 +127,9 @@ export default function ReviewCard({ review, showOrder = false, showLikeButton =
           message: '分享成功',
           type: 'success',
         });
-      } catch (error: any) {
-        if (error?.name !== 'AbortError') {
+      } catch (error: unknown) {
+        const isAbortError = error instanceof Error && error.name === 'AbortError';
+        if (!isAbortError) {
           setToast({
             show: true,
             message: '分享失败，请稍后重试',
@@ -253,14 +254,14 @@ export default function ReviewCard({ review, showOrder = false, showLikeButton =
             <button
               type="button"
               onClick={handleLike}
-              disabled={likeLoading || isOwnReview}
+              disabled={likeLoading || !canLike}
               className={`
                 inline-flex items-center gap-1.5 text-sm font-medium transition-colors
                 ${isLiked
                   ? 'text-red-500'
                   : 'text-text-tertiary hover:text-red-500'
                 }
-                ${(likeLoading || isOwnReview) ? 'opacity-50 cursor-not-allowed' : ''}
+                ${(likeLoading || !canLike) ? 'opacity-50 cursor-not-allowed' : ''}
               `}
             >
               <Heart

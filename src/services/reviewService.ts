@@ -89,7 +89,30 @@ export interface SubmitReviewParams {
   is_anonymous?: boolean;
 }
 
-// Normalize any review payload (camelCase or snake_case) into a consistent shape.
+export interface AdminReviewStats {
+  total_reviews: number;
+  average_rating: number;
+  rating_5: number;
+  rating_4: number;
+  rating_3: number;
+  rating_2: number;
+  rating_1: number;
+  avg_service: number;
+  avg_quality: number;
+  avg_speed: number;
+}
+
+interface PublicReviewsPayload {
+  reviews?: ReviewLike[];
+  pagination?: PublicReviewsResponse['pagination'];
+  summary?: PublicReviewsResponse['summary'];
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
+// Normalize review payload (camelCase or snake_case) into a consistent shape.
 function normalizeReview(r: ReviewLike): OrderReview {
   const rating = Number(r?.rating ?? 0);
   const serviceRating = Number(r?.service_rating ?? r?.serviceRating ?? 0);
@@ -157,7 +180,7 @@ function normalizeReview(r: ReviewLike): OrderReview {
 export async function getUserReviews(userId?: string): Promise<OrderReview[]> {
   if (userId && !isValidUUID(userId)) return [];
   try {
-    const payload = await apiRequest<any[]>(`/api/reviews/user`);
+    const payload = await apiRequest<ReviewLike[]>(`/api/reviews/user`);
     if (!Array.isArray(payload)) return [];
     return payload.map(normalizeReview);
   } catch (_error) {
@@ -172,7 +195,7 @@ export async function getOrderReview(orderId: string): Promise<OrderReview | nul
   if (!isValidUUID(orderId)) return null;
 
   try {
-    const review = await apiRequest<any>(`/api/reviews/order/${orderId}`);
+    const review = await apiRequest<ReviewLike>(`/api/reviews/order/${orderId}`);
     return review ? normalizeReview(review) : null;
   } catch (_err) {
     return null;
@@ -201,7 +224,7 @@ export async function canReviewOrder(orderId: string, userId: string): Promise<b
  */
 export async function submitReview(params: SubmitReviewParams, userId?: string): Promise<{ reviewId?: string; review?: OrderReview; error?: string }> {
   try {
-    const reviewPayload = await apiRequest<any>(`/api/reviews`, {
+    const reviewPayload = await apiRequest<ReviewLike>(`/api/reviews`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(params),
@@ -209,12 +232,12 @@ export async function submitReview(params: SubmitReviewParams, userId?: string):
     const normalized = normalizeReview({
       ...reviewPayload,
       order_id: params.order_id || params.orderId || reviewPayload?.order_id,
-      user_id: (reviewPayload as any)?.user_id || (reviewPayload as any)?.userId || userId,
+      user_id: reviewPayload?.user_id || reviewPayload?.userId || userId,
     });
     return { reviewId: normalized.id, review: normalized };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to submit review:', error);
-    return { error: error?.message || 'Failed to submit review' };
+    return { error: getErrorMessage(error, 'Failed to submit review') };
   }
 }
 
@@ -223,7 +246,7 @@ export async function submitReview(params: SubmitReviewParams, userId?: string):
  */
 export async function getFeaturedReviews(): Promise<OrderReview[]> {
   try {
-    const payload = await apiRequest<any[]>(`/api/reviews/featured`);
+    const payload = await apiRequest<ReviewLike[]>(`/api/reviews/featured`);
     if (!Array.isArray(payload)) return [];
     return payload.map(normalizeReview);
   } catch {
@@ -266,7 +289,7 @@ export async function getPublicReviews(params: PublicReviewsParams = {}): Promis
     const queryString = searchParams.toString();
     const url = `/api/reviews/public${queryString ? `?${queryString}` : ''}`;
 
-    const payload = await apiRequest<any>(url);
+    const payload = await apiRequest<PublicReviewsPayload>(url);
 
     return {
       reviews: Array.isArray(payload.reviews) ? payload.reviews.map(normalizeReview) : [],
@@ -303,7 +326,7 @@ export async function toggleReviewLike(reviewId: string): Promise<{ liked: boole
 export async function getPublicReviewById(reviewId: string): Promise<OrderReview | null> {
   if (!isValidUUID(reviewId)) return null;
   try {
-    const payload = await apiRequest<any>(`/api/reviews/public/${reviewId}`);
+    const payload = await apiRequest<ReviewLike>(`/api/reviews/public/${reviewId}`);
     return payload ? normalizeReview(payload) : null;
   } catch {
     return null;
@@ -315,7 +338,7 @@ export async function getPublicReviewById(reviewId: string): Promise<OrderReview
  */
 export async function getAdminReviews(): Promise<OrderReview[]> {
   try {
-    const payload = await apiRequest<any[]>(`/api/admin/reviews`);
+    const payload = await apiRequest<ReviewLike[]>(`/api/admin/reviews`);
     if (!Array.isArray(payload)) return [];
     return payload.map(normalizeReview);
   } catch {
@@ -326,15 +349,27 @@ export async function getAdminReviews(): Promise<OrderReview[]> {
 /**
  * Admin: 获取评价统计
  */
-export async function getAdminReviewStats(): Promise<any> {
-  return apiRequest(`/api/admin/reviews/stats`);
+export async function getAdminReviewStats(): Promise<AdminReviewStats> {
+  const payload = await apiRequest<Partial<AdminReviewStats>>(`/api/admin/reviews/stats`);
+  return {
+    total_reviews: Number(payload?.total_reviews ?? 0),
+    average_rating: Number(payload?.average_rating ?? 0),
+    rating_5: Number(payload?.rating_5 ?? 0),
+    rating_4: Number(payload?.rating_4 ?? 0),
+    rating_3: Number(payload?.rating_3 ?? 0),
+    rating_2: Number(payload?.rating_2 ?? 0),
+    rating_1: Number(payload?.rating_1 ?? 0),
+    avg_service: Number(payload?.avg_service ?? 0),
+    avg_quality: Number(payload?.avg_quality ?? 0),
+    avg_speed: Number(payload?.avg_speed ?? 0),
+  };
 }
 
 /**
  * Admin: 回复评价
  */
-export async function replyReview(reviewId: string, reply: string): Promise<any> {
-  return apiRequest(`/api/admin/reviews/${reviewId}/reply`, {
+export async function replyReview(reviewId: string, reply: string): Promise<void> {
+  await apiRequest<unknown>(`/api/admin/reviews/${reviewId}/reply`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ reply }),

@@ -67,6 +67,7 @@ UPLOAD_DIR="./public/uploads"
 | `NEXT_PUBLIC_APP_URL` | ❌ No | `http://localhost:3000` | Public app URL |
 | `UPLOAD_DIR` | ❌ No | `./public/uploads` | Upload directory path |
 | `MAX_FILE_SIZE` | ❌ No | `5242880` | Max upload size (5MB) |
+| `CSRF_TRUSTED_ORIGINS` | ❌ No | - | Comma-separated extra allowed origins for API CSRF checks |
 
 ### Payment Configuration
 
@@ -135,6 +136,12 @@ NODE_ENV="development"
 # ===========================================
 UPLOAD_DIR="./public/uploads"
 MAX_FILE_SIZE="5242880"
+
+# ===========================================
+# CSRF Protection
+# ===========================================
+# Optional trusted origins (comma separated, no trailing slash)
+# CSRF_TRUSTED_ORIGINS="https://admin.example.com,https://ops.example.com"
 
 # ===========================================
 # Payment Configuration

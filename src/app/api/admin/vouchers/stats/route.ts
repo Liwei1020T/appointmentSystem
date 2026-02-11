@@ -1,10 +1,9 @@
-import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/server-auth';
 import { successResponse } from '@/lib/api-response';
 import { handleApiError } from '@/lib/api/handleApiError';
 export const dynamic = 'force-dynamic';
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     await requireAdmin();
     const now = new Date();

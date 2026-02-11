@@ -10,6 +10,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { verifyCsrfRequest } from '@/lib/csrf';
 
 // 需要登录才能访问的路由
 const protectedRoutes = [
@@ -28,24 +29,71 @@ const adminRoutes = ['/admin'];
 
 // 已登录用户不应访问的路由（重定向到首页）
 const authRoutes = ['/login', '/signup'];
+const csrfExemptPathPrefixes = ['/api/cron', '/api/health', '/api/payments/tng/callback'];
+const csrfTrustedOrigins = [
+    process.env.NEXTAUTH_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
+    ...(process.env.CSRF_TRUSTED_ORIGINS || '').split(','),
+]
+    .map((value) => value?.trim())
+    .filter((value): value is string => Boolean(value));
 
 function withSecurityHeaders(response: NextResponse) {
+    const contentSecurityPolicy = [
+        "default-src 'self'",
+        "base-uri 'self'",
+        "frame-ancestors 'none'",
+        "object-src 'none'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob: https:",
+        "font-src 'self' data:",
+        "connect-src 'self' https: wss:",
+        "form-action 'self'",
+    ].join('; ');
+
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
     response.headers.set('X-XSS-Protection', '1; mode=block');
-
-    // CSP 头部 (可根据需要调整)
-    // response.headers.set(
-    //   'Content-Security-Policy',
-    //   "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
-    // );
+    response.headers.set('Content-Security-Policy', contentSecurityPolicy);
+    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    if (process.env.NODE_ENV === 'production') {
+        response.headers.set(
+            'Strict-Transport-Security',
+            'max-age=31536000; includeSubDomains; preload'
+        );
+    }
 
     return response;
 }
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
+    const isApiRoute = pathname.startsWith('/api/');
+
+    if (isApiRoute) {
+        const csrfResult = verifyCsrfRequest(request, {
+            pathname,
+            trustedOrigins: csrfTrustedOrigins,
+            exemptPathPrefixes: csrfExemptPathPrefixes,
+        });
+
+        if (!csrfResult.allowed) {
+            return withSecurityHeaders(
+                NextResponse.json(
+                    {
+                        success: false,
+                        message: 'CSRF validation failed',
+                        reason: csrfResult.reason,
+                    },
+                    { status: 403 }
+                )
+            );
+        }
+
+        return withSecurityHeaders(NextResponse.next());
+    }
 
     const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
     const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
@@ -108,12 +156,11 @@ export const config = {
     matcher: [
         /*
          * Match all request paths except:
-         * - api (API routes)
          * - _next/static (static files)
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
          * - public folder files
          */
-        '/((?!api|_next/static|_next/image|favicon.ico|images|uploads|sw.js|manifest.json).*)',
+        '/((?!_next/static|_next/image|favicon.ico|images|uploads|sw.js|manifest.json).*)',
     ],
 };

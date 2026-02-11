@@ -65,7 +65,7 @@ export default function AdminCronPage() {
         throw new Error('Task failed');
       }
 
-      const result = await response.json();
+      const _result = await response.json();
       setToast({
         show: true,
         message: `${task.name} 执行成功`,

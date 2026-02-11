@@ -5,6 +5,7 @@ import { parseJson } from '@/lib/validation';
 import { okResponse, failResponse } from '@/lib/api-response';
 import { redeemPoints } from '@/server/services/points.service';
 import { handleApiError } from '@/lib/api/handleApiError';
+import { financialLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 const bodySchema = z.object({
   points: z.coerce.number().int().positive(),
@@ -18,6 +19,13 @@ const bodySchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const user = await requireUser();
+    const clientIp = getClientIp(request);
+    const rateLimitKey = `points:redeem:${user.id}:${clientIp}`;
+    const rateLimitResult = financialLimiter.check(rateLimitKey);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult.resetAt);
+    }
+
     const parsed = await parseJson(request, bodySchema);
     if (!parsed.ok) {
       if (parsed.type === 'invalid_json') {

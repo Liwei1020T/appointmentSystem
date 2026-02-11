@@ -16,6 +16,13 @@ import { confirmPasswordReset, requestPasswordResetOtp } from '@/services/authSe
 import { normalizeMyPhone, validatePassword, validatePhone } from '@/lib/utils';
 import BrandLogo from '@/components/BrandLogo';
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export default function ForgotPasswordPage() {
   // Step: 1 request OTP, 2 confirm reset
   const [step, setStep] = useState<1 | 2>(1);
@@ -85,10 +92,10 @@ export default function ForgotPasswordPage() {
         message: '验证码已发送（5 分钟内有效）',
         type: 'success',
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setToast({
         show: true,
-        message: err.message || '发送验证码失败',
+        message: getErrorMessage(err, '发送验证码失败'),
         type: 'error',
       });
     } finally {
@@ -136,10 +143,10 @@ export default function ForgotPasswordPage() {
       setTimeout(() => {
         window.location.href = '/login';
       }, 1200);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setToast({
         show: true,
-        message: err.message || '重置密码失败',
+        message: getErrorMessage(err, '重置密码失败'),
         type: 'error',
       });
       setSubmitting(false);

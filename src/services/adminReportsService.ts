@@ -9,6 +9,16 @@ export interface DateRange {
   endDate: string;
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  if (typeof error === 'string' && error) {
+    return error;
+  }
+  return fallback;
+}
+
 export interface ReportStats {
   revenue: number;
   orders: number;
@@ -71,8 +81,11 @@ export async function getRevenueReport(filters?: {
       return { data: { totalRevenue: 0, periodRevenue: 0, revenueByDay: [], revenueByCategory: [], growthRate: 0 }, error: getApiErrorMessage(data, 'Failed to fetch revenue report') };
     }
     return { data: data?.data || { totalRevenue: 0, periodRevenue: 0, revenueByDay: [], revenueByCategory: [], growthRate: 0 }, error: null };
-  } catch (error: any) {
-    return { data: { totalRevenue: 0, periodRevenue: 0, revenueByDay: [], revenueByCategory: [], growthRate: 0 }, error: error.message || 'Failed to fetch revenue report' };
+  } catch (error: unknown) {
+    return {
+      data: { totalRevenue: 0, periodRevenue: 0, revenueByDay: [], revenueByCategory: [], growthRate: 0 },
+      error: getErrorMessage(error, 'Failed to fetch revenue report'),
+    };
   }
 }
 
@@ -113,8 +126,11 @@ export async function getProfitAnalysis(filters?: {
       return { data: { totalProfit: 0, profitMargin: 0, profitByCategory: [], topProfitableItems: [] }, error: getApiErrorMessage(data, 'Failed to fetch profit analysis') };
     }
     return { data: data?.data || { totalProfit: 0, profitMargin: 0, profitByCategory: [], topProfitableItems: [] }, error: null };
-  } catch (error: any) {
-    return { data: { totalProfit: 0, profitMargin: 0, profitByCategory: [], topProfitableItems: [] }, error: error.message || 'Failed to fetch profit analysis' };
+  } catch (error: unknown) {
+    return {
+      data: { totalProfit: 0, profitMargin: 0, profitByCategory: [], topProfitableItems: [] },
+      error: getErrorMessage(error, 'Failed to fetch profit analysis'),
+    };
   }
 }
 
@@ -150,8 +166,11 @@ export async function getSalesStats(filters?: {
       return { data: { totalSales: 0, totalOrders: 0, averageOrderValue: 0, conversionRate: 0, salesByDay: [] }, error: getApiErrorMessage(data, 'Failed to fetch sales stats') };
     }
     return { data: data?.data || { totalSales: 0, totalOrders: 0, averageOrderValue: 0, conversionRate: 0, salesByDay: [] }, error: null };
-  } catch (error: any) {
-    return { data: { totalSales: 0, totalOrders: 0, averageOrderValue: 0, conversionRate: 0, salesByDay: [] }, error: error.message || 'Failed to fetch sales stats' };
+  } catch (error: unknown) {
+    return {
+      data: { totalSales: 0, totalOrders: 0, averageOrderValue: 0, conversionRate: 0, salesByDay: [] },
+      error: getErrorMessage(error, 'Failed to fetch sales stats'),
+    };
   }
 }
 
@@ -183,8 +202,8 @@ export async function getTopStrings(limit: number = 10, dateRange?: DateRange): 
       return { data: [], error: getApiErrorMessage(data, 'Failed to fetch top strings') };
     }
     return { data: data?.data || [], error: null };
-  } catch (error: any) {
-    return { data: [], error: error.message || 'Failed to fetch top strings' };
+  } catch (error: unknown) {
+    return { data: [], error: getErrorMessage(error, 'Failed to fetch top strings') };
   }
 }
 
@@ -217,8 +236,8 @@ export async function getTopPackages(limit: number = 10, dateRange?: DateRange):
       return { data: [], error: getApiErrorMessage(data, 'Failed to fetch top packages') };
     }
     return { data: data?.data || [], error: null };
-  } catch (error: any) {
-    return { data: [], error: error.message || 'Failed to fetch top packages' };
+  } catch (error: unknown) {
+    return { data: [], error: getErrorMessage(error, 'Failed to fetch top packages') };
   }
 }
 
@@ -257,8 +276,11 @@ export async function getUserGrowthStats(daysOrFilters?: number | {
       return { data: { totalUsers: 0, newUsers: 0, activeUsers: 0, churnRate: 0, growthByDay: [] }, error: getApiErrorMessage(data, 'Failed to fetch user growth stats') };
     }
     return { data: data?.data || { totalUsers: 0, newUsers: 0, activeUsers: 0, churnRate: 0, growthByDay: [] }, error: null };
-  } catch (error: any) {
-    return { data: { totalUsers: 0, newUsers: 0, activeUsers: 0, churnRate: 0, growthByDay: [] }, error: error.message || 'Failed to fetch user growth stats' };
+  } catch (error: unknown) {
+    return {
+      data: { totalUsers: 0, newUsers: 0, activeUsers: 0, churnRate: 0, growthByDay: [] },
+      error: getErrorMessage(error, 'Failed to fetch user growth stats'),
+    };
   }
 }
 
@@ -294,8 +316,11 @@ export async function getOrderTrends(filters?: {
       return { data: { totalOrders: 0, pendingOrders: 0, completedOrders: 0, cancelledOrders: 0, ordersByDay: [], averageCompletionTime: 0 }, error: getApiErrorMessage(data, 'Failed to fetch order trends') };
     }
     return { data: data?.data || { totalOrders: 0, pendingOrders: 0, completedOrders: 0, cancelledOrders: 0, ordersByDay: [], averageCompletionTime: 0 }, error: null };
-  } catch (error: any) {
-    return { data: { totalOrders: 0, pendingOrders: 0, completedOrders: 0, cancelledOrders: 0, ordersByDay: [], averageCompletionTime: 0 }, error: error.message || 'Failed to fetch order trends' };
+  } catch (error: unknown) {
+    return {
+      data: { totalOrders: 0, pendingOrders: 0, completedOrders: 0, cancelledOrders: 0, ordersByDay: [], averageCompletionTime: 0 },
+      error: getErrorMessage(error, 'Failed to fetch order trends'),
+    };
   }
 }
 
@@ -335,7 +360,7 @@ export async function exportReportData(
     }
     const blob = await response.blob();
     return { success: true, data: blob, error: null };
-  } catch (error: any) {
-    return { success: false, error: error.message || 'Failed to export report' };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error, 'Failed to export report') };
   }
 }

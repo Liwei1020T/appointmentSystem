@@ -5,6 +5,7 @@ import { failResponse, okResponse } from '@/lib/api-response';
 import { isValidUUID } from '@/lib/utils';
 import { recordPaymentProof } from '@/server/services/payment.service';
 import { handleApiError } from '@/lib/api/handleApiError';
+import { financialLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +23,13 @@ export async function POST(
 
     if (!isValidUUID(paymentId)) {
       return failResponse('BAD_REQUEST', 'Invalid payment id', 400);
+    }
+
+    const clientIp = getClientIp(request);
+    const rateLimitKey = `payment:receipt:${user.id}:${clientIp}`;
+    const rateLimitResult = financialLimiter.check(rateLimitKey);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult.resetAt);
     }
 
     const parsed = await parseJson(request, bodySchema);

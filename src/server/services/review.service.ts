@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
+import { AppError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { mapReviewToApiPayload, type ReviewLike } from '@/lib/review-mapper';
 import { isAdminRole } from '@/lib/roles';
@@ -49,15 +49,15 @@ export async function submitReview(userId: string, body: SubmitReviewBody) {
   const comment = String(body.comment ?? '').trim();
 
   if (!isValidUUID(orderId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid order id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid order id');
   }
 
   if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
-    throw new ApiError('UNPROCESSABLE_ENTITY', 422, 'Rating must be between 1 and 5');
+    throw new AppError('UNPROCESSABLE_ENTITY', 422, 'Rating must be between 1 and 5');
   }
 
   if (comment.length < 10) {
-    throw new ApiError('UNPROCESSABLE_ENTITY', 422, 'Comment must be at least 10 characters');
+    throw new AppError('UNPROCESSABLE_ENTITY', 422, 'Comment must be at least 10 characters');
   }
 
   const photos = parseStringArray(body.images ?? body.image_urls ?? body.imageUrls ?? body.photos);
@@ -74,11 +74,11 @@ export async function submitReview(userId: string, body: SubmitReviewBody) {
   });
 
   if (!order) {
-    throw new ApiError('NOT_FOUND', 404, 'Order not found');
+    throw new AppError('NOT_FOUND', 404, 'Order not found');
   }
 
   if (order.status !== 'completed') {
-    throw new ApiError('CONFLICT', 409, 'Order is not completed');
+    throw new AppError('CONFLICT', 409, 'Order is not completed');
   }
 
   const existing = await prisma.review.findUnique({
@@ -86,7 +86,7 @@ export async function submitReview(userId: string, body: SubmitReviewBody) {
     select: { id: true },
   });
   if (existing) {
-    throw new ApiError('CONFLICT', 409, 'Review already exists');
+    throw new AppError('CONFLICT', 409, 'Review already exists');
   }
 
   const created = await prisma.$transaction(async (tx) => {
@@ -150,6 +150,7 @@ export async function getPendingReviewOrders(userId: string) {
     where: {
       userId,
       status: 'completed',
+      reviews: { none: {} },
     },
     select: {
       id: true,
@@ -167,27 +168,19 @@ export async function getPendingReviewOrders(userId: string) {
     orderBy: { createdAt: 'desc' },
   });
 
-  const reviewedOrderIds = await prisma.review.findMany({
-    where: { userId },
-    select: { orderId: true },
-  });
-  const reviewedSet = new Set(reviewedOrderIds.map((r) => r.orderId));
-
-  return completedOrders
-    .filter((order) => !reviewedSet.has(order.id))
-    .map((order) => ({
-      id: order.id,
-      created_at: order.createdAt.toISOString(),
-      price: Number(order.price),
-      discount_amount: order.discountAmount ? Number(order.discountAmount) : null,
-      tension: order.tension,
-      string: order.string
-        ? {
-            brand: order.string.brand,
-            model: order.string.model,
-          }
-        : null,
-    }));
+  return completedOrders.map((order) => ({
+    id: order.id,
+    created_at: order.createdAt.toISOString(),
+    price: Number(order.price),
+    discount_amount: order.discountAmount ? Number(order.discountAmount) : null,
+    tension: order.tension,
+    string: order.string
+      ? {
+          brand: order.string.brand,
+          model: order.string.model,
+        }
+      : null,
+  }));
 }
 
 /**
@@ -221,7 +214,7 @@ export async function getUserReviews(userId: string) {
  */
 export async function getReviewByOrder(user: { id: string; role?: string | null }, orderId: string) {
   if (!isValidUUID(orderId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid order id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid order id');
   }
 
   if (!isAdminRole(user.role)) {
@@ -229,7 +222,7 @@ export async function getReviewByOrder(user: { id: string; role?: string | null 
       where: { id: orderId, userId: user.id },
       select: { id: true },
     });
-    if (!order) throw new ApiError('NOT_FOUND', 404, 'Order not found');
+    if (!order) throw new AppError('NOT_FOUND', 404, 'Order not found');
   }
 
   const review = await prisma.review.findUnique({
@@ -476,7 +469,7 @@ export async function getPublicReviews(options: PublicReviewsOptions = {}): Prom
  */
 export async function getPublicReviewById(reviewId: string) {
   if (!isValidUUID(reviewId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid review id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid review id');
   }
 
   const review = await prisma.review.findUnique({
@@ -570,7 +563,7 @@ export async function replyReview(adminId: string, reviewId: string, reply: stri
   const trimmed = String(reply || '').trim();
 
   if (!trimmed || trimmed.length < 5) {
-    throw new ApiError('UNPROCESSABLE_ENTITY', 422, 'Reply must be at least 5 characters');
+    throw new AppError('UNPROCESSABLE_ENTITY', 422, 'Reply must be at least 5 characters');
   }
 
   const existing = await prisma.review.findUnique({
@@ -578,7 +571,7 @@ export async function replyReview(adminId: string, reviewId: string, reply: stri
     select: { id: true },
   });
   if (!existing) {
-    throw new ApiError('NOT_FOUND', 404, 'Review not found');
+    throw new AppError('NOT_FOUND', 404, 'Review not found');
   }
 
   const updated = await prisma.review.update({
@@ -603,47 +596,64 @@ export async function replyReview(adminId: string, reviewId: string, reply: stri
  */
 export async function toggleReviewLike(userId: string, reviewId: string) {
   if (!isValidUUID(reviewId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid review id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid review id');
   }
 
-  const review = await prisma.review.findUnique({
-    where: { id: reviewId },
-    select: { id: true, likesCount: true },
-  });
-  if (!review) {
-    throw new ApiError('NOT_FOUND', 404, 'Review not found');
-  }
+  const isUniqueConstraintError = (error: unknown) =>
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: string }).code === 'P2002';
 
-  // 检查是否已点赞
-  const existingLike = await prisma.reviewLike.findUnique({
-    where: { reviewId_userId: { reviewId, userId } },
-  });
+  return await prisma.$transaction(async (tx) => {
+    const review = await tx.review.findUnique({
+      where: { id: reviewId },
+      select: { id: true },
+    });
+    if (!review) {
+      throw new AppError('NOT_FOUND', 404, 'Review not found');
+    }
 
-  if (existingLike) {
-    // 取消点赞
-    await prisma.$transaction([
-      prisma.reviewLike.delete({
-        where: { id: existingLike.id },
-      }),
-      prisma.review.update({
-        where: { id: reviewId },
+    const removedLike = await tx.reviewLike.deleteMany({
+      where: { reviewId, userId },
+    });
+
+    if (removedLike.count > 0) {
+      await tx.review.updateMany({
+        where: { id: reviewId, likesCount: { gt: 0 } },
         data: { likesCount: { decrement: 1 } },
-      }),
-    ]);
-    return { liked: false, likesCount: Math.max(0, review.likesCount - 1) };
-  } else {
-    // 添加点赞
-    await prisma.$transaction([
-      prisma.reviewLike.create({
-        data: { reviewId, userId },
-      }),
-      prisma.review.update({
+      });
+
+      const latest = await tx.review.findUnique({
         where: { id: reviewId },
-        data: { likesCount: { increment: 1 } },
-      }),
-    ]);
-    return { liked: true, likesCount: review.likesCount + 1 };
-  }
+        select: { likesCount: true },
+      });
+
+      return { liked: false, likesCount: latest?.likesCount ?? 0 };
+    }
+
+    try {
+      await tx.reviewLike.create({
+        data: { reviewId, userId },
+      });
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        const latest = await tx.review.findUnique({
+          where: { id: reviewId },
+          select: { likesCount: true },
+        });
+        return { liked: true, likesCount: latest?.likesCount ?? 0 };
+      }
+      throw error;
+    }
+
+    const updated = await tx.review.update({
+      where: { id: reviewId },
+      data: { likesCount: { increment: 1 } },
+      select: { likesCount: true },
+    });
+    return { liked: true, likesCount: updated.likesCount };
+  });
 }
 
 /**
@@ -673,7 +683,7 @@ export async function getUserLikedReviewIds(userId: string, reviewIds: string[])
  */
 export async function toggleReviewFeatured(reviewId: string) {
   if (!isValidUUID(reviewId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid review id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid review id');
   }
 
   const review = await prisma.review.findUnique({
@@ -681,7 +691,7 @@ export async function toggleReviewFeatured(reviewId: string) {
     select: { id: true, isFeatured: true },
   });
   if (!review) {
-    throw new ApiError('NOT_FOUND', 404, 'Review not found');
+    throw new AppError('NOT_FOUND', 404, 'Review not found');
   }
 
   const updated = await prisma.review.update({
@@ -691,4 +701,3 @@ export async function toggleReviewFeatured(reviewId: string) {
 
   return { isFeatured: updated.isFeatured };
 }
-

@@ -9,16 +9,19 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { getOrderById, cancelOrder } from '@/services/orderService';
-import { subscribeToOrderUpdates } from '@/services/realtimeService';
-import { getOrderReview, canReviewOrder, OrderReview } from '@/services/reviewService';
+import { getOrderById, cancelOrder, type OrderWithDetails } from '@/services/orderService';
+import {
+  subscribeToOrderUpdates,
+  type OrderUpdateData,
+  type RealtimeSubscription,
+} from '@/services/realtimeService';
+import { getOrderReview, OrderReview } from '@/services/reviewService';
 import {
   getOrderStatusNotification,
   showBrowserNotification,
   playNotificationSound,
   OrderStatus as OrderStatusType,
 } from '@/lib/orderNotificationHelper';
-import { Order } from '@/types';
 import Card from '@/components/Card';
 import PageLoading from '@/components/loading/PageLoading';
 import Button from '@/components/Button';
@@ -31,10 +34,24 @@ import ReviewForm from '@/components/ReviewForm';
 import ReviewCard from '@/components/ReviewCard';
 import OrderPhotosDisplay from '@/components/OrderPhotosDisplay';
 import OrderPaymentSection from '@/components/OrderPaymentSection';
+import { AppImage } from '@/components/AppImage';
 import { formatDate, generateShortCode } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
 import PageHeader from '@/components/layout/PageHeader';
 import BrandLogo from '@/components/BrandLogo';
+import {
+  getErrorMessage,
+  getStringDate,
+  mapStatusToTimelineStatus,
+  normalizeStatusLogs,
+  pickRelevantPayment,
+  resolvePickupAddress,
+  resolveServiceType,
+  type OrderPaymentLike,
+  type OrderStatusLogLike,
+  type ServiceType,
+  type TimelineStatus,
+} from '@/lib/orderDetailUtils';
 import {
   Disc,
   Banknote,
@@ -55,20 +72,102 @@ interface OrderDetailPageProps {
   orderId: string;
 }
 
+interface OrderDetailItem {
+  id?: string;
+  price?: number | string;
+  notes?: string;
+  tensionVertical?: number;
+  tension_vertical?: number;
+  tensionHorizontal?: number;
+  tension_horizontal?: number;
+  racketPhoto?: string;
+  racket_photo?: string;
+  racketBrand?: string;
+  racket_brand?: string;
+  racketModel?: string;
+  racket_model?: string;
+  string?: {
+    brand?: string;
+    model?: string;
+  };
+}
+
+type OrderDetailData = Omit<OrderWithDetails, 'items' | 'payments'> & {
+  status: string;
+  created_at?: string;
+  updated_at?: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+  completed_at?: string;
+  cancelled_at?: string | null;
+  final_price?: number | string;
+  discount_amount?: number | string;
+  use_package?: boolean;
+  voucher_id?: string;
+  tension?: number;
+  tension_vertical?: number;
+  tension_horizontal?: number;
+  serviceType?: ServiceType;
+  service_type?: ServiceType;
+  pickupAddress?: string;
+  pickup_address?: string;
+  in_progress_at?: string;
+  estimatedCompletionAt?: string | null;
+  estimated_completion_at?: string | null;
+  queuePosition?: number | null;
+  payment?: OrderPaymentLike | null;
+  payments?: OrderPaymentLike[];
+  statusLogs?: OrderStatusLogLike[];
+  items?: OrderDetailItem[];
+  voucher?: {
+    voucher?: {
+      name?: string | null;
+    };
+  };
+  packageUsed?: {
+    remaining?: number;
+    expiry?: string;
+    expires_at?: string;
+    package?: {
+      name?: string;
+    };
+  };
+};
+
+interface SupabaseOrderUpdatePayload {
+  eventType?: string;
+  old?: { status?: string };
+  new?: Partial<OrderDetailData> & { id?: string; status?: string };
+}
+
+function isSupabaseOrderUpdatePayload(payload: unknown): payload is SupabaseOrderUpdatePayload {
+  return typeof payload === 'object' && payload !== null && 'eventType' in payload;
+}
+
+function toNotificationStatus(status: string | null | undefined): OrderStatusType {
+  if (status === 'cancelled') return 'cancelled';
+  if (status === 'completed' || status === 'picked_up') return 'completed';
+  if (status === 'in_progress' || status === 'received') return 'in_progress';
+  return 'pending';
+}
+
+function toTimelineStatus(status: string | null | undefined): TimelineStatus {
+  return mapStatusToTimelineStatus(status);
+}
+
 export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const userId = session?.user?.id || null;
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<OrderDetailData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [showCancelModal, setShowCancelModal] = useState<boolean>(false);
   const [cancelling, setCancelling] = useState<boolean>(false);
   const [showReviewForm, setShowReviewForm] = useState<boolean>(false);
   const [review, setReview] = useState<OrderReview | null>(null);
-  const [canReview, setCanReview] = useState<boolean>(false);
   const [showPayment, setShowPayment] = useState<boolean>(false);
-  const [realtimeChannel, setRealtimeChannel] = useState<any>(null);
+  const [realtimeSubscription, setRealtimeSubscription] = useState<RealtimeSubscription | null>(null);
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
@@ -81,50 +180,52 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   const [showConfetti, setShowConfetti] = useState(false);
 
   // 加载订单详情
-  const loadOrder = async () => {
+  const loadOrder = useCallback(async () => {
     setLoading(true);
     setError('');
 
     try {
       const data = await getOrderById(orderId);
-      setOrder(data as any);
-    } catch (err: any) {
-      setError(err.message || '加载订单失败');
+      setOrder(data as OrderDetailData);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, '加载订单失败'));
       setOrder(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [orderId]);
 
   // 静默刷新订单数据（不显示加载状态，避免页面闪烁）
-  const refreshOrderSilently = async () => {
+  const refreshOrderSilently = useCallback(async () => {
     try {
       const data = await getOrderById(orderId);
-      setOrder(data as any);
-    } catch (err: any) {
+      setOrder(data as OrderDetailData);
+    } catch (err: unknown) {
       console.error('静默刷新订单失败:', err);
     }
-  };
+  }, [orderId]);
 
   // 处理订单实时更新
-  const handleOrderUpdate = useCallback((payload: any) => {
-    const { eventType, old, new: newData } = payload;
+  const handleOrderUpdate = useCallback((payload: OrderUpdateData | SupabaseOrderUpdatePayload) => {
+    if (isSupabaseOrderUpdatePayload(payload)) {
+      const oldStatus = payload.old?.status;
+      const newData = payload.new;
+      if (payload.eventType !== 'UPDATE' || !newData?.id) return;
 
-    if (eventType === 'UPDATE') {
       setOrder((prevOrder) => {
-        if (!prevOrder || prevOrder.id !== newData.id) {
+        if (!prevOrder || prevOrder.id !== newData.id || !newData.status) {
           return prevOrder;
         }
 
         // 检查状态是否变化
-        if (old.status !== newData.status) {
+        if (oldStatus !== newData.status) {
           const orderInfo = prevOrder.string
             ? `${prevOrder.string.brand} ${prevOrder.string.model}`
             : '订单';
 
           const notification = getOrderStatusNotification(
-            old.status as OrderStatusType,
-            newData.status as OrderStatusType,
+            toNotificationStatus(oldStatus),
+            toNotificationStatus(newData.status),
             newData.id,
             orderInfo
           );
@@ -157,45 +258,51 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
         // 更新订单数据
         return { ...prevOrder, ...newData };
       });
+      return;
     }
-  }, []);
+
+    // Polling payload fallback: refresh once backend indicates this order has changed.
+    if (payload.orderId === orderId) {
+      refreshOrderSilently();
+    }
+  }, [orderId, refreshOrderSilently]);
 
   // 初始化实时订阅
   useEffect(() => {
     if (userId && orderId) {
-      const channel = subscribeToOrderUpdates(orderId, handleOrderUpdate);
-      setRealtimeChannel(channel);
+      const subscription = subscribeToOrderUpdates(orderId, handleOrderUpdate);
+      setRealtimeSubscription(subscription);
 
       // 清理函数：取消订阅
       return () => {
-        if (channel && typeof channel.unsubscribe === 'function') {
-          channel.unsubscribe();
+        if (subscription && typeof subscription.unsubscribe === 'function') {
+          subscription.unsubscribe();
         }
       };
     }
   }, [userId, orderId, handleOrderUpdate]);
 
+  useEffect(() => {
+    return () => {
+      realtimeSubscription?.unsubscribe();
+    };
+  }, [realtimeSubscription]);
+
+  // 加载评价数据
+  const loadReview = useCallback(async () => {
+    try {
+      const data = await getOrderReview(orderId);
+      setReview(data);
+    } catch (error) {
+      console.error('Error loading review:', error);
+    }
+  }, [orderId]);
+
   // 初始加载
   useEffect(() => {
     loadOrder();
     loadReview();
-  }, [orderId]);
-
-  // 加载评价数据
-  const loadReview = async () => {
-    try {
-      const data = await getOrderReview(orderId);
-      setReview(data);
-
-      // 检查是否可以评价
-      if (userId) {
-        const result = await canReviewOrder(orderId, userId);
-        setCanReview(result);
-      }
-    } catch (error) {
-      console.error('Error loading review:', error);
-    }
-  };
+  }, [orderId, loadOrder, loadReview]);
 
   // 评价成功回调
   const handleReviewSuccess = (newReview?: OrderReview) => {
@@ -224,10 +331,10 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
         type: 'success',
       });
       loadOrder(); // 重新加载订单
-    } catch (err: any) {
+    } catch (err: unknown) {
       setToast({
         show: true,
-        message: err.message || '取消订单失败',
+        message: getErrorMessage(err, '取消订单失败'),
         type: 'error',
       });
     } finally {
@@ -256,45 +363,46 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   // Normalize monetary values because API can return numeric strings
   const finalAmount = Number(order.final_price ?? order.price ?? 0);
   const discountAmount = Number(order.discount_amount ?? 0);
-  const createdAt = order.created_at ?? (order as any).createdAt;
-  const updatedAt = order.updated_at ?? (order as any).updatedAt;
+  const createdAt = getStringDate(order.created_at ?? order.createdAt) ?? '';
+  const updatedAt = getStringDate(order.updated_at ?? order.updatedAt) ?? createdAt;
 
   // 找到已完成的支付记录以获取正确的确认时间
-  const completedPayment = order.payments?.find((p: any) => p.status === 'success' || p.status === 'completed') as any;
-  const paymentRecord = completedPayment || order.payments?.[0];
+  const completedPayment = order.payments?.find(
+    (payment) => payment.status === 'success' || payment.status === 'completed'
+  );
+  const paymentRecord = completedPayment ?? pickRelevantPayment(order);
+  const paymentMetadata = (completedPayment?.metadata ?? {}) as Record<string, unknown>;
   // 优先使用 metadata.verifiedAt（管理员确认时间），其次使用 updated_at
-  const paymentConfirmedAt = completedPayment?.metadata?.verifiedAt
-    || completedPayment?.metadata?.confirmed_at
-    || (paymentRecord as any)?.updated_at
-    || updatedAt;
-  const paymentPendingAt = (paymentRecord as any)?.created_at || createdAt;
-  const inProgressAt = (order as any).in_progress_at || updatedAt;
-  const statusLogs = Array.isArray((order as any).statusLogs)
-    ? (order as any).statusLogs.map((log: any) => ({
-      status: log.status,
-      createdAt: log.createdAt || log.created_at,
-      note: log.note || log.notes || null,
-    }))
-    : undefined;
+  const paymentConfirmedAt = getStringDate(
+    (paymentMetadata.verifiedAt as string | Date | undefined)
+    ?? (paymentMetadata.confirmed_at as string | Date | undefined)
+    ?? paymentRecord?.updated_at
+    ?? paymentRecord?.updatedAt
+  ) ?? updatedAt;
+  const paymentPendingAt = getStringDate(paymentRecord?.created_at ?? paymentRecord?.createdAt) ?? createdAt;
+  const inProgressAt = getStringDate(order.in_progress_at) ?? updatedAt;
+  const statusLogs = normalizeStatusLogs(order.statusLogs);
   const packageName = order.packageUsed?.package?.name || '配套服务';
-  const packageRemainingCount = order.packageUsed?.remaining;
-  const packageExpiry = order.packageUsed?.expiry ?? order.packageUsed?.expires_at;
-  const serviceType = (order as any).serviceType || (order as any).service_type || 'in_store';
+  const serviceType = resolveServiceType(order);
+  const pickupAddress = resolvePickupAddress(order);
+  const orderItems = Array.isArray(order.items) ? order.items : [];
+  const orderTensionVertical = order.tension_vertical ?? order.tension;
+  const orderTensionHorizontal = order.tension_horizontal ?? order.tension;
 
   // 判断支付状态：检查是否有已完成的支付记录（'success' 是确认后的状态，'completed' 是兼容状态）
   const hasCompletedPayment =
-    order.payments?.some((p: any) => p.status === 'completed' || p.status === 'success') || false;
+    order.payments?.some((payment) => payment.status === 'completed' || payment.status === 'success') || false;
 
   // 检查是否有真正的待确认支付（用户已选择了支付方式，不是 'pending' provider）
   const hasActualPendingPayment =
-    order.payments?.some((p: any) => p.status === 'pending' && p.provider !== 'pending' && p.provider !== 'manual') || false;
+    order.payments?.some((payment) => payment.status === 'pending' && payment.provider !== 'pending' && payment.provider !== 'manual') || false;
 
   const hasPendingCashPayment =
-    order.payments?.some((p: any) => p.status === 'pending' && p.provider === 'cash') || false;
+    order.payments?.some((payment) => payment.status === 'pending' && payment.provider === 'cash') || false;
 
   // TNG 支付已上传收据，等待审核
   const hasPendingTngVerification =
-    order.payments?.some((p: any) => p.status === 'pending_verification' && p.provider === 'tng') || false;
+    order.payments?.some((payment) => payment.status === 'pending_verification' && payment.provider === 'tng') || false;
 
   // 只有在没有完成支付、没有真正的待确认支付时才显示支付界面
   // provider='pending' 的支付记录表示用户还没选择支付方式，应该显示支付选择界面
@@ -306,7 +414,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
    * @returns Next-step metadata for the tracking card.
    */
   const nextStepInfo = (() => {
-    if ((order as any).status === 'cancelled') {
+    if (order.status === 'cancelled') {
       return {
         title: '订单已取消',
         description: '可重新下单以继续预约',
@@ -389,6 +497,14 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
     };
   })();
   const NextStepIcon = nextStepInfo.icon;
+  const timelineStatus = toTimelineStatus(order.status);
+  const orderStatusForBadge: OrderStatus = order.status === 'cancelled'
+    ? 'cancelled'
+    : order.status === 'completed'
+      ? 'completed'
+      : order.status === 'in_progress'
+        ? 'in_progress'
+        : 'pending';
 
   return (
     <div className="min-h-screen bg-ink">
@@ -404,35 +520,35 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             <div className="text-xs text-text-tertiary">
               下单时间: {formatDate(createdAt, 'yyyy/MM/dd HH:mm')}
             </div>
-            <OrderStatusBadge status={order.status as OrderStatus} />
+            <OrderStatusBadge status={orderStatusForBadge} />
           </div>
 
           {/* 横向时间线 */}
           <OrderTimeline
-            currentStatus={order.status as any}
-            createdAt={createdAt as any}
-            updatedAt={updatedAt as any}
+            currentStatus={timelineStatus}
+            createdAt={createdAt}
+            updatedAt={updatedAt}
             completedAt={order.completed_at}
             cancelledAt={order.cancelled_at || undefined}
             hasPayment={!!order.payments && order.payments.length > 0}
             paymentStatus={
               // 优先使用已完成的支付状态，否则使用第一个支付的状态
-              order.payments?.find((p: any) => p.status === 'success' || p.status === 'completed')?.status
+              order.payments?.find((payment) => payment.status === 'success' || payment.status === 'completed')?.status
               || order.payments?.[0]?.status
             }
             usePackage={!!order.use_package}
-            paymentConfirmedAt={paymentConfirmedAt as any}
-            inProgressAt={inProgressAt as any}
-            paymentPendingAt={paymentPendingAt as any}
+            paymentConfirmedAt={paymentConfirmedAt}
+            inProgressAt={inProgressAt}
+            paymentPendingAt={paymentPendingAt}
             statusLogs={statusLogs}
-            estimatedCompletionAt={(order as any).estimatedCompletionAt || (order as any).estimated_completion_at}
-            queuePosition={(order as any).queuePosition}
+            estimatedCompletionAt={order.estimatedCompletionAt || order.estimated_completion_at}
+            queuePosition={order.queuePosition}
           />
         </Card>
 
         {/* 订单摘要卡 - 关键信息与行动按钮 */}
         <OrderSummaryCard
-          order={order as any}
+          order={order}
           hasReview={!!review}
           onPayClick={() => setShowPayment(true)}
           onReviewClick={() => {
@@ -468,8 +584,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             <summary className="px-5 py-4 cursor-pointer hover:bg-ink/30 transition-colors flex items-center justify-between">
               <h2 className="text-base font-semibold text-text-primary flex items-center gap-2">
                 <Disc className="w-5 h-5 text-accent" />
-                {(order as any).items?.length > 0
-                  ? `球拍清单 (${(order as any).items.length} 支)`
+                {orderItems.length > 0
+                  ? `球拍清单 (${orderItems.length} 支)`
                   : '球线信息'
                 }
               </h2>
@@ -480,49 +596,54 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
             <div className="px-5 pb-5 space-y-2">
               {/* 多球拍订单 */}
-              {(order as any).items?.length > 0 ? (
-                (order as any).items.map((item: any, index: number) => (
-                  <div
-                    key={item.id || index}
-                    className="bg-ink-elevated rounded-lg p-3 border border-border-subtle flex items-center gap-3"
-                  >
-                    {/* 球拍照片 */}
-                    {(item.racketPhoto || item.racket_photo) ? (
-                      <img
-                        src={item.racketPhoto || item.racket_photo}
-                        alt={`球拍 ${index + 1}`}
-                        className="w-12 h-12 rounded-lg object-cover border border-border-subtle flex-shrink-0"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center flex-shrink-0">
-                        <Disc className="w-6 h-6 text-text-tertiary" />
-                      </div>
-                    )}
+              {orderItems.length > 0 ? (
+                orderItems.map((item, index: number) => {
+                  const racketPhotoUrl = item.racketPhoto || item.racket_photo || '';
 
-                    {/* 球线信息 */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 bg-accent text-white rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0">
-                          {index + 1}
-                        </span>
-                        <span className="font-medium text-text-primary text-sm truncate">
-                          {item.string?.brand} {item.string?.model}
-                        </span>
+                  return (
+                    <div
+                      key={item.id || index}
+                      className="bg-ink-elevated rounded-lg p-3 border border-border-subtle flex items-center gap-3"
+                    >
+                      {/* 球拍照片 */}
+                      {racketPhotoUrl ? (
+                        <AppImage
+                          src={racketPhotoUrl}
+                          alt={`球拍 ${index + 1}`}
+                          width={48}
+                          height={48}
+                          className="w-12 h-12 rounded-lg object-cover border border-border-subtle flex-shrink-0"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-ink-surface border border-border-subtle flex items-center justify-center flex-shrink-0">
+                          <Disc className="w-6 h-6 text-text-tertiary" />
+                        </div>
+                      )}
+
+                      {/* 球线信息 */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 bg-accent text-white rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0">
+                            {index + 1}
+                          </span>
+                          <span className="font-medium text-text-primary text-sm truncate">
+                            {item.string?.brand} {item.string?.model}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 text-xs text-text-tertiary">
+                          <span>主{item.tensionVertical || item.tension_vertical}/横{item.tensionHorizontal || item.tension_horizontal} 磅</span>
+                          {item.notes && <span className="truncate">· {item.notes}</span>}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-text-tertiary">
-                        <span>主{item.tensionVertical || item.tension_vertical}/横{item.tensionHorizontal || item.tension_horizontal} 磅</span>
-                        {item.notes && <span className="truncate">· {item.notes}</span>}
+
+                      {/* 价格 */}
+                      <div className="text-sm font-bold text-accent font-mono flex-shrink-0">
+                        RM {Number(item.price || 0).toFixed(2)}
                       </div>
                     </div>
-
-                    {/* 价格 */}
-                    <div className="text-sm font-bold text-accent font-mono flex-shrink-0">
-                      RM {Number(item.price || 0).toFixed(2)}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 /* 单球拍订单（旧格式兼容） */
                 <div className="bg-ink-elevated rounded-lg p-3 border border-border-subtle flex items-center gap-3">
@@ -537,8 +658,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                       {(() => {
                         const match = order.notes?.match(/\[竖\/横分拉:\s*(\d+)\/(\d+)\s*LBS\]/);
                         if (match) return `主${match[1]}/横${match[2]} 磅`;
-                        const v = (order as any).tension_vertical || order.tension;
-                        const h = (order as any).tension_horizontal || order.tension;
+                        const v = orderTensionVertical;
+                        const h = orderTensionHorizontal;
                         return `主${v}/横${h} 磅`;
                       })()}
                     </div>
@@ -727,7 +848,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
               <span className="text-xs text-text-tertiary">服务方式</span>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-text-primary flex items-center gap-1">
-                  {(order as any).serviceType === 'pickup_delivery' || (order as any).service_type === 'pickup_delivery'
+                  {serviceType === 'pickup_delivery'
                     ? <><Truck className="w-4 h-4 text-accent" /> 上门取送</>
                     : <><Store className="w-4 h-4 text-accent" /> 到店自取</>}
                 </span>
@@ -735,15 +856,14 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             </div>
 
             {/* 上门取送地址 */}
-            {((order as any).serviceType === 'pickup_delivery' || (order as any).service_type === 'pickup_delivery') &&
-              ((order as any).pickupAddress || (order as any).pickup_address) && (
+            {serviceType === 'pickup_delivery' && pickupAddress && (
                 <div className="px-4 py-2 bg-accent-soft border-b border-dashed border-accent-border">
                   <div className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <span className="text-xs text-accent font-medium">取拍地址</span>
                       <p className="text-sm text-text-primary mt-0.5">
-                        {(order as any).pickupAddress || (order as any).pickup_address}
+                        {pickupAddress}
                       </p>
                     </div>
                   </div>
@@ -753,8 +873,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             {/* 价格明细 - 显示每种球线 */}
             <div className="px-4 py-3 space-y-2 font-mono text-sm border-b border-dashed border-border-subtle">
               {/* 多球拍订单：显示每种球线 */}
-              {(order as any).items?.length > 0 ? (
-                (order as any).items.map((item: any, index: number) => (
+              {orderItems.length > 0 ? (
+                orderItems.map((item, index: number) => (
                   <div key={item.id || index} className="flex items-end">
                     <span className="text-text-secondary truncate max-w-[60%]">
                       {item.string?.brand} {item.string?.model}
@@ -809,10 +929,10 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
             {/* 支付信息 - 只有在实际选择了支付方式时才显示 */}
             {(() => {
-              const payment = order.payment || order.payments?.[0];
+              const payment = pickRelevantPayment(order);
               if (!payment) return null;
 
-              const rawProvider = (payment as any).provider || (payment as any).payment_method || '';
+              const rawProvider = payment.provider || payment.payment_method || '';
               const providerKey = String(rawProvider).toLowerCase();
 
               // 只有当选择了真正的支付方式（cash 或 tng）时才显示，不显示 'pending' 等待选择状态
@@ -821,7 +941,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
               const providerLabel = providerKey.includes('cash') ? '现金' : 'TnG';
               const providerIcon = providerKey.includes('cash') ? '$' : 'TnG';
 
-              const rawStatus = (payment as any).status || 'pending';
+              const rawStatus = payment.status || 'pending';
               const statusLabel =
                 order.status === 'completed' || rawStatus === 'success' || rawStatus === 'completed' ? '已支付' :
                   rawStatus === 'pending_verification' ? '待审核' :

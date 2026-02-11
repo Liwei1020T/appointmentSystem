@@ -8,6 +8,11 @@ import { apiRequest } from '@/services/apiClient';
 
 export type { Package, UserPackage } from '.prisma/client';
 
+interface ServiceResult<T> {
+  data?: T;
+  error?: Error;
+}
+
 export interface UserPackageWithPackage
   extends Omit<UserPackage, 'userId' | 'packageId' | 'originalTimes' | 'expiry' | 'createdAt' | 'updatedAt'> {
   package: Package;
@@ -24,17 +29,117 @@ export interface UserPackageWithPackage
   original_times?: number;
   created_at?: Date | string;
   updated_at?: Date | string;
+  expiry_date?: Date | string | null;
+  remaining_uses?: number;
+  remainingUses?: number;
+}
+
+export interface PackagePurchaseResult {
+  paymentId: string;
+  packageId: string;
+  packageName: string;
+  amount: number;
+  originalAmount?: number;
+  renewalDiscount?: number;
+  times: number;
+  validityDays: number;
+  paymentRequired: boolean;
+  paymentMethod: 'cash' | 'tng';
+}
+
+export interface PendingPackagePayment {
+  id: string;
+  packageId: string | null;
+  packageName: string;
+  packageTimes: number;
+  packageValidityDays: number;
+  amount: number;
+  status: 'pending' | 'pending_verification';
+  provider: 'cash' | 'tng';
+  receiptUrl?: string;
+  createdAt: string;
+}
+
+export interface ProfilePackagePayload {
+  id: string;
+  name: string;
+  total_uses: number;
+  price: number;
+  validity_days: number | null;
+}
+
+export interface ProfileUserPackagePayload {
+  id: string;
+  package_id: string;
+  remaining_uses: number;
+  expiry_date: string | Date;
+  created_at: string | Date;
+  package: ProfilePackagePayload;
+}
+
+export interface PackageUsageRecord {
+  id: string;
+  used_at: string;
+  order: {
+    order_number: string;
+    string: {
+      brand: string;
+      model: string;
+    };
+  };
+}
+
+export interface PackageSummaryData {
+  totalRemaining: number;
+  packages: UserPackageWithPackage[];
+}
+
+function toError(error: unknown, fallbackMessage: string): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+  if (typeof error === 'string') {
+    return new Error(error);
+  }
+  return new Error(fallbackMessage);
+}
+
+function getRemainingUses(pkg: UserPackageWithPackage): number {
+  const value = pkg.remaining_uses ?? pkg.remainingUses ?? pkg.remaining;
+  return Number.isFinite(Number(value)) ? Number(value) : 999;
+}
+
+function toTimestamp(value: string | Date | null | undefined): number {
+  if (!value) return 0;
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function getExpiryTimestamp(pkg: UserPackageWithPackage): number {
+  return toTimestamp(pkg.expires_at ?? pkg.expiresAt ?? pkg.expiry);
+}
+
+export function sortPackagesByPriority(packages: UserPackageWithPackage[]): UserPackageWithPackage[] {
+  return [...packages].sort((a, b) => {
+    const remainingA = getRemainingUses(a);
+    const remainingB = getRemainingUses(b);
+    if (remainingA !== remainingB) return remainingA - remainingB;
+
+    const expiryA = getExpiryTimestamp(a);
+    const expiryB = getExpiryTimestamp(b);
+    return expiryA - expiryB;
+  });
 }
 
 /**
  * Fetch all available packages.
  */
-export async function getAvailablePackages(): Promise<{ data?: Package[]; error?: any }> {
+export async function getAvailablePackages(): Promise<ServiceResult<Package[]>> {
   try {
     const data = await apiRequest<Package[]>('/api/packages');
     return { data };
-  } catch (error: any) {
-    return { error };
+  } catch (error: unknown) {
+    return { error: toError(error, 'Failed to fetch packages') };
   }
 }
 
@@ -51,20 +156,20 @@ export async function getFeaturedPackages(limit?: number): Promise<Package[]> {
  */
 export async function getUserPackages(
   status?: 'active' | 'expired' | 'used_up' | boolean
-): Promise<{ data?: UserPackageWithPackage[]; error?: any }> {
+): Promise<ServiceResult<UserPackageWithPackage[]>> {
   try {
     const query = typeof status === 'string' ? `?status=${status}` : '';
     const data = await apiRequest<UserPackageWithPackage[]>(`/api/packages/user${query}`);
     return { data };
-  } catch (error: any) {
-    return { error };
+  } catch (error: unknown) {
+    return { error: toError(error, 'Failed to fetch user packages') };
   }
 }
 
 /**
  * Fetch a summary of active user packages.
  */
-export async function getUserPackageSummary(): Promise<{ summary?: { totalRemaining: number; packages: any[] }; error?: string }> {
+export async function getUserPackageSummary(): Promise<{ summary?: PackageSummaryData; error?: string }> {
   const { data: packages, error } = await getUserPackages('active');
 
   if (error) {
@@ -78,8 +183,8 @@ export async function getUserPackageSummary(): Promise<{ summary?: { totalRemain
 /**
  * Create a package purchase payment.
  */
-export async function buyPackage(packageId: string, paymentMethod: string): Promise<any> {
-  return apiRequest('/api/packages/buy', {
+export async function buyPackage(packageId: string, paymentMethod: string): Promise<PackagePurchaseResult> {
+  return apiRequest<PackagePurchaseResult>('/api/packages/buy', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ packageId, paymentMethod }),
@@ -89,14 +194,14 @@ export async function buyPackage(packageId: string, paymentMethod: string): Prom
 /**
  * Fetch pending package payments for the current user.
  */
-export async function getPendingPackagePayments(): Promise<any[]> {
-  return apiRequest<any[]>('/api/packages/pending-payments');
+export async function getPendingPackagePayments(): Promise<PendingPackagePayment[]> {
+  return apiRequest<PendingPackagePayment[]>('/api/packages/pending-payments');
 }
 
 /**
  * Map user packages to profile-friendly shape.
  */
-export async function getUserPackagesForProfile(): Promise<{ packages?: any[]; error?: string }> {
+export async function getUserPackagesForProfile(): Promise<{ packages?: ProfileUserPackagePayload[]; error?: string }> {
   try {
     const { data } = await getUserPackages();
     const packages = (data || []).map((pkg) => ({
@@ -114,20 +219,20 @@ export async function getUserPackagesForProfile(): Promise<{ packages?: any[]; e
       },
     }));
     return { packages };
-  } catch (error: any) {
-    return { packages: [], error: error.message || 'Failed to fetch packages' };
+  } catch (error: unknown) {
+    return { packages: [], error: toError(error, 'Failed to fetch packages').message };
   }
 }
 
 /**
  * Fetch usage records for a specific user package.
  */
-export async function getPackageUsage(packageId: string): Promise<{ usage?: any[]; error?: string }> {
+export async function getPackageUsage(packageId: string): Promise<{ usage?: PackageUsageRecord[]; error?: string }> {
   try {
-    const usage = await apiRequest<any[]>(`/api/packages/user/${packageId}/usage`);
+    const usage = await apiRequest<PackageUsageRecord[]>(`/api/packages/user/${packageId}/usage`);
     return { usage };
-  } catch (error: any) {
-    return { usage: [], error: error.message || 'Failed to fetch usage' };
+  } catch (error: unknown) {
+    return { usage: [], error: toError(error, 'Failed to fetch usage').message };
   }
 }
 
@@ -160,7 +265,7 @@ export async function getPackageById(packageId: string): Promise<{ package: Pack
 }
 
 /**
- * Check whether the user has any active packages.
+ * Check whether the user has active packages available.
  */
 export async function hasAvailablePackage(): Promise<boolean> {
   try {
@@ -180,15 +285,7 @@ export async function getPriorityPackage(): Promise<UserPackageWithPackage | nul
     const activePackages = await getActiveUserPackages();
     if (activePackages.length === 0) return null;
 
-    const sorted = activePackages.sort((a, b) => {
-      const remainingA = (a as any).remaining_uses ?? (a as any).remainingUses ?? 999;
-      const remainingB = (b as any).remaining_uses ?? (b as any).remainingUses ?? 999;
-      if (remainingA !== remainingB) return remainingA - remainingB;
-
-      const expiryA = new Date((a as any).expires_at || (a as any).expiresAt || 0).getTime();
-      const expiryB = new Date((b as any).expires_at || (b as any).expiresAt || 0).getTime();
-      return expiryA - expiryB;
-    });
+    const sorted = sortPackagesByPriority(activePackages);
 
     return sorted[0];
   } catch (error) {
@@ -207,7 +304,7 @@ export async function purchasePackage(
   try {
     await buyPackage(packageId, paymentMethod);
     return { success: true, error: null };
-  } catch (error: any) {
-    return { success: false, error: error.message || 'Failed to purchase package' };
+  } catch (error: unknown) {
+    return { success: false, error: toError(error, 'Failed to purchase package').message };
   }
 }

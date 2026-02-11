@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
+import { AppError } from '@/lib/api-errors';
 import { isAdminRole } from '@/lib/roles';
 import { isValidUUID } from '@/lib/utils';
 
@@ -32,7 +32,7 @@ function parseOrderPhotos(notes: string | null): OrderPhoto[] {
 
 function ensureAdmin(user: UserSnapshot) {
   if (!isAdminRole(user.role)) {
-    throw new ApiError('FORBIDDEN', 403, 'Admin access required');
+    throw new AppError('FORBIDDEN', 403, 'Admin access required');
   }
 }
 
@@ -41,7 +41,7 @@ function ensureAdmin(user: UserSnapshot) {
  */
 export async function listOrderPhotos(user: UserSnapshot, orderId: string): Promise<OrderPhoto[]> {
   if (!isValidUUID(orderId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid order id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid order id');
   }
 
   const order = await prisma.order.findUnique({
@@ -50,11 +50,11 @@ export async function listOrderPhotos(user: UserSnapshot, orderId: string): Prom
   });
 
   if (!order) {
-    throw new ApiError('NOT_FOUND', 404, 'Order not found');
+    throw new AppError('NOT_FOUND', 404, 'Order not found');
   }
 
   if (!isAdminRole(user.role) && order.userId !== user.id) {
-    throw new ApiError('FORBIDDEN', 403, 'Access denied');
+    throw new AppError('FORBIDDEN', 403, 'Access denied');
   }
 
   return parseOrderPhotos(order.notes);
@@ -77,7 +77,7 @@ export async function addOrderPhoto(
 
   const { orderId, photoUrl, photoType, caption, displayOrder } = params;
   if (!isValidUUID(orderId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid order id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid order id');
   }
 
   const order = await prisma.order.findUnique({
@@ -86,7 +86,7 @@ export async function addOrderPhoto(
   });
 
   if (!order) {
-    throw new ApiError('NOT_FOUND', 404, 'Order not found');
+    throw new AppError('NOT_FOUND', 404, 'Order not found');
   }
 
   const existingPhotos = parseOrderPhotos(order.notes);
@@ -118,7 +118,7 @@ export async function deleteOrderPhoto(
   ensureAdmin(admin);
 
   if (!isValidUUID(orderId) || !isValidUUID(photoId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid order photo id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid order photo id');
   }
 
   const order = await prisma.order.findUnique({
@@ -127,14 +127,14 @@ export async function deleteOrderPhoto(
   });
 
   if (!order) {
-    throw new ApiError('NOT_FOUND', 404, 'Order not found');
+    throw new AppError('NOT_FOUND', 404, 'Order not found');
   }
 
   const existingPhotos = parseOrderPhotos(order.notes);
   const updatedPhotos = existingPhotos.filter((photo) => photo.id !== photoId);
 
   if (updatedPhotos.length === existingPhotos.length) {
-    throw new ApiError('NOT_FOUND', 404, 'Photo not found');
+    throw new AppError('NOT_FOUND', 404, 'Photo not found');
   }
 
   await prisma.order.update({
@@ -154,7 +154,7 @@ export async function reorderOrderPhotos(
   ensureAdmin(admin);
 
   if (!isValidUUID(orderId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid order id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid order id');
   }
 
   const order = await prisma.order.findUnique({
@@ -163,7 +163,7 @@ export async function reorderOrderPhotos(
   });
 
   if (!order) {
-    throw new ApiError('NOT_FOUND', 404, 'Order not found');
+    throw new AppError('NOT_FOUND', 404, 'Order not found');
   }
 
   const existingPhotos = parseOrderPhotos(order.notes);

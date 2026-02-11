@@ -62,14 +62,24 @@ export default function RestockModal({
     try {
       const data = await getAdminInventory();
       setStrings(
-        data.map((s: any) => ({
-          id: s.id,
-          name: s.name || s.model,
-          brand: s.brand,
-          model: s.model,
-          currentStock: Number(s.stock ?? 0),
-          costPrice: s.costPrice ?? s.cost_price,
-        }))
+        data.map((s) => {
+          const legacyCostPriceRaw = (s as Record<string, unknown>).cost_price;
+          const legacyCostPrice =
+            typeof legacyCostPriceRaw === 'number' ? legacyCostPriceRaw : undefined;
+          const normalizedCostPrice =
+            s.costPrice !== null && s.costPrice !== undefined
+              ? Number(s.costPrice)
+              : legacyCostPrice;
+
+          return {
+            id: s.id,
+            name: s.model,
+            brand: s.brand,
+            model: s.model,
+            currentStock: Number(s.stock ?? 0),
+            costPrice: Number.isFinite(normalizedCostPrice) ? normalizedCostPrice : undefined,
+          };
+        })
       );
     } catch (err) {
       console.error('Failed to load strings:', err);

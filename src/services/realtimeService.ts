@@ -18,6 +18,67 @@ export interface OrderUpdateData {
   // 可扩展其他字段
 }
 
+function toOrderUpdateData(raw: unknown): OrderUpdateData | null {
+  if (!raw || typeof raw !== 'object') return null;
+
+  const candidate = raw as Record<string, unknown>;
+  const orderIdValue = candidate.orderId ?? candidate.id;
+  const statusValue = candidate.status;
+  const updatedAtValue = candidate.updatedAt ?? candidate.updated_at;
+
+  if (typeof orderIdValue !== 'string' || typeof statusValue !== 'string') {
+    return null;
+  }
+
+  if (typeof updatedAtValue !== 'string') {
+    return {
+      orderId: orderIdValue,
+      status: statusValue,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  return {
+    orderId: orderIdValue,
+    status: statusValue,
+    updatedAt: updatedAtValue,
+  };
+}
+
+/**
+ * 从 orders API 响应中提取简化后的订单更新列表。
+ * 兼容两种历史结构：
+ * 1) { ok: true, data: Order[] }
+ * 2) { ok: true, data: { orders: Order[] } }
+ */
+export function extractOrderUpdatesFromPayload(payload: unknown): OrderUpdateData[] {
+  if (!payload || typeof payload !== 'object') {
+    return [];
+  }
+
+  const candidate = payload as Record<string, unknown>;
+  const data = candidate.data;
+
+  if (Array.isArray(data)) {
+    return data
+      .map(toOrderUpdateData)
+      .filter((order): order is OrderUpdateData => Boolean(order));
+  }
+
+  if (!data || typeof data !== 'object') {
+    return [];
+  }
+
+  const maybeOrders = (data as Record<string, unknown>).orders;
+  if (!Array.isArray(maybeOrders)) {
+    return [];
+  }
+
+  return maybeOrders
+    .map(toOrderUpdateData)
+    .filter((order): order is OrderUpdateData => Boolean(order));
+}
+
 /**
  * 订阅单个订单更新
  * @param orderId 订单 ID
@@ -90,7 +151,7 @@ export function subscribeToOrderUpdates(
  * @returns 订阅对象
  */
 export function subscribeToUserOrders(
-  userId: string,
+  _userId: string,
   callback: (data: { orders: OrderUpdateData[] }) => void
 ): RealtimeSubscription {
   let isActive = true;
@@ -106,24 +167,18 @@ export function subscribeToUserOrders(
       }
 
       const result = await response.json();
-      const orders = result.data?.orders || [];
+      const orders = extractOrderUpdatesFromPayload(result);
 
       if (!isActive) return;
 
       // 生成简单的状态哈希来检测变化
       const ordersHash = orders
-        .map((o: { id: string; status: string; updatedAt: string }) => `${o.id}:${o.status}:${o.updatedAt}`)
+        .map((o) => `${o.orderId}:${o.status}:${o.updatedAt}`)
         .join('|');
 
       if (ordersHash !== lastOrdersHash && lastOrdersHash !== null && isActive) {
         // 有更新，触发回调
-        callback({
-          orders: orders.map((o: { id: string; status: string; updatedAt: string }) => ({
-            orderId: o.id,
-            status: o.status,
-            updatedAt: o.updatedAt,
-          })),
-        });
+        callback({ orders });
       }
 
       lastOrdersHash = ordersHash;

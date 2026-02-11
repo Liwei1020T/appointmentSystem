@@ -4,7 +4,6 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
 import { POINTS } from '@/lib/constants';
 
 // 阶梯式奖励配置
@@ -47,13 +46,6 @@ export const BADGE_CONFIG: Record<string, { name: string; icon: string; descript
     description: '完成首次订单',
   },
 };
-
-const DEFAULT_REWARD_POINTS = 50;
-
-function getRewardPoints() {
-  const raw = Number(process.env.REFERRAL_REWARD_POINTS || DEFAULT_REWARD_POINTS);
-  return Number.isFinite(raw) ? raw : DEFAULT_REWARD_POINTS;
-}
 
 /**
  * 获取用户当前推荐数量

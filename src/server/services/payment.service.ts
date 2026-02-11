@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
+import { AppError } from '@/lib/api-errors';
 import { ADMIN_ROLES, isAdminRole } from '@/lib/roles';
 import { User } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 
 const CONFIRMED_STATUSES = new Set(['success', 'completed']);
 
@@ -35,14 +36,14 @@ export async function getPaymentForUser(params: { paymentId: string; user: UserS
   });
 
   if (!payment) {
-    throw new ApiError('NOT_FOUND', 404, 'Payment not found');
+    throw new AppError('NOT_FOUND', 404, 'Payment not found');
   }
 
   if (!isAdminRole(user.role)) {
     const ownsOrder = payment.order?.userId === user.id;
     const ownsPayment = !payment.order && payment.userId === user.id;
     if (!ownsOrder && !ownsPayment) {
-      throw new ApiError('FORBIDDEN', 403, 'Forbidden');
+      throw new AppError('FORBIDDEN', 403, 'Forbidden');
     }
   }
 
@@ -59,13 +60,13 @@ export async function createPayment(params: {
   const { userId, amount, orderId, packageId, paymentMethod } = params;
 
   if (!amount || (!orderId && !packageId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Missing required fields');
+    throw new AppError('BAD_REQUEST', 400, 'Missing required fields');
   }
 
   if (orderId) {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
     if (!order || order.userId !== userId) {
-      throw new ApiError('FORBIDDEN', 403, 'Forbidden');
+      throw new AppError('FORBIDDEN', 403, 'Forbidden');
     }
   }
 
@@ -88,11 +89,11 @@ export async function createCashPayment(params: { userId: string; orderId: strin
   const order = await prisma.order.findUnique({ where: { id: orderId } });
 
   if (!order) {
-    throw new ApiError('NOT_FOUND', 404, 'Order not found');
+    throw new AppError('NOT_FOUND', 404, 'Order not found');
   }
 
   if (order.userId !== userId) {
-    throw new ApiError('FORBIDDEN', 403, 'Forbidden');
+    throw new AppError('FORBIDDEN', 403, 'Forbidden');
   }
 
   return prisma.payment.create({
@@ -156,7 +157,7 @@ export async function rejectPayment(params: { paymentId: string; reason: string 
   const { paymentId, reason } = params;
 
   if (!reason?.trim()) {
-    throw new ApiError('BAD_REQUEST', 400, 'Reject reason is required');
+    throw new AppError('BAD_REQUEST', 400, 'Reject reason is required');
   }
 
   const payment = await prisma.payment.findUnique({
@@ -165,12 +166,14 @@ export async function rejectPayment(params: { paymentId: string; reason: string 
   });
 
   if (!payment) {
-    throw new ApiError('NOT_FOUND', 404, 'Payment not found');
+    throw new AppError('NOT_FOUND', 404, 'Payment not found');
   }
 
   if (CONFIRMED_STATUSES.has(payment.status)) {
-    throw new ApiError('CONFLICT', 409, 'Payment already confirmed');
+    throw new AppError('CONFLICT', 409, 'Payment already confirmed');
   }
+
+  const paymentMetadata = (payment.metadata as Record<string, unknown> | null) ?? {};
 
   await prisma.$transaction(async (tx) => {
     await tx.payment.update({
@@ -178,7 +181,7 @@ export async function rejectPayment(params: { paymentId: string; reason: string 
       data: {
         status: 'rejected',
         metadata: {
-          ...(payment.metadata as any),
+          ...paymentMetadata,
           rejectedAt: new Date().toISOString(),
           rejectReason: reason,
         },
@@ -222,29 +225,31 @@ export async function recordPaymentProof(params: {
   });
 
   if (!payment) {
-    throw new ApiError('NOT_FOUND', 404, 'Payment not found');
+    throw new AppError('NOT_FOUND', 404, 'Payment not found');
   }
 
   if (payment.order && payment.order.userId !== userId) {
-    throw new ApiError('FORBIDDEN', 403, 'Forbidden');
+    throw new AppError('FORBIDDEN', 403, 'Forbidden');
   }
 
   if (!payment.order && payment.userId !== userId) {
-    throw new ApiError('FORBIDDEN', 403, 'Forbidden');
+    throw new AppError('FORBIDDEN', 403, 'Forbidden');
   }
 
   if (!['pending', 'pending_verification', 'rejected', 'failed'].includes(payment.status)) {
-    throw new ApiError('CONFLICT', 409, 'Payment already processed');
+    throw new AppError('CONFLICT', 409, 'Payment already processed');
   }
+
+  const paymentMetadata = (payment.metadata as Record<string, unknown> | null) ?? {};
 
   await prisma.$transaction(async (tx) => {
     await tx.payment.update({
       where: { id: paymentId },
       data: {
         metadata: {
-          ...(payment.metadata as any),
+          ...paymentMetadata,
           proofUrl,
-          receiptUrl: (payment.metadata as any)?.receiptUrl || proofUrl,
+          receiptUrl: typeof paymentMetadata.receiptUrl === 'string' ? paymentMetadata.receiptUrl : proofUrl,
           uploadedAt: new Date().toISOString(),
         },
         status: 'pending_verification',
@@ -306,15 +311,15 @@ export async function verifyPayment(params: {
   });
 
   if (!payment) {
-    throw new ApiError('NOT_FOUND', 404, 'Payment not found');
+    throw new AppError('NOT_FOUND', 404, 'Payment not found');
   }
 
   if (requireCash && payment.provider !== 'cash') {
-    throw new ApiError('BAD_REQUEST', 400, 'Only cash payments can be confirmed here');
+    throw new AppError('BAD_REQUEST', 400, 'Only cash payments can be confirmed here');
   }
 
   if (CONFIRMED_STATUSES.has(payment.status)) {
-    throw new ApiError('CONFLICT', 409, 'Payment already confirmed');
+    throw new AppError('CONFLICT', 409, 'Payment already confirmed');
   }
 
   const isCash = payment.provider === 'cash';
@@ -324,7 +329,7 @@ export async function verifyPayment(params: {
   const normalizedNotes = notes?.trim() || null;
 
   return prisma.$transaction(async (tx) => {
-    const metadata: any = { ...paymentMeta };
+    const metadata: Record<string, unknown> = { ...paymentMeta };
 
     if (isCash) {
       metadata.confirmed_by = admin.id;
@@ -344,12 +349,13 @@ export async function verifyPayment(params: {
       data: {
         status: 'success',
         transactionId: normalizedTransactionId,
-        metadata,
+        metadata: metadata as Prisma.InputJsonValue,
       },
     });
 
+    const isPackagePaymentType = paymentMeta.type === 'package';
     const isPackagePurchase =
-      !!payment.packageId && (!payment.orderId || (paymentMeta as any)?.type === 'package');
+      !!payment.packageId && (!payment.orderId || isPackagePaymentType);
 
     if (isPackagePurchase && payment.packageId) {
       const existingUserPackage = await tx.userPackage.findFirst({

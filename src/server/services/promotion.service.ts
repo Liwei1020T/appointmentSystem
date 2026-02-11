@@ -4,7 +4,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { Promotion, PromotionType, DiscountType } from '@prisma/client';
+import { Promotion, PromotionType } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
 export interface OrderItemForDiscount {

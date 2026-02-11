@@ -340,13 +340,6 @@ export async function getLowStockAlerts(): Promise<{
   const strings = await prisma.stringInventory.findMany({
     where: {
       active: true,
-      OR: [
-        { stock: { lte: CRITICAL_STOCK_THRESHOLD } },
-        {
-          // stock <= minimumStock
-          stock: { lte: prisma.stringInventory.fields.minimumStock as any },
-        },
-      ],
     },
     select: {
       id: true,

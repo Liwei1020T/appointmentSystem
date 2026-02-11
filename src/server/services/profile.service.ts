@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
+import { AppError } from '@/lib/api-errors';
 import { validatePassword } from '@/lib/utils';
 import {
   MembershipTierId,
@@ -40,7 +40,7 @@ export async function getUserProfile(userId: string) {
   });
 
   if (!profile) {
-    throw new ApiError('NOT_FOUND', 404, 'User not found');
+    throw new AppError('NOT_FOUND', 404, 'User not found');
   }
 
   const [orderCount, packageCount, voucherCount] = await Promise.all([
@@ -205,10 +205,10 @@ export async function changePassword(userId: string, params: { currentPassword?:
   const newPassword = String(params.newPassword || '');
 
   if (!newPassword.trim()) {
-    throw new ApiError('BAD_REQUEST', 400, 'New password is required');
+    throw new AppError('BAD_REQUEST', 400, 'New password is required');
   }
   if (!validatePassword(newPassword)) {
-    throw new ApiError('UNPROCESSABLE_ENTITY', 422, 'Password does not meet requirements');
+    throw new AppError('UNPROCESSABLE_ENTITY', 422, 'Password does not meet requirements');
   }
 
   const dbUser = await prisma.user.findUnique({
@@ -218,12 +218,12 @@ export async function changePassword(userId: string, params: { currentPassword?:
 
   if (dbUser?.password) {
     if (!currentPassword.trim()) {
-      throw new ApiError('BAD_REQUEST', 400, 'Current password is required');
+      throw new AppError('BAD_REQUEST', 400, 'Current password is required');
     }
 
     const ok = await bcrypt.compare(currentPassword, dbUser.password);
     if (!ok) {
-      throw new ApiError('FORBIDDEN', 403, 'Current password is incorrect');
+      throw new AppError('FORBIDDEN', 403, 'Current password is incorrect');
     }
   }
 
@@ -267,7 +267,7 @@ export async function generateReferralCode(userId: string) {
       });
       if (!existingCode) return candidate;
     }
-    throw new ApiError('CONFLICT', 409, 'Unable to generate unique referral code');
+    throw new AppError('CONFLICT', 409, 'Unable to generate unique referral code');
   };
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -294,14 +294,19 @@ export async function generateReferralCode(userId: string) {
       ]);
 
       return { code };
-    } catch (err: any) {
-      const message = String(err?.message || '');
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : '';
       if (message.toLowerCase().includes('unique') || message.toLowerCase().includes('constraint')) {
         continue;
       }
-      throw err;
+      throw error;
     }
   }
 
-  throw new ApiError('CONFLICT', 409, 'Failed to generate referral code');
+  throw new AppError('CONFLICT', 409, 'Failed to generate referral code');
 }

@@ -18,6 +18,8 @@ type OrderWithQueue = OrderWithDetails & {
   workQueueEstimate?: WorkQueueEstimate;
   queueEstimate?: WorkQueueEstimate;
   workQueue?: WorkQueueEstimate;
+  estimatedCompletionAt?: string | Date | null;
+  estimated_completion_at?: string | Date | null;
 };
 
 const formatEtaRange = (min?: number, max?: number) => {
@@ -45,7 +47,8 @@ export function getWorkQueueEstimate(order: OrderWithDetails): WorkQueueEstimate
 
 export function getOrderEtaEstimate(order: OrderWithDetails): OrderEtaResult {
   // 1. 优先使用管理员手动设置的 ETA
-  const etaDateStr = (order as any).estimatedCompletionAt || (order as any).estimated_completion_at;
+  const candidate = order as OrderWithQueue;
+  const etaDateStr = candidate.estimatedCompletionAt || candidate.estimated_completion_at;
 
   if (etaDateStr && (order.status === 'pending' || order.status === 'in_progress')) {
     const eta = new Date(etaDateStr);

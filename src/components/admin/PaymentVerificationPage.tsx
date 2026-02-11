@@ -13,15 +13,16 @@
  *
  * 重要说明：
  * - 支付凭证 URL 存在 payments.metadata.receiptUrl / payments.metadata.proofUrl
- * - 这里使用 <img> 而不是 next/image，避免配置远程域名导致的显示问题
+ * - 统一使用 AppImage（内部默认 unoptimized）兼容当前远程/本地图片来源
  */
 
 import { useEffect, useMemo, useState } from 'react';
 import { confirmCashPayment, confirmPayment, getPendingPayments, rejectPayment } from '@/services/paymentService';
 import { formatAmount } from '@/lib/payment-helpers';
-import { Badge, Button, Card, Modal, Toast } from '@/components';
+import { Badge, Button, Modal, Toast } from '@/components';
 import EmptyState from '@/components/EmptyState';
 import PageLoading from '@/components/loading/PageLoading';
+import { AppImage } from '@/components/AppImage';
 
 interface PaymentUser {
   id: string;
@@ -51,16 +52,28 @@ interface Payment {
   amount: number | string;
   status: string;
   provider: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   createdAt: string | Date;
   user: PaymentUser;
   order: PaymentOrder | null;
   package: PaymentPackage | null;
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  if (typeof error === 'string' && error) {
+    return error;
+  }
+  return fallback;
+}
+
 function getProofUrl(payment: Payment): string | null {
   const meta = payment.metadata || {};
-  return meta.receiptUrl || meta.proofUrl || null;
+  const receiptUrl = typeof meta.receiptUrl === 'string' ? meta.receiptUrl : null;
+  const proofUrl = typeof meta.proofUrl === 'string' ? meta.proofUrl : null;
+  return receiptUrl || proofUrl;
 }
 
 function getPaymentTitle(payment: Payment): string {
@@ -135,8 +148,8 @@ export default function PaymentVerificationPage() {
       await fetchPayments();
       setSelectedPayment(null);
       setShowConfirmModal(false);
-    } catch (error: any) {
-      setToast({ message: error.message || '确认失败', type: 'error' });
+    } catch (error: unknown) {
+      setToast({ message: getErrorMessage(error, '确认失败'), type: 'error' });
     } finally {
       setProcessing(false);
     }
@@ -157,8 +170,8 @@ export default function PaymentVerificationPage() {
       setSelectedPayment(null);
       setShowRejectModal(false);
       setRejectReason('');
-    } catch (error: any) {
-      setToast({ message: error.message || '拒绝失败', type: 'error' });
+    } catch (error: unknown) {
+      setToast({ message: getErrorMessage(error, '拒绝失败'), type: 'error' });
     } finally {
       setProcessing(false);
     }
@@ -204,9 +217,11 @@ export default function PaymentVerificationPage() {
                 {/* 支付凭证预览（现金不一定有） */}
                 {proofUrl ? (
                   <div className="relative h-44 bg-ink-elevated">
-                    <img
+                    <AppImage
                       src={proofUrl}
                       alt="Payment Proof"
+                      width={880}
+                      height={352}
                       className="h-full w-full cursor-pointer object-contain"
                       onClick={() => setSelectedPayment(payment)}
                     />

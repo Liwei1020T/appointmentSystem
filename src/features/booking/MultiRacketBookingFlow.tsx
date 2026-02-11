@@ -15,7 +15,7 @@ import { StringInventory, UserVoucher } from '@/types';
 import PageLoading from '@/components/loading/PageLoading';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
 import { formatCurrency } from '@/lib/utils';
-import { hasAvailablePackage, getUserPackages } from '@/services/packageService';
+import { hasAvailablePackage, getUserPackages, type UserPackageWithPackage } from '@/services/packageService';
 import type { OrderWithDetails } from '@/services/orderService';
 import { createMultiRacketOrder, getOrderById } from '@/services/orderService';
 import { getUserStats, getUserProfile, type MembershipTierInfo } from '@/services/profileService';
@@ -27,11 +27,91 @@ import ServiceMethodSelector, { ServiceType } from './ServiceMethodSelector';
 import { getOrderEtaEstimate } from '@/lib/orderEta';
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { AppImage } from '@/components/AppImage';
 
 type RetryQueueEntry = {
     reason: string;
     fileName?: string;
     readyToReplace: boolean;
+};
+
+type DecimalLike = { toNumber: () => number };
+type NumberLike = number | string | DecimalLike;
+
+type VoucherWithLegacyFields = NonNullable<UserVoucher['voucher']> & {
+    type?: string;
+    value?: NumberLike;
+};
+
+type RepeatOrderStringLike = {
+    id?: string;
+    brand?: string;
+    model?: string;
+    sellingPrice?: NumberLike;
+    selling_price?: NumberLike;
+};
+
+type RepeatOrderItemLike = {
+    stringId?: string;
+    string_id?: string;
+    string?: RepeatOrderStringLike;
+    tensionVertical?: number | null;
+    tension_vertical?: number | null;
+    tensionHorizontal?: number | null;
+    tension_horizontal?: number | null;
+    racketBrand?: string | null;
+    racket_brand?: string | null;
+    racketModel?: string | null;
+    racket_model?: string | null;
+    racketPhoto?: string | null;
+    racket_photo?: string | null;
+    notes?: string | null;
+};
+
+type RepeatOrderLike = Omit<OrderWithDetails, 'items' | 'string'> & {
+    stringId?: string;
+    string_id?: string;
+    stringBrand?: string;
+    string_brand?: string;
+    stringName?: string;
+    string_name?: string;
+    tension?: NumberLike;
+    finalPrice?: NumberLike;
+    final_price?: NumberLike;
+    price?: NumberLike;
+    notes?: string | null;
+    racketPhoto?: string | null;
+    racket_photo?: string | null;
+    string?: (NonNullable<OrderWithDetails['string']> & RepeatOrderStringLike) | RepeatOrderStringLike | null;
+    items?: RepeatOrderItemLike[] | null;
+    serviceType?: ServiceType;
+    service_type?: ServiceType;
+    pickupAddress?: string | null;
+    pickup_address?: string | null;
+};
+
+const toNumberValue = (value: NumberLike | null | undefined, fallback = 0) => {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : fallback;
+    if (typeof value === 'string') {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : fallback;
+    }
+    if (value && typeof value === 'object' && typeof value.toNumber === 'function') {
+        const parsed = Number(value.toNumber());
+        return Number.isFinite(parsed) ? parsed : fallback;
+    }
+    return fallback;
+};
+
+const toErrorMessage = (error: unknown, fallback: string) => {
+    if (error instanceof Error && error.message) {
+        return error.message;
+    }
+    return fallback;
+};
+
+const normalizeServiceType = (value: string | null | undefined): ServiceType => {
+    return value === 'pickup_delivery' ? 'pickup_delivery' : 'in_store';
 };
 
 // 生成临时 ID
@@ -76,7 +156,7 @@ export default function MultiRacketBookingFlow() {
     const [loading, setLoading] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
     const [packageAvailable, setPackageAvailable] = useState(false);
-    const [userPackages, setUserPackages] = useState<any[]>([]);
+    const [userPackages, setUserPackages] = useState<UserPackageWithPackage[]>([]);
     const [membershipInfo, setMembershipInfo] = useState<MembershipTierInfo | null>(null);
     const [templateId, setTemplateId] = useState<string | null>(null);
     const [syncTension, setSyncTension] = useState(true);
@@ -89,7 +169,7 @@ export default function MultiRacketBookingFlow() {
         targetCount: number;
         existingCount: number;
     } | null>(null);
-    const [toastState, setToastState] = useState<{
+    const [_toastState, _setToastState] = useState<{
         show: boolean;
         message: string;
         type: 'success' | 'error' | 'info' | 'warning';
@@ -192,9 +272,9 @@ export default function MultiRacketBookingFlow() {
 
     const loadUserPackages = async () => {
         try {
-            const result = await getUserPackages();
+            const result = await getUserPackages('active');
             const packages = result.data || [];
-            setUserPackages(packages.filter((p: any) => p.status === 'active' && p.remaining > 0));
+            setUserPackages(packages.filter((pkg) => pkg.remaining > 0));
         } catch (error) {
             console.error('Failed to load packages:', error);
         }
@@ -307,10 +387,10 @@ export default function MultiRacketBookingFlow() {
         };
     }, [cartItems, MIN_TENSION_DIFF, MAX_TENSION_DIFF]);
 
-    const buildItemsFromOrder = useCallback((order: any, includePhotos = false): RacketItemData[] => {
+    const buildItemsFromOrder = useCallback((order: RepeatOrderLike, includePhotos = false): RacketItemData[] => {
         const orderItems = Array.isArray(order.items) ? order.items : [];
         if (orderItems.length > 0) {
-            return orderItems.map((item: any) => {
+            return orderItems.map((item: RepeatOrderItemLike) => {
                 const photo = includePhotos ? (item.racketPhoto || item.racket_photo || '') : '';
                 const hasPhoto = Boolean(photo);
                 return {
@@ -320,10 +400,18 @@ export default function MultiRacketBookingFlow() {
                         id: item.string?.id || item.stringId || item.string_id || order.stringId || order.string_id || '',
                         brand: item.string?.brand || order.string?.brand || '',
                         model: item.string?.model || order.string?.model || '',
-                        sellingPrice: item.string?.sellingPrice || order.string?.sellingPrice || order.finalPrice || order.final_price || order.price || 0,
+                        sellingPrice: toNumberValue(
+                            item.string?.sellingPrice
+                            || item.string?.selling_price
+                            || order.string?.sellingPrice
+                            || order.string?.selling_price
+                            || order.finalPrice
+                            || order.final_price
+                            || order.price
+                        ),
                     },
-                    tensionVertical: item.tensionVertical ?? item.tension_vertical ?? order.tension ?? 24,
-                    tensionHorizontal: item.tensionHorizontal ?? item.tension_horizontal ?? order.tension ?? 24,
+                    tensionVertical: toNumberValue(item.tensionVertical ?? item.tension_vertical ?? order.tension, 24),
+                    tensionHorizontal: toNumberValue(item.tensionHorizontal ?? item.tension_horizontal ?? order.tension, 24),
                     racketBrand: item.racketBrand ?? item.racket_brand ?? '',
                     racketModel: item.racketModel ?? item.racket_model ?? '',
                     racketPhoto: photo,
@@ -336,7 +424,7 @@ export default function MultiRacketBookingFlow() {
         const fallbackStringId = order.stringId || order.string_id || order.string?.id || '';
         if (!fallbackStringId) return [];
 
-        const fallbackTension = Number(order.tension) || 24;
+        const fallbackTension = toNumberValue(order.tension, 24);
         const photo = includePhotos ? (order.racketPhoto || order.racket_photo || '') : '';
         const hasPhoto = Boolean(photo);
         return [
@@ -347,7 +435,13 @@ export default function MultiRacketBookingFlow() {
                     id: fallbackStringId,
                     brand: order.string?.brand || order.stringBrand || order.string_brand || '',
                     model: order.string?.model || order.stringName || order.string_name || '',
-                    sellingPrice: order.string?.sellingPrice || order.finalPrice || order.final_price || order.price || 0,
+                    sellingPrice: toNumberValue(
+                        order.string?.sellingPrice
+                        || order.string?.selling_price
+                        || order.finalPrice
+                        || order.final_price
+                        || order.price
+                    ),
                 },
                 tensionVertical: fallbackTension,
                 tensionHorizontal: fallbackTension,
@@ -367,12 +461,12 @@ export default function MultiRacketBookingFlow() {
                 const order = await getOrderById(repeatOrderId);
                 if (!active) return;
 
-                const baseItems = buildItemsFromOrder(order, false);
-                const snapshotWithPhotos = buildItemsFromOrder(order, true);
+                const repeatOrder = order as RepeatOrderLike;
+                const baseItems = buildItemsFromOrder(repeatOrder, false);
+                const snapshotWithPhotos = buildItemsFromOrder(repeatOrder, true);
                 if (baseItems.length === 0) {
                     throw new Error('Missing order items');
                 }
-                const orderAny = order as any;
 
                 setRepeatSnapshot(snapshotWithPhotos);
                 setRepeatSourceOrder(order);
@@ -384,12 +478,12 @@ export default function MultiRacketBookingFlow() {
                 setUsePackage(false);
                 setSelectedPackageId(null);
                 setSelectedVoucher(null);
-                setServiceType(orderAny.serviceType || orderAny.service_type || 'in_store');
-                setPickupAddress(orderAny.pickupAddress || orderAny.pickup_address || '');
+                setServiceType(normalizeServiceType(repeatOrder.serviceType || repeatOrder.service_type));
+                setPickupAddress(repeatOrder.pickupAddress || repeatOrder.pickup_address || '');
                 setRepeatSourceLabel(`订单 #${order.id.slice(0, 6).toUpperCase()}`);
                 toast.success('已载入上次配置');
                 setAutoFilledPhotos(false);
-            } catch (error) {
+            } catch (_error) {
                 if (active) {
                     toast.error('未能载入上次配置');
                 }
@@ -547,8 +641,8 @@ export default function MultiRacketBookingFlow() {
         } else {
             try {
                 url = await uploadRacketPhoto(file, `racket_retry_${itemId}_${Date.now()}.jpg`);
-            } catch (error: any) {
-                failureMessage = error?.message || '上传失败';
+            } catch (error: unknown) {
+                failureMessage = toErrorMessage(error, '上传失败');
             }
         }
 
@@ -652,8 +746,8 @@ export default function MultiRacketBookingFlow() {
             } else {
                 try {
                     url = await uploadRacketPhoto(file, `racket_${batchId}_${i}.jpg`);
-                } catch (error: any) {
-                    failureMessage = error?.message || '上传失败';
+                } catch (error: unknown) {
+                    failureMessage = toErrorMessage(error, '上传失败');
                     failed += 1;
                 }
             }
@@ -870,9 +964,11 @@ export default function MultiRacketBookingFlow() {
         // 优惠券折扣
         let voucherDiscount = 0;
         if (selectedVoucher?.voucher) {
-            const voucher = selectedVoucher.voucher;
-            const discountType = (voucher as any).type || (voucher as any).discount_type;
-            const discountValue = Number((voucher as any).value || (voucher as any).discount_value || 0);
+            const voucher = selectedVoucher.voucher as VoucherWithLegacyFields;
+            const discountType = voucher.type || voucher.discount_type;
+            const discountValue = voucher.value !== undefined
+                ? toNumberValue(voucher.value)
+                : toNumberValue(voucher.discount_value);
             if (discountType === 'percentage') {
                 voucherDiscount = (baseTotal * discountValue) / 100;
             } else {
@@ -894,7 +990,7 @@ export default function MultiRacketBookingFlow() {
         return { baseTotal, voucherDiscount, membershipDiscount, totalDiscount, finalTotal };
     }, [cartItems, usePackage, selectedVoucher, membershipInfo]);
 
-    const { baseTotal, voucherDiscount, membershipDiscount, totalDiscount, finalTotal } = calculatePrices();
+    const { baseTotal, voucherDiscount, membershipDiscount, totalDiscount: _totalDiscount, finalTotal } = calculatePrices();
 
 
     // 验证购物车
@@ -990,8 +1086,8 @@ export default function MultiRacketBookingFlow() {
             setTimeout(() => {
                 router.push(`/orders/${result.orderId}`);
             }, 1500);
-        } catch (err: any) {
-            toast.error(err.message || '预约失败，请重试');
+        } catch (err: unknown) {
+            toast.error(toErrorMessage(err, '预约失败，请重试'));
             setLoading(false);
         }
     };
@@ -1532,9 +1628,11 @@ export default function MultiRacketBookingFlow() {
                                         <div className="flex items-center justify-between bg-ink rounded-lg px-3 py-2 border border-border-subtle">
                                             <span>照片</span>
                                             {quickApplySource.racketPhoto ? (
-                                                <img
+                                                <AppImage
                                                     src={quickApplySource.racketPhoto}
                                                     alt="模板照片"
+                                                    width={32}
+                                                    height={32}
                                                     className="w-8 h-8 rounded object-cover"
                                                 />
                                             ) : (
@@ -1619,7 +1717,7 @@ export default function MultiRacketBookingFlow() {
                             )}
 
                             <div className="space-y-4">
-                                {cartItems.map((item, index) => (
+                                {cartItems.map((item, _index) => (
                                     <div
                                         key={item.id}
                                         ref={(node) => {
@@ -1629,7 +1727,7 @@ export default function MultiRacketBookingFlow() {
                                     >
                                         <RacketItemCard
                                             item={item}
-                                            index={index}
+                                            index={_index}
                                             onUpdate={handleUpdateItem}
                                             onRemove={handleRemoveItem}
                                             disabled={loading}
@@ -1772,18 +1870,19 @@ export default function MultiRacketBookingFlow() {
 
                             {/* 订单项列表 */}
                             <div className="space-y-3">
-                                {cartItems.map((item, index) => (
+                                {cartItems.map((item, _index) => (
                                     <div
                                         key={item.id}
                                         className="flex items-center gap-3 p-4 rounded-xl bg-ink-surface border border-border-subtle"
                                     >
                                         {item.racketPhoto && (
-                                            <img
+                                            <AppImage
                                                 src={item.racketPhoto}
                                                 alt="球拍"
+                                                width={64}
+                                                height={64}
                                                 className="w-16 h-16 rounded-lg object-cover"
                                                 loading="lazy"
-                                                decoding="async"
                                             />
                                         )}
                                         <div className="flex-1">
@@ -1993,9 +2092,11 @@ export default function MultiRacketBookingFlow() {
                     <div className="space-y-2">
                         <div className="flex items-center gap-3">
                             <span className="text-text-tertiary">模板照片:</span>
-                            <img
+                            <AppImage
                                 src={pendingPhotoSync.sourcePhoto}
                                 alt="模板照片"
+                                width={48}
+                                height={48}
                                 className="w-12 h-12 rounded object-cover"
                             />
                         </div>

@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { Card } from '@/components/Card';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
+import { AppImage } from '@/components/AppImage';
 
 // 促销类型
 export type PromotionType = 'FLASH_SALE' | 'POINTS_BOOST' | 'SPEND_SAVE';
@@ -45,8 +46,13 @@ interface EventCardProps {
   className?: string;
 }
 
+type BadgeVariant = NonNullable<React.ComponentProps<typeof Badge>['variant']>;
+
 // 促销类型配置
-const PROMOTION_CONFIG: Record<PromotionType, { label: string; icon: string; color: string }> = {
+const PROMOTION_CONFIG: Record<
+  PromotionType,
+  { label: string; icon: string; color: BadgeVariant }
+> = {
   FLASH_SALE: { label: '限时特惠', icon: '🔥', color: 'error' },
   POINTS_BOOST: { label: '积分翻倍', icon: '✨', color: 'warning' },
   SPEND_SAVE: { label: '满减优惠', icon: '💰', color: 'success' },
@@ -103,7 +109,7 @@ export const EventCard: React.FC<EventCardProps> = ({
         >
           <div className="flex items-center gap-1.5 mb-1.5">
             <span className="text-sm">{config.icon}</span>
-            <Badge variant={config.color as any} size="sm">
+            <Badge variant={config.color} size="sm">
               {config.label}
             </Badge>
           </div>
@@ -135,7 +141,7 @@ export const EventCard: React.FC<EventCardProps> = ({
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="text-2xl">{config.icon}</span>
-            <Badge variant={config.color as any}>{config.label}</Badge>
+            <Badge variant={config.color}>{config.label}</Badge>
           </div>
           <Badge variant={isEnded ? 'neutral' : 'info'} size="sm">
             {timeRemaining}
@@ -220,9 +226,11 @@ export const EventCard: React.FC<EventCardProps> = ({
           </Badge>
         </div>
         {announcement.imageUrl && (
-          <img
+          <AppImage
             src={announcement.imageUrl}
             alt={announcement.title}
+            width={1200}
+            height={320}
             className="w-full h-40 object-cover rounded-xl mb-3"
           />
         )}

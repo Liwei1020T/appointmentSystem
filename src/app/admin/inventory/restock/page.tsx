@@ -11,10 +11,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Badge, Toast } from '@/components';
+import { Button, Badge } from '@/components';
 import { SkeletonCard } from '@/components/Skeleton';
 import { formatCurrency } from '@/lib/utils';
-import { ArrowLeft, AlertTriangle, TrendingUp, Package } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Package } from 'lucide-react';
 
 interface RestockSuggestion {
   stringId: string;

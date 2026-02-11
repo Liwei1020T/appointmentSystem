@@ -38,17 +38,160 @@ export interface ReferralStats {
   }>;
 }
 
+type ReferralStatsItem = ReferralStats['referrals'][number];
+type MyReferralStatsItem = MyReferralStats['referrals'][number];
+
+interface ReferralStatsPayload {
+  referralCode?: unknown;
+  stats?: {
+    totalReferrals?: unknown;
+    totalRewards?: unknown;
+  } | null;
+  referrals?: unknown;
+}
+
+interface MyReferralStatsPayload {
+  referralCode?: unknown;
+  referralCount?: unknown;
+  totalPoints?: unknown;
+  pendingRewards?: unknown;
+  referrals?: unknown;
+}
+
+interface LeaderboardEntryPayload {
+  userId?: unknown;
+  fullName?: unknown;
+  referralCount?: unknown;
+  totalPoints?: unknown;
+  isCurrentUser?: unknown;
+}
+
+interface ReferralLeaderboardPayload {
+  leaderboard?: unknown;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function toString(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value : fallback;
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return fallback;
+}
+
+function toBoolean(value: unknown, fallback = false): boolean {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    if (value.toLowerCase() === 'true') return true;
+    if (value.toLowerCase() === 'false') return false;
+  }
+
+  return fallback;
+}
+
+function toDate(value: unknown, fallback = new Date(0)): Date {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
+  }
+
+  if (typeof value === 'string' || typeof value === 'number') {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+
+  return fallback;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === 'string' && error) {
+    return error;
+  }
+
+  if (isRecord(error) && typeof error.message === 'string' && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
+function normalizeReferralStatsItems(input: unknown): ReferralStatsItem[] {
+  if (!Array.isArray(input)) {
+    return [];
+  }
+
+  return input
+    .map((item): ReferralStatsItem | null => {
+      if (!isRecord(item)) {
+        return null;
+      }
+
+      return {
+        id: toString(item.id),
+        fullName: toString(item.fullName, 'User'),
+        createdAt: toDate(item.createdAt),
+        rewardPoints: toNumber(item.rewardPoints),
+      };
+    })
+    .filter((item): item is ReferralStatsItem => item !== null);
+}
+
+function normalizeMyReferralStatsItems(input: unknown): MyReferralStatsItem[] {
+  if (!Array.isArray(input)) {
+    return [];
+  }
+
+  return input
+    .map((item): MyReferralStatsItem | null => {
+      if (!isRecord(item)) {
+        return null;
+      }
+
+      const status = item.status === 'completed' ? 'completed' : 'pending';
+      return {
+        id: toString(item.id),
+        fullName: toString(item.fullName, 'User'),
+        createdAt: toDate(item.createdAt),
+        status,
+        rewardPoints: toNumber(item.rewardPoints),
+      };
+    })
+    .filter((item): item is MyReferralStatsItem => item !== null);
+}
+
 /**
  * 获取用户的推荐统计
  */
 export async function getReferralStats(): Promise<ReferralStats> {
   try {
-    const data = await apiRequest<any>(`/api/referrals`);
+    const data = await apiRequest<ReferralStatsPayload>(`/api/referrals`);
     return {
-      referralCode: data?.referralCode || '',
-      totalReferrals: data?.stats?.totalReferrals || 0,
-      totalRewards: data?.stats?.totalRewards || 0,
-      referrals: data?.referrals || [],
+      referralCode: toString(data.referralCode),
+      totalReferrals: toNumber(data.stats?.totalReferrals),
+      totalRewards: toNumber(data.stats?.totalRewards),
+      referrals: normalizeReferralStatsItems(data.referrals),
     };
   } catch (error) {
     console.error('Error fetching referral stats:', error);
@@ -112,8 +255,8 @@ export async function getMyReferralCode(): Promise<{ code: string | null; error:
   try {
     const stats = await getReferralStats();
     return { code: stats.referralCode || null, error: null };
-  } catch (error: any) {
-    return { code: null, error: error.message || 'Failed to get referral code' };
+  } catch (error: unknown) {
+    return { code: null, error: getErrorMessage(error, 'Failed to get referral code') };
   }
 }
 
@@ -131,8 +274,8 @@ export async function generateShareLink(referralCode?: string): Promise<{ link: 
       code = result.code;
     }
     return { link: generateReferralLink(code), error: null };
-  } catch (err: any) {
-    return { link: null, error: err.message || '生成失败' };
+  } catch (error: unknown) {
+    return { link: null, error: getErrorMessage(error, '生成失败') };
   }
 }
 
@@ -159,8 +302,8 @@ export async function generateShareMessage(referralCode?: string): Promise<{ mes
     const link = generateReferralLink(code);
     const msg = `Join me at LW String Studio! Use my referral code: ${code} or sign up here: ${link}`;
     return { message: msg, error: null };
-  } catch (err: any) {
-    return { message: null, error: err.message || '生成失败' };
+  } catch (error: unknown) {
+    return { message: null, error: getErrorMessage(error, '生成失败') };
   }
 }
 
@@ -194,13 +337,13 @@ export interface MyReferralStats {
  */
 export async function getMyReferralStats(): Promise<MyReferralStats> {
   try {
-    const data = await apiRequest<any>(`/api/referrals/my-stats`);
+    const data = await apiRequest<MyReferralStatsPayload>(`/api/referrals/my-stats`);
     return {
-      referralCode: data.referralCode || '',
-      referralCount: data.referralCount || 0,
-      totalPoints: data.totalPoints || 0,
-      pendingRewards: data.pendingRewards || 0,
-      referrals: data.referrals || [],
+      referralCode: toString(data.referralCode),
+      referralCount: toNumber(data.referralCount),
+      totalPoints: toNumber(data.totalPoints),
+      pendingRewards: toNumber(data.pendingRewards),
+      referrals: normalizeMyReferralStatsItems(data.referrals),
     };
   } catch (error) {
     console.error('Error fetching my referral stats:', error);
@@ -231,15 +374,20 @@ export interface LeaderboardEntry {
  */
 export async function getReferralLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
   try {
-    const data = await apiRequest<{ leaderboard: any[] }>(`/api/referrals/leaderboard?limit=${limit}`);
-    return (data.leaderboard || []).map((entry: any, index: number) => ({
-      rank: index + 1,
-      userId: entry.userId || '',
-      fullName: entry.fullName || 'Anonymous',
-      referralCount: entry.referralCount || 0,
-      totalPoints: entry.totalPoints || 0,
-      isCurrentUser: entry.isCurrentUser || false,
-    }));
+    const data = await apiRequest<ReferralLeaderboardPayload>(`/api/referrals/leaderboard?limit=${limit}`);
+    const leaderboard = Array.isArray(data.leaderboard) ? data.leaderboard : [];
+
+    return leaderboard.map((entry, index: number) => {
+      const payload: LeaderboardEntryPayload = isRecord(entry) ? entry : {};
+      return {
+        rank: index + 1,
+        userId: toString(payload.userId),
+        fullName: toString(payload.fullName, 'Anonymous'),
+        referralCount: toNumber(payload.referralCount),
+        totalPoints: toNumber(payload.totalPoints),
+        isCurrentUser: toBoolean(payload.isCurrentUser),
+      };
+    });
   } catch (error) {
     console.error('Error fetching referral leaderboard:', error);
     return [];

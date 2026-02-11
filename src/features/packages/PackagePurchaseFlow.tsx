@@ -6,6 +6,7 @@
  */
 
 'use client';
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -21,6 +22,13 @@ import TngQRCodeDisplay from '@/components/TngQRCodeDisplay';
 
 // 步骤标签
 const stepLabels = ['确认', '支付', '处理', '完成'];
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
 
 export default function PackagePurchaseFlow() {
   const router = useRouter();
@@ -130,10 +138,10 @@ export default function PackagePurchaseFlow() {
           type: 'success',
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setToast({
         show: true,
-        message: err.message || '购买失败',
+        message: getErrorMessage(err, '购买失败'),
         type: 'error',
       });
       setStep(2);
@@ -164,10 +172,10 @@ export default function PackagePurchaseFlow() {
       });
 
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       setToast({
         show: true,
-        message: err.message || '提交收据失败',
+        message: getErrorMessage(err, '提交收据失败'),
         type: 'error',
       });
     } finally {

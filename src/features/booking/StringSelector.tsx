@@ -105,7 +105,7 @@ export default function StringSelector({ selectedString, onSelect, onNext, hideB
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       result = result.filter((string) => {
-        const description = (string as any).description?.toLowerCase() || '';
+        const description = string.description?.toLowerCase() || '';
         return (
           string.brand.toLowerCase().includes(search) ||
           string.model.toLowerCase().includes(search) ||

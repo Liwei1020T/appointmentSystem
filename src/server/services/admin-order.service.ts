@@ -1,8 +1,9 @@
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
+import { AppError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 import { getOrderQueuePosition } from '@/server/services/order-eta.service';
 import { OrderStatus, validateOrderStatus } from '@/server/services/order-status.service';
+import type { Prisma } from '@prisma/client';
 
 type AdminOrderStatus = OrderStatus;
 
@@ -36,16 +37,17 @@ export async function getAdminOrders(params?: {
   const limit = params?.limit ? Number(params.limit) : 20;
   const skip = (page - 1) * limit;
 
-  const where: any = {};
+  const where: Prisma.OrderWhereInput = {};
   if (status) {
     where.status = status;
   }
   if (search) {
+    const normalizedSearch = search.trim();
     where.OR = [
-      { id: { contains: search, mode: 'insensitive' } },
-      { user: { fullName: { contains: search, mode: 'insensitive' } } },
-      { user: { email: { contains: search, mode: 'insensitive' } } },
-      { user: { phone: { contains: search, mode: 'insensitive' } } },
+      ...(isValidUUID(normalizedSearch) ? [{ id: normalizedSearch }] : []),
+      { user: { fullName: { contains: normalizedSearch, mode: 'insensitive' } } },
+      { user: { email: { contains: normalizedSearch, mode: 'insensitive' } } },
+      { user: { phone: { contains: normalizedSearch, mode: 'insensitive' } } },
     ];
   }
 
@@ -61,7 +63,7 @@ export async function getAdminOrders(params?: {
         items: {
           select: { id: true },
         },
-      } as any,
+      },
       orderBy: { createdAt: 'desc' },
       skip,
       take: limit,
@@ -85,7 +87,7 @@ export async function getAdminOrders(params?: {
  */
 export async function getAdminOrderById(orderId: string) {
   if (!isValidUUID(orderId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid order id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid order id');
   }
 
   const order = await prisma.order.findUnique({
@@ -108,11 +110,11 @@ export async function getAdminOrderById(orderId: string) {
           },
         },
       },
-    } as any,
+    },
   });
 
   if (!order) {
-    throw new ApiError('NOT_FOUND', 404, 'Order not found');
+    throw new AppError('NOT_FOUND', 404, 'Order not found');
   }
 
   // 获取队列位置（仅对未完成订单）
@@ -133,11 +135,11 @@ export async function updateAdminOrderStatus(
   notes?: string
 ) {
   if (!isValidUUID(orderId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid order id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid order id');
   }
 
   if (!status || !validateOrderStatus(status)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid order status');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid order status');
   }
 
   const currentOrder = await prisma.order.findUnique({
@@ -186,7 +188,7 @@ export async function updateOrderEta(
   estimatedCompletionAt: Date | null
 ) {
   if (!isValidUUID(orderId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid order id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid order id');
   }
 
   const order = await prisma.order.update({

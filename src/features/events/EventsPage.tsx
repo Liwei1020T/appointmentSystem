@@ -14,7 +14,6 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import PageHeader from '@/components/layout/PageHeader';
 import { Card } from '@/components/Card';
-import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { EventCard, PromotionEvent, AnnouncementEvent, PromotionType } from '@/components/EventCard';
 
@@ -63,7 +62,7 @@ export default function EventsPage() {
       } else {
         setError(json.error?.message || '加载失败');
       }
-    } catch (err) {
+    } catch (_err) {
       setError('网络错误');
     } finally {
       setLoading(false);

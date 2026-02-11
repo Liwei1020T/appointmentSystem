@@ -9,6 +9,7 @@
 
 import { signIn as nextAuthSignIn, signOut } from 'next-auth/react';
 import { apiRequest, getApiErrorMessage } from '@/services/apiClient';
+import { AppError } from '@/lib/api-errors';
 
 export interface SignupData {
   phone: string;
@@ -22,6 +23,32 @@ export interface LoginData {
   password: string;
 }
 
+interface LoginResult {
+  error?: string;
+  ok?: boolean;
+  status?: number;
+  url?: string | null;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === 'string' && error) {
+    return error;
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const { message } = error as { message?: unknown };
+    if (typeof message === 'string' && message) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
 /**
  * 用户注册（手机号 + 密码）
  *
@@ -29,7 +56,7 @@ export interface LoginData {
  * - Create user via API
  * - Then sign in via NextAuth credentials
  */
-export async function signup(data: SignupData): Promise<any> {
+export async function signup(data: SignupData): Promise<Record<string, unknown>> {
   const response = await fetch('/api/auth/signup', {
     method: 'POST',
     headers: {
@@ -41,7 +68,7 @@ export async function signup(data: SignupData): Promise<any> {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new Error(getApiErrorMessage(result, '注册失败'));
+    throw new AppError('BAD_REQUEST', response.status, getApiErrorMessage(result, '注册失败'));
   }
 
   return result.data;
@@ -53,7 +80,7 @@ export async function signup(data: SignupData): Promise<any> {
  * @param data.phone - phone input (digits or +60)
  * @param data.password - account password
  */
-export async function login(data: LoginData & { admin?: boolean }): Promise<any> {
+export async function login(data: LoginData & { admin?: boolean }): Promise<LoginResult> {
   const result = await nextAuthSignIn('credentials', {
     redirect: false,
     phone: data.phone,
@@ -62,7 +89,7 @@ export async function login(data: LoginData & { admin?: boolean }): Promise<any>
   });
 
   if (result?.error) {
-    throw new Error(result.error || '手机号或密码错误');
+    throw new AppError('UNAUTHORIZED', 401, result.error || '手机号或密码错误');
   }
 
   return result;
@@ -86,7 +113,7 @@ export async function logout(): Promise<void> {
 export function getCurrentUser() {
   // 在组件中使用: const { data: session } = useSession();
   // session?.user 即为当前用户
-  throw new Error('请在组件中使用 useSession hook 获取用户信息');
+  throw new AppError('FEATURE_DISABLED', 500, '请在组件中使用 useSession hook 获取用户信息');
 }
 
 /**
@@ -96,7 +123,7 @@ export function getCurrentUser() {
 export function isAuthenticated() {
   // 在组件中使用: const { status } = useSession();
   // status === 'authenticated' 表示已登录
-  throw new Error('请在组件中使用 useSession hook 检查登录状态');
+  throw new AppError('FEATURE_DISABLED', 500, '请在组件中使用 useSession hook 检查登录状态');
 }
 
 /**
@@ -113,7 +140,7 @@ export async function requestPasswordResetOtp(data: {
 
   const result = await response.json();
   if (!response.ok) {
-    throw new Error(getApiErrorMessage(result, '发送验证码失败'));
+    throw new AppError('BAD_REQUEST', response.status, getApiErrorMessage(result, '发送验证码失败'));
   }
 
   return result.data;
@@ -135,7 +162,7 @@ export async function confirmPasswordReset(data: {
 
   const result = await response.json();
   if (!response.ok) {
-    throw new Error(getApiErrorMessage(result, '重置密码失败'));
+    throw new AppError('BAD_REQUEST', response.status, getApiErrorMessage(result, '重置密码失败'));
   }
 }
 
@@ -164,8 +191,8 @@ export async function updatePassword(data: {
     });
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating password:', error);
-    return { success: false, error: error.message || 'Failed to update password' };
+    return { success: false, error: getErrorMessage(error, 'Failed to update password') };
   }
 }

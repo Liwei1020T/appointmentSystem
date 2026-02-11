@@ -1,9 +1,16 @@
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
+import { AppError } from '@/lib/api-errors';
 
-function toNumber(value: any): number {
+function toNumber(value: unknown): number {
   if (value === null || value === undefined) return 0;
-  if (typeof value === 'object' && 'toNumber' in value) return value.toNumber();
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    'toNumber' in value &&
+    typeof (value as { toNumber?: unknown }).toNumber === 'function'
+  ) {
+    return (value as { toNumber: () => number }).toNumber();
+  }
   return Number(value);
 }
 
@@ -66,7 +73,7 @@ export async function getUserVouchersMapped(userId: string, status?: string) {
 export async function redeemVoucherByCode(userId: string, code: string, usePoints = false) {
   const trimmed = code?.trim();
   if (!trimmed) {
-    throw new ApiError('BAD_REQUEST', 400, 'Voucher code is required');
+    throw new AppError('BAD_REQUEST', 400, 'Voucher code is required');
   }
 
   const voucher = await prisma.voucher.findUnique({
@@ -74,16 +81,16 @@ export async function redeemVoucherByCode(userId: string, code: string, usePoint
   });
 
   if (!voucher) {
-    throw new ApiError('NOT_FOUND', 404, 'Voucher not found');
+    throw new AppError('NOT_FOUND', 404, 'Voucher not found');
   }
 
   if (!voucher.active) {
-    throw new ApiError('CONFLICT', 409, 'Voucher is inactive');
+    throw new AppError('CONFLICT', 409, 'Voucher is inactive');
   }
 
   const now = new Date();
   if (now < new Date(voucher.validFrom) || now > new Date(voucher.validUntil)) {
-    throw new ApiError('CONFLICT', 409, 'Voucher not in valid date range');
+    throw new AppError('CONFLICT', 409, 'Voucher not in valid date range');
   }
 
   // NOTE: maxUses 检查移入事务内进行，以防止并发竞争条件
@@ -94,7 +101,7 @@ export async function redeemVoucherByCode(userId: string, code: string, usePoint
 
   const maxPerUser = voucher.maxRedemptionsPerUser || 1;
   if (existingCount >= maxPerUser) {
-    throw new ApiError('CONFLICT', 409, 'Voucher redemption limit reached');
+    throw new AppError('CONFLICT', 409, 'Voucher redemption limit reached');
   }
 
   if (usePoints && voucher.pointsCost > 0) {
@@ -104,7 +111,7 @@ export async function redeemVoucherByCode(userId: string, code: string, usePoint
     });
 
     if (!currentUser || currentUser.points < voucher.pointsCost) {
-      throw new ApiError('CONFLICT', 409, 'Insufficient points');
+      throw new AppError('CONFLICT', 409, 'Insufficient points');
     }
 
     await prisma.$transaction(async (tx) => {
@@ -132,7 +139,7 @@ export async function redeemVoucherByCode(userId: string, code: string, usePoint
         });
 
         if (freshVoucher?.maxUses && freshVoucher.usedCount >= freshVoucher.maxUses) {
-          throw new ApiError('CONFLICT', 409, 'Voucher is fully redeemed');
+          throw new AppError('CONFLICT', 409, 'Voucher is fully redeemed');
         }
 
         // 如果不是超限，则是其他原因导致更新失败，重试增加计数
@@ -191,7 +198,7 @@ export async function redeemVoucherByCode(userId: string, code: string, usePoint
         });
 
         if (freshVoucher?.maxUses && freshVoucher.usedCount >= freshVoucher.maxUses) {
-          throw new ApiError('CONFLICT', 409, 'Voucher is fully redeemed');
+          throw new AppError('CONFLICT', 409, 'Voucher is fully redeemed');
         }
 
         await tx.voucher.update({
@@ -280,7 +287,7 @@ export async function getRedeemableVouchers(userId: string) {
  */
 export async function redeemVoucherWithPoints(userId: string, voucherId: string, points?: number) {
   if (!voucherId) {
-    throw new ApiError('BAD_REQUEST', 400, 'Voucher id is required');
+    throw new AppError('BAD_REQUEST', 400, 'Voucher id is required');
   }
 
   const voucher = await prisma.voucher.findUnique({
@@ -288,16 +295,16 @@ export async function redeemVoucherWithPoints(userId: string, voucherId: string,
   });
 
   if (!voucher) {
-    throw new ApiError('NOT_FOUND', 404, 'Voucher not found');
+    throw new AppError('NOT_FOUND', 404, 'Voucher not found');
   }
 
   if (!voucher.active) {
-    throw new ApiError('CONFLICT', 409, 'Voucher is inactive');
+    throw new AppError('CONFLICT', 409, 'Voucher is inactive');
   }
 
   const now = new Date();
   if (now < new Date(voucher.validFrom) || now > new Date(voucher.validUntil)) {
-    throw new ApiError('CONFLICT', 409, 'Voucher not in valid date range');
+    throw new AppError('CONFLICT', 409, 'Voucher not in valid date range');
   }
 
   // NOTE: maxUses 检查移入事务内进行，以防止并发竞争条件
@@ -308,14 +315,14 @@ export async function redeemVoucherWithPoints(userId: string, voucherId: string,
 
   const maxPerUser = voucher.maxRedemptionsPerUser || 1;
   if (existingCount >= maxPerUser) {
-    throw new ApiError('CONFLICT', 409, 'Voucher redemption limit reached');
+    throw new AppError('CONFLICT', 409, 'Voucher redemption limit reached');
   }
 
   const requiredPoints = voucher.pointsCost || 0;
   const pointsToUse = Number.isFinite(Number(points)) ? Number(points) : requiredPoints;
 
   if (requiredPoints > 0 && pointsToUse < requiredPoints) {
-    throw new ApiError('CONFLICT', 409, 'Insufficient points');
+    throw new AppError('CONFLICT', 409, 'Insufficient points');
   }
 
   const currentUser = await prisma.user.findUnique({
@@ -324,7 +331,7 @@ export async function redeemVoucherWithPoints(userId: string, voucherId: string,
   });
 
   if (!currentUser || currentUser.points < requiredPoints) {
-    throw new ApiError('CONFLICT', 409, 'Insufficient points');
+    throw new AppError('CONFLICT', 409, 'Insufficient points');
   }
 
   return prisma.$transaction(async (tx) => {
@@ -348,7 +355,7 @@ export async function redeemVoucherWithPoints(userId: string, voucherId: string,
       });
 
       if (freshVoucher?.maxUses && freshVoucher.usedCount >= freshVoucher.maxUses) {
-        throw new ApiError('CONFLICT', 409, 'Voucher is fully redeemed');
+        throw new AppError('CONFLICT', 409, 'Voucher is fully redeemed');
       }
 
       await tx.voucher.update({

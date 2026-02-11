@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { ApiError } from '@/lib/api-errors';
+import { AppError } from '@/lib/api-errors';
 import { isValidUUID } from '@/lib/utils';
 
 interface NotificationQuery {
@@ -36,7 +36,7 @@ export async function getNotifications(userId: string, options?: NotificationQue
  */
 export async function markNotificationAsRead(userId: string, notificationId: string) {
   if (!isValidUUID(notificationId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid notification id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid notification id');
   }
 
   const existing = await prisma.notification.findFirst({
@@ -45,7 +45,7 @@ export async function markNotificationAsRead(userId: string, notificationId: str
   });
 
   if (!existing) {
-    throw new ApiError('NOT_FOUND', 404, 'Notification not found');
+    throw new AppError('NOT_FOUND', 404, 'Notification not found');
   }
 
   await prisma.notification.update({
@@ -69,7 +69,7 @@ export async function markAllNotificationsAsRead(userId: string) {
  */
 export async function deleteNotification(userId: string, notificationId: string) {
   if (!isValidUUID(notificationId)) {
-    throw new ApiError('BAD_REQUEST', 400, 'Invalid notification id');
+    throw new AppError('BAD_REQUEST', 400, 'Invalid notification id');
   }
 
   const existing = await prisma.notification.findFirst({
@@ -78,7 +78,7 @@ export async function deleteNotification(userId: string, notificationId: string)
   });
 
   if (!existing) {
-    throw new ApiError('NOT_FOUND', 404, 'Notification not found');
+    throw new AppError('NOT_FOUND', 404, 'Notification not found');
   }
 
   await prisma.notification.delete({

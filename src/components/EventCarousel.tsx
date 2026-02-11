@@ -35,7 +35,7 @@ export const EventCarousel: React.FC<EventCarouselProps> = ({ className = '' }) 
         } else {
           setError(json.error?.message || '加载失败');
         }
-      } catch (err) {
+      } catch {
         setError('网络错误');
       } finally {
         setLoading(false);

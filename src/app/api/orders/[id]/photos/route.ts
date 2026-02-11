@@ -12,6 +12,7 @@ import {
   listOrderPhotos,
 } from '@/server/services/order-photos.service';
 import { handleApiError } from '@/lib/api/handleApiError';
+import { apiLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,6 +64,13 @@ export async function POST(
 ) {
   try {
     const admin = await requireAdmin();
+    const clientIp = getClientIp(request);
+    const rateLimitKey = `order-photo:add:${admin.id}:${clientIp}`;
+    const rateLimitResult = apiLimiter.check(rateLimitKey);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult.resetAt);
+    }
+
     const parsedParams = paramsSchema.safeParse(params);
     if (!parsedParams.success) {
       return failResponse('UNPROCESSABLE_ENTITY', 'Invalid order id', 422, parsedParams.error.flatten());

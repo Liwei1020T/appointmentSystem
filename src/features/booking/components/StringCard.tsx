@@ -11,6 +11,7 @@ import React from 'react';
 import { StringInventory } from '@/types';
 import { INVENTORY } from '@/lib/constants';
 import { formatCurrency } from '@/lib/utils';
+import { AppImage } from '@/components/AppImage';
 
 interface StringCardProps {
     string: StringInventory;
@@ -26,7 +27,7 @@ export default function StringCard({ string, isSelected, onSelect }: StringCardP
 
     const price = Number(string.sellingPrice) || Number(string.selling_price) || 0;
     const imageUrl = string.imageUrl || string.image_url;
-    const description = (string as any).description;
+    const description = string.description;
 
     const handleClick = () => {
         if (!isDisabled) {
@@ -76,9 +77,11 @@ export default function StringCard({ string, isSelected, onSelect }: StringCardP
                 {/* Image */}
                 <div className="flex-shrink-0 w-16 h-16 rounded-xl bg-ink-surface overflow-hidden">
                     {imageUrl ? (
-                        <img
+                        <AppImage
                             src={imageUrl}
                             alt={`${string.brand} ${string.model}`}
+                            width={64}
+                            height={64}
                             className="w-full h-full object-cover"
                             loading="lazy"
                         />
