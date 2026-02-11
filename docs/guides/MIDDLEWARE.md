@@ -154,6 +154,25 @@ const token = await getToken({
 });
 ```
 
+### Active Session Validation
+
+`token` 非空并不总是等于“已登录”。在本项目中，中间件会额外校验：
+
+- `token.id` 存在且为非空字符串
+- 如存在 `token.exp`，必须未过期
+
+```typescript
+function hasActiveSessionToken(token: unknown): boolean {
+  if (!token || typeof token !== 'object') return false;
+  const record = token as Record<string, unknown>;
+  if (typeof record.id !== 'string' || !record.id.trim()) return false;
+  if (typeof record.exp === 'number' && record.exp <= Math.floor(Date.now() / 1000)) return false;
+  return true;
+}
+```
+
+这可以避免历史/异常 token 导致 `/login`、`/signup` 被错误重定向。
+
 ### Dual Secret Support
 
 For migration scenarios, the middleware supports fallback to alternate secret:

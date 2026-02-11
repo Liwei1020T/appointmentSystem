@@ -38,6 +38,47 @@ const csrfTrustedOrigins = [
     .map((value) => value?.trim())
     .filter((value): value is string => Boolean(value));
 
+function getTokenStringField(token: Record<string, unknown>, key: string): string | undefined {
+    const value = token[key];
+    return typeof value === 'string' ? value : undefined;
+}
+
+function isTokenExpired(expValue: unknown): boolean {
+    const nowEpochSeconds = Math.floor(Date.now() / 1000);
+
+    if (typeof expValue === 'number') {
+        return expValue <= nowEpochSeconds;
+    }
+
+    if (typeof expValue === 'string') {
+        const parsed = Number(expValue);
+        if (Number.isFinite(parsed)) {
+            return parsed <= nowEpochSeconds;
+        }
+    }
+
+    return false;
+}
+
+function hasActiveSessionToken(token: unknown): token is Record<string, unknown> & { id: string } {
+    if (!token || typeof token !== 'object') {
+        return false;
+    }
+
+    const tokenRecord = token as Record<string, unknown>;
+    const userId = getTokenStringField(tokenRecord, 'id');
+
+    if (!userId || !userId.trim()) {
+        return false;
+    }
+
+    if (isTokenExpired(tokenRecord.exp)) {
+        return false;
+    }
+
+    return true;
+}
+
 function withSecurityHeaders(response: NextResponse) {
     const contentSecurityPolicy = [
         "default-src 'self'",
@@ -128,8 +169,15 @@ export async function middleware(request: NextRequest) {
         });
     }
 
-    const isLoggedIn = !!token;
-    const isAdmin = token?.role === 'admin' || token?.role === 'super_admin';
+    let isLoggedIn = false;
+    let role: string | undefined;
+
+    if (hasActiveSessionToken(token)) {
+        isLoggedIn = true;
+        role = getTokenStringField(token, 'role');
+    }
+
+    const isAdmin = role === 'admin' || role === 'super_admin';
 
     // 1. 已登录用户访问登录/注册页面 → 重定向到首页
     if (isLoggedIn && isAuthRoute) {
